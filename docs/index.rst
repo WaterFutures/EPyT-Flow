@@ -4,7 +4,7 @@ Welcome to EPyT-Flow's documentation!
 EPANET Python Toolkit Flow -- EPyT-Flow
 +++++++++++++++++++++++++++++++++++++++
 
-TODO
+EPyT-Flow is a Python package building on top of `EPyT <https://github.com/OpenWaterAnalytics/EPyT>`_ for providing easy access to water distribution network simulations.
 
 
 .. toctree::
@@ -12,6 +12,7 @@ TODO
     :caption: User Guide
 
     installation
+    usage
 
 
 .. toctree::
