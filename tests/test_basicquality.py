@@ -1,5 +1,6 @@
 import sys
 sys.path.insert(0,'..')
+import numpy as np
 
 from epyt_flow.data.networks import load_hanoi, load_net1
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
@@ -38,6 +39,19 @@ def test_chlorine():
         sim.set_sensors(SENSOR_TYPE_NODE_QUALITY, sensor_locations=sim.sensor_config.nodes)
 
         sim.enable_chemical_analysis()
+
+        res = sim.run_simulation()
+        res.get_data()
+
+
+def test_chlorine_injection():
+    network_config = load_hanoi(download_dir=get_temp_folder(),
+                                include_default_sensor_placement=True)
+    with WaterDistributionNetworkScenarioSimulator(scenario_config=network_config) as sim:
+        sim.set_sensors(SENSOR_TYPE_NODE_QUALITY, sensor_locations=sim.sensor_config.nodes)
+
+        sim.enable_chemical_analysis()
+        sim.add_quality_source("1", "my-chl-pattern", np.array([1.]), "CONCEN")
 
         res = sim.run_simulation()
         res.get_data()

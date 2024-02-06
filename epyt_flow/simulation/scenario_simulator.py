@@ -637,6 +637,46 @@ class WaterDistributionNetworkScenarioSimulator():
         self.set_general_parameters(quality_model={"type": "chem", "chemical_name": chemical_name,
                                                    "chemical_units": chemical_units})
 
+    def add_quality_source(self, node_id:str, pattern_id:str, pattern:numpy.ndarray,
+                           source_type:str, source_strength:int=1.) -> None:
+        """
+        Adds a new external water quality source at a particular node.
+
+        Parameters
+        ----------
+        node_id : `str`
+            ID of the node at which this external water quality source is placed.
+        pattern_id : `str`
+            ID of the source pattern.
+        pattern : `numpy.ndarray`
+            1d source pattern.
+        source_type : `str`,
+            Types of the external water quality source -- must be of the following:
+                - CONCEN Sets the concentration of external inflow entering a node
+                - MASS Injects a given mass/minute into a node
+                - SETPOINT Sets the concentration leaving a node to a given value
+                - FLOWPACED Adds a given value to the concentration leaving a node
+        source_strength : `int`, optional
+            Quality source strength -- i.e. quality-source = source_strength * pattern.
+
+            The default is 1.
+        """
+        if self.epanet_api.getQualityInfo().QualityCode != ToolkitConstants.EN_CHEM:
+            raise RuntimeError("Chemical analysis is not enabled -- "+\
+                               "call 'enable_chemical_analysis()' before calling this function.")
+        if not node_id in self.sensor_config.nodes:
+            raise ValueError(f"Unknown node '{node_id}'")
+        if not isinstance(pattern, numpy.ndarray):
+            raise ValueError("'pattern' must be an instance of 'numpy.ndarray' "+\
+                             f"but not of '{type(pattern)}'")
+
+        node_idx = self.epanet_api.getNodeIndex(node_id)
+        pattern_idx = self.epanet_api.addPattern(pattern_id, pattern)
+
+        self.epanet_api.setNodeSourceType(pattern_idx, source_type)
+        self.epanet_api.setNodeSourceQuality(node_idx, source_strength)
+        self.epanet_api.setNodeSourcePatternIndex(node_idx, pattern_idx)
+
     def enable_sourcetracing_analysis(self, trace_node_id:str):
         """
         Set source tracing analysis -- i.e. tracks the percentage of flow from a given node 
