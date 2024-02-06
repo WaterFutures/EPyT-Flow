@@ -1,6 +1,7 @@
 import os
 from typing import Generator
 from copy import deepcopy
+import warnings
 import random
 import numpy as np
 from epyt import epanet
@@ -572,8 +573,8 @@ class WaterDistributionNetworkScenarioSimulator():
 
             The default is None.
         quality_model : `dict`, optional
-            Specifies the quality model -- the dictionary must contain "code",
-            "type", "chemical_name", "trace_node_id", and "units" of the requested quality model.
+            Specifies the quality model -- the dictionary must contain,
+            "type", "chemical_name", "chemical_units", and "trace_node_id", of the requested quality model.
 
             The default is None.
         """
@@ -588,14 +589,66 @@ class WaterDistributionNetworkScenarioSimulator():
         if quality_time_step is not None:
             self.epanet_api.setTimeQualityStep(quality_time_step)
         if quality_model is not None:
-            if quality_model["code"] == ToolkitConstants.EN_NONE:
+            if quality_model["type"] == "none":
                 self.epanet_api.setQualityType("none")
-            elif quality_model["code"] == ToolkitConstants.EN_AGE:
+            elif quality_model["type"] == "age":
                 self.epanet_api.setQualityType("age")
-            elif quality_model["code"] == ToolkitConstants.EN_CHEM:
-                self.epanet_api.setQualityType("chem", quality_model["type"],
-                                               quality_model["units"])
-            elif quality_model["code"] == ToolkitConstants.EN_TRACE:
-                self.epanet_api.setQualityType('trace', quality_model["trace_node_id"])
+            elif quality_model["type"] == "chem":
+                self.epanet_api.setQualityType("chem", quality_model["chemical_name"],
+                                               quality_model["chemical_units"])
+            elif quality_model["type"] == "trace":
+                self.epanet_api.setQualityType("trace", quality_model["trace_node_id"])
             else:
-                raise ValueError(f"Unknown quality model code: {quality_model['code']}")
+                raise ValueError(f"Unknown quality type: {quality_model['type']}")
+
+    def __warn_if_quality_set(self):
+        qual_info = self.epanet_api.getQualityInfo()
+        if qual_info.QualityCode != ToolkitConstants.EN_NONE:
+            warnings.warn("You are overriding current quality settings "+\
+                          f"'{qual_info.QualityType}'")
+
+    def enable_waterage_analysis(self) -> None:
+        """
+        Sets water age analysis -- i.e. estimates the water age (in hours) at 
+        all places in the network.
+        """
+        self.__warn_if_quality_set()
+        self.set_general_parameters(quality_model={"type": "age"})
+
+    def enable_chemical_analysis(self, chemical_name:str="Chlorine",
+                                 chemical_units:str="mg/L") -> None:
+        """
+        Sets chemical analysis.
+
+        ATTENTION: Do not forget to inject this chemical into the WDN.
+
+        Parameters
+        ----------
+        chemical_name : `str`, optional
+            Name of the chemical being analyzed.
+
+            The default is "Chlorine".
+        chemical_units : `str`, optional
+            Units that the chemical is measured in.
+
+            The default is "mg/L".
+        """
+        self.__warn_if_quality_set()
+        self.set_general_parameters(quality_model={"type": "chem", "chemical_name": chemical_name,
+                                                   "chemical_units": chemical_units})
+
+    def enable_sourcetracing_analysis(self, trace_node_id:str):
+        """
+        Set source tracing analysis -- i.e. tracks the percentage of flow from a given node 
+        reaching all other nodes over time.
+
+        Parameters
+        ----------
+        trace_node_id : `str`
+            ID of the node traced in the source tracing analysis.
+        """
+        if not trace_node_id in self.sensor_config.nodes:
+            raise ValueError(f"Invalid node ID '{trace_node_id}'")
+
+        self.__warn_if_quality_set()
+        self.set_general_parameters(quality_model={"type": "trace", "trace_node_id": trace_node_id})
