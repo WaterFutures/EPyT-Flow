@@ -13,6 +13,8 @@ epyt_flow.simulation.scada.scada_data
 epyt_flow.simulation.scada.scada_data_export
 --------------------------------------------
 
+.. _epyt_flow.simulation.scada.scada_data_export:
+
 .. automodule:: epyt_flow.simulation.scada.scada_data_export
    :members:
    :show-inheritance:
