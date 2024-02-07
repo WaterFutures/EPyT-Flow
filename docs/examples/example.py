@@ -16,7 +16,7 @@ if __name__ == "__main__":
         # Place pressure sensors at nodes "13", "16", "22", and "30"
         sim.set_sensors(SENSOR_TYPE_NODE_PRESSURE, sensor_locations=["13", "16", "22", "30"])
 
-        # Place a flow sensor at link/pipe ""
+        # Place a flow sensor at link/pipe "1"
         sim.set_sensors(SENSOR_TYPE_LINK_FLOW, sensor_locations=["1"])
 
         # Run entire simulation
