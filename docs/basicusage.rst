@@ -1,8 +1,8 @@
 .. _usage:
 
-*****
-Usage
-*****
+***********
+Basic Usage
+***********
 
 Quick example
 -------------

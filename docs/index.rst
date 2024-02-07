@@ -12,7 +12,9 @@ EPyT-Flow is a Python package building on top of `EPyT <https://github.com/OpenW
     :caption: User Guide
 
     installation
-    usage
+    basicusage
+
+    tutorial
 
 
 .. toctree::
