@@ -6,6 +6,7 @@ import random
 import numpy as np
 from epyt import epanet
 from epyt.epanet import ToolkitConstants
+import networkx
 
 from .scenario_config import ScenarioConfig
 from .sensor_config import *
@@ -204,6 +205,37 @@ class WaterDistributionNetworkScenarioSimulator():
         return ScenarioConfig(self.__f_inp_in, self.__f_msx_in, general_params, self.sensor_config,
                               self.controls, self.sensor_noise, self.model_uncertainty,
                               self.system_events, self.sensor_reading_events)
+
+    def get_topology(self) -> networkx.Graph:
+        """
+        Gets the topology (incl. information such as eleveations, pipe diameters, etc.) of this WDN.
+
+        Returns
+        -------
+        `networkx.Graph`
+            Topology of this WDN as a graph.
+        """
+        # Collect information about the topology of the water distribution network
+        nodes_id = self.epanet_api.getNodeIndex()
+        nodes_elevation = self.epanet_api.getNodeElevations()
+        nodes_type = [self.epanet_api.TYPENODE[i] for i in self.epanet_api.getNodeTypeIndex()]
+
+        links_data = self.epanet_api.getNodesConnectingLinksID()
+        links_diameter = self.epanet_api.getLinkDiameter()
+        links_length = self.epanet_api.getLinkLength()
+
+        # Build graph describing the topology
+        g = networkx.Graph(name=f"{self.f_inp_in}")
+
+        for node, node_elevation, node_type in zip(nodes_id, nodes_elevation, nodes_type):
+            g.add_node(node, info={"elevation": node_elevation, "type": node_type})
+
+        g.add_nodes_from(nodes_id)
+
+        for link, diameter, length in zip(links_data, links_diameter, links_length):
+            g.add_edge(link[0], link[1], info={"diameter": diameter, "length": length})
+
+        return g
 
     def randomize_demands(self) -> None:
         """
