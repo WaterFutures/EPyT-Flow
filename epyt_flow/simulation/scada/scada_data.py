@@ -92,7 +92,20 @@ class ScadaData(Serializable):
             raise ValueError("'sensor_noise' must be an instance of "+\
                              "'epyt_flow.uncertainty.SensorNoise' but not of "+\
                                 f"'{type(sensor_noise)}'")
-        # TODO: Check shapes!
+        n_time_steps = sensor_readings_time.shape[0]
+        if not all([pressure_data_raw.shape[0] == n_time_steps,
+                    flow_data_raw.shape[0] == n_time_steps,
+                    demand_data_raw.shape[0] == n_time_steps,
+                    node_quality_data_raw.shape[0] == n_time_steps,
+                    link_quality_data_raw.shape[0] == n_time_steps]):
+            raise ValueError("Shape mismatch detected")
+        if len(valves_state_data_raw) != 0:
+            if not valves_state_data_raw.shape[0] == n_time_steps:
+                raise ValueError("Shape mismatch detected")
+        if len(pumps_state_data_raw) != 0:
+            if not pumps_state_data_raw.shape[0] == n_time_steps:
+                raise ValueError("Shape mismatch detected")
+
 
         self.__sensor_config = sensor_config
         self.__sensor_noise = sensor_noise
@@ -219,11 +232,15 @@ class ScadaData(Serializable):
             and np.all(self.__valves_state_data_raw == other.valves_state_data_raw)
 
     def __str__(self) -> str:
-        return f"sensor_config: {self.__sensor_config} sensor_noise: {self.__sensor_noise} sensor_faults: {self.__sensor_faults} "+\
-                f"pressure_data_raw: {self.__pressure_data_raw} flow_data_raw: {self.__flow_data_raw} demand_data_raw: {self.__demand_data_raw} "+\
-                f"node_quality_data_raw: {self.__node_quality_data_raw} link_quality_data_raw: {self.__link_quality_data_raw} "+\
-                f"sensor_readings_time: {self.__sensor_readings_time} pumps_state_data_raw: {self.__pumps_state_data_raw} "+\
-                f"valves_state_data_raw: {self.__valves_state_data_raw}"
+        return f"sensor_config: {self.__sensor_config} sensor_noise: {self.__sensor_noise} "+\
+            f"sensor_faults: {self.__sensor_faults} "+\
+            f"pressure_data_raw: {self.__pressure_data_raw} "+\
+            f"flow_data_raw: {self.__flow_data_raw} demand_data_raw: {self.__demand_data_raw} "+\
+            f"node_quality_data_raw: {self.__node_quality_data_raw} "+\
+            f"link_quality_data_raw: {self.__link_quality_data_raw} "+\
+            f"sensor_readings_time: {self.__sensor_readings_time} "+\
+            f"pumps_state_data_raw: {self.__pumps_state_data_raw} "+\
+            f"valves_state_data_raw: {self.__valves_state_data_raw}"
 
     def change_sensor_config(self, sensor_config:SensorConfig) -> None:
         """
