@@ -1,6 +1,12 @@
 # EPyT-Flow -- EPANET Python Toolkit - Flow
 
-EPyT-Flow is a Python package building on top of [EPyT](https://github.com/OpenWaterAnalytics/EPyT) for providing easy access to water distribution network simulations.
+EPyT-Flow is a Python package building on top of [EPyT](https://github.com/OpenWaterAnalytics/EPyT) 
+for providing easy access to water distribution network simulations.
+It aims to provide a high-level interface for the easy generation of hydraulic and water quality scenario data.
+However, it also provides access to low-level functions by [EPANET](https://github.com/OpenWaterAnalytics/epanet) 
+and [EPANET-MSX](https://github.com/OpenWaterAnalytics/epanet-msx).
+
+EPyT-Flow also provides an evironment for developing and testing control algorithms.
 
 ## Installation
 
