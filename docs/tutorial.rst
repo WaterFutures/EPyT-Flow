@@ -4,6 +4,7 @@ In-depth Tutorial
 =================
 
 .. toctree::
+    tut.intro
     tut.scenarios
     tut.scada
     tut.quality

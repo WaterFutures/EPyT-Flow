@@ -4,6 +4,13 @@
 Scenarios
 *********
 
+In EPyT-Flow, a scenario refers to a water distribution network that is to be simulated -- 
+i.e. performing a hydraulic and quality analysis.
+Besides the network itself, a scenario usually contains a sensor configuration and 
+might also contain some events such as leakages, sensor faults, contamination events, 
+and actuator events.
+Furthermore, a scenario might also include some control modules.
+
 Basics
 ++++++
 
@@ -134,7 +141,7 @@ Note that the individual entries in the JSON file correspond to the classes at i
 At every time, a complete :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` can be obtained by calling 
 :func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.get_scenario_config`.
 This scenario configuration could be than, for instance, be stored in a file so that it can be reloaded in the future 
-without having to make all the manual specifications again.
+without having to make all the manual specifications again -- see :ref:`Serialization <tut.serialization>` for details.
 
 Example of obtaining and storing the current scenario configuration:
 
