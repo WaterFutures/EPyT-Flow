@@ -11,10 +11,12 @@ Sensor Placements
 
 A sensor placement is necessary for getting actual sensor readings from a 
 :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance.
-Such a sensor placement can be set before the simulation is run by calling :func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.set_sensors`
+Such a sensor placement can be set before the simulation is run by calling 
+:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.set_sensors`
 of a :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator` instance, 
 or after when post-processing the results a :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances -- 
-this becomes handy in cases where multiple sensor configurations have to be evaluated without having to re-run the simulation every time.
+this becomes handy in cases where multiple sensor configurations have to be evaluated without 
+having to re-run the simulation every time.
 
 Example for specifying a sensor placement BEFORE the simulation is run:
 
@@ -32,7 +34,8 @@ Example for specifying a sensor placement BEFORE the simulation is run:
         # Run simulation
         # ....
 
-Example for specifying a sensor placement AFTER the simulation is run by calling :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.change_sensor_config` 
+Example for specifying a sensor placement AFTER the simulation is run by calling 
+:func:`~epyt_flow.simulation.scada.scada_data.ScadaData.change_sensor_config` 
 of a :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
 
 .. code-block:: python
@@ -71,7 +74,8 @@ of a given :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
 Importing and Exporting
 +++++++++++++++++++++++
 
-SCADA data can be exported and also imported if stored in a custom binary file.
+SCADA data can be exported and also imported if stored in a custom binary file -- 
+see :ref:`Serialization <tut.serialization>` for details.
 
 Example for exporting and important :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances:
 
@@ -92,7 +96,8 @@ Example for exporting and important :class:`~epyt_flow.simulation.scada.scada_da
     scada_data = ScadaData.load_from_file("myHanoiResuls.epytflow_scada")
 
 
-EPyT-Flow also supports the export of SCADA data to Numpy, .xlsx, MatLab files -- see :ref:`here <epyt_flow.simulation.scada.scada_data_export>`.
+EPyT-Flow also supports the export of SCADA data to Numpy, .xlsx, MatLab files -- 
+see :ref:`here <epyt_flow.simulation.scada.scada_data_export>`.
 
 .. note::
     In these cases, the exported SCADA data CANNOT be imported again!
