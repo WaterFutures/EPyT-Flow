@@ -45,6 +45,7 @@ class AdvancedControlModule(ABC):
         status : `int`
             New status of the pump -- either open or closed.
             One of the following: 
+
                 - EN_PUMP_CLOSED  = 2 
                 - EN_PUMP_OPEN    = 3  
         """
@@ -78,7 +79,8 @@ class AdvancedControlModule(ABC):
         status : `int`
             New status of the valve -- either open or closed.
             Must be one of the following:
-                - EN_CLOSED       = 0,
+
+                - EN_CLOSED       = 0
                 - EN_OPEN         = 1
         """
         valve_idx = self._epanet_api.getLinkValveNameID().index(valve_id)
