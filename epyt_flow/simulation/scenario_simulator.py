@@ -662,6 +662,7 @@ class WaterDistributionNetworkScenarioSimulator():
             The default is "Chlorine".
         chemical_units : `str`, optional
             Units that the chemical is measured in.
+            Either "mg/L" or "ug/L".
 
             The default is "mg/L".
         """
