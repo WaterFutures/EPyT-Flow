@@ -2,7 +2,7 @@ import sys
 sys.path.insert(0,'..')
 
 from epyt_flow.data.networks import load_hanoi
-from epyt_flow.simulation import ScenarioConfig
+from epyt_flow.simulation import ScenarioConfig, WaterDistributionNetworkScenarioSimulator
 
 
 def test_configparser():
@@ -10,10 +10,10 @@ def test_configparser():
             "general": {
                 "file_inp": "/tmp/Hanoi.inp",
                 "file_msx": "",
-                "simulation_duration": 100,
-                "demand_model": "pdd",
-                "hydraulic_time_step": 0,
-                "quality_time_step": 0
+                "simulation_duration": 10,
+                "demand_model": {"type": "PDA", "pressure_min": 0, "pressure_required": 0.1, "pressure_exponent": 0.5},
+                "hydraulic_time_step": 1800,
+                "quality_time_step": 300
             },
             "uncertainties": {
                 "pipe_length": {"type": "gaussian", "mean": 0, "scale": 1},
@@ -36,6 +36,9 @@ def test_configparser():
                 {"type": "constant", "constant_shift": 2.0, "sensor_id": "16", "sensor_type": 1, "start_time": 5000, "end_time": 100000}
             ]
         }"""
-    load_hanoi()
+    load_hanoi()    # Make sure Hanoi network is available
+
+    # Load config from JSON and run the simulation
     config = ScenarioConfig.load_from_json(config_as_json)
-    print(config)
+    with WaterDistributionNetworkScenarioSimulator(scenario_config=config) as sim:
+        sim.run_simulation()

@@ -107,7 +107,7 @@ and uncertanties with respect to pipe length and roughtness, as well as sensor n
             "file_inp": "Hanoi.inp",
             "file_msx": "",
             "simulation_duration": 100,
-            "demand_model": "pdd",
+            "demand_model": {"type": "PDA", "pressure_min": 0, "pressure_required": 0.1, "pressure_exponent": 0.5},
             "hydraulic_time_step": 1800,
             "quality_time_step": 300
         },

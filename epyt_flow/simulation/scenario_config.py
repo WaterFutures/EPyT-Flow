@@ -229,11 +229,10 @@ class ScenarioConfig(Serializable):
         general_params["simulation_duration"] = general_settings["simulation_duration"]
         general_params["hydraulic_time_step"] = general_settings["hydraulic_time_step"]
         general_params["quality_time_step"] = general_settings["quality_time_step"]
-        general_params["demand_model"] = general_settings["demand_model"]
+        if "demand_model" in general_settings.keys():
+            general_params["demand_model"] = general_settings["demand_model"]
         if "quality_model" in general_settings.keys():
             general_params["quality_model"] = general_settings["quality_model"]
-        else:
-            general_params = None
 
         sensor_config = data["sensors"]
         if "pressure_sensors" in sensor_config.keys():
