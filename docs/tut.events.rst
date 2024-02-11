@@ -129,4 +129,38 @@ TODO
 Sensor reading events
 ---------------------
 
-TODO
+Sensor reading events are events that affect sensor readings only (e.g. sensor faults, 
+communication events, etc.). Those events must be derived from 
+:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent` 
+and must implement the :func:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent.apply` 
+method. This method gets the raw sensor readings as well as the time steps as input, applies the event's logic to it, and 
+returns the processed sensor readings.
+
+.. note::
+    Note that :func:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent.apply` 
+    is called at each simulation time steps -- the method must respect the start and end time of the event 
+    as stored in its parent class :class:`~epyt_flow.simulation.events.event.Event`.
+
+Example of a custom sensor reading event that adds Gaussian noise to the sensor readings:
+
+.. code-block:: python
+
+    class MySensorReadingEvent(SensorReadingEvent):
+        def __init__(**kwds):
+            super().__init__(**kwds)    # Sets start & end time, location, etc.
+
+        def apply(self, sensor_readings:numpy.ndarray,
+                    sensor_readings_time:numpy.ndarray) -> numpy.ndarray:
+            for i in range(sensor_readings.shape[0]):
+                if self.start_time <= sensor_readings_time[i] < self.end_time:
+                    sensor_readings[i] += numpy.random.normal(loc=0, scale=1)
+            
+            return sensor_readings
+
+.. note::
+
+    Be aware that multiple sensor reading events can be active for the same sensor -- 
+    i.e. chaining of events is possible. In this case, the input to the 
+    :func:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent.apply` is the 
+    output of the previous method. The ordering of the sensor reading events is determined by 
+    the order they were added to the scenario.
