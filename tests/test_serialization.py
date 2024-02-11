@@ -10,7 +10,8 @@ from utils import get_temp_folder
 
 
 def test_sensorconfig():
-    sensor_config = SensorConfig(nodes=["0", "1", "2"], links=["0", "1"], pressure_sensors=["2"])
+    sensor_config = SensorConfig(nodes=["0", "1", "2"], links=["0", "1"],
+                                 valves=[], pumps=[], tanks=[], pressure_sensors=["2"])
     sensor_config_restored = SensorConfig.load(sensor_config.dump())
 
     assert sensor_config == sensor_config_restored

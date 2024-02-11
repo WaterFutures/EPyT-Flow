@@ -153,7 +153,10 @@ class WaterDistributionNetworkScenarioSimulator():
 
         if self.sensor_config is None:
             self.sensor_config = SensorConfig(nodes=self.epanet_api.getNodeNameID(),
-                                              links=self.epanet_api.getLinkNameID())
+                                              links=self.epanet_api.getLinkNameID(),
+                                              valves=self.epanet_api.getLinkValveNameID(),
+                                              pumps=self.epanet_api.getLinkPumpNameID(),
+                                              tanks=self.epanet_api.getNodeTankNameID())
         if general_params is not None:
             self.set_general_parameters(**general_params)
 
@@ -353,6 +356,9 @@ class WaterDistributionNetworkScenarioSimulator():
                 - SENSOR_TYPE_NODE_DEMAND     = 3
                 - SENSOR_TYPE_LINK_FLOW       = 4
                 - SENSOR_TYPE_LINK_QUALITY    = 5
+                - SENSOR_TYPE_VALVE_STATE     = 6
+                - SENSOR_TYPE_PUMP_STATE      = 7
+                - SENSOR_TYPE_TANK_LEVEL      = 8
         sensor_locations : `list[str]`
             Locations (IDs) of sensors.
         """
@@ -366,6 +372,12 @@ class WaterDistributionNetworkScenarioSimulator():
             self.__sensor_config.quality_node_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_LINK_QUALITY:
             self.__sensor_config.quality_link_sensors = sensor_locations
+        elif sensor_type == SENSOR_TYPE_VALVE_STATE:
+            self.__sensor_config.valve_state_sensors = sensor_locations
+        elif sensor_type == SENSOR_TYPE_PUMP_STATE:
+            self.__sensor_config.pump_state_sensors = sensor_locations
+        elif sensor_type == SENSOR_TYPE_TANK_LEVEL:
+            self.__sensor_config.tank_level_sensors = sensor_locations
         else:
             raise ValueError(f"Unknown sensor type '{sensor_type}'")
 
@@ -425,9 +437,11 @@ class WaterDistributionNetworkScenarioSimulator():
                 # TODO: Differs from the step-by-step simulation!
                 valves_state = np.array([[] for _ in range(res.Pressure.shape[0])])
 
+            tanks_level = np.array([[] for _ in range(res.Pressure.shape[0])])  # TODO: No tanks level data available?
+
             return ScadaData(self.sensor_config, res.Pressure[:,:], res.Flow[:,:], res.Demand[:,:],
                              res.NodeQuality[:,:], res.LinkQuality[:,:], pumps_state,
-                             valves_state, res.Time[:], self.sensor_reading_events,
+                             valves_state, tanks_level, res.Time[:], self.sensor_reading_events,
                              self.sensor_noise)
 
     def run_simulation_as_generator(self, hyd_export:str=None,
@@ -506,6 +520,7 @@ class WaterDistributionNetworkScenarioSimulator():
                 quality_node_data = self.epanet_api.getNodeActualQuality().reshape(1, -1)
                 quality_link_data = self.epanet_api.getLinkActualQuality().reshape(1, -1)
                 pumps_state_data = self.epanet_api.getLinkPumpState().reshape(1,-1)
+                tanks_level_data = self.epanet_api.getNodeTankVolume().reshape(1,-1)
 
                 link_valve_idx = self.epanet_api.getLinkValveIndex()
                 valves_state_data = self.epanet_api.getLinkStatus(link_valve_idx).reshape(1,-1)
@@ -513,7 +528,7 @@ class WaterDistributionNetworkScenarioSimulator():
 
                 scada_data = ScadaData(self.__sensor_config, pressure_data, flow_data, demand_data,
                                     quality_node_data, quality_link_data, pumps_state_data,
-                                    valves_state_data, np.array([total_time]),
+                                    valves_state_data, tanks_level_data, np.array([total_time]),
                                     self.__sensor_reading_events, self.__sensor_noise)
 
                 # Yield results

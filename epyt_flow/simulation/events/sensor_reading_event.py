@@ -20,6 +20,9 @@ class SensorReadingEvent(Event):
         - SENSOR_TYPE_NODE_DEMAND       = 3
         - SENSOR_TYPE_LINK_FLOW         = 4
         - SENSOR_TYPE_LINK_QUALITY      = 5
+        - SENSOR_TYPE_VALVE_STATE       = 6
+        - SENSOR_TYPE_PUMP_STATE        = 7
+        - SENSOR_TYPE_TANK_LEVEL        = 8
     """
     def __init__(self, sensor_id:str, sensor_type:int, **kwds):
         if not isinstance(sensor_id, str):

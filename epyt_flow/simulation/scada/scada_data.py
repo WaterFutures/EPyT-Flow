@@ -31,6 +31,8 @@ class ScadaData(Serializable):
         States of all pumps.
     valves_state_data_raw : `numpy.ndarray`
         States of all valves.
+    tanks_level_data_raw : `numpy.ndarray`
+        Water levels in all tanks.
     sensor_readings_time : `numpy.ndarray`
         Time (seconds since simulation start) for each sensor reading row 
         in `sensor_readings_data_raw`.
@@ -49,8 +51,9 @@ class ScadaData(Serializable):
     def __init__(self, sensor_config:SensorConfig, pressure_data_raw:numpy.ndarray,
                  flow_data_raw:numpy.ndarray, demand_data_raw:numpy.ndarray,
                  node_quality_data_raw:numpy.ndarray, link_quality_data_raw:numpy.ndarray,
-                 pumps_state_data_raw:numpy.ndarray, valves_state_data_raw,
-                 sensor_readings_time:numpy.ndarray, sensor_faults:list[SensorFault]=[],
+                 pumps_state_data_raw:numpy.ndarray, valves_state_data_raw:numpy.ndarray,
+                 tanks_level_data_raw:numpy.ndarray, sensor_readings_time:numpy.ndarray,
+                 sensor_faults:list[SensorFault]=[],
                  sensor_noise:SensorNoise=None, **kwds):
         if not isinstance(sensor_config, SensorConfig):
             raise ValueError("'sensor_config' must be an instance of "+\
@@ -77,6 +80,9 @@ class ScadaData(Serializable):
         if not isinstance(valves_state_data_raw, np.ndarray):
             raise ValueError("'valves_state_data_raw' must be an instance of 'numpy.ndarray' "+\
                              f"but no of '{type(valves_state_data_raw)}'")
+        if not isinstance(tanks_level_data_raw, np.ndarray):
+            raise ValueError("'tanks_level_data_raw' must be an instance of 'numpy.ndarray'"+\
+                             f" but not of '{type(tanks_level_data_raw)}'")
         if not isinstance(sensor_readings_time, np.ndarray):
             raise ValueError("'sensor_readings_time' must be an instance of 'numpy.ndarray' "+\
                              f"but not of '{type(sensor_readings_time)}'")
@@ -97,7 +103,10 @@ class ScadaData(Serializable):
                     flow_data_raw.shape[0] == n_time_steps,
                     demand_data_raw.shape[0] == n_time_steps,
                     node_quality_data_raw.shape[0] == n_time_steps,
-                    link_quality_data_raw.shape[0] == n_time_steps]):
+                    link_quality_data_raw.shape[0] == n_time_steps,
+                    valves_state_data_raw.shape[0] == n_time_steps,
+                    pumps_state_data_raw.shape[0] == n_time_steps,
+                    tanks_level_data_raw.shape[0] == n_time_steps]):
             raise ValueError("Shape mismatch detected")
         if len(valves_state_data_raw) != 0:
             if not valves_state_data_raw.shape[0] == n_time_steps:
@@ -105,7 +114,9 @@ class ScadaData(Serializable):
         if len(pumps_state_data_raw) != 0:
             if not pumps_state_data_raw.shape[0] == n_time_steps:
                 raise ValueError("Shape mismatch detected")
-
+        if len(tanks_level_data_raw) != 0:
+            if not tanks_level_data_raw.shape[0] == n_time_steps:
+                raise ValueError("Shape mismatch detected")
 
         self.__sensor_config = sensor_config
         self.__sensor_noise = sensor_noise
@@ -118,6 +129,7 @@ class ScadaData(Serializable):
         self.__sensor_readings_time = sensor_readings_time
         self.__pumps_state_data_raw = pumps_state_data_raw
         self.__valves_state_data_raw = valves_state_data_raw
+        self.__tanks_level_data_raw = tanks_level_data_raw
 
         self.__init()
 
@@ -179,6 +191,10 @@ class ScadaData(Serializable):
     def valves_state_data_raw(self) -> numpy.ndarray:
         return deepcopy(self.__valves_state_data_raw)
 
+    @property
+    def tanks_level_data_raw(self) -> numpy.ndarray:
+        return deepcopy(self.__tanks_level_data_raw)
+
     def __init(self):
         self.__apply_sensor_noise = lambda x: x
         if self.__sensor_noise is not None:
@@ -202,6 +218,15 @@ class ScadaData(Serializable):
             elif sensor_fault.sensor_type == SENSOR_TYPE_LINK_QUALITY:
                 idx = self.__sensor_config.get_index_of_reading(
                     link_quality_sensor=sensor_fault.sensor_id)
+            elif sensor_fault.sensor_type == SENSOR_TYPE_VALVE_STATE:
+                idx = self.__sensor_config.get_index_of_reading(
+                    valve_state_sensor=sensor_fault.sensor_id)
+            elif sensor_fault.sensor_type == SENSOR_TYPE_PUMP_STATE:
+                idx = self.__sensor_config.get_index_of_reading(
+                    pump_state_sensor=sensor_fault.sensor_id)
+            elif sensor_fault.sensor_type == SENSOR_TYPE_TANK_LEVEL:
+                idx = self.__sensor_config.get_index_of_reading(
+                    tank_level_sensor=sensor_fault.sensor_id)
 
             self.__apply_sensor_faults.append((idx, sensor_fault.apply))
 
@@ -216,7 +241,8 @@ class ScadaData(Serializable):
                                            "link_quality_data_raw": self.__link_quality_data_raw,
                                            "sensor_readings_time": self.__sensor_readings_time,
                                            "pumps_state_data_raw": self.__pumps_state_data_raw,
-                                           "valves_state_data_raw": self.__valves_state_data_raw}
+                                           "valves_state_data_raw": self.__valves_state_data_raw,
+                                           "tanks_level_data_raw": self.__tanks_level_data_raw}
 
     def __eq__(self, other) -> bool:
         return self.__sensor_config == other.sensor_config \
@@ -229,7 +255,8 @@ class ScadaData(Serializable):
             and np.all(self.__link_quality_data_raw == other.link_quality_data_raw) \
             and np.all(self.__sensor_readings_time == other.sensor_readings_time) \
             and np.all(self.__pumps_state_data_raw == other.pumps_state_data_raw) \
-            and np.all(self.__valves_state_data_raw == other.valves_state_data_raw)
+            and np.all(self.__valves_state_data_raw == other.valves_state_data_raw) \
+            and np.all(self.__tanks_level_data_raw == other.tanks_level_data_raw)
 
     def __str__(self) -> str:
         return f"sensor_config: {self.__sensor_config} sensor_noise: {self.__sensor_noise} "+\
@@ -240,7 +267,8 @@ class ScadaData(Serializable):
             f"link_quality_data_raw: {self.__link_quality_data_raw} "+\
             f"sensor_readings_time: {self.__sensor_readings_time} "+\
             f"pumps_state_data_raw: {self.__pumps_state_data_raw} "+\
-            f"valves_state_data_raw: {self.__valves_state_data_raw}"
+            f"valves_state_data_raw: {self.__valves_state_data_raw}"+\
+            f"tanks_level_data_raw: {self.__tanks_level_data_raw}"
 
     def change_sensor_config(self, sensor_config:SensorConfig) -> None:
         """
@@ -326,6 +354,8 @@ class ScadaData(Serializable):
             (self.__pumps_state_data_raw, other.pumps_state_data_raw), axis=0)
         self.__valves_state_data_raw = np.concatenate(
             (self.__valves_state_data_raw, other.valves_state_data_raw), axis=0)
+        self.__tanks_level_data_raw = np.concatenate(
+            (self.__tanks_level_data_raw, other.tanks_level_data_raw), axis=0)
 
     def get_data(self) -> numpy.ndarray:
         """
@@ -342,14 +372,13 @@ class ScadaData(Serializable):
                                                                 self.__flow_data_raw,
                                                                 self.__demand_data_raw,
                                                                 self.__node_quality_data_raw,
-                                                                self.__link_quality_data_raw)
+                                                                self.__link_quality_data_raw,
+                                                                self.__pumps_state_data_raw,
+                                                                self.__valves_state_data_raw,
+                                                                self.__tanks_level_data_raw)
 
         # Apply sensor uncertainties
         sensor_readings = self.__apply_sensor_noise(sensor_readings)
-
-        # Append actuator states
-        sensor_readings = np.concatenate(
-            (sensor_readings, self.__pumps_state_data_raw, self.__valves_state_data_raw), axis=1)
 
         # Apply sensor faults
         for idx, f in self.__apply_sensor_faults:

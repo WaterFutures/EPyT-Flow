@@ -255,6 +255,18 @@ class ScenarioConfig(Serializable):
             link_quality_sensors = sensor_config["link_quality_sensors"]
         else:
             link_quality_sensors = []
+        if "tank_level_sensors" in sensor_config.keys():
+            tank_level_sensors = sensor_config["tank_level_sensor"]
+        else:
+            tank_level_sensors = []
+        if "valve_state_sensors" in sensor_config.keys():
+            valve_state_sensors = sensor_config["valve_state_sensors"]
+        else:
+            valve_state_sensors = []
+        if "pump_state_sensors" in sensor_config.keys():
+            pump_state_sensors = sensor_config["pump_state_sensors"]
+        else:
+            pump_state_sensors = []
 
         # Uncertainties
         if "uncertainties" in data.keys():
@@ -360,9 +372,13 @@ class ScenarioConfig(Serializable):
         from .scenario_simulator import WaterDistributionNetworkScenarioSimulator
         with WaterDistributionNetworkScenarioSimulator(f_inp_in) as scenario:
             sensor_config = SensorConfig(scenario.sensor_config.nodes,
-                                         scenario.sensor_config.links, pressure_sensors,
+                                         scenario.sensor_config.links,
+                                         scenario.sensor_config.valves,
+                                         scenario.sensor_config.pumps,
+                                         scenario.sensor_config.tanks, pressure_sensors,
                                          flow_sensors, demand_sensors, node_quality_sensors,
-                                         link_quality_sensors)
+                                         link_quality_sensors, valve_state_sensors,
+                                         pump_state_sensors, tank_level_sensors)
 
         # Create final scenario configuration
         return ScenarioConfig(f_inp_in, f_msx_in, general_params, sensor_config, [], sensor_noise,

@@ -210,6 +210,7 @@ def load_hanoi(download_dir:str=get_temp_folder(),
         config = ScenarioConfig(f_inp_in=config.f_inp_in,
                                 sensor_config=SensorConfig(nodes=[f"{i}" for i in range(1, 33)],
                                                            links=[f"{i}" for i in range(1, 35)],
+                                                           tanks=[], valves=[], pumps=[],
                                                            pressure_sensors=["13", "16", "22", "30"],
                                                            flow_sensors=["1"]))
 
@@ -246,8 +247,9 @@ def load_ltown(download_dir:str=get_temp_folder(),
 
     if include_default_sensor_placement is True:
         config = ScenarioConfig(f_inp_in=config.f_inp_in,
-                                sensor_config=SensorConfig(nodes=[f"n{i}" for i in range(1, 783)],
-                                                           links=[f"p{i}" for i in range(1, 906)],
+                                sensor_config=SensorConfig(nodes=[f"n{i}" for i in range(1, 783)] + ["T1"],
+                                                           links=[f"p{i}" for i in range(1, 906)] + ["PUMP_1", "PRV-1", "PRV-2", "PRV-3"],
+                                                           tanks=["T1"], pumps=["PUMP_1"], valves=["PRV-1", "PRV-2", "PRV-3"],
                                                            pressure_sensors=["n54", "n105", "n114", "n163", "n188", "n229",
                                                                              "n288", "n296", "n332", "n342", "n410",\
                                                                              "n415", "n429", "n458", "n469", "n495", \
