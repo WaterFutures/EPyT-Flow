@@ -66,4 +66,36 @@ Example for storing and loading a scenario configuration to/from a file:
 Advanced
 ++++++++
 
-TODO
+To  make any new class (e.g. custom events) serializable, the class must be derived from 
+:class:`~epyt_flow.serialization.Serializable` and be marked by the 
+:func:`~epyt_flow.serialization.serializable` decorator.
+
+Any class derived from :class:`~epyt_flow.serialization.Serializable`  must implement the 
+:func:`~epyt_flow.serialization.Serializable.get_attributes` method. 
+This method is supposed to return a dictionary of the attributes completely describing the instance -- 
+those will be passed to the constructor when deserializing an instance of this class.
+
+The decorator requires a **unique ID** of the class that is made serializeable -- 
+i.e. every class (more general every data type) is assigned a unique ID to make it 
+recognizable by the parser. All reserved IDs (you cannot use those!) are listed in 
+:mod:`epyt_flow.serialization.py` -- right now any number greater than 17 is free for use.
+
+Example of making a new class `MyClass` serializable -- this class is assigned the ID `18`:
+
+.. code-block:: python
+
+    @serializable(18)
+    class MyNewClass(Serializable):
+        def __init__(self, my_var_1, my_var_2, **kwds):
+            self.my_var_1 = my_var_1
+            self.my_var_2 = my_var_2
+
+            # Other initialization logic ...
+
+            super().__init__(**kwds)
+        
+        def get_attributes(self) -> dict:
+            return super().get_attributes() | \
+                {"my_var_1": self.my_var_1, "my_var_2": self.my_var_2}
+
+        # Other class methods ...
