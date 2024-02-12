@@ -123,7 +123,63 @@ users can also implement completly custom events by either implementing a `syste
 System events
 -------------
 
-TODO
+System events are events that directly affect the simulation (e.g. leakages, actuator events, etc.).
+System events must be derived from :class:`~epyt_flow.simulation.events.system_event.SystemEvent` 
+and must implement the :func:`~epyt_flow.simulation.events.system_event.SystemEvent.apply` method. 
+This function is called in every simulation step to apply the event's logic by making use of 
+the EPANET and EPANET-MSX interface.
+
+.. note::
+    Note that the function gets the current simulation time 
+    passed as an argument and must respect the start and end time of the event 
+    as stored in its parent class :class:`~epyt_flow.simulation.events.event.Event`.
+
+Optionally, the :func:`~epyt_flow.simulation.events.system_event.SystemEvent.init` method can also 
+be override for running some initialization logic -- make sure to call the parent's 
+:func:`~epyt_flow.simulation.events.system_event.SystemEvent.init` first.
+
+Example of a system event that activates a pump:
+
+.. code-block:: python
+
+    class MySystemEvent(SystemEvent):
+        def __init__(self, **kwds):
+            self.pump_link_idx = None
+
+            super().__init__(**kwds)
+        
+        def init(self, epanet_api:epyt.epanet) -> None:
+            super().init(epanet_api)
+
+            # Custom init logic if needed ...
+            pump_idx = self._epanet_api.getLinkPumpNameID().index("9")
+            pump_link_idx = self._epanet_api.getLinkPumpIndex()[pump_idx]
+
+        def apply(self, cur_time:int) -> None:
+            # Activate pump "9" while this event is active
+            if self.start_time <= cur_time < self.end_time:
+                pump_status = 2
+                self._epanet_api.setLinkStatus(self.pump_link_idx, pump_status)
+
+
+System events can be added to a scenario by calling 
+:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.add_system_event`  
+of a :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator` 
+instance BEFORE running the simulation:
+
+.. code-block:: python
+
+    # Open/Create a new scenario based on the Net1 network
+    config = load_net1()
+    with WaterDistributionNetworkScenarioSimulator(scenario_config=config) as sim:
+        # Setup scenario settings
+        # ...
+
+        # Add the system event implemented in the "MySystemEvent" class
+        sim.add_system_event(MySystemEvent(start_time=5000, end_time=100000))
+
+        # Run simulation
+        # ....
 
 
 Sensor reading events
@@ -156,6 +212,11 @@ Example of a custom sensor reading event that adds Gaussian noise to the sensor 
                     sensor_readings[i] += numpy.random.normal(loc=0, scale=1)
             
             return sensor_readings
+
+System events can be added to a scenario by calling 
+:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.add_sensor_reading_event`  
+of a :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator` 
+instance BEFORE running the simulation:
 
 .. note::
 
