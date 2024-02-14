@@ -18,6 +18,28 @@ or after when post-processing the results a :class:`~epyt_flow.simulation.scada.
 this becomes handy in cases where multiple sensor configurations have to be evaluated without 
 having to re-run the simulation every time.
 
+EPyT-Flow supports different types of sensors:
+
++---------------------------+--------------------------------------------------------------------------------+
+| Identifier                | Description                                                                    |
++===========================+================================================================================+
+| SENSOR_TYPE_NODE_PRESSURE | Pressure at a node.                                                            |
++---------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_NODE_QUALITY  | Water quality (e.g. chemical concentration, water age, etc.) at a node.        |
++---------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_NODE_DEMAND   | Demand (i.e. water consumption) at a node.                                     |
++---------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_LINK_FLOW     | Flow rate at a link/pipe.                                                      |
++---------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_LINK_QUALITY  | Water quality (e.g. chemical concentration, water age, etc.) at a link/pipe.   |
++---------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_VALVE_STATE   | State of a valve.                                                              |
++---------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_PUMP_STATE    | State of a pump.                                                               |
++---------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_TANK_LEVEL    | Water level in a tank.                                                         |
++---------------------------+--------------------------------------------------------------------------------+
+
 Example for specifying a sensor placement BEFORE the simulation is run:
 
 .. code-block:: python
@@ -69,6 +91,25 @@ of a given :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
 
     # Compute final sensor readings that are observed
     observed_sensor_readings = scada_data.get_data()
+
+
+.. note::
+    The function :func:`~epyt_flow.simulation.sensor_config.SensorConfig.get_index_of_reading` of 
+    the sensor configuration can be used to get the index of a particular sensor in the final 
+    sensor reading numpy array.
+
+    Example for getting the pressure readings at node "5":
+
+    .. code-block:: python
+
+        # Load and run scenario simulation ...
+
+        # Compute final sensor readings that are observed
+        observed_sensor_readings = scada_data.get_data()
+
+        # Access pressure readings at node "5"
+        pressure_sensor_5_idx = scada_data.sensor_config.get_index_of_reading(pressure_sensor="5")
+        pressures_at_node_5 = observed_sensor_readings[:,pressure_sensor_5_idx]
 
 
 Importing and Exporting
