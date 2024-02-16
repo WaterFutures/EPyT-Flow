@@ -481,6 +481,8 @@ class WaterDistributionNetworkScenarioSimulator():
 
         tmp_file = self.__find_temporary_file()
 
+        requested_time_step = self.epanet_api.getTimeHydraulicStep()
+
         try:
             # Run simulation step by step
             total_time = 0
@@ -496,9 +498,10 @@ class WaterDistributionNetworkScenarioSimulator():
                     tstep = 0
                     first_itr = False
 
-                # Apply system events
-                for event in self.__system_events:
-                    event.apply(total_time)
+                # Apply system events in a regular time interval only!
+                if (total_time + tstep) % requested_time_step == 0:
+                    for event in self.__system_events:
+                        event.apply(total_time + tstep)
 
                 # Compute current time step
                 t = self.epanet_api.runHydraulicAnalysis()
@@ -531,8 +534,9 @@ class WaterDistributionNetworkScenarioSimulator():
                                     valves_state_data, tanks_level_data, np.array([total_time]),
                                     self.__sensor_reading_events, self.__sensor_noise)
 
-                # Yield results
-                yield scada_data
+                # Yield results in a regular time interval only!
+                if total_time % requested_time_step == 0:
+                    yield scada_data
 
                 # Apply control modules
                 for control in self.__controls:
