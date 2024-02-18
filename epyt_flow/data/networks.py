@@ -27,7 +27,7 @@ def load_net1(download_dir:str=get_temp_folder()) -> ScenarioConfig:
     download_dir : `str`, optional
         Path to the directory where the .inp file is stored.
 
-        The default is the OS specific temporary directory (e.g. "C:\\temp", "/tmp/", etc.)
+        The default is the OS specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
     
     Returns
     -------
@@ -52,7 +52,7 @@ def load_net2(download_dir:str=get_temp_folder()) -> ScenarioConfig:
     download_dir : `str`, optional
         Path to the directory where the .inp file is stored.
 
-        The default is the OS specific temporary directory (e.g. "C:\\temp", "/tmp/", etc.)
+        The default is the OS specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
     
     Returns
     -------
@@ -77,7 +77,7 @@ def load_net3(download_dir:str=get_temp_folder()) -> ScenarioConfig:
     download_dir : `str`, optional
         Path to the directory where the .inp file is stored.
 
-        The default is the OS specific temporary directory (e.g. "C:\\temp", "/tmp/", etc.)
+        The default is the OS specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
     
     Returns
     -------
@@ -102,7 +102,7 @@ def load_richmond(download_dir:str=get_temp_folder()) -> ScenarioConfig:
     download_dir : `str`, optional
         Path to the directory where the .inp file is stored.
 
-        The default is the OS specific temporary directory (e.g. "C:\\temp", "/tmp/", etc.)
+        The default is the OS specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
     
     Returns
     -------
@@ -127,7 +127,7 @@ def load_anytown(download_dir:str=get_temp_folder()) -> ScenarioConfig:
     download_dir : `str`, optional
         Path to the directory where the .inp file is stored.
 
-        The default is the OS specific temporary directory (e.g. "C:\\temp", "/tmp/", etc.)
+        The default is the OS specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
     
     Returns
     -------
@@ -156,7 +156,7 @@ def load_kentucky(wdn_id:int=1, download_dir:str=get_temp_folder()) -> ScenarioC
     download_dir : `str`, optional
         Path to the directory where the .inp file is stored.
 
-        The default is the OS specific temporary directory (e.g. "C:\\temp", "/tmp/", etc.)
+        The default is the OS specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
     
     Returns
     -------
@@ -187,7 +187,7 @@ def load_hanoi(download_dir:str=get_temp_folder(),
     download_dir : `str`, optional
         Path to the directory where the .inp file is stored.
 
-        The default is the OS specific temporary directory (e.g. "C:\\temp", "/tmp/", etc.)
+        The default is the OS specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
     include_default_sensor_placement : `bool`, optional
         If True, a default sensor placement will be included in the returned scenario configuration.
 
@@ -227,9 +227,11 @@ def load_ltown(download_dir:str=get_temp_folder(),
     download_dir : `str`, optional
         Path to the directory where the .inp file is stored.
 
-        The default is the OS specific temporary directory (e.g. "C:\\temp", "/tmp/", etc.)
+        The default is the OS specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
     include_default_sensor_placement : `bool`, optional
-        If True, a default sensor placement will be included in the returned scenario configuration.
+        If True, a default sensor placement (as proposed in the BattLeDim challenge -- 
+        see https://github.com/KIOS-Research/BattLeDIM) will be included in the returned 
+        scenario configuration.
 
         The default is False
     
