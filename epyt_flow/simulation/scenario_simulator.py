@@ -294,8 +294,8 @@ class WaterDistributionNetworkScenarioSimulator():
 
         node_idx = self.epanet_api.getNodeIndex(node_id)
         self.epanet_api.addPattern(demand_pattern_id, demand_pattern)
-        self.epanet_api.addNodeJunctionDemand(node_idx, base_demand, demand_pattern_id,
-                                              demand_pattern_id)
+        self.epanet_api.setNodeJunctionData(node_idx, self.epanet_api.getNodeElevations(node_idx),
+                                            base_demand, demand_pattern_id)
 
     def add_control(self, control:AdvancedControlModule) -> None:
         """
