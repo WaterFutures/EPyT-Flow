@@ -81,7 +81,7 @@ class WaterDistributionNetworkScenarioSimulator():
         self.__model_uncertainty = None
         self.__sensor_noise = None
         self.__sensor_config = None
-        self.__controls = None
+        self.__controls = []
         self.__system_events = []
         self.__sensor_reading_events = []
 
