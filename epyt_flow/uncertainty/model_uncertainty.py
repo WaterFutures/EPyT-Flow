@@ -57,44 +57,44 @@ class ModelUncertainty(Serializable):
                  parameters_uncertainty:Uncertainty=None, **kwds):
         if pipe_length_uncertainty is not None:
             if not isinstance(pipe_length_uncertainty, Uncertainty):
-                raise ValueError("'pipe_length_uncertainty' must be an instance of "+\
-                                 "'epyt_flow.uncertainty.Uncertainty' but not of "+\
-                                 f"'{type(pipe_length_uncertainty)}'")
+                raise TypeError("'pipe_length_uncertainty' must be an instance of "+\
+                                "'epyt_flow.uncertainty.Uncertainty' but not of "+\
+                                    f"'{type(pipe_length_uncertainty)}'")
         if pipe_roughness_uncertainty is not None:
             if not isinstance(pipe_roughness_uncertainty, Uncertainty):
-                raise ValueError("'pipe_roughness_uncertainty' must be an instance of "+\
-                                 "'epyt_flow.uncertainty.Uncertainty' but not of "+\
-                                 f"'{type(pipe_roughness_uncertainty)}'")
+                raise TypeError("'pipe_roughness_uncertainty' must be an instance of "+\
+                                "'epyt_flow.uncertainty.Uncertainty' but not of "+\
+                                    f"'{type(pipe_roughness_uncertainty)}'")
         if pipe_diameter_uncertainty is not None:
             if not isinstance(pipe_diameter_uncertainty, Uncertainty):
-                raise ValueError("'pipe_diameter_uncertainty' must be an instance of "+\
-                                 "'epyt_flow.uncertainty.Uncertainty' but not of "+\
-                                 f"'{type(pipe_diameter_uncertainty)}'")
+                raise TypeError("'pipe_diameter_uncertainty' must be an instance of "+\
+                                "'epyt_flow.uncertainty.Uncertainty' but not of "+\
+                                    f"'{type(pipe_diameter_uncertainty)}'")
         if demand_base_uncertainty is not None:
             if not isinstance(demand_base_uncertainty, Uncertainty):
-                raise ValueError("'demand_base_uncertainty' must be an instance of "+\
-                                 "'epyt_flow.uncertainty.Uncertainty' but not of "+\
-                                 f"'{type(demand_base_uncertainty)}'")
+                raise TypeError("'demand_base_uncertainty' must be an instance of "+\
+                                "'epyt_flow.uncertainty.Uncertainty' but not of "+\
+                                    f"'{type(demand_base_uncertainty)}'")
         if demand_pattern_uncertainty is not None:
             if not isinstance(demand_pattern_uncertainty, Uncertainty):
-                raise ValueError("'demand_pattern_uncertainty' must be an instance of "+\
-                                 "'epyt_flow.uncertainty.Uncertainty' but not of "+\
-                                 f"'{type(demand_pattern_uncertainty)}'")
+                raise TypeError("'demand_pattern_uncertainty' must be an instance of "+\
+                                "'epyt_flow.uncertainty.Uncertainty' but not of "+\
+                                    f"'{type(demand_pattern_uncertainty)}'")
         if elevation_uncertainty is not None:
             if not isinstance(elevation_uncertainty, Uncertainty):
-                raise ValueError("'elevation_uncertainty' must be an instance of "+\
-                                 "'epyt_flow.uncertainty.Uncertainty' but not of "+\
-                                 f"'{type(elevation_uncertainty)}'")
+                raise TypeError("'elevation_uncertainty' must be an instance of "+\
+                                "'epyt_flow.uncertainty.Uncertainty' but not of "+\
+                                    f"'{type(elevation_uncertainty)}'")
         if constants_uncertainty is not None:
             if not isinstance(constants_uncertainty, Uncertainty):
-                raise ValueError("'constants_uncertainty' must be an instance of "+\
-                                 "'epyt_flow.uncertainty.Uncertainty' but not of "+\
-                                 f"'{type(constants_uncertainty)}'")
+                raise TypeError("'constants_uncertainty' must be an instance of "+\
+                                "'epyt_flow.uncertainty.Uncertainty' but not of "+\
+                                    f"'{type(constants_uncertainty)}'")
         if parameters_uncertainty is not None:
             if not isinstance(parameters_uncertainty, Uncertainty):
-                raise ValueError("'parameters_uncertainty' must be an instance of "+\
-                                 "'epyt_flow.uncertainty.Uncertainty' but not of "+\
-                                 f"'{type(parameters_uncertainty)}'")
+                raise TypeError("'parameters_uncertainty' must be an instance of "+\
+                                "'epyt_flow.uncertainty.Uncertainty' but not of "+\
+                                    f"'{type(parameters_uncertainty)}'")
 
         self.__pipe_length = pipe_length_uncertainty
         self.__pipe_roughness = pipe_roughness_uncertainty

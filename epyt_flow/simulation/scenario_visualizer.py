@@ -15,9 +15,9 @@ class ScenarioVisualizer():
     """
     def __init__(self, scenario:WaterDistributionNetworkScenarioSimulator):
         if not isinstance(scenario, WaterDistributionNetworkScenarioSimulator):
-            raise ValueError("'scenario' must be an instance of "+\
-                             "'epyt_flow.simulation.WaterDistributionNetworkScenarioSimulator' "+\
-                             f"but not of '{type(scenario)}'")
+            raise TypeError("'scenario' must be an instance of "+\
+                            "'epyt_flow.simulation.WaterDistributionNetworkScenarioSimulator' "+\
+                                f"but not of '{type(scenario)}'")
 
         self.__scenario = scenario
 

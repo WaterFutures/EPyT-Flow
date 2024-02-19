@@ -63,16 +63,16 @@ class WaterDistributionNetworkScenarioSimulator():
             raise ValueError("Either 'f_inp_in' or 'scenario_config' must be set.")
         if f_inp_in is not None:
             if not isinstance(f_inp_in, str):
-                raise ValueError("'f_inp_in' must be an instance of 'str' but not of "+\
-                                 f"'{type(f_inp_in)}'")
+                raise TypeError("'f_inp_in' must be an instance of 'str' but not of "+\
+                                f"'{type(f_inp_in)}'")
         if f_msx_in is not None:
             if not isinstance(f_msx_in, str):
-                raise ValueError("'f_msx_in' must be an instance of 'str' but not of "+\
-                                 f"'{type(f_msx_in)}'")
+                raise TypeError("'f_msx_in' must be an instance of 'str' but not of "+\
+                                f"'{type(f_msx_in)}'")
         if scenario_config is not None:
             if not isinstance(scenario_config, ScenarioConfig):
-                raise ValueError("'scenario_config' must be an instance of "+\
-                                 "'epyt_flow.simulation.ScenarioConfig' but not of "+\
+                raise TypeError("'scenario_config' must be an instance of "+\
+                                "'epyt_flow.simulation.ScenarioConfig' but not of "+\
                                     f"'{type(scenario_config)}'")
 
         self.epanet_api = None
@@ -130,8 +130,8 @@ class WaterDistributionNetworkScenarioSimulator():
     @sensor_config.setter
     def sensor_config(self, sensor_config:SensorConfig) -> None:
         if not isinstance(sensor_config, SensorConfig):
-            raise ValueError("'sensor_config' must be an instance of "+\
-                             "'epyt_flow.simulation.SensorConfig' but not of "+\
+            raise TypeError("'sensor_config' must be an instance of "+\
+                            "'epyt_flow.simulation.SensorConfig' but not of "+\
                                 f"'{type(sensor_config)}'")
 
         self.__sensor_config = sensor_config
@@ -307,8 +307,8 @@ class WaterDistributionNetworkScenarioSimulator():
             Control module.
         """
         if not isinstance(control, AdvancedControlModule):
-            raise ValueError("'control' must be an instance of "+\
-                             "'epyt_flow.simulation.scada.AdvancedControlModule' not of "+\
+            raise TypeError("'control' must be an instance of "+\
+                            "'epyt_flow.simulation.scada.AdvancedControlModule' not of "+\
                                 f"'{type(control)}'")
 
         self.__controls.append(control)
@@ -323,8 +323,8 @@ class WaterDistributionNetworkScenarioSimulator():
             Leakage.
         """
         if not isinstance(leakage_event, Leakage):
-            raise ValueError("'leakage_event' must be an instance of "+\
-                             "'epyt_flow.simulation.events.Leakage' not of "+\
+            raise TypeError("'leakage_event' must be an instance of "+\
+                            "'epyt_flow.simulation.events.Leakage' not of "+\
                                 f"'{type(leakage_event)}'")
 
         self.__system_events.append(leakage_event)
@@ -340,8 +340,8 @@ class WaterDistributionNetworkScenarioSimulator():
             System event.
         """
         if not isinstance(event, SystemEvent):
-            raise ValueError("'event' must be an instance of "+\
-                             f"'epyt_flow.simulation.events.SystemEvent' not of '{type(event)}'")
+            raise TypeError("'event' must be an instance of "+\
+                            f"'epyt_flow.simulation.events.SystemEvent' not of '{type(event)}'")
 
         self.__system_events.append(event)
 
@@ -355,8 +355,8 @@ class WaterDistributionNetworkScenarioSimulator():
             Sensor fault specifications.
         """
         if not isinstance(sensor_fault_event, SensorFault):
-            raise ValueError("'sensor_fault_event' must be an instance of "+\
-                             "'epyt_flow.simulation.events.SensorFault' not of "+\
+            raise TypeError("'sensor_fault_event' must be an instance of "+\
+                            "'epyt_flow.simulation.events.SensorFault' not of "+\
                                 f"'{type(sensor_fault_event)}'")
 
         self.__sensor_reading_events.append(sensor_fault_event)
@@ -371,8 +371,8 @@ class WaterDistributionNetworkScenarioSimulator():
             Sensor reading event.
         """
         if not isinstance(event, SensorReadingEvent):
-            raise ValueError("'event' must be an instance of "+\
-                             "'epyt_flow.simulation.events.SensorReadingEvent' not of "+\
+            raise TypeError("'event' must be an instance of "+\
+                            "'epyt_flow.simulation.events.SensorReadingEvent' not of "+\
                                 f"'{type(event)}'")
 
         self.__sensor_reading_events.append(event)
@@ -601,8 +601,8 @@ class WaterDistributionNetworkScenarioSimulator():
             Model uncertainty specifications.
         """
         if not isinstance(model_uncertainty, ModelUncertainty):
-            raise ValueError("'model_uncertainty' must be an instance of "+\
-                             "'epyt_flow.uncertainties.ModelUncertainty' but not of "+\
+            raise TypeError("'model_uncertainty' must be an instance of "+\
+                            "'epyt_flow.uncertainties.ModelUncertainty' but not of "+\
                                 f"'{type(model_uncertainty)}'")
 
         self.__model_uncertainty = model_uncertainty
@@ -617,8 +617,8 @@ class WaterDistributionNetworkScenarioSimulator():
             Sensor noise specification.
         """
         if not isinstance(sensor_noise, SensorNoise):
-            raise ValueError("'sensor_noise' must be an instance of "+\
-                             "'epyt_flow.uncertainties.SensorNoise' but not of "+\
+            raise TypeError("'sensor_noise' must be an instance of "+\
+                            "'epyt_flow.uncertainties.SensorNoise' but not of "+\
                                 f"'{type(sensor_noise)}'")
 
         self.__sensor_noise = sensor_noise
@@ -753,8 +753,8 @@ class WaterDistributionNetworkScenarioSimulator():
         if not node_id in self.sensor_config.nodes:
             raise ValueError(f"Unknown node '{node_id}'")
         if not isinstance(pattern, numpy.ndarray):
-            raise ValueError("'pattern' must be an instance of 'numpy.ndarray' "+\
-                             f"but not of '{type(pattern)}'")
+            raise TypeError("'pattern' must be an instance of 'numpy.ndarray' "+\
+                            f"but not of '{type(pattern)}'")
 
         node_idx = self.epanet_api.getNodeIndex(node_id)
         pattern_idx = self.epanet_api.addPattern(pattern_id, pattern)

@@ -60,8 +60,8 @@ class ScadaDataNumpyExport(ScadaDataExport):
             SCADA data to be exported.
         """
         if not isinstance(scada_data, ScadaData):
-            raise ValueError("'scada_data' must be an instance of "+\
-                             "'epyt_flow.simulation.scada_data.ScadaData' and not of "+\
+            raise TypeError("'scada_data' must be an instance of "+\
+                            "'epyt_flow.simulation.scada_data.ScadaData' and not of "+\
                                 f"'{type(scada_data)}'")
 
         np.savez(self.f_out, sensor_readings=scada_data.get_data())
@@ -84,8 +84,8 @@ class ScadaDataXlsxExport(ScadaDataExport):
             SCADA data to be exported.
         """
         if not isinstance(scada_data, ScadaData):
-            raise ValueError("'scada_data' must be an instance of "+\
-                             "'epyt_flow.simulation.scada_data.ScadaData' and not of "+\
+            raise TypeError("'scada_data' must be an instance of "+\
+                            "'epyt_flow.simulation.scada_data.ScadaData' and not of "+\
                                 f"'{type(scada_data)}'")
 
         with pd.ExcelWriter(self.f_out) as writer:
@@ -110,8 +110,8 @@ class ScadaDataMatlabExport(ScadaDataExport):
             SCADA data to be exported.
         """
         if not isinstance(scada_data, ScadaData):
-            raise ValueError("'scada_data' must be an instance of "+\
-                             "'epyt_flow.simulation.scada_data.ScadaData' and not of "+\
+            raise TypeError("'scada_data' must be an instance of "+\
+                            "'epyt_flow.simulation.scada_data.ScadaData' and not of "+\
                                 f"'{type(scada_data)}'")
 
         savemat(self.f_out, {"sensor_readings": scada_data.get_data()})

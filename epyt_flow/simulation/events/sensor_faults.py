@@ -59,8 +59,8 @@ class SensorFaultConstant(SensorFault, Serializable):
     """
     def __init__(self, constant_shift:float, **kwds):
         if not isinstance(constant_shift, float):
-            raise ValueError("'constant_shift' must be an instance of 'float' but no of "+\
-                             f"'{type(constant_shift)}'")
+            raise TypeError("'constant_shift' must be an instance of 'float' but no of "+\
+                            f"'{type(constant_shift)}'")
 
         self.__constant_shift = constant_shift
 

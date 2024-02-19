@@ -26,11 +26,11 @@ class SensorReadingEvent(Event):
     """
     def __init__(self, sensor_id:str, sensor_type:int, **kwds):
         if not isinstance(sensor_id, str):
-            raise ValueError("'sensor_id' must be an instance of 'str' but not of "+\
-                             f"'{type(sensor_id)}'")
+            raise TypeError("'sensor_id' must be an instance of 'str' but not of "+\
+                            f"'{type(sensor_id)}'")
         if not isinstance(sensor_type, int):
-            raise ValueError("'sensor_type' mut be an instance of 'int' but not of "+\
-                             f"'{type(sensor_type)}'")
+            raise TypeError("'sensor_type' mut be an instance of 'int' but not of "+\
+                            f"'{type(sensor_type)}'")
         if not(sensor_type >= 1 and sensor_type <= 5):
             raise ValueError("Invalid value of 'sensor_type'")
 

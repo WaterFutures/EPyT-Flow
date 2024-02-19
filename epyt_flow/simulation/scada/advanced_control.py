@@ -29,8 +29,8 @@ class AdvancedControlModule(ABC):
             API to EPANET for implementing the control module.
         """
         if not isinstance(epanet_api, epyt.epanet):
-            raise ValueError("'epanet_api' must be an instance of 'epyt.epanet' but not of "+\
-                             f"'{type(epanet_api)}'")
+            raise TypeError("'epanet_api' must be an instance of 'epyt.epanet' but not of "+\
+                            f"'{type(epanet_api)}'")
 
         self._epanet_api = epanet_api
 

@@ -18,8 +18,8 @@ def register(env_name:str, env:WaterDistributionNetworkScenarioControlEnv) -> No
     if env_name in environments:
         raise ValueError(f"Environment '{env_name}' already exists.")
     if not issubclass(env, WaterDistributionNetworkScenarioControlEnv):
-        raise ValueError("'env' must be a subclass of "+\
-                         "'epyt_flow.gym.WaterDistributionNetworkScenarioControlEnv'")
+        raise TypeError("'env' must be a subclass of "+\
+                        "'epyt_flow.gym.WaterDistributionNetworkScenarioControlEnv'")
 
     environments[env_name] = env
 

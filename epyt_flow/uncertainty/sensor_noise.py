@@ -17,8 +17,8 @@ class SensorNoise(Serializable):
     """
     def __init__(self, uncertainty:Uncertainty, **kwds):
         if not isinstance(uncertainty, Uncertainty):
-            raise ValueError("'uncertainty' must be an instance of "+\
-                             f"'epyt_flow.uncertainty.Uncertainty' not of {type(uncertainty)}")
+            raise TypeError("'uncertainty' must be an instance of "+\
+                            f"'epyt_flow.uncertainty.Uncertainty' not of {type(uncertainty)}")
 
         self.__uncertainty = uncertainty
 

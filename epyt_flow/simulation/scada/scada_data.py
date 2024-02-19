@@ -56,47 +56,47 @@ class ScadaData(Serializable):
                  sensor_faults:list[SensorFault]=[],
                  sensor_noise:SensorNoise=None, **kwds):
         if not isinstance(sensor_config, SensorConfig):
-            raise ValueError("'sensor_config' must be an instance of "+\
-                             "'epyt_flow.simulation.SensorConfig' but not of "+\
+            raise TypeError("'sensor_config' must be an instance of "+\
+                            "'epyt_flow.simulation.SensorConfig' but not of "+\
                                 f"'{type(sensor_config)}'")
         if not isinstance(pressure_data_raw, np.ndarray):
-            raise ValueError("'pressure_data_raw' must be an instance of 'numpy.ndarray'"+\
-                             f" but not of '{type(pressure_data_raw)}'")
+            raise TypeError("'pressure_data_raw' must be an instance of 'numpy.ndarray'"+\
+                            f" but not of '{type(pressure_data_raw)}'")
         if not isinstance(flow_data_raw, np.ndarray):
-            raise ValueError("'flow_data_raw' must be an instance of 'numpy.ndarray' but not of "+\
-                             f"'{type(flow_data_raw)}'")
+            raise TypeError("'flow_data_raw' must be an instance of 'numpy.ndarray' but not of "+\
+                            f"'{type(flow_data_raw)}'")
         if not isinstance(demand_data_raw, np.ndarray):
-            raise ValueError("'demand_data_raw' must be an instance of 'numpy.ndarray' "+\
-                             f"but not of '{type(demand_data_raw)}'")
+            raise TypeError("'demand_data_raw' must be an instance of 'numpy.ndarray' "+\
+                            f"but not of '{type(demand_data_raw)}'")
         if not isinstance(node_quality_data_raw, np.ndarray):
-            raise ValueError("'node_quality_data_raw' must be an instance of 'numpy.ndarray'"+\
-                             f" but not of '{type(node_quality_data_raw)}'")
+            raise TypeError("'node_quality_data_raw' must be an instance of 'numpy.ndarray'"+\
+                            f" but not of '{type(node_quality_data_raw)}'")
         if not isinstance(link_quality_data_raw, np.ndarray):
-            raise ValueError("'link_quality_data_raw' must be an instance of 'numpy.ndarray'"+\
-                             f" but not of '{type(link_quality_data_raw)}'")
+            raise TypeError("'link_quality_data_raw' must be an instance of 'numpy.ndarray'"+\
+                            f" but not of '{type(link_quality_data_raw)}'")
         if not isinstance(pumps_state_data_raw, np.ndarray):
-            raise ValueError("'pumps_state_data_raw' must be an instance of 'numpy.ndarray' "+\
-                             f"but no of '{type(pumps_state_data_raw)}'")
+            raise TypeError("'pumps_state_data_raw' must be an instance of 'numpy.ndarray' "+\
+                            f"but no of '{type(pumps_state_data_raw)}'")
         if not isinstance(valves_state_data_raw, np.ndarray):
-            raise ValueError("'valves_state_data_raw' must be an instance of 'numpy.ndarray' "+\
-                             f"but no of '{type(valves_state_data_raw)}'")
+            raise TypeError("'valves_state_data_raw' must be an instance of 'numpy.ndarray' "+\
+                            f"but no of '{type(valves_state_data_raw)}'")
         if not isinstance(tanks_level_data_raw, np.ndarray):
-            raise ValueError("'tanks_level_data_raw' must be an instance of 'numpy.ndarray'"+\
-                             f" but not of '{type(tanks_level_data_raw)}'")
+            raise TypeError("'tanks_level_data_raw' must be an instance of 'numpy.ndarray'"+\
+                            f" but not of '{type(tanks_level_data_raw)}'")
         if not isinstance(sensor_readings_time, np.ndarray):
-            raise ValueError("'sensor_readings_time' must be an instance of 'numpy.ndarray' "+\
-                             f"but not of '{type(sensor_readings_time)}'")
+            raise TypeError("'sensor_readings_time' must be an instance of 'numpy.ndarray' "+\
+                            f"but not of '{type(sensor_readings_time)}'")
         if sensor_faults is None or not isinstance(sensor_faults, list):
-            raise ValueError("'sensor_faults' must be a list of "+\
-                             "'epyt_flow.simulation.events.SensorFault' instances but "+\
+            raise TypeError("'sensor_faults' must be a list of "+\
+                            "'epyt_flow.simulation.events.SensorFault' instances but "+\
                                 f"'{type(sensor_faults)}'")
         if len(sensor_faults) != 0:
             if any([not isinstance(f, SensorFault) for f in sensor_faults]):
-                raise ValueError("'sensor_faults' must be a list of "+\
-                                 "'epyt_flow.simulation.event.SensorFault' instances")
+                raise TypeError("'sensor_faults' must be a list of "+\
+                                "'epyt_flow.simulation.event.SensorFault' instances")
         if sensor_noise is not None and not isinstance(sensor_noise, SensorNoise):
-            raise ValueError("'sensor_noise' must be an instance of "+\
-                             "'epyt_flow.uncertainty.SensorNoise' but not of "+\
+            raise TypeError("'sensor_noise' must be an instance of "+\
+                            "'epyt_flow.uncertainty.SensorNoise' but not of "+\
                                 f"'{type(sensor_noise)}'")
         n_time_steps = sensor_readings_time.shape[0]
         if not all([pressure_data_raw.shape[0] == n_time_steps,
@@ -280,8 +280,8 @@ class ScadaData(Serializable):
             New sensor configuration.
         """
         if not isinstance(sensor_config, SensorConfig):
-            raise ValueError("'sensor_config' must be an instance of "+\
-                             "'epyt_flow.simulation.SensorConfig' but not of "+\
+            raise TypeError("'sensor_config' must be an instance of "+\
+                            "'epyt_flow.simulation.SensorConfig' but not of "+\
                                 f"'{type(sensor_config)}'")
 
         self.__sensor_config = sensor_config
@@ -297,8 +297,8 @@ class ScadaData(Serializable):
             New sensor noise/uncertainty specification.
         """
         if not isinstance(sensor_noise, SensorNoise):
-            raise ValueError("'sensor_noise' must be an instance of "+\
-                             "'epyt_flow.uncertainty.SensorNoise' but not of "+\
+            raise TypeError("'sensor_noise' must be an instance of "+\
+                            "'epyt_flow.uncertainty.SensorNoise' but not of "+\
                                 f"'{type(sensor_noise)}'")
 
         self.__sensor_noise = sensor_noise
@@ -313,8 +313,8 @@ class ScadaData(Serializable):
         """
         if len(sensor_faults) != 0:
             if any([not isinstance(f, SensorFault) for f in sensor_faults]):
-                raise ValueError("'sensor_faults' must be a list of "+\
-                                 "'epyt_flow.simulation.events.SensorFault' instances")
+                raise TypeError("'sensor_faults' must be a list of "+\
+                                "'epyt_flow.simulation.events.SensorFault' instances")
 
         self.__sensor_faults = sensor_faults
         self.__init()
@@ -334,7 +334,7 @@ class ScadaData(Serializable):
             Other scada data to be added to this data.
         """
         if not isinstance(other, ScadaData):
-            raise ValueError(f"'other' must be an instance of 'ScadaData' but not of {type(other)}")
+            raise TypeError(f"'other' must be an instance of 'ScadaData' but not of {type(other)}")
         if self.__sensor_config != other.sensor_config:
             raise ValueError("Sensor configurations must be the same!")
 

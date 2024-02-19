@@ -75,85 +75,85 @@ class SensorConfig(Serializable):
                  valve_state_sensors:list[str]=[], pump_state_sensors:list[str]=[],
                  tank_level_sensors:list[str]=[], **kwds):
         if not isinstance(nodes, list):
-            raise ValueError("'nodes' must be an instance of 'list(str)' "+\
-                             f"but not of '{type(nodes)}'")
+            raise TypeError("'nodes' must be an instance of 'list(str)' "+\
+                            f"but not of '{type(nodes)}'")
         if len(nodes) == 0:
             raise ValueError("'nodes' must be a list of all nodes (i.e. IDs) in the network.")
         if any([not isinstance(n, str) for n in nodes]):
-            raise ValueError("Each item in 'nodes' must be an instance of 'str' -- "+\
-                             "ID of a node in the network.")
+            raise TypeError("Each item in 'nodes' must be an instance of 'str' -- "+\
+                            "ID of a node in the network.")
         if not isinstance(links, list):
-            raise ValueError("'links' must be an instance of 'list(str)' "+\
-                             f"but not of '{type(links)}'")
+            raise TypeError("'links' must be an instance of 'list(str)' "+\
+                            f"but not of '{type(links)}'")
         if len(links) == 0:
             raise ValueError("'links' must be a list of all links/pipes (i.e. IDs) in the network.")
         if any([not isinstance(l, str) for l in links]):
-            raise ValueError("Each item in 'links' must be an instance of 'str' -- "+\
-                             "ID of a link/pipe in the network.")
+            raise TypeError("Each item in 'links' must be an instance of 'str' -- "+\
+                            "ID of a link/pipe in the network.")
 
         if not isinstance(valves, list):
-            raise ValueError("'valves' must be an instance of 'list(str)' "+\
-                             f"but not of '{type(valves)}'")
+            raise TypeError("'valves' must be an instance of 'list(str)' "+\
+                            f"but not of '{type(valves)}'")
         if any([v not in links for v in valves]):
             raise ValueError("Each item in 'valves' must be in 'links'")
 
         if not isinstance(pumps, list):
-            raise ValueError("'pumps' must be an instance of 'list(str)' "+\
-                             f"but not of '{type(pumps)}'")
+            raise TypeError("'pumps' must be an instance of 'list(str)' "+\
+                            f"but not of '{type(pumps)}'")
         if any([p not in links for p in pumps]):
             raise ValueError("Each item in 'pumps' must be in 'links'")
 
         if not isinstance(tanks, list):
-            raise ValueError("'tanks' must be an instance of 'list(str)' "+\
-                             f"but not of '{type(tanks)}'")
+            raise TypeError("'tanks' must be an instance of 'list(str)' "+\
+                            f"but not of '{type(tanks)}'")
         if any([v not in nodes for v in tanks]):
             raise ValueError("Each item in 'tanks' must be in 'nodes'")
 
         if not isinstance(pressure_sensors, list):
-            raise ValueError("'pressure_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(pressure_sensors)}'")
+            raise TypeError("'pressure_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(pressure_sensors)}'")
         if any([n not in nodes for n in pressure_sensors]):
             raise ValueError("Each item in 'pressure_sensors' must be in 'nodes' -- "+\
                              "cannot place a sensor at a non-existing node.")
         if not isinstance(flow_sensors, list):
-            raise ValueError("'flow_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(flow_sensors)}'")
+            raise TypeError("'flow_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(flow_sensors)}'")
         if any([l not in links for l in flow_sensors]):
             raise ValueError("Each item in 'flow_sensors' must be in 'links' -- cannot "+\
                              "place a sensor at a non-existing link/pipe.")
         if not isinstance(demand_sensors, list):
-            raise ValueError("'demand_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(demand_sensors)}'")
+            raise TypeError("'demand_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(demand_sensors)}'")
         if any([n not in nodes for n in demand_sensors]):
             raise ValueError("Each item in 'demand_sensors' must be in 'nodes' -- cannot "+\
                              "place a sensor at a non-existing node.")
         if not isinstance(quality_node_sensors, list):
-            raise ValueError("'quality_node_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(quality_node_sensors)}'")
+            raise TypeError("'quality_node_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(quality_node_sensors)}'")
         if any([n not in nodes for n in quality_node_sensors]):
             raise ValueError("Each item in 'quality_node_sensors' must be in 'nodes' -- cannot "+\
                              "place a sensor at a non-existing node.")
         if not isinstance(quality_link_sensors, list):
-            raise ValueError("'quality_link_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(quality_link_sensors)}'")
+            raise TypeError("'quality_link_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(quality_link_sensors)}'")
         if any([l not in links for l in quality_link_sensors]):
             raise ValueError("Each item in 'quality_link_sensors' must be in 'links' -- cannot "+\
                              "place a sensor at a non-existing link/pipe.")
         if not isinstance(valve_state_sensors, list):
-            raise ValueError("'valve_state_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(valve_state_sensors)}'")
+            raise TypeError("'valve_state_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(valve_state_sensors)}'")
         if any([l not in valves for l in valve_state_sensors]):
             raise ValueError("Each item in 'valve_state_sensors' must be in 'valves' -- cannot "+\
                              "place a sensor at a non-existing valve.")              
         if not isinstance(pump_state_sensors, list):
-            raise ValueError("'pump_state_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(pump_state_sensors)}'")
+            raise TypeError("'pump_state_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(pump_state_sensors)}'")
         if any([l not in pumps for l in pump_state_sensors]):
             raise ValueError("Each item in 'pump_state_sensors' must be in 'pumps' -- cannot "+\
                              "place a sensor at a non-existing pump.")           
         if not isinstance(tank_level_sensors, list):
-            raise ValueError("'tank_level_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(tank_level_sensors)}'")
+            raise TypeError("'tank_level_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(tank_level_sensors)}'")
         if any([n not in tanks for n in tank_level_sensors]):
             raise ValueError("Each item in 'tank_level_sensors' must be in 'tanks' -- cannot "+\
                              "place a sensor at a non-existing tanks.")
@@ -262,8 +262,8 @@ class SensorConfig(Serializable):
     @pressure_sensors.setter
     def pressure_sensors(self, pressure_sensors:list[str]) -> None:
         if not isinstance(pressure_sensors, list):
-            raise ValueError("'pressure_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(pressure_sensors)}'")
+            raise TypeError("'pressure_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(pressure_sensors)}'")
         if any([n not in self.__nodes for n in pressure_sensors]):
             raise ValueError("Each item in 'pressure_sensors' must be in 'nodes' -- cannot "+\
                              "place a sensor at a non-existing node.")
@@ -279,8 +279,8 @@ class SensorConfig(Serializable):
     @flow_sensors.setter
     def flow_sensors(self, flow_sensors:list[str]) -> None:
         if not isinstance(flow_sensors, list):
-            raise ValueError("'pressure_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(flow_sensors)}'")
+            raise TypeError("'pressure_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(flow_sensors)}'")
         if any([l not in self.__links for l in flow_sensors]):
             raise ValueError("Each item in 'flow_sensors' must be in 'links' -- cannot "+\
                              "place a sensor at a non-existing link/pipe.")
@@ -296,8 +296,8 @@ class SensorConfig(Serializable):
     @demand_sensors.setter
     def demand_sensors(self, demand_sensors:list[str]) -> None:
         if not isinstance(demand_sensors, list):
-            raise ValueError("'demand_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(demand_sensors)}'")
+            raise TypeError("'demand_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(demand_sensors)}'")
         if any([n not in self.__nodes for n in demand_sensors]):
             raise ValueError("Each item in 'demand_sensors' must be in 'nodes' -- cannot "+\
                              "place a sensor at a non-existing node.")
@@ -313,8 +313,8 @@ class SensorConfig(Serializable):
     @quality_node_sensors.setter
     def quality_node_sensors(self, quality_node_sensors:list[str]) -> None:
         if not isinstance(quality_node_sensors, list):
-            raise ValueError("'quality_node_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(quality_node_sensors)}'")
+            raise TypeError("'quality_node_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(quality_node_sensors)}'")
         if any([n not in self.__nodes for n in quality_node_sensors]):
             raise ValueError("Each item in 'quality_node_sensors' must be in 'nodes' -- cannot "+\
                              "place a sensor at a non-existing node.")
@@ -330,8 +330,8 @@ class SensorConfig(Serializable):
     @quality_link_sensors.setter
     def quality_link_sensors(self, quality_link_sensors:list[str]) -> None:
         if not isinstance(quality_link_sensors, list):
-            raise ValueError("'quality_link_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(quality_link_sensors)}'")
+            raise TypeError("'quality_link_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(quality_link_sensors)}'")
         if any([n not in self.__nodes for n in quality_link_sensors]):
             raise ValueError("Each item in 'quality_link_sensors' must be in 'nodes' -- cannot "+\
                              "place a sensor at a non-existing node.")
@@ -347,8 +347,8 @@ class SensorConfig(Serializable):
     @valve_state_sensors.setter
     def valve_state_sensors(self, valve_state_sensors:list[str]) -> None:
         if not isinstance(valve_state_sensors, list):
-            raise ValueError("'valve_state_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(valve_state_sensors)}'")
+            raise TypeError("'valve_state_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(valve_state_sensors)}'")
         if any([l not in self.__valves for l in valve_state_sensors]):
             raise ValueError("Each item in 'valve_state_sensors' must be in 'valves' -- cannot "+\
                              "place a sensor at a non-existing valves.")
@@ -364,8 +364,8 @@ class SensorConfig(Serializable):
     @pump_state_sensors.setter
     def pump_state_sensors(self, pump_state_sensors:list[str]) -> None:
         if not isinstance(pump_state_sensors, list):
-            raise ValueError("'pump_state_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(pump_state_sensors)}'")
+            raise TypeError("'pump_state_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(pump_state_sensors)}'")
         if any([l not in self.__pumps for l in pump_state_sensors]):
             raise ValueError("Each item in 'pump_state_sensors' must be in 'pumps' -- cannot "+\
                              "place a sensor at a non-existing pump.")
@@ -382,8 +382,8 @@ class SensorConfig(Serializable):
     @tank_level_sensors.setter
     def tank_level_sensors(self, tank_level_sensors:list[str]) -> None:
         if not isinstance(tank_level_sensors, list):
-            raise ValueError("'tank_level_sensors' must be an instance of 'list[str]' "+\
-                             f"but not of '{type(tank_level_sensors)}'")
+            raise TypeError("'tank_level_sensors' must be an instance of 'list[str]' "+\
+                            f"but not of '{type(tank_level_sensors)}'")
         if any([n not in self.__tanks for n in tank_level_sensors]):
             raise ValueError("Each item in 'tank_level_sensors' must be in 'tanks' -- cannot "+\
                              "place a sensor at a non-existing tanks.")
