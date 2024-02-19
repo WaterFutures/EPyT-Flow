@@ -187,9 +187,6 @@ class DeepUniformUncertainty(Uncertainty, Serializable):
         rand_high = np.maximum(rand_low, rand_high)
         self.__uncertainties = [np.random.uniform(l, h) for l, h in zip(rand_low, rand_high)]
 
-    def get_attributes(self) -> dict:
-        return super().get_attributes()
-
     def apply(self, data:float) -> float:
         data += self.__uncertainties[self.__uncertainties_idx]
 
@@ -210,9 +207,6 @@ class DeepGaussianUncertainty(Uncertainty, Serializable):
         super().__init__(**kwds)
 
         self.__create_uncertainties()
-
-    def get_attributes(self) -> dict:
-        return super().get_attributes()
 
     def __create_uncertainties(self, n_samples:int=500) -> None:
         self.__uncertainties_idx = 0

@@ -78,7 +78,7 @@ class WaterDistributionNetworkScenarioControlEnv(ABC):
                 return None, True
 
     @abstractmethod
-    def step(self) -> (ScadaData, float, bool):
+    def step(self) -> tuple[ScadaData, float, bool]:
         """
         Performs the next step by applying an action and observing 
         the consequences (SCADA data, reward, terminated).
@@ -88,7 +88,8 @@ class WaterDistributionNetworkScenarioControlEnv(ABC):
 
         Returns
         -------
-        `(float, bool)`
-            Triple of observations (:class:`~epyt_flow.simuation.scada.scada_data.ScadaData`), reward (`float`), and terminated (`bool`).
+        `(ScadaData, float, bool)`
+            Triple of observations (:class:`~epyt_flow.simuation.scada.scada_data.ScadaData`), 
+            reward (`float`), and terminated (`bool`).
         """
         raise NotImplementedError()
