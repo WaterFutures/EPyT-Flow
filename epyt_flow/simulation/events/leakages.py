@@ -1,4 +1,5 @@
 from copy import deepcopy
+import math
 import numpy
 import numpy as np
 import epyt
@@ -127,9 +128,9 @@ class AbruptLeakage(Leakage):
         time_step = self._epanet_api.getTimeHydraulicStep()
 
         if self.end_time is not None:
-            n_leaky_time_points = int((self.end_time - self.start_time) / time_step)
+            n_leaky_time_points = math.ceil((self.end_time - self.start_time) / time_step)
         else:
-            n_leaky_time_points = int((total_sim_duration - self.start_time) / time_step)
+            n_leaky_time_points = math.ceil((total_sim_duration - self.start_time) / time_step)
 
         self._profile = np.ones(n_leaky_time_points)
 
@@ -181,9 +182,9 @@ class IncipientLeakage(Leakage):
         time_step = self._epanet_api.getTimeHydraulicStep()
 
         if self.end_time is not None:
-            n_leaky_time_points = int((self.end_time - self.start_time) / time_step)
+            n_leaky_time_points = math.ceil((self.end_time - self.start_time) / time_step)
         else:
-            n_leaky_time_points = int((total_sim_duration - self.start_time) / time_step)
+            n_leaky_time_points = math.ceil((total_sim_duration - self.start_time) / time_step)
 
         self._profile = np.ones(n_leaky_time_points)
 
