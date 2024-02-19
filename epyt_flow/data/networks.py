@@ -1,7 +1,7 @@
 import os
 import requests
 
-from ..simulation import ScenarioConfig, SensorConfig
+from ..simulation import ScenarioConfig, WaterDistributionNetworkScenarioSimulator
 from ..utils import get_temp_folder
 
 
@@ -11,11 +11,20 @@ def download_if_necessary(download_dir:str, url:str) -> None:
         with open(download_dir, "wb") as f_out:
             f_out.write(r.content)
 
-def load_inp(f_in:str) -> ScenarioConfig:
+
+def create_empty_sensor_config(f_inp):
+    with WaterDistributionNetworkScenarioSimulator(f_inp_in=f_inp) as sim:
+        return sim.sensor_config
+
+
+def load_inp(f_in:str, include_empty_sensor_config=True) -> ScenarioConfig:
     if not os.path.isfile(f_in):
         raise ValueError("Can not find 'f_in'")
 
-    return ScenarioConfig(f_in)
+    if include_empty_sensor_config is True:
+        return ScenarioConfig(f_inp_in=f_in, sensor_config=create_empty_sensor_config(f_inp=f_in))
+    else:
+        return ScenarioConfig(f_inp_in=f_in)
 
 
 def load_net1(download_dir:str=get_temp_folder()) -> ScenarioConfig:
@@ -207,12 +216,11 @@ def load_hanoi(download_dir:str=get_temp_folder(),
     config = load_inp(f_in)
 
     if include_default_sensor_placement is True:
-        config = ScenarioConfig(f_inp_in=config.f_inp_in,
-                                sensor_config=SensorConfig(nodes=[f"{i}" for i in range(1, 33)],
-                                                           links=[f"{i}" for i in range(1, 35)],
-                                                           tanks=[], valves=[], pumps=[],
-                                                           pressure_sensors=["13", "16", "22", "30"],
-                                                           flow_sensors=["1"]))
+        sensor_config = config.sensor_config
+        sensor_config.pressure_sensors = ["13", "16", "22", "30"]
+        sensor_config.flow_sensors = ["1"]
+
+        config = ScenarioConfig(f_inp_in=config.f_inp_in, sensor_config=sensor_config)
 
     return config
 
@@ -248,15 +256,14 @@ def load_ltown(download_dir:str=get_temp_folder(),
     config = load_inp(f_in)
 
     if include_default_sensor_placement is True:
-        config = ScenarioConfig(f_inp_in=config.f_inp_in,
-                                sensor_config=SensorConfig(nodes=[f"n{i}" for i in range(1, 783)] + ["T1"],
-                                                           links=[f"p{i}" for i in range(1, 906)] + ["PUMP_1", "PRV-1", "PRV-2", "PRV-3"],
-                                                           tanks=["T1"], pumps=["PUMP_1"], valves=["PRV-1", "PRV-2", "PRV-3"],
-                                                           pressure_sensors=["n54", "n105", "n114", "n163", "n188", "n229",
-                                                                             "n288", "n296", "n332", "n342", "n410",\
-                                                                             "n415", "n429", "n458", "n469", "n495", \
-                                                                             "n506", "n516", "n519", "n549", "n613", "n636",\
-                                                                             "n644", "n679", "n722", "n726", "n740", "n752", "n769"],
-                                                           flow_sensors=["p227", "p235"]))
-    
+        sensor_config = config.sensor_config
+        sensor_config.pressure_sensors=["n54", "n105", "n114", "n163", "n188", "n229", "n288", \
+                                        "n296", "n332", "n342", "n410", "n415", "n429", "n458", \
+                                        "n469", "n495", "n506", "n516", "n519", "n549", "n613", \
+                                        "n636", "n644", "n679", "n722", "n726", "n740", "n752", \
+                                            "n769"]
+        sensor_config.flow_sensors = ["p227", "p235"]
+
+        config = ScenarioConfig(f_inp_in=config.f_inp_in, sensor_config=sensor_config)
+
     return config
