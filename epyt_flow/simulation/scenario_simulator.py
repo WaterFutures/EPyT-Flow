@@ -263,6 +263,40 @@ class WaterDistributionNetworkScenarioSimulator():
             for t in range(pattern_length): # Set shuffled/randomized pattern
                 self.epanet_api.setPatternValue(pattern_id, t+1, pattern[t])
 
+    def set_node_demand_pattern(self, node_id:str, base_demand:float, demand_pattern_id:str,
+                                demand_pattern:numpy.ndarray) -> None:
+        """
+        Sets the demand pattern (incl. base demand) at a given node.
+
+        Parameters
+        ----------
+        node_id : `str`
+            ID of the node for which the demand pattern is set.
+        base_demand : `float`
+            Base demand.
+        demand_pattern_id : `str`
+            ID of the new demand pattern.
+        demand_pattern : `numpy.ndarray`
+            Demand pattern over time. Final demand over time = base_demand * demand_pattern
+        """
+        if not isinstance(base_demand, float):
+            raise TypeError("'base_demand' must be an instance of 'float' "+\
+                            f"but not if '{type(base_demand)}'")
+        if not isinstance(demand_pattern_id, str):
+            raise TypeError("'demand_pattern_id' must be an instance of 'str' "+\
+                            f"but not of '{type(demand_pattern_id)}'")
+        if not isinstance(demand_pattern, np.ndarray):
+            raise TypeError("'demand_pattern' must be an instance of 'numpy.ndarray' "+\
+                            f"but not of '{type(demand_pattern)}'")
+        if len(demand_pattern.shape) > 1:
+            raise ValueError(f"Inconsistent demand pattern shape '{demand_pattern.shape}' "+\
+                             "detected. Expected a one dimensional array!")
+
+        node_idx = self.epanet_api.getNodeIndex(node_id)
+        self.epanet_api.addPattern(demand_pattern_id, demand_pattern)
+        self.epanet_api.addNodeJunctionDemand(node_idx, base_demand, demand_pattern_id,
+                                              demand_pattern_id)
+
     def add_control(self, control:AdvancedControlModule) -> None:
         """
         Adds a control module to the scenario simulation.
