@@ -100,7 +100,7 @@ class ScenarioConfig(Serializable):
                             "'list[epyt_flow.simualtion.scada.AdvancedControlModule]' but no of "+\
                                 f"'{type(controls)}'")
         if len(controls) != 0:
-            if any([not isinstance(c, AdvancedControlModule) for c in controls]):
+            if any(not isinstance(c, AdvancedControlModule) for c in controls):
                 raise TypeError("Each item in 'controls' must be an instance of "+\
                                 "'epyt_flow.simualtion.scada.AdvancedControlModule'")
         if sensor_noise is not None:
@@ -117,7 +117,7 @@ class ScenarioConfig(Serializable):
                             "'list[epyt_flow.simualtion.events.SystemEvent]' but no of "+\
                                 f"'{type(system_events)}'")
         if len(system_events) != 0:
-            if any([not isinstance(c, SystemEvent) for c in system_events]):
+            if any(not isinstance(c, SystemEvent) for c in system_events):
                 raise TypeError("Each item in 'system_events' must be an instance of "+\
                                 "'epyt_flow.simualtion.events.SystemEvent'")
         if not isinstance(sensor_reading_events, list):
@@ -125,7 +125,7 @@ class ScenarioConfig(Serializable):
                             "'list[epyt_flow.simualtion.events.SensorReadingEvent]' but not of "+\
                                 f"'{type(sensor_reading_events)}'")
         if len(sensor_reading_events) != 0:
-            if any([not isinstance(c, SensorReadingEvent) for c in sensor_reading_events]):
+            if any(not isinstance(c, SensorReadingEvent) for c in sensor_reading_events):
                 raise TypeError("Each item in 'sensor_reading_events' must be an instance of "+\
                                 "'epyt_flow.simualtion.events.SensorReadingEvent'")
 

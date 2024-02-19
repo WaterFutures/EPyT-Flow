@@ -91,7 +91,7 @@ class ScadaData(Serializable):
                             "'epyt_flow.simulation.events.SensorFault' instances but "+\
                                 f"'{type(sensor_faults)}'")
         if len(sensor_faults) != 0:
-            if any([not isinstance(f, SensorFault) for f in sensor_faults]):
+            if any(not isinstance(f, SensorFault) for f in sensor_faults):
                 raise TypeError("'sensor_faults' must be a list of "+\
                                 "'epyt_flow.simulation.event.SensorFault' instances")
         if sensor_noise is not None and not isinstance(sensor_noise, SensorNoise):
