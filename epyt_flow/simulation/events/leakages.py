@@ -18,10 +18,18 @@ class Leakage(SystemEvent, Serializable):
     ----------
     link_id : `str`
         ID of the link at which the leak is placed.
+        Note that if the leak is placed at a node, then 'link_id' must be None and the 
+        ID of the node must be set in 'node_id'
     diameter : `float`
         Diameter of this leak.
     profile : `numpy.ndarray`
         Pattern of this leak.
+    node_id : `str`, optional
+        ID of the node at which the leak is placed.
+        This parameter must only be set if the leak is placed at a node instead of a link. 
+        In this case, 'link_id' must be None.
+
+        The default is None.
 
     Attributes
     ----------
@@ -32,10 +40,36 @@ class Leakage(SystemEvent, Serializable):
     profile : `numpy.ndarray`
         Pattern of this leak.
     """
-    def __init__(self, link_id:str, diameter:float, profile:numpy.ndarray, **kwds):
+    def __init__(self, link_id:str, diameter:float, profile:numpy.ndarray, node_id:str=None,
+                 **kwds):
+        if link_id is not None and node_id is not None:
+            raise ValueError("Leak can not be placed at a link and node at the same time")
+        if link_id is None and node_id is None:
+            raise ValueError("Leak must be placed at either a link or a node -- "+\
+                             "expecting either 'link_id' or 'node_id' but both are None")
+        if link_id is not None:
+            if not isinstance(link_id, str):
+                raise TypeError("'link_id' must be an instance of 'str' "+\
+                                f"but not of '{type(link_id)}'")
+        if not isinstance(diameter, float):
+            raise TypeError("'diameter must be an instance of 'float' but "+\
+                            f"not of '{type(diameter)}'")
+        if profile is not None:
+            if not isinstance(profile, np.ndarray):
+                raise TypeError("'profile' must be an instance of 'numpy.ndarray' but "+\
+                                f"not of '{type(profile)}'")
+            if len(profile.shape) > 1:
+                raise ValueError("'profile' must be a one-dimensional array "+\
+                                 f"but not of shape '{profile.shape}'")
+        if node_id is not None:
+            if not isinstance(node_id, str):
+                raise TypeError("'node_id' must be an instance of 'str' "+\
+                                f"but not of '{type(node_id)}'")
+
         self.__link_id = link_id
+        self.__node_id = node_id
         self.__diameter = diameter
-        self._profile = profile
+        self.__profile = profile
 
         self.__leaky_node_id = None
         self.__leak_emitter_coef = None
@@ -48,24 +82,42 @@ class Leakage(SystemEvent, Serializable):
         return self.__link_id
 
     @property
+    def node_id(self) -> str:
+        return self.__node_id
+
+    @property
     def diameter(self) -> float:
         return self.__diameter
 
     @property
     def profile(self) -> numpy.ndarray:
-        return deepcopy(self._profile)
+        return deepcopy(self.__profile)
+
+    @profile.setter
+    def profile(self, pattern:numpy.ndarray):
+        if not isinstance(pattern, np.ndarray):
+            raise TypeError("'profile' must be an instance of 'numpy.ndarray' but "+\
+                            f"not of '{type(pattern)}'")
+        if len(pattern.shape) > 1:
+            raise ValueError("'profile' must be a one-dimensional array "+\
+                                f"but not of shape '{pattern.shape}'")
+
+        self.__profile = pattern
 
     def get_attributes(self) -> dict:
         return super().get_attributes() | {"link_id": self.link_id, "diameter": self.diameter,
-                                           "profile": self.profile}
+                                           "profile": self.profile,
+                                           "node_id": self.__leaky_node_id \
+                                                if self.link_id is None else None}
 
     def __eq__(self, other) -> bool:
-        return super().__eq__(other) and self.link_id == other.link_id \
-            and self.diameter == other.diameter and self.profile == other.profile
+        return super().__eq__(other) and self.__link_id == other.link_id \
+            and self.__diameter == other.diameter and self.__profile == other.profile \
+            and self.__node_id == other.node_id
 
     def __str__(self) -> str:
         return f"{super().__str__()} link_id: {self.link_id} diameter: {self.diameter} "+\
-            f"profile: {self.profile}"
+            f"profile: {self.profile} node_id: {self.__node_id}"
 
     def compute_leak_area(self, diameter:float, factor_units:float=100.) -> float:
         # factor_units=100 changes the units to EPANET default units
@@ -80,16 +132,21 @@ class Leakage(SystemEvent, Serializable):
     def init(self, epanet_api:epyt.epanet) -> None:
         super().init(epanet_api)
 
-        # Split pipe
-        new_link_id = f"leak_pipe_{self.link_id}"
-        new_node_id = f"leak_node_{self.link_id}"
+        # Split pipe if leak is placed at a link/pipe
+        if self.__link_id is not None:
+            new_link_id = f"leak_pipe_{self.link_id}"
+            new_node_id = f"leak_node_{self.link_id}"
 
-        all_nodes_id = self._epanet_api.getNodeNameID()
-        if new_node_id in all_nodes_id:
-            raise ValueError(f"There is already a leak at pipe {self.link_id}")
+            all_nodes_id = self._epanet_api.getNodeNameID()
+            if new_node_id in all_nodes_id:
+                raise ValueError(f"There is already a leak at pipe {self.link_id}")
 
-        self._epanet_api.splitPipe(self.link_id, new_link_id, new_node_id)
-        self.__leaky_node_id = self._epanet_api.getNodeIndex(new_node_id)
+            self._epanet_api.splitPipe(self.link_id, new_link_id, new_node_id)
+            self.__leaky_node_id = self._epanet_api.getNodeIndex(new_node_id)
+        else:
+            self.__leaky_node_id = self._epanet_api.getNodeIndex(self.__node_id)
+
+        # Compute and set leak emitter coefficient
         self.__leak_emitter_coef = self.compute_leak_emitter_coefficient(
             self.compute_leak_area(self.__diameter))
         self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_id, 0.)
@@ -98,7 +155,7 @@ class Leakage(SystemEvent, Serializable):
         if self.start_time <= cur_time < self.end_time:
             self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_id,
                                                  self.__leak_emitter_coef \
-                                                    * self._profile[self.__time_pattern_idx])
+                                                    * self.__profile[self.__time_pattern_idx])
             self.__time_pattern_idx += 1
         elif cur_time >= self.end_time:
             self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_id, 0.)
@@ -132,7 +189,7 @@ class AbruptLeakage(Leakage):
         else:
             n_leaky_time_points = math.ceil((total_sim_duration - self.start_time) / time_step)
 
-        self._profile = np.ones(n_leaky_time_points)
+        self.profile = np.ones(n_leaky_time_points)
 
 
 @serializable(INCIPIENT_LEAKAGE_ID)
@@ -186,8 +243,10 @@ class IncipientLeakage(Leakage):
         else:
             n_leaky_time_points = math.ceil((total_sim_duration - self.start_time) / time_step)
 
-        self._profile = np.ones(n_leaky_time_points)
+        profile = np.ones(n_leaky_time_points)
 
         coeff = int((self.peak_time - self.start_time) / time_step)
         for t in range(coeff):
-            self._profile[t] = (1. / coeff) + ((1. / coeff) * t)    # Linear interpolation!
+            profile[t] = (1. / coeff) + ((1. / coeff) * t)    # Linear interpolation!
+
+        self.profile = profile
