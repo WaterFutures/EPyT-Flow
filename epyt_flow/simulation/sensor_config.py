@@ -1,3 +1,4 @@
+from copy import deepcopy
 import numpy
 import numpy as np
 
@@ -212,7 +213,7 @@ class SensorConfig(Serializable):
         pump_state_idx_shift = valve_state_idx_shift + n_valve_state_sensors
         tank_level_idx_shift = pump_state_idx_shift + n_pump_state_sensors
 
-        self.__sensord_id_to_idx = {"pressure": {n: i + pressure_idx_shift for n, i in \
+        self.__sensors_id_to_idx = {"pressure": {n: i + pressure_idx_shift for n, i in \
                                                  zip(self.__pressure_sensors, \
                                                      range(n_pressure_sensors))},
                                     "flow": {l: i + flow_idx_shift for l, i in \
@@ -392,6 +393,10 @@ class SensorConfig(Serializable):
 
         self.__compute_indices()
 
+    @property
+    def sensors_id_to_idx(self) -> dict:
+        return deepcopy(self.__sensors_id_to_idx)
+
     def get_attributes(self) -> dict:
         return super().get_attributes() | {"nodes": self.__nodes, "links": self.__links,
                                            "valves": self.__valves, "pumps": self.__pumps,
@@ -503,20 +508,20 @@ class SensorConfig(Serializable):
             ID of the water level sensor (at a tank)
         """
         if pressure_sensor is not None:
-            return self.__sensord_id_to_idx["pressure"][pressure_sensor]
+            return self.__sensors_id_to_idx["pressure"][pressure_sensor]
         elif flow_sensor is not None:
-            return self.__sensord_id_to_idx["flow"][flow_sensor]
+            return self.__sensors_id_to_idx["flow"][flow_sensor]
         elif demand_sensor is not None:
-            return self.__sensord_id_to_idx["demand"][demand_sensor]
+            return self.__sensors_id_to_idx["demand"][demand_sensor]
         elif node_quality_sensor is not None:
-            return self.__sensord_id_to_idx["quality_node"][node_quality_sensor]
+            return self.__sensors_id_to_idx["quality_node"][node_quality_sensor]
         elif link_quality_sensor is not None:
-            return self.__sensord_id_to_idx["quality_link"][link_quality_sensor]
+            return self.__sensors_id_to_idx["quality_link"][link_quality_sensor]
         elif valve_state_sensor is not None:
-            return self.__sensord_id_to_idx["valve_state"][valve_state_sensor]
+            return self.__sensors_id_to_idx["valve_state"][valve_state_sensor]
         elif pump_state_sensor is not None:
-            return self.__sensord_id_to_idx["pump_state"][pump_state_sensor]
+            return self.__sensors_id_to_idx["pump_state"][pump_state_sensor]
         elif tank_level_sensor is not None:
-            return self.__sensord_id_to_idx["tank_level"][tank_level_sensor]
+            return self.__sensors_id_to_idx["tank_level"][tank_level_sensor]
         else:
             raise ValueError("No sensor given")

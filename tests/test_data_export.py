@@ -18,13 +18,15 @@ def test_numpyexport():
 
         res = sim.run_simulation()
         data = res.get_data()
+        time = res.sensor_readings_time
 
         f_out = os.path.join(get_temp_folder(), "numpy_export.npz")
         ScadaDataNumpyExport(f_out=f_out).export(res)
 
         data_restored = np.load(f_out)
 
-        assert np.all(data == data_restored["sensor_readings"])
+        assert np.all(data == data_restored["sensor_readings"]) and \
+            np.all(time == data_restored["sensor_readings_time"])
 
 def test_xlsx_export():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
@@ -34,7 +36,7 @@ def test_xlsx_export():
 
         res = sim.run_simulation()
 
-        f_out = os.path.join(get_temp_folder(), "numpy_export.xlsx")
+        f_out = os.path.join(get_temp_folder(), "excel_export.xlsx")
         ScadaDataXlsxExport(f_out=f_out).export(res)
 
 
@@ -46,5 +48,5 @@ def test_mat_export():
 
         res = sim.run_simulation()
 
-        f_out = os.path.join(get_temp_folder(), "numpy_export.mat")
+        f_out = os.path.join(get_temp_folder(), "matlab_export.mat")
         ScadaDataMatlabExport(f_out=f_out).export(res)
