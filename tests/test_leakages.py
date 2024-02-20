@@ -7,7 +7,7 @@ from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator, Inci
 from utils import get_temp_folder
 
 
-def test_arupt_leakage():
+def test_abrupt_leakage():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
                                       include_default_sensor_placement=True)
     with WaterDistributionNetworkScenarioSimulator(scenario_config=hanoi_network_config) as sim:
