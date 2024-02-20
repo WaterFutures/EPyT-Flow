@@ -15,6 +15,7 @@ class SensorReadingEvent(Event):
     sensor_type : `int`
         Type of the sensor that is specified in 'sensor_id'.
         Must be one of the following pre-defined constants:
+        
         - SENSOR_TYPE_NODE_PRESSURE     = 1
         - SENSOR_TYPE_NODE_QUALITY      = 2
         - SENSOR_TYPE_NODE_DEMAND       = 3
