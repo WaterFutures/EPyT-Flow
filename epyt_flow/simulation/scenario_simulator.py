@@ -160,7 +160,6 @@ class WaterDistributionNetworkScenarioSimulator():
         if general_params is not None:
             self.set_general_parameters(**general_params)
 
-
     def __find_temporary_file(self) -> str:
         files = list(filter(lambda f: os.path.isfile(f) and "." not in f, os.listdir()))
         files.sort(key=os.path.getmtime)    # Sort by time to find the temporary file created by EPANET
@@ -644,7 +643,7 @@ class WaterDistributionNetworkScenarioSimulator():
         
             The default is None.
             
-        simulation_duraction : `int`, optional
+        simulation_duration : `int`, optional
             Number of days to be simulated.
 
             The default is None.
