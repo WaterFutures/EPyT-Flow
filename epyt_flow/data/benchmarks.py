@@ -14,7 +14,7 @@ from ..uncertainty import ModelUncertainty, UniformUncertainty
 
 
 def load_leakdb(scenarios_id:list[int], use_net1:bool=True,
-                path_to_inp:str=None) -> list[ScenarioConfig]:
+                download_dir:str=None) -> list[ScenarioConfig]:
     """
     LeakDB (Leakage Diagnosis Benchmark) by Vrachimis, S. G., Kyriakou, M. S., Eliades, D. G. 
     and Polycarpou, M. M. (2018), is a realistic leakage dataset for water distribution networks. 
@@ -43,9 +43,9 @@ def load_leakdb(scenarios_id:list[int], use_net1:bool=True,
         If True, Net1 network will be used, otherwise the Hanoi network will be used.
 
         The default is True.
-    path_to_inp : `str`
+    download_dir : `str`
         Path to the Net1.inp or Hanoi.inp file -- if None, the temp folder will be used.
-        If the path does not exist, the .inp will be downloaded to the give pat.
+        If the path does not exist, the .inp will be downloaded to the give path.
 
         The default is None.
     """
@@ -53,7 +53,7 @@ def load_leakdb(scenarios_id:list[int], use_net1:bool=True,
 
     # Load the network
     load_network = load_net1 if use_net1 is True else load_hanoi
-    download_dir = path_to_inp if path_to_inp is not None else get_temp_folder()
+    download_dir = download_dir if download_dir is not None else get_temp_folder()
     network_config = load_network(download_dir)
 
     # Set simulation duration
@@ -62,11 +62,11 @@ def load_leakdb(scenarios_id:list[int], use_net1:bool=True,
 
     # Add demand patterns
     # Taken from https://github.com/KIOS-Research/LeakDB/blob/master/CCWI-WDSA2018/Dataset_Generator_Py3/demandGenerator.py
-    def gen_dem(tmp_path):
-        week_pat = scipy.io.loadmat(os.path.join(tmp_path, "weekPat_30min.mat"))
+    def gen_dem():
+        week_pat = scipy.io.loadmat(os.path.join(download_dir, "weekPat_30min.mat"))
         a_w = week_pat['Aw']
         nw = week_pat['nw']
-        year_offset = scipy.io.loadmat(os.path.join(tmp_path, "yearOffset_30min.mat"))
+        year_offset = scipy.io.loadmat(os.path.join(download_dir, "yearOffset_30min.mat"))
         a_y = year_offset['Ay']
         ny = year_offset['ny']
 
@@ -124,8 +124,8 @@ def load_leakdb(scenarios_id:list[int], use_net1:bool=True,
     year_offset_url = "https://github.com/KIOS-Research/LeakDB/raw/master/CCWI-WDSA2018/"+\
         "Dataset_Generator_Py3/yearOffset_30min.mat"
 
-    download_if_necessary(os.path.join(get_temp_folder(), "weekPat_30min.mat"), week_pattern_url)
-    download_if_necessary(os.path.join(get_temp_folder(), "yearOffset_30min.mat"), year_offset_url)
+    download_if_necessary(os.path.join(download_dir, "weekPat_30min.mat"), week_pattern_url)
+    download_if_necessary(os.path.join(download_dir, "yearOffset_30min.mat"), year_offset_url)
 
     for s_id in scenarios_id:   # Create new .inp files with demands if necessary
         f_inp_in = os.path.join(download_dir,
@@ -150,7 +150,7 @@ def load_leakdb(scenarios_id:list[int], use_net1:bool=True,
                     node_idx = wdn.epanet_api.getNodeIndex(node_id)
                     base_demand = wdn.epanet_api.getNodeBaseDemands(node_idx)[1][0]
 
-                    my_demand_pattern = np.array(gen_dem(get_temp_folder()))
+                    my_demand_pattern = np.array(gen_dem())
 
                     wdn.set_node_demand_pattern(node_id=node_id, base_demand=base_demand,
                                                 demand_pattern_id=f"demand_{node_id}",
@@ -221,7 +221,7 @@ def load_leakdb(scenarios_id:list[int], use_net1:bool=True,
                           system_events=leaks) for f_inp_in, leaks in zip(scenarios_inp, leaks_all)]
 
 
-def load_battledim(evaluation:bool, path_to_ltown:str=None) -> ScenarioConfig:
+def load_battledim(evaluation:bool, download_dir:str=None) -> ScenarioConfig:
     """
     The Battle of the Leakage Detection and Isolation Methods (*BattLeDIM*) 2020, organized by
     S. G. Vrachimis, D. G. Eliades, R. Taormina, Z. Kapelan, A. Ostfeld, S. Liu, M. Kyriakou, 
@@ -242,7 +242,7 @@ def load_battledim(evaluation:bool, path_to_ltown:str=None) -> ScenarioConfig:
     evaluation : `bool`
         If True, the evaluation scenario is returned, otherwise the historical 
         (i.e. training) scenario is returned.
-    path_to_ltown : `str`
+    download_dir : `str`
         Path to the L-TOWN.inp file -- if None, the temp folder will be used.
         If the path does not exist, the .inp will be downloaded to the give path.
 
@@ -255,8 +255,8 @@ def load_battledim(evaluation:bool, path_to_ltown:str=None) -> ScenarioConfig:
     """
 
     # Load L-Town network including the sensor placement
-    if path_to_ltown is not None:
-        ltown_config = load_ltown(download_dir=path_to_ltown, include_default_sensor_placement=True)
+    if download_dir is not None:
+        ltown_config = load_ltown(download_dir=download_dir, include_default_sensor_placement=True)
     else:
         ltown_config = load_ltown(include_default_sensor_placement=True)
 
