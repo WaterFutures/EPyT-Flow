@@ -40,10 +40,13 @@ Example for performing a water age analysis at all nodes:
         sim.enable_waterage_analysis()
 
         # Places quality sensors at all nodes -- i.e. measuring the water age at each node
-        sim.set_sensors(SENSOR_TYPE_NODE_QUALITY, sensor_locations=sim.sensor_config.nodes)
+        sim.set_node_quality_sensors(sensor_locations=sim.sensor_config.nodes)
 
         # Run simulation
         scada_data = sim.run_simulation()
+
+        # Retrieve simulated water age at all nodes
+        nodes_quality = scada_data.get_data_nodes_quality()
 
 
 Chemical Analysis
@@ -100,10 +103,13 @@ Example for running a chemical analysis where the concentration at the reservoir
 
         # Places quality sensors at all nodes -- 
         # i.e. measuring the chemical concentration at all nodes
-        sim.set_sensors(SENSOR_TYPE_NODE_QUALITY, sensor_locations=sim.sensor_config.nodes)
+        sim.set_node_quality_sensors(sensor_locations=sim.sensor_config.nodes)
 
         # Run simulation
         scada_data = sim.run_simulation()
+
+        # Retrieve simulated chemical concentrations at all nodes
+        nodes_quality = scada_data.get_data_nodes_quality()
 
 
 Advanced Quality Analysis

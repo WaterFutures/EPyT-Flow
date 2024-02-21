@@ -77,7 +77,7 @@ of a :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
     scada_data.change_sensor_config(cur_sensor_config)  # Set new sensor configuration
 
 
-If a sensor placement have been specified, the final sensor readings (as a `numpy.array`) 
+If a sensor placement have been specified, the final sensor readings of all sensor (as a `numpy.array`) 
 can be obtained by calling :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data` 
 of a given :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
 
@@ -110,6 +110,43 @@ of a given :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
         # Access pressure readings at node "5"
         pressure_sensor_5_idx = scada_data.sensor_config.get_index_of_reading(pressure_sensor="5")
         pressures_at_node_5 = observed_sensor_readings[:,pressure_sensor_5_idx]
+
+
+Alternatively, one can use sensor type specific function for retrieving the readings of all 
+or some sensors of that type:
+
++-------------------+----------------------------------------------------------------------------------------------------------------------------+
+| Sensor type       | Function for getting sensors readings                                                                                      |
++===================+============================================================================================================================+
+| Pressure          | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pressures`                                                |
++-------------------+----------------------------------------------------------------------------------------------------------------------------+
+| Flow              | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_flows`                                                    |
++-------------------+----------------------------------------------------------------------------------------------------------------------------+
+| Demand            | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_demands`                                                  |
++-------------------+----------------------------------------------------------------------------------------------------------------------------+
+| Node quality      | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_nodes_quality`                                            |
++-------------------+----------------------------------------------------------------------------------------------------------------------------+
+| Link quality      | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_links_quality`                                            |
++-------------------+----------------------------------------------------------------------------------------------------------------------------+
+| Valve state       | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_valves_state`                                             |
++-------------------+----------------------------------------------------------------------------------------------------------------------------+
+| Pump state        | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pumps_state`                                              |
++-------------------+----------------------------------------------------------------------------------------------------------------------------+
+| Tank water level  | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_tanks_water_level`                                        |
++-------------------+----------------------------------------------------------------------------------------------------------------------------+
+
+Example for getting the pressure readings at node "5":
+
+.. code-block:: python
+
+    # Load scenario
+    # ...
+
+    # Run simulation
+    scada_data = sim.run_simulation()
+
+    # Access pressure readings at node "5"
+    pressure_at_node_5 = scada_data.get_data_pressures(sensor_locations=["5"])
 
 
 Importing and Exporting
