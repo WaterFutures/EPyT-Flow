@@ -415,6 +415,96 @@ class WaterDistributionNetworkScenarioSimulator():
         else:
             raise ValueError(f"Unknown sensor type '{sensor_type}'")
 
+    def set_pressure_sensors(self, sensor_locations: list[str]) -> None:
+        """
+        Sets the pressure sensors -- i.e. measuring pressure at some nodes in the network.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`
+            Locations (IDs) of sensors.
+        """
+        self.set_sensors(SENSOR_TYPE_NODE_PRESSURE, sensor_locations)
+
+    def set_flow_sensors(self, sensor_locations: list[str]) -> None:
+        """
+        Sets the flow sensors -- i.e. measuring flows at some links/pipes in the network.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`
+            Locations (IDs) of sensors.
+        """
+        self.set_sensors(SENSOR_TYPE_LINK_FLOW, sensor_locations)
+
+    def set_demand_sensors(self, sensor_locations: list[str]) -> None:
+        """
+        Sets the demand sensors -- i.e. measuring demands at some nodes in the network.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`
+            Locations (IDs) of sensors.
+        """
+        self.set_sensors(SENSOR_TYPE_NODE_DEMAND, sensor_locations)
+
+    def set_node_quality_sensors(self, sensor_locations: list[str]) -> None:
+        """
+        Sets the node quality sensors -- i.e. measuring the water quality 
+        (e.g. age, chlorine concentration, etc.) at some nodes in the network.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`
+            Locations (IDs) of sensors.
+        """
+        self.set_sensors(SENSOR_TYPE_NODE_QUALITY, sensor_locations)
+
+    def set_link_quality_sensors(self, sensor_locations: list[str]) -> None:
+        """
+        Sets the link quality sensors -- i.e. measuring the water quality 
+        (e.g. age, chlorine concentration, etc.) at some links/pipes in the network.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`
+            Locations (IDs) of sensors.
+        """
+        self.set_sensors(SENSOR_TYPE_LINK_QUALITY, sensor_locations)
+
+    def set_valve_sensors(self, sensor_locations: list[str]) -> None:
+        """
+        Sets the valve state sensors -- i.e. retrieving the state of some valves in the network.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`
+            Locations (IDs) of sensors.
+        """
+        self.set_sensors(SENSOR_TYPE_VALVE_STATE, sensor_locations)
+
+    def set_pump_sensors(self, sensor_locations: list[str]) -> None:
+        """
+        Sets the pump state sensors -- i.e. retrieving the state of some pumps in the network.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`
+            Locations (IDs) of sensors.
+        """
+        self.set_sensors(SENSOR_TYPE_PUMP_STATE, sensor_locations)
+
+    def set_tank_sensors(self, sensor_locations: list[str]) -> None:
+        """
+        Sets the tank level sensors -- i.e. measuring water levels in some tanks in the network.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`
+            Locations (IDs) of sensors.
+        """
+        self.set_sensors(SENSOR_TYPE_TANK_LEVEL, sensor_locations)
+
     def __prepare_simulation(self) -> None:
         if self.__model_uncertainty is not None:
             self.__model_uncertainty.apply(self.epanet_api)
