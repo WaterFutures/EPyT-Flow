@@ -315,7 +315,7 @@ class ScadaData(Serializable):
             List of new sensor faults.
         """
         if len(sensor_faults) != 0:
-            if any([not isinstance(f, SensorFault) for f in sensor_faults]):
+            if any(not isinstance(f, SensorFault) for f in sensor_faults):
                 raise TypeError("'sensor_faults' must be a list of "+\
                                 "'epyt_flow.simulation.events.SensorFault' instances")
 
