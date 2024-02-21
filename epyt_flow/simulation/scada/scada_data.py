@@ -130,6 +130,7 @@ class ScadaData(Serializable):
         self.__pumps_state_data_raw = pumps_state_data_raw
         self.__valves_state_data_raw = valves_state_data_raw
         self.__tanks_level_data_raw = tanks_level_data_raw
+        self.__sensor_readings = None
 
         self.__init()
 
@@ -229,6 +230,8 @@ class ScadaData(Serializable):
                     tank_level_sensor=sensor_fault.sensor_id)
 
             self.__apply_sensor_faults.append((idx, sensor_fault.apply))
+
+        self.__sensor_readings = None
 
     def get_attributes(self) -> dict:
         return super().get_attributes() | {"sensor_config": self.__sensor_config,
@@ -384,4 +387,310 @@ class ScadaData(Serializable):
         for idx, f in self.__apply_sensor_faults:
             sensor_readings[:,idx] = f(sensor_readings[:,idx], self.__sensor_readings_time)
 
+        self.__sensor_readings = deepcopy(sensor_readings)
+
         return sensor_readings
+
+    def get_data_pressures(self, sensor_locations:list[str]=None) -> numpy.ndarray:
+        """
+        Gets the final pressure sensor readings -- note that those might be subject to 
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing pressure sensor locations for which the sensor readings are requested. 
+            If None, the readings from all pressure sensors are returned.
+
+            The default is None.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Pressure sensor readings.
+        """
+        if self.sensor_config.pressure_sensors == []:
+            raise ValueError("No pressure sensors set")
+        if sensor_locations is not None:
+            if not isinstance(sensor_locations, list):
+                raise TypeError("'sensor_locations' must be an instance of 'list[str]' "+\
+                                f"but not of '{type(sensor_locations)}'")
+            if any(s_id not in self.sensor_config.pressure_sensors for s_id in sensor_locations):
+                raise ValueError("Invalid sensor ID in 'sensor_locations' -- note that all "+\
+                                 "sensors in 'sensor_locations' must be set in the current "+\
+                                    "pressure sensor configuration")
+        else:
+            sensor_locations = self.sensor_config.pressure_sensors
+
+        if self.__sensor_readings is None:
+            self.get_data()
+
+        idx = [self.sensor_config.get_index_of_reading(pressure_sensor=s_id) \
+               for s_id in sensor_locations]
+        return self.__sensor_readings[:,idx]
+
+    def get_data_flows(self, sensor_locations:list[str]=None) -> numpy.ndarray:
+        """
+        Gets the final flow sensor readings -- note that those might be subject to 
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing flow sensor locations for which the sensor readings are requested. 
+            If None, the readings from all flow sensors are returned.
+
+            The default is None.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Flow sensor readings.
+        """
+        if self.sensor_config.flow_sensors == []:
+            raise ValueError("No flow sensors set")
+        if sensor_locations is not None:
+            if not isinstance(sensor_locations, list):
+                raise TypeError("'sensor_locations' must be an instance of 'list[str]' "+\
+                                f"but not of '{type(sensor_locations)}'")
+            if any(s_id not in self.sensor_config.flow_sensors for s_id in sensor_locations):
+                raise ValueError("Invalid sensor ID in 'sensor_locations' -- note that all "+\
+                                 "sensors in 'sensor_locations' must be set in the current "+\
+                                    "flow sensor configuration")
+        else:
+            sensor_locations = self.sensor_config.flow_sensors
+
+        if self.__sensor_readings is None:
+            self.get_data()
+
+        idx = [self.sensor_config.get_index_of_reading(flow_sensor=s_id) \
+               for s_id in sensor_locations]
+        return self.__sensor_readings[:,idx]
+
+    def get_data_demands(self, sensor_locations:list[str]=None) -> numpy.ndarray:
+        """
+        Gets the final demand sensor readings -- note that those might be subject to 
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing demand sensor locations for which the sensor readings are requested. 
+            If None, the readings from all demand sensors are returned.
+
+            The default is None.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Demand sensor readings.
+        """
+        if self.sensor_config.demand_sensors == []:
+            raise ValueError("No demand sensors set")
+        if sensor_locations is not None:
+            if not isinstance(sensor_locations, list):
+                raise TypeError("'sensor_locations' must be an instance of 'list[str]' "+\
+                                f"but not of '{type(sensor_locations)}'")
+            if any(s_id not in self.sensor_config.demand_sensors for s_id in sensor_locations):
+                raise ValueError("Invalid sensor ID in 'sensor_locations' -- note that all "+\
+                                 "sensors in 'sensor_locations' must be set in the current "+\
+                                    "demand sensor configuration")
+        else:
+            sensor_locations = self.sensor_config.demand_sensors
+
+        if self.__sensor_readings is None:
+            self.get_data()
+
+        idx = [self.sensor_config.get_index_of_reading(demand_sensor=s_id) \
+               for s_id in sensor_locations]
+        return self.__sensor_readings[:,idx]
+
+    def get_data_nodes_quality(self, sensor_locations:list[str]=None) -> numpy.ndarray:
+        """
+        Gets the final node quality sensor readings -- note that those might be subject to 
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing node quality sensor locations for which the sensor readings are requested. 
+            If None, the readings from all node quality sensors are returned.
+
+            The default is None.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Node quality sensor readings.
+        """
+        if self.sensor_config.quality_node_sensors == []:
+            raise ValueError("No node quality sensors set")
+        if sensor_locations is not None:
+            if not isinstance(sensor_locations, list):
+                raise TypeError("'sensor_locations' must be an instance of 'list[str]' "+\
+                                f"but not of '{type(sensor_locations)}'")
+            if any(s_id not in self.sensor_config.quality_node_sensors for s_id in sensor_locations):
+                raise ValueError("Invalid sensor ID in 'sensor_locations' -- note that all "+\
+                                 "sensors in 'sensor_locations' must be set in the current "+\
+                                    "node quality sensor configuration")
+        else:
+            sensor_locations = self.sensor_config.quality_node_sensors
+
+        if self.__sensor_readings is None:
+            self.get_data()
+
+        idx = [self.sensor_config.get_index_of_reading(node_quality_sensor=s_id) \
+               for s_id in sensor_locations]
+        return self.__sensor_readings[:,idx]
+
+    def get_data_links_quality(self, sensor_locations:list[str]=None) -> numpy.ndarray:
+        """
+        Gets the final link quality sensor readings -- note that those might be subject to 
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing link quality sensor locations for which the sensor readings are requested. 
+            If None, the readings from all link quality sensors are returned.
+
+            The default is None.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Link quality sensor readings.
+        """
+        if self.sensor_config.quality_link_sensors == []:
+            raise ValueError("No link quality sensors set")
+        if sensor_locations is not None:
+            if not isinstance(sensor_locations, list):
+                raise TypeError("'sensor_locations' must be an instance of 'list[str]' "+\
+                                f"but not of '{type(sensor_locations)}'")
+            if any(s_id not in self.sensor_config.quality_link_sensors for s_id in sensor_locations):
+                raise ValueError("Invalid sensor ID in 'sensor_locations' -- note that all "+\
+                                 "sensors in 'sensor_locations' must be set in the current "+\
+                                    "link quality sensor configuration")
+        else:
+            sensor_locations = self.sensor_config.quality_link_sensors
+
+        if self.__sensor_readings is None:
+            self.get_data()
+
+        idx = [self.sensor_config.get_index_of_reading(link_quality_sensor=s_id) \
+               for s_id in sensor_locations]
+        return self.__sensor_readings[:,idx]
+
+    def get_data_pumps_state(self, sensor_locations:list[str]=None) -> numpy.ndarray:
+        """
+        Gets the final pump state sensor readings -- note that those might be subject to 
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing pump state sensor locations for which the sensor readings are requested. 
+            If None, the readings from all pump state sensors are returned.
+
+            The default is None.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Pump state sensor readings.
+        """
+        if self.sensor_config.pump_state_sensors == []:
+            raise ValueError("No pump state sensors set")
+        if sensor_locations is not None:
+            if not isinstance(sensor_locations, list):
+                raise TypeError("'sensor_locations' must be an instance of 'list[str]' "+\
+                                f"but not of '{type(sensor_locations)}'")
+            if any(s_id not in self.sensor_config.pump_state_sensors for s_id in sensor_locations):
+                raise ValueError("Invalid sensor ID in 'sensor_locations' -- note that all "+\
+                                 "sensors in 'sensor_locations' must be set in the current "+\
+                                    "pump state sensor configuration")
+        else:
+            sensor_locations = self.sensor_config.pump_state_sensors
+
+        if self.__sensor_readings is None:
+            self.get_data()
+
+        idx = [self.sensor_config.get_index_of_reading(pump_state_sensor=s_id) \
+               for s_id in sensor_locations]
+        return self.__sensor_readings[:,idx]
+
+    def get_data_valves_state(self, sensor_locations:list[str]=None) -> numpy.ndarray:
+        """
+        Gets the final valve state sensor readings -- note that those might be subject to 
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing valve state sensor locations for which the sensor readings are requested. 
+            If None, the readings from all valve state sensors are returned.
+
+            The default is None.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Valve state sensor readings.
+        """
+        if self.sensor_config.valve_state_sensors == []:
+            raise ValueError("No valve state sensors set")
+        if sensor_locations is not None:
+            if not isinstance(sensor_locations, list):
+                raise TypeError("'sensor_locations' must be an instance of 'list[str]' "+\
+                                f"but not of '{type(sensor_locations)}'")
+            if any(s_id not in self.sensor_config.valve_state_sensors for s_id in sensor_locations):
+                raise ValueError("Invalid sensor ID in 'sensor_locations' -- note that all "+\
+                                 "sensors in 'sensor_locations' must be set in the current "+\
+                                    "valve state sensor configuration")
+        else:
+            sensor_locations = self.sensor_config.valve_state_sensors
+
+        if self.__sensor_readings is None:
+            self.get_data()
+
+        idx = [self.sensor_config.get_index_of_reading(valve_state_sensor=s_id) \
+               for s_id in sensor_locations]
+        return self.__sensor_readings[:,idx]
+
+    def get_data_tanks_water_level(self, sensor_locations:list[str]=None) -> numpy.ndarray:
+        """
+        Gets the final water tanks level sensor readings -- note that those might be subject to 
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing flow sensor locations for which the sensor readings are requested. 
+            If None, the readings from all water tanks level sensors are returned.
+
+            The default is None.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Water tanks level sensor readings.
+        """
+        if self.sensor_config.tank_level_sensors == []:
+            raise ValueError("No tank level sensors set")
+        if sensor_locations is not None:
+            if not isinstance(sensor_locations, list):
+                raise TypeError("'sensor_locations' must be an instance of 'list[str]' "+\
+                                f"but not of '{type(sensor_locations)}'")
+            if any(s_id not in self.sensor_config.flow_sensors for s_id in sensor_locations):
+                raise ValueError("Invalid sensor ID in 'sensor_locations' -- note that all "+\
+                                 "sensors in 'sensor_locations' must be set in the current "+\
+                                    "water tanks level sensor configuration")
+        else:
+            sensor_locations = self.sensor_config.tank_level_sensors
+
+        if self.__sensor_readings is None:
+            self.get_data()
+
+        idx = [self.sensor_config.get_index_of_reading(tank_level_sensor=s_id) \
+               for s_id in sensor_locations]
+        return self.__sensor_readings[:,idx]
