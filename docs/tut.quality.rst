@@ -11,8 +11,10 @@ Basic Quality Analysis
 
 The basic quality analysis supports water age analysis, simple chemical analysis, 
 and source tracing analysis.
-Note that only one of these analysis be performed at a time -- i.e. multiple simulation runs 
-are necessary if different quality analysis are requested.
+
+.. note::
+    Note that only one of these analysis be performed at a time -- i.e. multiple simulation runs 
+    are necessary if different quality analysis are requested.
 
 The requested quality analysis must be set (i.e. activated) before the simulation is run:
 

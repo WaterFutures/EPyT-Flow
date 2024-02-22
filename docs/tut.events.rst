@@ -24,7 +24,7 @@ the leak size is increasing linearly from the start time until it reaches its ma
 at the peak time where it stays until the leakage is over.
 
 .. note::
-    What leak diameter refers to small or large leak depends mainly on the link/pipe diameter, 
+    Which leak diameter refers to small or large leak depends mainly on the link/pipe diameter, 
     which might be different for different links/pipes and is also likely to differ between different water distribution networks.
 
 Example for adding an abrupt and an incipient leakage:
