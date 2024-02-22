@@ -56,6 +56,44 @@ Example for specifying a sensor placement BEFORE the simulation is run:
         # Run simulation
         # ....
 
+Alternatively, one can use sensor type specific functions for specifying a sensor placement 
+BEFORE the simulation is run:
+
++---------------------+--------------------------------------------------------------------------------------------------------------------------+
+| Sensor type         | Function for specifying sensors                                                                                          |
++=====================+==========================================================================================================================+
+| Pressure            | :func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.set_pressure_sensors`          |
++---------------------+--------------------------------------------------------------------------------------------------------------------------+
+| Flow                | :func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.set_flow_sensors`              |
++---------------------+--------------------------------------------------------------------------------------------------------------------------+
+| Demand              | :func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.set_demand_sensors`            |
++---------------------+--------------------------------------------------------------------------------------------------------------------------+
+| Link quality        | :func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.set_link_quality_sensors`      |
++---------------------+--------------------------------------------------------------------------------------------------------------------------+
+| Node quality        | :func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.set_node_quality_sensors`      |
++---------------------+--------------------------------------------------------------------------------------------------------------------------+
+| Valve state         | :func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.set_valve_sensors`             |
++---------------------+--------------------------------------------------------------------------------------------------------------------------+
+| Pump state          | :func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.set_pump_sensors`              |
++---------------------+--------------------------------------------------------------------------------------------------------------------------+
+| Tank water level    | :func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.set_tank_sensors`              |
++---------------------+--------------------------------------------------------------------------------------------------------------------------+
+
+.. code-block:: python
+
+    # Open/Create a new scenario based on the Hanoi network
+    network_config = load_hanoi()
+    with WaterDistributionNetworkScenarioSimulator(scenario_config=network_config) as sim:
+        # Place pressure sensors at nodes "13", "16", "22", and "30"
+        sim.set_pressure_sensors(sensor_locations=["13", "16", "22", "30"])
+
+        # Place a flow sensor at link/pipe "1"
+        sim.set_flow_sensors(sensor_locations=["1"])
+
+        # Run simulation
+        # ....
+
+
 Example for specifying a sensor placement AFTER the simulation is run by calling 
 :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.change_sensor_config` 
 of a :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
