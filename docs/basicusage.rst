@@ -32,4 +32,5 @@ Quick example
             res = sim.run_simulation()
 
             # Show sensor readings over the entire simulation
-            print(res.get_data())
+            print(f"Pressure readings: {res.get_data_pressures()}")
+            print(f"Flow readings: {res.get_data_flows()}")

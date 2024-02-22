@@ -14,13 +14,14 @@ if __name__ == "__main__":
         sim.set_general_parameters(simulation_duration=2)
 
         # Place pressure sensors at nodes "13", "16", "22", and "30"
-        sim.set_sensors(SENSOR_TYPE_NODE_PRESSURE, sensor_locations=["13", "16", "22", "30"])
+        sim.set_pressure_sensors(sensor_locations=["13", "16", "22", "30"])
 
         # Place a flow sensor at link/pipe "1"
-        sim.set_sensors(SENSOR_TYPE_LINK_FLOW, sensor_locations=["1"])
+        sim.set_flow_sensors(sensor_locations=["1"])
 
         # Run entire simulation
         res = sim.run_simulation()
 
         # Show sensor readings over the entire simulation
-        print(res.get_data())
+        print(f"Pressure readings: {res.get_data_pressures()}")
+        print(f"Flow readings: {res.get_data_flows()}")
