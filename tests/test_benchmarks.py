@@ -5,6 +5,7 @@ from epyt_flow.data.benchmarks.leakdb import load_leakdb
 from epyt_flow.data.benchmarks.battledim import load_battledim
 from epyt_flow.data.benchmarks.gecco_water_quality import load_gecco2017_water_quality_data, \
     load_gecco2018_water_quality_data, load_gecco2019_water_quality_data
+from epyt_flow.data.benchmarks.water_usage import load_water_usage
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
 
 from utils import get_temp_folder
@@ -66,6 +67,32 @@ def test_gecco_water_quality():
     assert y is not None
 
     data = load_gecco2019_water_quality_data(download_dir=get_temp_folder(), return_X_y=False)
+    df_data= data["train"]
+    assert df_data is not None
+
+    df_data= data["validation"]
+    assert df_data is not None
+
+    df_data = data["test"]
+    assert df_data is not None
+
+
+def test_water_usage():
+    data = load_water_usage(return_X_y=True)
+    X, y = data["train"]
+    assert X is not None
+    assert y is not None
+
+    X, y = data["validation"]
+    assert X is not None
+    assert y is not None
+
+    X, y = data["test"]
+    assert X is not None
+    assert y is not None
+
+
+    data = load_water_usage(return_X_y=False)
     df_data= data["train"]
     assert df_data is not None
 

@@ -18,6 +18,14 @@ epyt_flow.data.benchmarks.battledim
    :show-inheritance:
 
 
+epyt_flow.data.benchmarks.water_usage
+-------------------------------------
+
+.. automodule:: epyt_flow.data.benchmarks.water_usage
+   :members:
+   :show-inheritance:
+
+
 epyt_flow.data.benchmarks.gecco_water_quality
 ---------------------------------------------
 
