@@ -846,6 +846,8 @@ class WaterDistributionNetworkScenarioSimulator():
         if not isinstance(pattern, numpy.ndarray):
             raise TypeError("'pattern' must be an instance of 'numpy.ndarray' " + \
                             f"but not of '{type(pattern)}'")
+        if not source_type in ["CONCEN", "MASS", "SETPOINT", "FLOWPACED"]:
+            raise ValueError("Invalid type of water quality source")
 
         node_idx = self.epanet_api.getNodeIndex(node_id)
         pattern_idx = self.epanet_api.addPattern(pattern_id, pattern)
