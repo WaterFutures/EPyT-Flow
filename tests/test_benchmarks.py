@@ -1,7 +1,8 @@
 import sys
 sys.path.insert(0,'..')
 
-from epyt_flow.data.benchmarks import load_leakdb, load_battledim
+from epyt_flow.data.benchmarks.leakdb import load_leakdb
+from epyt_flow.data.benchmarks.battledim import load_battledim
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
 
 from utils import get_temp_folder

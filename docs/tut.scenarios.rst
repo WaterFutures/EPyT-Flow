@@ -203,3 +203,18 @@ Example of loading the Hanoi network:
     with WaterDistributionNetworkScenarioSimulator(scenario_config=network_config) as sim:
         # Set any additional parameters and finalize the scenario configuration ....
         # Run simulation ...
+
+
+Predefined benchmarks
+---------------------
+
+EPyT-Flow comes with a set of benchmarks. Usually, those are pre-defined scenarios for 
+different tasks such as leakage detection and localization.
+
++------------+--------------------------------------------------------------+
+| Benchmark  | Function for loading                                         |
++============+==============================================================+
+| LeakDB     | :func:`~epyt_flow.data.benchmarks.leakdb.load_leakdb`        |
++------------+--------------------------------------------------------------+
+| BattLeDIM  | :func:`~epyt_flow.data.benchmarks.battledim.load_battledim`  |
++------------+--------------------------------------------------------------+
