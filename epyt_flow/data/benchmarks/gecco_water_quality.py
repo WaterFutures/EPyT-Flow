@@ -7,7 +7,29 @@ import numpy as np
 import pandas as pd
 
 from ..networks import download_if_necessary
-from ...utils import get_temp_folder
+from ...utils import get_temp_folder, f1_score
+
+
+def evaluation_score(y_pred, y):
+    """
+    Evaluates the performance of a detection method.
+    
+    .. note::
+        All GECCO water quality challenges use the F1-score for evaluation.
+
+    Parameters
+    ----------
+    y_pred : `numpy.ndarray`
+        Event indication prediction over time
+    y : `numpy.ndarray`
+        Ground truth event indication over time.
+    
+    Returns
+    -------
+    `float`
+        Evaluation score.
+    """
+    return f1_score(y_pred, y)
 
 
 
