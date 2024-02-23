@@ -1,3 +1,6 @@
+"""
+Module provides a base class for sensor reading events such as sensor faults.
+"""
 from abc import abstractmethod
 import numpy
 

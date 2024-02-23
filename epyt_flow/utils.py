@@ -1,3 +1,6 @@
+"""
+Module provides helper functions.
+"""
 import tempfile
 
 

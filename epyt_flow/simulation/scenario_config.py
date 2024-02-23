@@ -1,3 +1,6 @@
+"""
+Module provides a class for specifying scenario configurations.
+"""
 from typing import Any
 from copy import deepcopy
 import json

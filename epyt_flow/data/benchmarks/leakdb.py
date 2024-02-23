@@ -1,3 +1,6 @@
+"""
+Module provides functions for loading LeakDB scenarios.
+"""
 import os
 import json
 import scipy
@@ -96,11 +99,11 @@ def load_leakdb(scenarios_id:list[int], use_net1:bool=True,
     ----------
     scenarios_id : `list[int]`
         List of scenarios ID that are to be loaded -- there is a total number of 1000 scenarios.
-    use_net1 : `bool`
+    use_net1 : `bool`, optional
         If True, Net1 network will be used, otherwise the Hanoi network will be used.
 
         The default is True.
-    download_dir : `str`
+    download_dir : `str`, optional
         Path to the Net1.inp or Hanoi.inp file -- if None, the temp folder will be used.
         If the path does not exist, the .inp will be downloaded to the give path.
 

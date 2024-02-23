@@ -1,3 +1,6 @@
+"""
+Module provides a base classes for events.
+"""
 from abc import ABC
 import math
 

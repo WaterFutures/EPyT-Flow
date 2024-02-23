@@ -1,3 +1,6 @@
+"""
+Module provides functions for loading BattLeDIM scenarios.
+"""
 from datetime import datetime
 
 from ..networks import load_ltown
@@ -26,7 +29,7 @@ def load_battledim(evaluation:bool, download_dir:str=None) -> ScenarioConfig:
     evaluation : `bool`
         If True, the evaluation scenario is returned, otherwise the historical 
         (i.e. training) scenario is returned.
-    download_dir : `str`
+    download_dir : `str`, optional
         Path to the L-TOWN.inp file -- if None, the temp folder will be used.
         If the path does not exist, the .inp will be downloaded to the give path.
 

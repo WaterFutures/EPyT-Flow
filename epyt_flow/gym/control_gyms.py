@@ -1,3 +1,6 @@
+"""
+Module provides functions for registering and creating control environments.
+"""
 from .scenario_control_env import WaterDistributionNetworkScenarioControlEnv
 
 

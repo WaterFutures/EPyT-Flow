@@ -1,3 +1,6 @@
+"""
+Module provides a base classes for system events such as leakages, actuator events, etc.
+"""
 from abc import abstractmethod
 import epyt
 

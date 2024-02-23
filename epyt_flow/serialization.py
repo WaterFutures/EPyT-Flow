@@ -1,3 +1,6 @@
+"""
+Module provides functions and classes for serialization.
+"""
 from typing import Any
 from abc import abstractmethod, ABC
 import zipfile

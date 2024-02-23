@@ -1,3 +1,6 @@
+"""
+Module provides a base class anomaly detectors.
+"""
 from abc import abstractmethod, ABC
 
 from ..simulation.scada import ScadaData

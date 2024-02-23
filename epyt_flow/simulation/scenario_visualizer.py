@@ -1,4 +1,6 @@
-from typing import Any
+"""
+Module provides a class for visualizing scenarios.
+"""
 import matplotlib.pyplot as plt
 
 from .scenario_simulator import WaterDistributionNetworkScenarioSimulator

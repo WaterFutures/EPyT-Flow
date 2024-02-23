@@ -1,3 +1,6 @@
+"""
+Module provides a function for loading the water usage data set by P. Pavlou et al.
+"""
 import os
 import numpy as np
 import pandas as pd

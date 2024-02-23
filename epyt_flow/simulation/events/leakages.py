@@ -1,3 +1,6 @@
+"""
+Module provides classes for implementing leakages.
+"""
 from copy import deepcopy
 import math
 import numpy

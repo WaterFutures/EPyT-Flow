@@ -1,3 +1,6 @@
+"""
+Module provides a class for implementing model uncertainty.
+"""
 from copy import deepcopy
 import epyt
 import numpy as np

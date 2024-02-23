@@ -1,3 +1,7 @@
+"""
+Module provides a classes for exporting SCADA data stored in 
+:class:`~epyt_flow.simulation.scada.scada_data.ScadaData`.
+"""
 from abc import abstractmethod
 import numpy
 import numpy as np
@@ -10,7 +14,7 @@ from .scada_data import ScadaData
 class ScadaDataExport():
     """
     Base class for exporting SCADA data stored in 
-    :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData`.
+    :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`.
     
     Parameters
     ----------
@@ -37,7 +41,7 @@ class ScadaDataExport():
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData`
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             SCADA data to be described.
 
         Returns
@@ -66,7 +70,7 @@ class ScadaDataExport():
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData`
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             SCADA data to be exported.
         """
         raise NotImplementedError()
@@ -85,7 +89,7 @@ class ScadaDataNumpyExport(ScadaDataExport):
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData`
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             SCADA data to be exported.
         """
         if not isinstance(scada_data, ScadaData):
@@ -114,7 +118,7 @@ class ScadaDataXlsxExport(ScadaDataExport):
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData`
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             SCADA data to be exported.
         """
         if not isinstance(scada_data, ScadaData):
@@ -154,7 +158,7 @@ class ScadaDataMatlabExport(ScadaDataExport):
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData`
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             SCADA data to be exported.
         """
         if not isinstance(scada_data, ScadaData):

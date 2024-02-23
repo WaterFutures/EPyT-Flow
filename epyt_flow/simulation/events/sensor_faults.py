@@ -1,3 +1,6 @@
+"""
+Module provides classes for implementing different sensor faults.
+"""
 from abc import abstractmethod
 import numpy
 import numpy as np

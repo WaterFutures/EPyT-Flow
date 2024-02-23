@@ -1,3 +1,6 @@
+"""
+Module provides a class for implementing sensor noise (e.g. uncertainty in sensor readings).
+"""
 from copy import deepcopy
 import numpy
 

@@ -1,3 +1,6 @@
+"""
+Module provides a class for storing and processing SCADA data.
+"""
 from copy import deepcopy
 import numpy
 import numpy as np

@@ -1,3 +1,6 @@
+"""
+Module provides a class for scenario simulations.
+"""
 import os
 from typing import Generator
 from copy import deepcopy

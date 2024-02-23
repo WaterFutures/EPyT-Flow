@@ -1,3 +1,6 @@
+"""
+Module provides a base class for control environments.
+"""
 from abc import abstractmethod, ABC
 from copy import deepcopy
 

@@ -1,3 +1,7 @@
+"""
+Module provides the leakage configurations for LeakDB.
+"""
+
 net1_leakages = """{
     "1": [
         {

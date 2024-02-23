@@ -1,3 +1,6 @@
+"""
+Module provides classes for implementing different types of uncertainties.
+"""
 from abc import ABC, abstractmethod
 import numpy
 import numpy as np

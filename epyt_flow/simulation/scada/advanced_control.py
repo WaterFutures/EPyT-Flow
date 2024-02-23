@@ -1,3 +1,6 @@
+"""
+Module provides a classes for control modules.
+"""
 from abc import abstractmethod, ABC
 import numpy as np
 import epyt
