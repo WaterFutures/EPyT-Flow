@@ -1,8 +1,11 @@
 import sys
 sys.path.insert(0,'..')
+import os
 
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import ScenarioConfig, WaterDistributionNetworkScenarioSimulator
+
+from utils import get_temp_folder
 
 
 def test_configparser():
@@ -36,7 +39,12 @@ def test_configparser():
                 {"type": "constant", "constant_shift": 2.0, "sensor_id": "16", "sensor_type": 1, "start_time": 5000, "end_time": 100000}
             ]
         }"""
-    load_hanoi()    # Make sure Hanoi network is available
+    # Use OS dependend path
+    config_as_json = config_as_json.replace("/tmp/Hanoi.inp", os.path.join(get_temp_folder(),
+                                                                           "Hanoi.inp"))
+
+    # Make sure Hanoi network is available
+    load_hanoi(download_dir=get_temp_folder())
 
     # Load config from JSON and run the simulation
     config = ScenarioConfig.load_from_json(config_as_json)
