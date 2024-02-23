@@ -765,6 +765,7 @@ class WaterDistributionNetworkScenarioSimulator():
                 simulation_duration * 24 * 3600)  # TODO: Changing the simulation duration from .inp file seems to break EPANET-MSX
         if hydraulic_time_step is not None:
             self.epanet_api.setTimeHydraulicStep(hydraulic_time_step)
+            self.epanet_api.setTimeReportingStep(hydraulic_time_step)
         if quality_time_step is not None:
             self.epanet_api.setTimeQualityStep(quality_time_step)
         if quality_model is not None:
