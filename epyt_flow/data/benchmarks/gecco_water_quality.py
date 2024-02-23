@@ -3,6 +3,7 @@ Module provides functions for loading different GECCO water quality data sets.
 """
 import os
 from typing import Any
+import numpy
 import numpy as np
 import pandas as pd
 
@@ -10,7 +11,7 @@ from ..networks import download_if_necessary
 from ...utils import get_temp_folder, f1_score
 
 
-def evaluation_score(y_pred, y):
+def evaluation_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
     """
     Evaluates the performance of a detection method.
     

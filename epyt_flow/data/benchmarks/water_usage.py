@@ -2,11 +2,39 @@
 Module provides a function for loading the water usage data set by P. Pavlou et al.
 """
 import os
+import numpy
 import numpy as np
 import pandas as pd
 
 from ..networks import download_if_necessary
-from ...utils import get_temp_folder
+from ...utils import get_temp_folder, accuracy_score, precision_score, roc_auc_score, f1_micro_score
+
+
+def evaluation_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> dict:
+    """
+    Evaluates the performance of a detection method.
+    
+    Note that instead of a single metric, the following set of metrics is used:
+        - Accuracy
+        - Precision
+        - F1-score (using "micro" averaging)
+        - Cohen's kappa
+        - ROC AUC
+
+    Parameters
+    ----------
+    y_pred : `numpy.ndarray`
+        Event indication prediction over time
+    y : `numpy.ndarray`
+        Ground truth event indication over time.
+    
+    Returns
+    -------
+    `dict`
+        All evaluation scores.
+    """
+    return {"accuracy": accuracy_score(y_pred, y), "precision": precision_score(y_pred, y),
+            "f1-micro": f1_micro_score(y_pred, y), "roc-auc": roc_auc_score(y_pred, y)}
 
 
 def load_water_usage(download_dir:str=None, return_X_y:bool=True) -> dict:
