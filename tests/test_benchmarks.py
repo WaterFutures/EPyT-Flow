@@ -6,9 +6,9 @@ from epyt_flow.data.benchmarks.leakdb import load_leakdb
 from epyt_flow.data.benchmarks.battledim import load_battledim
 from epyt_flow.data.benchmarks.gecco_water_quality import load_gecco2017_water_quality_data, \
     load_gecco2018_water_quality_data, load_gecco2019_water_quality_data, \
-        evaluation_score as gecco_evaluation_score
+        compute_evaluation_score as gecco_evaluation_score
 from epyt_flow.data.benchmarks.water_usage import load_water_usage, \
-    evaluation_score as water_usage_evaluation_score
+    compute_evaluation_score as water_usage_evaluation_score
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
 
 from utils import get_temp_folder

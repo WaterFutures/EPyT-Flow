@@ -11,7 +11,7 @@ from ..networks import download_if_necessary
 from ...utils import get_temp_folder, f1_score
 
 
-def evaluation_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
+def compute_evaluation_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
     """
     Evaluates the performance of a detection method.
     
