@@ -50,7 +50,7 @@ class SensorFault(SensorReadingEvent):
         return sensor_readings
 
 
-@serializable(SENSOR_FAULT_CONSTANT_ID)
+@serializable(SENSOR_FAULT_CONSTANT_ID, ".epytflow_sensorfault_constant")
 class SensorFaultConstant(SensorFault, Serializable):
     """
     Class implementing a constant shift sensor fault.
@@ -86,7 +86,7 @@ class SensorFaultConstant(SensorFault, Serializable):
         return sensor_reading + b * self.__constant_shift
 
 
-@serializable(SENSOR_FAULT_DRIFT_ID)
+@serializable(SENSOR_FAULT_DRIFT_ID, ".epytflow_sensorfault_drift")
 class SensorFaultDrift(SensorFault, Serializable):
     """
     Class implementing a drift sensor fault.
@@ -118,7 +118,7 @@ class SensorFaultDrift(SensorFault, Serializable):
         return sensor_reading + b * (self.__coef * (cur_time - self.start_time))
 
 
-@serializable(SENSOR_FAULT_GAUSSIAN_ID)
+@serializable(SENSOR_FAULT_GAUSSIAN_ID, ".epytflow_sensorfault_gaussian")
 class SensorFaultGaussian(SensorFault, Serializable):
     """
     Class implementing a Gaussian shift sensor fault -- i.e. 
@@ -154,7 +154,7 @@ class SensorFaultGaussian(SensorFault, Serializable):
         return sensor_reading + b * np.random.normal(loc=0, scale=self.__std)
 
 
-@serializable(SENSOR_FAULT_PERCENTAGE_ID)
+@serializable(SENSOR_FAULT_PERCENTAGE_ID, ".epytflow_sensorfault_percentage",)
 class SensorFaultPercentage(SensorFault, Serializable):
     """
     Class implementing a percentage shift sensor fault.
@@ -189,7 +189,7 @@ class SensorFaultPercentage(SensorFault, Serializable):
         return sensor_reading + b * self.__coef * sensor_reading
 
 
-@serializable(SENSOR_FAULT_STUCKATZERO_ID)
+@serializable(SENSOR_FAULT_STUCKATZERO_ID, ".epytflow_sensorfault_zero")
 class SensorFaultStuckZero(SensorFault, Serializable):
     """
     Class implementing a stuck-at-zero sensor fault -- i.e. sensor reading is set to zero.

@@ -16,7 +16,7 @@ from .events.leakages import AbruptLeakage, IncipientLeakage
 from ..serialization import serializable, Serializable, SCENARIO_CONFIG_ID
 
 
-@serializable(SCENARIO_CONFIG_ID)
+@serializable(SCENARIO_CONFIG_ID, ".epytflow_scenario_config")
 class ScenarioConfig(Serializable):
     """
     Configuration of a scenario.

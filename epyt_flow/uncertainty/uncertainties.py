@@ -67,7 +67,7 @@ class Uncertainty(ABC):
         return data
 
 
-@serializable(GAUSSIAN_UNCERTAINTY_ID)
+@serializable(GAUSSIAN_UNCERTAINTY_ID, ".epytflow_uncertainty_gaussian")
 class GaussianUncertainty(Uncertainty, Serializable):
     """
     Class implementing Gaussian uncertainty -- i.e. Gaussian noise is added to the data.
@@ -126,7 +126,7 @@ class GaussianUncertainty(Uncertainty, Serializable):
         return self.clip(data)
 
 
-@serializable(UNIFORM_UNCERTAINTY_ID)
+@serializable(UNIFORM_UNCERTAINTY_ID, ".epytflow_uncertainty_uniform")
 class UniformUncertainty(Uncertainty, Serializable):
     """
     Class implementing uniform uncertainty -- i.e. uniform noise is added to the data.
@@ -171,7 +171,7 @@ class UniformUncertainty(Uncertainty, Serializable):
         return self.clip(data)
 
 
-@serializable(DEEP_UNIFORM_UNCERTAINTY_ID)
+@serializable(DEEP_UNIFORM_UNCERTAINTY_ID, ".epytflow_uncertainty_deep_uniform")
 class DeepUniformUncertainty(Uncertainty, Serializable):
     """
     Class implementing deep uniform uncertainty -- i.e. random uniform noise
@@ -200,7 +200,7 @@ class DeepUniformUncertainty(Uncertainty, Serializable):
         return self.clip(data)
 
 
-@serializable(DEEP_GAUSSIAN_UNCERTAINTY_ID)
+@serializable(DEEP_GAUSSIAN_UNCERTAINTY_ID, ".epytflow_uncertainty_deep_gaussian")
 class DeepGaussianUncertainty(Uncertainty, Serializable):
     """
     Class implementing deep Gaussian uncertainty -- i.e. random Gaussian noise
@@ -225,7 +225,7 @@ class DeepGaussianUncertainty(Uncertainty, Serializable):
         return self.clip(data)
 
 
-@serializable(DEEP_UNCERTAINTY_ID)
+@serializable(DEEP_UNCERTAINTY_ID, ".epytflow_uncertainty_deep")
 class DeepUncertainty(Uncertainty, Serializable):
     """
     Class implementing deep uncertainty -- i.e. completly random noise is added to the data.

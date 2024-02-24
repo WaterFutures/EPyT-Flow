@@ -19,7 +19,7 @@ SENSOR_TYPE_PUMP_STATE      = 7
 SENSOR_TYPE_TANK_LEVEL      = 8
 
 
-@serializable(SENSOR_CONFIG_ID)
+@serializable(SENSOR_CONFIG_ID, ".epytflow_sensor_config")
 class SensorConfig(Serializable):
     """
     Class for storing a sensor configuration.

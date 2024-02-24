@@ -11,7 +11,7 @@ from ...uncertainty import SensorNoise
 from ...serialization import serializable, Serializable, SCADA_DATA_ID
 
 
-@serializable(SCADA_DATA_ID)
+@serializable(SCADA_DATA_ID, ".epytflow_scada_data")
 class ScadaData(Serializable):
     """
     Class for storing and processing SCADA data.

@@ -12,7 +12,7 @@ from ...serialization import serializable, Serializable,\
     LEAKAGE_ID, ABRUPT_LEAKAGE_ID, INCIPIENT_LEAKAGE_ID
 
 
-@serializable(LEAKAGE_ID)
+@serializable(LEAKAGE_ID, ".epytflow_leakage")
 class Leakage(SystemEvent, Serializable):
     """
     Base class for a leakage.
@@ -164,7 +164,7 @@ class Leakage(SystemEvent, Serializable):
             self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_id, 0.)
 
 
-@serializable(ABRUPT_LEAKAGE_ID)
+@serializable(ABRUPT_LEAKAGE_ID, ".epytflow_leakage_abrupt")
 class AbruptLeakage(Leakage):
     """
     Class implementing an abrupt leakage event.
@@ -195,7 +195,7 @@ class AbruptLeakage(Leakage):
         self.profile = np.ones(n_leaky_time_points)
 
 
-@serializable(INCIPIENT_LEAKAGE_ID)
+@serializable(INCIPIENT_LEAKAGE_ID, ".epytflow_leakage_incipient")
 class IncipientLeakage(Leakage):
     """
     Class implementing an incipient leakage event.

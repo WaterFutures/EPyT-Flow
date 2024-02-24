@@ -9,7 +9,7 @@ from ..serialization import serializable, Serializable, MODEL_UNCERTAINTY_ID
 from .uncertainties import Uncertainty
 
 
-@serializable(MODEL_UNCERTAINTY_ID)
+@serializable(MODEL_UNCERTAINTY_ID, ".epytflow_uncertainty_model_uncertainty")
 class ModelUncertainty(Serializable):
     """
     Class implementing model uncertainty -- i.e. uncertainties in pipe length, pipe roughness, 

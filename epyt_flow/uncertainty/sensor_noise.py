@@ -8,7 +8,7 @@ from .uncertainties import Uncertainty
 from ..serialization import serializable, Serializable, SENSOR_NOISE_ID
 
 
-@serializable(SENSOR_NOISE_ID)
+@serializable(SENSOR_NOISE_ID, ".epytflow_sensor_noise")
 class SensorNoise(Serializable):
     """
     Class implementing sensor noise/uncertainty.

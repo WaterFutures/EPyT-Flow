@@ -37,7 +37,7 @@ def my_unpackb(data:bytes) -> Any:
     return umsgpack.unpackb(data, ext_handlers=ext_handler_unpack)
 
 
-def serializable(my_id:int):
+def serializable(my_id:int, my_file_ext:str):
     """
     Decorator for a serializable class -- i.e. subclass of
     :class:`~epyt_flow.serialization.Serializable`.
@@ -48,12 +48,19 @@ def serializable(my_id:int):
     ----------
     my_id : `int`
         ID of the class.
+    my_file_ext : `str`
+        File extension.
     """
     def wrapper(my_class):
         @staticmethod
         def unpackb(data:bytes) -> Any:
             return my_class(**my_unpackb(data))
         setattr(my_class, "unpackb", unpackb)
+
+        @staticmethod
+        def file_ext() -> str:
+            return my_file_ext
+        setattr(my_class, "file_ext", file_ext)
 
         return umsgpack.ext_serializable(my_id)(my_class)
 
@@ -62,7 +69,8 @@ def serializable(my_id:int):
 
 class Serializable(ABC):
     """
-    Base class for a serializable class -- must be used in conjunction with the decorator `@serializable`.
+    Base class for a serializable class -- must be used in conjunction with the 
+    decorator `@serializable`.
     """
     def __init__(self, **kwds):
         super().__init__(**kwds)
@@ -147,6 +155,9 @@ class Serializable(ABC):
 
             The default is True.
         """
+        if not f_out.endswith(self.file_ext()):
+            f_out += self.file_ext()
+
         return save_to_file(f_out, self, use_zip)
 
 

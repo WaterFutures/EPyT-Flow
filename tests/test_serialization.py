@@ -34,7 +34,7 @@ def test_scadadata():
 
         res = sim.run_simulation()
 
-        f = os.path.join(get_temp_folder(), "my_hanoi.scada_data")
+        f = os.path.join(get_temp_folder(), "my_hanoi.epytflow_scada_data")
         res.save_to_file(f)
         res_loaded = ScadaData.load_from_file(f)
 
