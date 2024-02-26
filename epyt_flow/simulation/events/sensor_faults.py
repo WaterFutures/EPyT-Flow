@@ -2,12 +2,11 @@
 Module provides classes for implementing different sensor faults.
 """
 from abc import abstractmethod
-import numpy
 import numpy as np
 
 from .sensor_reading_event import SensorReadingEvent
-from ...serialization import serializable, Serializable, SENSOR_FAULT_CONSTANT_ID,\
-    SENSOR_FAULT_DRIFT_ID, SENSOR_FAULT_GAUSSIAN_ID, SENSOR_FAULT_PERCENTAGE_ID,\
+from ...serialization import serializable, Serializable, SENSOR_FAULT_CONSTANT_ID, \
+    SENSOR_FAULT_DRIFT_ID, SENSOR_FAULT_GAUSSIAN_ID, SENSOR_FAULT_PERCENTAGE_ID, \
     SENSOR_FAULT_STUCKATZERO_ID
 
 
@@ -19,10 +18,8 @@ class SensorFault(SensorReadingEvent):
     https://github.com/eldemet/sensorfaultmodels/blob/main/sensorfaultmodels.m
     and https://github.com/Mariosmsk/sensorfaultmodels/blob/main/sensorfaultmodels.py
     """
-    def __init__(self, **kwds):
-        super().__init__(**kwds)
 
-    def compute_multiplier(self, cur_time:int) -> float:
+    def compute_multiplier(self, cur_time: int) -> float:
         b1 = 0
         b2 = 0
         a1 = 1
@@ -37,11 +34,11 @@ class SensorFault(SensorReadingEvent):
         return b1 - b2
 
     @abstractmethod
-    def apply_sensor_fault(self, b, sensor_reading:float, cur_time:int) -> float:
+    def apply_sensor_fault(self, b, sensor_reading: float, cur_time: int) -> float:
         raise NotImplementedError()
 
-    def apply(self, sensor_readings:numpy.ndarray,
-              sensor_readings_time:numpy.ndarray) -> numpy.ndarray:
+    def apply(self, sensor_readings: np.ndarray,
+              sensor_readings_time: np.ndarray) -> np.ndarray:
         for i in range(sensor_readings.shape[0]):
             t = sensor_readings_time[i]
             sensor_readings[i] = self.apply_sensor_fault(self.compute_multiplier(t),
@@ -60,9 +57,9 @@ class SensorFaultConstant(SensorFault, Serializable):
     constant_shift : `float`
         Constant that is added to the sensor reading.
     """
-    def __init__(self, constant_shift:float, **kwds):
+    def __init__(self, constant_shift: float, **kwds):
         if not isinstance(constant_shift, float):
-            raise TypeError("'constant_shift' must be an instance of 'float' but no of "+\
+            raise TypeError("'constant_shift' must be an instance of 'float' but no of " +
                             f"'{type(constant_shift)}'")
 
         self.__constant_shift = constant_shift
@@ -82,7 +79,7 @@ class SensorFaultConstant(SensorFault, Serializable):
     def __str__(self) -> str:
         return f"{type(self).__name__} {super().__str__()} constant: {self.__constant_shift}"
 
-    def apply_sensor_fault(self, b:float, sensor_reading:float, cur_time:int) -> float:
+    def apply_sensor_fault(self, b: float, sensor_reading: float, cur_time: int) -> float:
         return sensor_reading + b * self.__constant_shift
 
 
@@ -96,7 +93,7 @@ class SensorFaultDrift(SensorFault, Serializable):
     coef : `float`
         Coefficient of the drift.
     """
-    def __init__(self, coef:float, **kwds):
+    def __init__(self, coef: float, **kwds):
         self.__coef = coef
 
         super().__init__(**kwds)
@@ -114,7 +111,7 @@ class SensorFaultDrift(SensorFault, Serializable):
     def __str__(self) -> str:
         return f"{type(self).__name__} {super().__str__()} coef: {self.__coef}"
 
-    def apply_sensor_fault(self, b:float, sensor_reading:float, cur_time:int) -> float:
+    def apply_sensor_fault(self, b: float, sensor_reading: float, cur_time: int) -> float:
         return sensor_reading + b * (self.__coef * (cur_time - self.start_time))
 
 
@@ -129,7 +126,7 @@ class SensorFaultGaussian(SensorFault, Serializable):
     std : `float`
         Standard deviation of the Gaussian noise.
     """
-    def __init__(self, std:float, **kwds):
+    def __init__(self, std: float, **kwds):
         if not isinstance(std, float) or not std > 0:
             raise ValueError("'std' must be an instance of 'float' and be greater than 0")
 
@@ -150,7 +147,7 @@ class SensorFaultGaussian(SensorFault, Serializable):
     def __str__(self) -> str:
         return f"{type(self).__name__} {super().__str__()} std: {self.__std}"
 
-    def apply_sensor_fault(self, b:float, sensor_reading:float, cur_time:int) -> float:
+    def apply_sensor_fault(self, b: float, sensor_reading: float, cur_time: int) -> float:
         return sensor_reading + b * np.random.normal(loc=0, scale=self.__std)
 
 
@@ -164,7 +161,7 @@ class SensorFaultPercentage(SensorFault, Serializable):
     coef : `float`
         Coefficient (percentage) of the shift -- i.e. coef must be in (0,].
     """
-    def __init__(self, coef:float, **kwds):
+    def __init__(self, coef: float, **kwds):
         if not isinstance(coef, float) or not coef > 0:
             raise ValueError("'coef' must be an instance of 'float' and be greater than zero.")
 
@@ -185,7 +182,7 @@ class SensorFaultPercentage(SensorFault, Serializable):
     def __str__(self) -> str:
         return f"{type(self).__name__} {super().__str__()} coef: {self.__coef}"
 
-    def apply_sensor_fault(self, b:float, sensor_reading:float, cur_time:int) -> float:
+    def apply_sensor_fault(self, b: float, sensor_reading: float, cur_time: int) -> float:
         return sensor_reading + b * self.__coef * sensor_reading
 
 
@@ -194,17 +191,9 @@ class SensorFaultStuckZero(SensorFault, Serializable):
     """
     Class implementing a stuck-at-zero sensor fault -- i.e. sensor reading is set to zero.
     """
-    def __init__(self, **kwds):
-        super().__init__(**kwds)
-
-    def get_attributes(self) -> dict:
-        return super().get_attributes()
-
-    def __eq__(self, other) -> bool:
-        return super().__eq__(other)
 
     def __str__(self) -> str:
         return f"{type(self).__name__} {super().__str__()}"
 
-    def apply_sensor_fault(self, b:float, sensor_reading:float, cur_time:int) -> float:
+    def apply_sensor_fault(self, b: float, sensor_reading: float, cur_time: int) -> float:
         return sensor_reading + b * (-1. * sensor_reading)

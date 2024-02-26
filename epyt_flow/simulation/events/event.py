@@ -26,12 +26,12 @@ class Event(ABC):
         Time (seconds since the simulation start) when this event ends -- 
         float("inf") if it never ends.
     """
-    def __init__(self, start_time:int, end_time:int=None, **kwds):
+    def __init__(self, start_time: int, end_time: int = None, **kwds):
         if not isinstance(start_time, int) or start_time < 0:
-            raise ValueError("'start_time' must be a positive integer specifying the time "+\
+            raise ValueError("'start_time' must be a positive integer specifying the time " +
                              "at which this event starts.")
         if end_time is not None and not isinstance(end_time, int):
-            raise ValueError("'end_time' must be either None or a positive integer specifiying "+\
+            raise ValueError("'end_time' must be either None or a positive integer specifiying " +
                              "the time at which this event ends.")
         if end_time is not None:
             if start_time >= end_time:

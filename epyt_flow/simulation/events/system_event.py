@@ -16,7 +16,7 @@ class SystemEvent(Event):
 
         super().__init__(**kwds)
 
-    def init(self, epanet_api:epyt.epanet) -> None:
+    def init(self, epanet_api: epyt.epanet) -> None:
         """
         Initializes the event.
 
@@ -28,7 +28,7 @@ class SystemEvent(Event):
         self._epanet_api = epanet_api
 
     @abstractmethod
-    def apply(self, cur_time:int) -> None:
+    def apply(self, cur_time: int) -> None:
         """
         Implements the event using EPANET and EPANET-MSX.
 

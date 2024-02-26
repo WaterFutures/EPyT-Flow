@@ -18,7 +18,7 @@ class SensorReadingEvent(Event):
     sensor_type : `int`
         Type of the sensor that is specified in 'sensor_id'.
         Must be one of the following pre-defined constants:
-        
+
         - SENSOR_TYPE_NODE_PRESSURE     = 1
         - SENSOR_TYPE_NODE_QUALITY      = 2
         - SENSOR_TYPE_NODE_DEMAND       = 3
@@ -28,14 +28,14 @@ class SensorReadingEvent(Event):
         - SENSOR_TYPE_PUMP_STATE        = 7
         - SENSOR_TYPE_TANK_LEVEL        = 8
     """
-    def __init__(self, sensor_id:str, sensor_type:int, **kwds):
+    def __init__(self, sensor_id: str, sensor_type: int, **kwds):
         if not isinstance(sensor_id, str):
-            raise TypeError("'sensor_id' must be an instance of 'str' but not of "+\
+            raise TypeError("'sensor_id' must be an instance of 'str' but not of " +
                             f"'{type(sensor_id)}'")
         if not isinstance(sensor_type, int):
-            raise TypeError("'sensor_type' mut be an instance of 'int' but not of "+\
+            raise TypeError("'sensor_type' mut be an instance of 'int' but not of " +
                             f"'{type(sensor_type)}'")
-        if not(sensor_type >= 1 and sensor_type <= 5):
+        if not 1 <= sensor_type <= 5:
             raise ValueError("Invalid value of 'sensor_type'")
 
         self.__sensor_id = sensor_id
@@ -59,12 +59,12 @@ class SensorReadingEvent(Event):
             and self.__sensor_type == other.sensor_type
 
     def __str__(self) -> str:
-        return f"{super().__str__()} sensor_id: {self.__sensor_id} "+\
+        return f"{super().__str__()} sensor_id: {self.__sensor_id} " +\
             f"sensor_type: {self.__sensor_type}"
 
     @abstractmethod
-    def apply(self, sensor_readings:numpy.ndarray,
-              sensor_readings_time:numpy.ndarray) -> numpy.ndarray:
+    def apply(self, sensor_readings: numpy.ndarray,
+              sensor_readings_time: numpy.ndarray) -> numpy.ndarray:
         """
         Applies the sensor reading event to sensor reading values -- i.e. 
         modify the sensor readings.
@@ -75,7 +75,7 @@ class SensorReadingEvent(Event):
             Original sensor readings.
         sensor_readings_time : `numpy.ndarray`
             Time (seconds since simulation start) for each sensor reading row in 'sensor_readings'.
-        
+
         Returns
         -------
         `numpy.ndarray`
