@@ -1,3 +1,6 @@
+"""
+Minimalistic usage example of EPyt-Flow.
+"""
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
 

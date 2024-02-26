@@ -1,3 +1,6 @@
+"""
+Example on water age analysis.
+"""
 from epyt_flow.data.networks import load_richmond
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
 

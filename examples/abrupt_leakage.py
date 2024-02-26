@@ -1,3 +1,6 @@
+"""
+Example on the implementation of an abrupt leakage.
+"""
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator, AbruptLeakage
 
