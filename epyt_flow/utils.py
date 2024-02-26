@@ -2,7 +2,6 @@
 Module provides helper functions.
 """
 import tempfile
-import numpy
 import numpy as np
 from sklearn.metrics import roc_auc_score as skelarn_roc_auc_score
 from sklearn.metrics import f1_score as skelarn_f1_scpre
@@ -12,7 +11,7 @@ def get_temp_folder() -> str:
     return tempfile.gettempdir()
 
 
-def f1_micro_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
+def f1_micro_score(y_pred: np.ndarray, y: np.ndarray) -> float:
     """
     Computes the F1 score using for a multi-class classification by 
     counting the total true positives, false negatives and false positives.
@@ -23,7 +22,7 @@ def f1_micro_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
         Predicted labels.
     y : `numpy.ndarray`
         Ground truth labels.
-    
+
     Returns
     -------
     `float`
@@ -32,7 +31,7 @@ def f1_micro_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
     return skelarn_f1_scpre(y, y_pred, average="micro")
 
 
-def roc_auc_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
+def roc_auc_score(y_pred: np.ndarray, y: np.ndarray) -> float:
     """
     Computes the Area Under the Curve (AUC) of a classification.
 
@@ -42,7 +41,7 @@ def roc_auc_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
         Predicted labels.
     y : `numpy.ndarray`
         Ground truth labels.
-    
+
     Returns
     -------
     `float`
@@ -51,7 +50,7 @@ def roc_auc_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
     return skelarn_roc_auc_score(y, y_pred)
 
 
-def precision_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
+def precision_score(y_pred: np.ndarray, y: np.ndarray) -> float:
     """
     Computes the precision of a classification.
 
@@ -61,7 +60,7 @@ def precision_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
         Predicted labels.
     y : `numpy.ndarray`
         Ground truth labels.
-    
+
     Returns
     -------
     `float`
@@ -73,7 +72,7 @@ def precision_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
     return tp / (tp + fp)
 
 
-def accuracy_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
+def accuracy_score(y_pred: np.ndarray, y: np.ndarray) -> float:
     """
     Computes the accuracy of a classification.
 
@@ -83,7 +82,7 @@ def accuracy_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
         Predicted labels.
     y : `numpy.ndarray`
         Ground truth labels.
-    
+
     Returns
     -------
     `float`
@@ -93,7 +92,7 @@ def accuracy_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
     return tp / len(y)
 
 
-def f1_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
+def f1_score(y_pred: np.ndarray, y: np.ndarray) -> float:
     """
     Computes the F1-score for a binary classification.
 
@@ -103,7 +102,7 @@ def f1_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
         Predicted labels.
     y : `numpy.ndarray`
         Ground truth labels.
-    
+
     Returns
     -------
     `float`

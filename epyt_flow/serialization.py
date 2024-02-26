@@ -32,14 +32,15 @@ INCIPIENT_LEAKAGE_ID            = 16
 SCADA_DATA_ID                   = 17
 
 
-def my_packb(data:Any) -> bytes:
+def my_packb(data: Any) -> bytes:
     return umsgpack.packb(data, ext_handlers=ext_handler_pack)
 
-def my_unpackb(data:bytes) -> Any:
+
+def my_unpackb(data: bytes) -> Any:
     return umsgpack.unpackb(data, ext_handlers=ext_handler_unpack)
 
 
-def serializable(my_id:int, my_file_ext:str):
+def serializable(my_id: int, my_file_ext: str):
     """
     Decorator for a serializable class -- i.e. subclass of
     :class:`~epyt_flow.serialization.Serializable`.
@@ -55,7 +56,7 @@ def serializable(my_id:int, my_file_ext:str):
     """
     def wrapper(my_class):
         @staticmethod
-        def unpackb(data:bytes) -> Any:
+        def unpackb(data: bytes) -> Any:
             return my_class(**my_unpackb(data))
         setattr(my_class, "unpackb", unpackb)
 
@@ -94,7 +95,7 @@ class Serializable(ABC):
         return my_packb(self.get_attributes())
 
     @staticmethod
-    def load(data:bytes) -> Any:
+    def load(data: bytes) -> Any:
         """
         Deserializes an instance of this class.
 
@@ -111,7 +112,7 @@ class Serializable(ABC):
         return load(data)
 
     @staticmethod
-    def load_from_file(f_in:str, use_zip:bool=True) -> Any:
+    def load_from_file(f_in: str, use_zip: bool = True) -> Any:
         """
         Deserializes an instance of this class from a (compressed) file.
 
@@ -143,7 +144,7 @@ class Serializable(ABC):
         """
         return dump(self)
 
-    def save_to_file(self, f_out:str, use_zip:bool=True) -> None:
+    def save_to_file(self, f_out: str, use_zip: bool = True) -> None:
         """
         Serializes this instance and stores it in a (compressed) file.
 
@@ -163,7 +164,7 @@ class Serializable(ABC):
         return save_to_file(f_out, self, use_zip)
 
 
-def load(data:bytes) -> Any:
+def load(data: bytes) -> Any:
     """
     Deserializes data.
 
@@ -179,7 +180,8 @@ def load(data:bytes) -> Any:
     """
     return my_unpackb(data)
 
-def dump(data:Any) -> bytes:
+
+def dump(data: Any) -> bytes:
     """
     Serializes some given data to a byte array.
 
@@ -191,7 +193,7 @@ def dump(data:Any) -> bytes:
     return my_packb(data)
 
 
-def load_from_file(f_in:str, use_zip:bool=True) -> Any:
+def load_from_file(f_in: str, use_zip: bool = True) -> Any:
     """
     Deserializes data from a (compressed) file.
 
@@ -218,7 +220,8 @@ def load_from_file(f_in:str, use_zip:bool=True) -> Any:
             with myzip.open("data.epyt_flow") as f:
                 return load(f.read())
 
-def save_to_file(f_out:str, data:Any, use_zip:bool=True) -> None:
+
+def save_to_file(f_out: str, data: Any, use_zip: bool = True) -> None:
     """
     Serializes data and stores it in a (compressed) file.
 
@@ -237,7 +240,6 @@ def save_to_file(f_out:str, data:Any, use_zip:bool=True) -> None:
     else:
         with ZipFile(f_out, "w", zipfile.ZIP_DEFLATED) as myzip:
             myzip.writestr("data.epyt_flow", dump(data))
-
 
 
 # Add numpy.ndarray and networkx.Graph support
