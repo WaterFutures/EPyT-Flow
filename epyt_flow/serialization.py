@@ -7,8 +7,10 @@ import zipfile
 from zipfile import ZipFile
 import umsgpack
 import numpy as np
+import networkx
 
 
+NETWORKX_GRAPH_ID               = -2
 NUMPY_ARRAY_ID                  = -1
 SENSOR_CONFIG_ID                = 0
 SCENARIO_CONFIG_ID              = 1
@@ -238,7 +240,13 @@ def save_to_file(f_out:str, data:Any, use_zip:bool=True) -> None:
 
 
 
-# Add numpy.ndarray support
+# Add numpy.ndarray and networkx.Graph support
 ext_handler_pack = {np.ndarray: \
-                    lambda arr: umsgpack.Ext(NUMPY_ARRAY_ID, umsgpack.packb(arr.tolist()))}
-ext_handler_unpack = {NUMPY_ARRAY_ID: lambda ext: np.array(umsgpack.unpackb(ext.data))}
+                    lambda arr: umsgpack.Ext(NUMPY_ARRAY_ID, umsgpack.packb(arr.tolist())),
+                    networkx.Graph: \
+                        lambda graph: \
+                            umsgpack.Ext(NETWORKX_GRAPH_ID,
+                                         umsgpack.packb(networkx.node_link_data(graph)))}
+ext_handler_unpack = {NUMPY_ARRAY_ID: lambda ext: np.array(umsgpack.unpackb(ext.data)),
+                      NETWORKX_GRAPH_ID: \
+                        lambda ext: networkx.node_link_graph(umsgpack.unpackb(ext.data))}

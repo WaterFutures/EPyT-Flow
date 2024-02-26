@@ -236,8 +236,6 @@ class WaterDistributionNetworkScenarioSimulator():
         for node, node_elevation, node_type in zip(nodes_id, nodes_elevation, nodes_type):
             g.add_node(node, info={"elevation": node_elevation, "type": node_type})
 
-        g.add_nodes_from(nodes_id)
-
         for link, diameter, length in zip(links_data, links_diameter, links_length):
             g.add_edge(link[0], link[1], info={"diameter": diameter, "length": length})
 
