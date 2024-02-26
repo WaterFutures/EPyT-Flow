@@ -3,7 +3,6 @@ Module provides functions for loading different GECCO water quality data sets.
 """
 import os
 from typing import Any
-import numpy
 import numpy as np
 import pandas as pd
 
@@ -11,10 +10,10 @@ from ..networks import download_if_necessary
 from ...utils import get_temp_folder, f1_score
 
 
-def compute_evaluation_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
+def compute_evaluation_score(y_pred: np.ndarray, y: np.ndarray) -> float:
     """
     Evaluates the performance of a detection method.
-    
+
     .. note::
         All GECCO water quality challenges use the F1-score for evaluation.
 
@@ -24,7 +23,7 @@ def compute_evaluation_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
         Event indication prediction over time
     y : `numpy.ndarray`
         Ground truth event indication over time.
-    
+
     Returns
     -------
     `float`
@@ -33,8 +32,7 @@ def compute_evaluation_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> float:
     return f1_score(y_pred, y)
 
 
-
-def load_gecco2017_water_quality_data(download_dir:str=None, return_X_y:bool=True) -> Any:
+def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool = True) -> Any:
     """
     GECCO Industrial Challenge 2017 Dataset: A water quality dataset for the 
     "Monitoring of drinking-water quality" competition organized by M. Friese, J. Stork, 
@@ -66,7 +64,7 @@ def load_gecco2017_water_quality_data(download_dir:str=None, return_X_y:bool=Tru
         otherwise the data is returned as Pandas data frame.
 
         The default is True.
-        
+
     Returns
     -------
     `pandas.DataFrame` or `tuple[numpy.ndarray, numpy.ndarray]`
@@ -94,7 +92,7 @@ def load_gecco2017_water_quality_data(download_dir:str=None, return_X_y:bool=Tru
         return X, y
 
 
-def load_gecco2018_water_quality_data(download_dir:str=None, return_X_y:bool=True) -> Any:
+def load_gecco2018_water_quality_data(download_dir: str = None, return_X_y: bool = True) -> Any:
     """
     GECCO Industrial Challenge 2018 Dataset: A water quality dataset for the 
     "Internet of Things: Online Anomaly Detection for Drinking Water Quality" competition 
@@ -128,7 +126,7 @@ def load_gecco2018_water_quality_data(download_dir:str=None, return_X_y:bool=Tru
         otherwise the data is returned as Pandas data frame.
 
         The default is True.
-        
+
     Returns
     -------
     `pandas.DataFrame` or `tuple[numpy.ndarray, numpy.ndarray]`
@@ -157,7 +155,7 @@ def load_gecco2018_water_quality_data(download_dir:str=None, return_X_y:bool=Tru
         return X, y
 
 
-def load_gecco2019_water_quality_data(download_dir:str=None, return_X_y:bool=True) -> dict:
+def load_gecco2019_water_quality_data(download_dir: str = None, return_X_y: bool = True) -> dict:
     """
     GECCO Industrial Challenge 2019 Dataset: A water quality dataset for the "Internet of Things: 
     Online Event Detection for Drinking Water Quality Control" competition organized by 
@@ -192,7 +190,7 @@ def load_gecco2019_water_quality_data(download_dir:str=None, return_X_y:bool=Tru
         otherwise the data is returned as Pandas data frame.
 
         The default is True.
-        
+
     Returns
     -------
     `dict`

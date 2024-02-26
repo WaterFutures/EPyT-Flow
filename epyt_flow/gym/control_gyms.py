@@ -7,7 +7,7 @@ from .scenario_control_env import WaterDistributionNetworkScenarioControlEnv
 environments = {}
 
 
-def register(env_name:str, env:WaterDistributionNetworkScenarioControlEnv) -> None:
+def register(env_name: str, env: WaterDistributionNetworkScenarioControlEnv) -> None:
     """
     Registers a new environment under a given name.
 
@@ -21,13 +21,13 @@ def register(env_name:str, env:WaterDistributionNetworkScenarioControlEnv) -> No
     if env_name in environments:
         raise ValueError(f"Environment '{env_name}' already exists.")
     if not issubclass(env, WaterDistributionNetworkScenarioControlEnv):
-        raise TypeError("'env' must be a subclass of "+\
+        raise TypeError("'env' must be a subclass of " +
                         "'epyt_flow.gym.WaterDistributionNetworkScenarioControlEnv'")
 
     environments[env_name] = env
 
 
-def make(env_name:str, **kwds) -> WaterDistributionNetworkScenarioControlEnv:
+def make(env_name: str, **kwds) -> WaterDistributionNetworkScenarioControlEnv:
     """
     Creates an instance of a registered environment.
 
@@ -41,7 +41,7 @@ def make(env_name:str, **kwds) -> WaterDistributionNetworkScenarioControlEnv:
     :class:`epyt_flow.gym.scenario_control_env.WaterDistributionNetworkScenarioControlEnv`
         Environment.
     """
-    if not env_name in environments:
+    if env_name not in environments:
         raise ValueError(f"Unknown environment '{env_name}'.")
 
     return environments[env_name](**kwds)

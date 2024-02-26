@@ -2,7 +2,6 @@
 Module provides a function for loading the water usage data set by P. Pavlou et al.
 """
 import os
-import numpy
 import numpy as np
 import pandas as pd
 
@@ -10,10 +9,10 @@ from ..networks import download_if_necessary
 from ...utils import get_temp_folder, accuracy_score, precision_score, roc_auc_score, f1_micro_score
 
 
-def compute_evaluation_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> dict:
+def compute_evaluation_score(y_pred: np.ndarray, y: np.ndarray) -> dict:
     """
     Evaluates the performance of a detection method.
-    
+
     Note that instead of a single metric, the following set of metrics is used:
         - Accuracy
         - Precision
@@ -27,7 +26,7 @@ def compute_evaluation_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> dict:
         Event indication prediction over time
     y : `numpy.ndarray`
         Ground truth event indication over time.
-    
+
     Returns
     -------
     `dict`
@@ -37,7 +36,7 @@ def compute_evaluation_score(y_pred:numpy.ndarray, y:numpy.ndarray) -> dict:
             "f1-micro": f1_micro_score(y_pred, y), "roc-auc": roc_auc_score(y_pred, y)}
 
 
-def load_water_usage(download_dir:str=None, return_X_y:bool=True) -> dict:
+def load_water_usage(download_dir: str = None, return_X_y: bool = True) -> dict:
     """
     "Monitoring domestic water consumption: A comparative study of model-based and data-driven 
     end-use disaggregation methods" by P. Pavlou, S. Filippou, S. Solonos, S. G. Vrachimis, 
@@ -74,7 +73,7 @@ def load_water_usage(download_dir:str=None, return_X_y:bool=True) -> dict:
         otherwise the data is returned as Pandas data frame.
 
         The default is True.
-        
+
     Returns
     -------
     `dict`

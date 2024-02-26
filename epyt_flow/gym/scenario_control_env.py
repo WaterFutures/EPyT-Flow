@@ -20,7 +20,7 @@ class WaterDistributionNetworkScenarioControlEnv(ABC):
 
         The default is False.
     """
-    def __init__(self, scenario_config:ScenarioConfig, autoreset=False, **kwds):
+    def __init__(self, scenario_config: ScenarioConfig, autoreset: bool = False, **kwds):
         self.__scenario_config = scenario_config
         self._scenario_sim = None
         self._sim_generator = None

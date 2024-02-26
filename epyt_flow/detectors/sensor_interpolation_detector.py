@@ -17,7 +17,7 @@ class SensorInterpolationDetector(AnomalyDetector):
         """
         pass
 
-    def apply(self, scada_data:ScadaData) -> list[int]:
+    def apply(self, scada_data: ScadaData) -> list[int]:
         """
         Applies this detector to given SCADA data  and returns suspicious time points.
 
@@ -25,7 +25,7 @@ class SensorInterpolationDetector(AnomalyDetector):
         ----------
         scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             SCADA data in which to look for anomalies.
-        
+
         Returns
         -------
         `list[int]`
