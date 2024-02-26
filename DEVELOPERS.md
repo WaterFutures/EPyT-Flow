@@ -8,7 +8,7 @@ Code must work with all current Python versions from 3.9 to 3.12. Also, code mus
 
 ## Code Style Guide
 
-- Please follow the suggestions made by [Pylint](https://github.com/pylint-dev/pylint) -- violations require good justification!
+- Please follow the suggestions made by [Pylint](https://github.com/pylint-dev/pylint) and [Flake8](https://github.com/pycqa/flake8/) -- violations require good justification!
 
 - Docstrings must be written in Numpy-docstring style.
 
