@@ -22,7 +22,7 @@ class AdvancedControlModule(ABC):
 
         super().__init__(**kwds)
 
-    def init(self, epanet_api:epyt.epanet) -> None:
+    def init(self, epanet_api: epyt.epanet) -> None:
         """
         Initializes the control module.
 
@@ -32,12 +32,12 @@ class AdvancedControlModule(ABC):
             API to EPANET for implementing the control module.
         """
         if not isinstance(epanet_api, epyt.epanet):
-            raise TypeError("'epanet_api' must be an instance of 'epyt.epanet' but not of "+\
+            raise TypeError("'epanet_api' must be an instance of 'epyt.epanet' but not of " +
                             f"'{type(epanet_api)}'")
 
         self._epanet_api = epanet_api
 
-    def set_pump_status(self, pump_id:str, status:int) -> None:
+    def set_pump_status(self, pump_id: str, status: int) -> None:
         """
         Sets the status of a pump.
 
@@ -47,16 +47,16 @@ class AdvancedControlModule(ABC):
             ID of the pump for which the status is set.
         status : `int`
             New status of the pump -- either open or closed.
-            One of the following: 
+            One of the following:
 
-                - EN_PUMP_CLOSED  = 2 
-                - EN_PUMP_OPEN    = 3  
+                - EN_PUMP_CLOSED  = 2
+                - EN_PUMP_OPEN    = 3
         """
         pump_idx = self._epanet_api.getLinkPumpNameID().index(pump_id)
         pump_link_idx = self._epanet_api.getLinkPumpIndex()[pump_idx]
         self._epanet_api.setLinkStatus(pump_link_idx, status)
 
-    def set_pump_speed(self, pump_id:str, speed:float) -> None:
+    def set_pump_speed(self, pump_id: str, speed: float) -> None:
         """
         Sets the speed of pump.
 
@@ -71,7 +71,7 @@ class AdvancedControlModule(ABC):
         pattern_idx = self._epanet_api.getLinkPumpPatternIndex(pump_idx + 1)
         self._epanet_api.setPattern(pattern_idx, np.array([speed]))
 
-    def set_valve_status(self, valve_id:str, status:int) -> None:
+    def set_valve_status(self, valve_id: str, status: int) -> None:
         """
         Sets the status of a valve.
 
@@ -90,7 +90,8 @@ class AdvancedControlModule(ABC):
         valve_link_idx = self._epanet_api.getLinkValveIndex()[valve_idx]
         self._epanet_api.setLinkStatus(valve_link_idx, status)
 
-    def set_node_quality_source_value(self, node_id:str, pattern_id:str, qual_value:float) -> None:
+    def set_node_quality_source_value(self, node_id: str, pattern_id: str,
+                                      qual_value: float) -> None:
         """
         Sets the quality source at a particular node to a specific value -- e.g. 
         setting the chlorine concentration injection to a specified value.
@@ -110,10 +111,10 @@ class AdvancedControlModule(ABC):
         self._epanet_api.setPattern(pattern_idx, np.array([qual_value]))
 
     @abstractmethod
-    def step(self, scada_data:ScadaData) -> None:
+    def step(self, scada_data: ScadaData) -> None:
         """
         Implements the control algorithm -- i.e. mapping of sensor reading to actions.
-        
+
         Parameters
         ----------
         scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`

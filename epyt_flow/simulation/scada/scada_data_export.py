@@ -3,7 +3,6 @@ Module provides a classes for exporting SCADA data stored in
 :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`.
 """
 from abc import abstractmethod
-import numpy
 import numpy as np
 from scipy.io import savemat
 import pandas as pd
@@ -15,7 +14,7 @@ class ScadaDataExport():
     """
     Base class for exporting SCADA data stored in 
     :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`.
-    
+
     Parameters
     ----------
     f_out : `str`
@@ -26,7 +25,7 @@ class ScadaDataExport():
     f_out : `str`
         Path to the file to which the SCADA data will be exported.
     """
-    def __init__(self, f_out:str, **kwds):
+    def __init__(self, f_out: str, **kwds):
         self._f_out = f_out
 
         super().__init__(**kwds)
@@ -35,7 +34,7 @@ class ScadaDataExport():
     def f_out(self) -> str:
         return self._f_out
 
-    def create_column_desc(self, scada_data:ScadaData) -> numpy.ndarray:
+    def create_column_desc(self, scada_data: ScadaData) -> np.ndarray:
         """
         Creates columns descriptions -- i.e. sensor type and location for each column
 
@@ -64,7 +63,7 @@ class ScadaDataExport():
         return np.array(col_desc, dtype=object)
 
     @abstractmethod
-    def export(self, scada_data:ScadaData):
+    def export(self, scada_data: ScadaData):
         """
         Exports given SCADA data.
 
@@ -80,10 +79,8 @@ class ScadaDataNumpyExport(ScadaDataExport):
     """
     Class for exporting SCADA data to numpy (.npz file).
     """
-    def __init__(self, **kwds):
-        super().__init__(**kwds)
 
-    def export(self, scada_data:ScadaData):
+    def export(self, scada_data: ScadaData):
         """
         Exports given SCADA data.
 
@@ -93,9 +90,9 @@ class ScadaDataNumpyExport(ScadaDataExport):
             SCADA data to be exported.
         """
         if not isinstance(scada_data, ScadaData):
-            raise TypeError("'scada_data' must be an instance of "+\
-                            "'epyt_flow.simulation.scada_data.ScadaData' and not of "+\
-                                f"'{type(scada_data)}'")
+            raise TypeError("'scada_data' must be an instance of " +
+                            "'epyt_flow.simulation.scada_data.ScadaData' and not of " +
+                            f"'{type(scada_data)}'")
 
         sensor_readings = scada_data.get_data()
         sensor_readings_time = scada_data.sensor_readings_time
@@ -109,10 +106,8 @@ class ScadaDataXlsxExport(ScadaDataExport):
     """
     Class for exporting SCADA data to excep (.xlsx file).
     """
-    def __init__(self, **kwds):
-        super().__init__(**kwds)
 
-    def export(self, scada_data:ScadaData):
+    def export(self, scada_data: ScadaData):
         """
         Exports given SCADA data.
 
@@ -122,19 +117,19 @@ class ScadaDataXlsxExport(ScadaDataExport):
             SCADA data to be exported.
         """
         if not isinstance(scada_data, ScadaData):
-            raise TypeError("'scada_data' must be an instance of "+\
-                            "'epyt_flow.simulation.scada_data.ScadaData' and not of "+\
-                                f"'{type(scada_data)}'")
+            raise TypeError("'scada_data' must be an instance of " +
+                            "'epyt_flow.simulation.scada_data.ScadaData' and not of " +
+                            f"'{type(scada_data)}'")
 
         sensor_readings = scada_data.get_data()
         sensor_readings_time = scada_data.sensor_readings_time
         col_desc = self.create_column_desc(scada_data)
-        sensors_name = np.array([f"Sensor {i}" for i in range(1, sensor_readings.shape[1] + 1)],\
+        sensors_name = np.array([f"Sensor {i}" for i in range(1, sensor_readings.shape[1] + 1)],
                                 dtype=object).reshape(-1, 1)
         col_desc = np.concatenate((sensors_name, col_desc), axis=1)
 
         with pd.ExcelWriter(self.f_out) as writer:
-            pd.DataFrame(sensor_readings, columns=[f"Sensor {i}" for i in \
+            pd.DataFrame(sensor_readings, columns=[f"Sensor {i}" for i in
                                                    range(1, sensor_readings.shape[1] + 1)]).\
                                                     to_excel(writer,
                                                              sheet_name="Sensor readings",
@@ -149,10 +144,8 @@ class ScadaDataMatlabExport(ScadaDataExport):
     """
     Class for exporting SCADA data to MATLAB (.mat file).
     """
-    def __init__(self, **kwds):
-        super().__init__(**kwds)
 
-    def export(self, scada_data:ScadaData):
+    def export(self, scada_data: ScadaData):
         """
         Exports given SCADA data.
 
@@ -162,9 +155,9 @@ class ScadaDataMatlabExport(ScadaDataExport):
             SCADA data to be exported.
         """
         if not isinstance(scada_data, ScadaData):
-            raise TypeError("'scada_data' must be an instance of "+\
-                            "'epyt_flow.simulation.scada_data.ScadaData' and not of "+\
-                                f"'{type(scada_data)}'")
+            raise TypeError("'scada_data' must be an instance of " +
+                            "'epyt_flow.simulation.scada_data.ScadaData' and not of " +
+                            f"'{type(scada_data)}'")
 
         sensor_readings = scada_data.get_data()
         sensor_readings_time = scada_data.sensor_readings_time
