@@ -15,3 +15,11 @@ epyt_flow.serialization
 .. automodule:: epyt_flow.serialization
    :members:
    :show-inheritance:
+
+
+epyt_flow.utils
+---------------
+
+.. automodule:: epyt_flow.utils
+   :members:
+   :show-inheritance:
