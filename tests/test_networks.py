@@ -1,17 +1,20 @@
-import sys
-sys.path.insert(0,'..')
+"""
+Module provides tests to test the `epyt_flow.data.networks` module.
+"""
 import pytest
+from epyt_flow.data.networks import load_anytown, load_hanoi, load_kentucky, load_ltown, \
+    load_net1, load_net2, load_net3, load_richmond
 
-from epyt_flow.data.networks import *
-
-from utils import get_temp_folder
+from .utils import get_temp_folder
 
 
 def test_net1():
     assert load_net1(get_temp_folder()) is not None
 
+
 def test_net2():
     assert load_net2(get_temp_folder()) is not None
+
 
 def test_net3():
     assert load_net3(get_temp_folder()) is not None
@@ -19,6 +22,7 @@ def test_net3():
 
 def test_anytown():
     assert load_anytown(get_temp_folder()) is not None
+
 
 def test_richmond():
     assert load_richmond(get_temp_folder()) is not None

@@ -1,11 +1,12 @@
-import sys
-sys.path.insert(0,'..')
+"""
+Module provides tests to test parsing a :class:`~epty_flow.simulation.ScenarioConfig` 
+instance from text data.
+"""
 import os
-
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import ScenarioConfig, WaterDistributionNetworkScenarioSimulator
 
-from utils import get_temp_folder
+from .utils import get_temp_folder
 
 
 def test_configparser():
@@ -21,7 +22,6 @@ def test_configparser():
             "uncertainties": {
                 "pipe_length": {"type": "gaussian", "mean": 0, "scale": 1},
                 "pipe_roughness": {"type": "uniform", "low": 0, "hight": 1},
-                
                 "sensor_noise": {"type": "gaussian", "mean": 0, "scale": 0.01}
             },
             "sensors": {

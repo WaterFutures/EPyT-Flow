@@ -1,17 +1,17 @@
-import sys
-sys.path.insert(0,'..')
+"""
+Module provides tests to test the `epty_flow.data.benchmarks` module.
+"""
 import numpy as np
-
 from epyt_flow.data.benchmarks.leakdb import load_leakdb
 from epyt_flow.data.benchmarks.battledim import load_battledim
 from epyt_flow.data.benchmarks.gecco_water_quality import load_gecco2017_water_quality_data, \
     load_gecco2018_water_quality_data, load_gecco2019_water_quality_data, \
-        compute_evaluation_score as gecco_evaluation_score
+    compute_evaluation_score as gecco_evaluation_score
 from epyt_flow.data.benchmarks.water_usage import load_water_usage, \
     compute_evaluation_score as water_usage_evaluation_score
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
 
-from utils import get_temp_folder
+from .utils import get_temp_folder
 
 
 def test_leakdb():
@@ -33,14 +33,15 @@ def test_leakdb():
 
 
 def test_battledim():
-    hist_scenario = load_battledim(evaluation=False, download_dir=get_temp_folder())
+    hist_scenario = load_battledim(test_scenario=False, download_dir=get_temp_folder())
     assert hist_scenario is not None
 
-    eval_scenario = load_battledim(evaluation=True, download_dir=get_temp_folder())
+    eval_scenario = load_battledim(test_scenario=True, download_dir=get_temp_folder())
     assert eval_scenario is not None
 
 
 def test_gecco_water_quality():
+    # Load as Numpy arrays
     X, y = load_gecco2017_water_quality_data(download_dir=get_temp_folder(), return_X_y=True)
     assert X is not None
     assert y is not None
@@ -57,7 +58,7 @@ def test_gecco_water_quality():
     df_data = load_gecco2018_water_quality_data(download_dir=get_temp_folder(), return_X_y=False)
     assert df_data is not None
 
-
+    # Load as ScadaData instance
     data = load_gecco2019_water_quality_data(download_dir=get_temp_folder(), return_X_y=True)
     X, y = data["train"]
     assert X is not None
@@ -73,10 +74,10 @@ def test_gecco_water_quality():
     assert gecco_evaluation_score(np.random.choice([0, 1], size=y.shape), y=y) is not None
 
     data = load_gecco2019_water_quality_data(download_dir=get_temp_folder(), return_X_y=False)
-    df_data= data["train"]
+    df_data = data["train"]
     assert df_data is not None
 
-    df_data= data["validation"]
+    df_data = data["validation"]
     assert df_data is not None
 
     df_data = data["test"]
@@ -84,6 +85,7 @@ def test_gecco_water_quality():
 
 
 def test_water_usage():
+    # Load as Numpy arrays
     data = load_water_usage(return_X_y=True)
     X, y = data["train"]
     assert X is not None
@@ -98,12 +100,12 @@ def test_water_usage():
     assert y is not None
     assert water_usage_evaluation_score(np.random.choice([0, 1], size=y.shape), y) is not None
 
-
+    # Load as ScadaData instance
     data = load_water_usage(return_X_y=False)
-    df_data= data["train"]
+    df_data = data["train"]
     assert df_data is not None
 
-    df_data= data["validation"]
+    df_data = data["validation"]
     assert df_data is not None
 
     df_data = data["test"]

@@ -1,13 +1,13 @@
-import sys
-sys.path.insert(0,'..')
-
+"""
+Module provides tests to test different types of sensor faults.
+"""
 import epyt_flow
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
-from epyt_flow.simulation.events import SensorFaultConstant, SensorFaultDrift,\
+from epyt_flow.simulation.events import SensorFaultConstant, SensorFaultDrift, \
     SensorFaultPercentage, SensorFaultStuckZero, SensorFaultGaussian
 
-from utils import get_temp_folder
+from .utils import get_temp_folder
 
 
 def test_sensor_fault():
@@ -23,7 +23,6 @@ def test_sensor_fault():
 
         res = sim.run_simulation()
         res.get_data()
-
 
     with WaterDistributionNetworkScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=2)

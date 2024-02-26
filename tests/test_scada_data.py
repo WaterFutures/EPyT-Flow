@@ -1,11 +1,10 @@
-import sys
-sys.path.insert(0,'..')
-import numpy as np
-
+"""
+Module provides tests to test the :class:`epyt_flow.simulation.scada.ScadaData` class.
+"""
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
 
-from utils import get_temp_folder
+from .utils import get_temp_folder
 
 
 def test_sensor_readings():
@@ -20,7 +19,7 @@ def test_sensor_readings():
         assert len(res.get_data_pressures()) != 0
         assert len(res.get_data_flows()) != 0
 
-        assert len(res.get_data_pressures(sensor_locations=
-                                          [res.sensor_config.pressure_sensors[0]])) != 0
-        assert len(res.get_data_flows(sensor_locations=
-                                      [res.sensor_config.flow_sensors[0]])) != 0
+        assert len(res.get_data_pressures(
+            sensor_locations=[res.sensor_config.pressure_sensors[0]])) != 0
+        assert len(res.get_data_flows(
+            sensor_locations=[res.sensor_config.flow_sensors[0]])) != 0

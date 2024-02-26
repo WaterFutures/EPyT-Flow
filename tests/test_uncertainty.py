@@ -1,11 +1,12 @@
-import sys
-sys.path.insert(0,'..')
-
+"""
+Module provides tests to test different types of uncertainties and noise.
+"""
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
-from epyt_flow.uncertainty import GaussianUncertainty, UniformUncertainty, ModelUncertainty, SensorNoise
+from epyt_flow.uncertainty import GaussianUncertainty, UniformUncertainty, ModelUncertainty, \
+    SensorNoise
 
-from utils import get_temp_folder
+from .utils import get_temp_folder
 
 
 def test_model_uncertainty():

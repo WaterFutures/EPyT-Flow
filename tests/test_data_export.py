@@ -1,13 +1,14 @@
-import sys
-sys.path.insert(0,'..')
+"""
+Module provides tests to test different :class:`~epyt_flow.simulation.scada.ScadaData` exports.
+"""
 import os
 import numpy as np
-
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
-from epyt_flow.simulation.scada import ScadaDataNumpyExport, ScadaDataXlsxExport, ScadaDataMatlabExport
+from epyt_flow.simulation.scada import ScadaDataNumpyExport, ScadaDataXlsxExport, \
+    ScadaDataMatlabExport
 
-from utils import get_temp_folder
+from .utils import get_temp_folder
 
 
 def test_numpyexport():
@@ -27,6 +28,7 @@ def test_numpyexport():
 
         assert np.all(data == data_restored["sensor_readings"]) and \
             np.all(time == data_restored["sensor_readings_time"])
+
 
 def test_xlsx_export():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),

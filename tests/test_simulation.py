@@ -1,10 +1,11 @@
-import sys
-sys.path.insert(0,'..')
-
+"""
+Module provides tests to test the 
+:class:`~epyt_flow.simulation.WaterDistributionNetworkScenarioSimulator` class.
+"""
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
 
-from utils import get_temp_folder
+from .utils import get_temp_folder
 
 
 def test_randomize_demands():

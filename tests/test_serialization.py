@@ -1,13 +1,13 @@
-import sys
-sys.path.insert(0,'..')
+"""
+Module provides tests to test the serialization module.
+"""
 import os
-
 from epyt_flow.data.networks import load_hanoi, load_net1
-from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator, SensorConfig,\
+from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator, SensorConfig, \
     ScenarioConfig, ScadaData
 from epyt_flow.serialization import load, dump
 
-from utils import get_temp_folder
+from .utils import get_temp_folder
 
 
 def test_sensorconfig():
