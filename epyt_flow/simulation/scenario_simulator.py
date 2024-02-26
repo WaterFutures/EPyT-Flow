@@ -12,7 +12,9 @@ from epyt.epanet import ToolkitConstants
 import networkx
 
 from .scenario_config import ScenarioConfig
-from .sensor_config import *
+from .sensor_config import SensorConfig, SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY, \
+    SENSOR_TYPE_NODE_DEMAND, SENSOR_TYPE_NODE_PRESSURE, SENSOR_TYPE_NODE_QUALITY, \
+    SENSOR_TYPE_PUMP_STATE, SENSOR_TYPE_TANK_LEVEL, SENSOR_TYPE_VALVE_STATE
 from ..uncertainty import ModelUncertainty, SensorNoise
 from .events import SystemEvent, Leakage, SensorFault, SensorReadingEvent
 from .scada import ScadaData, AdvancedControlModule
@@ -21,7 +23,7 @@ from .scada import ScadaData, AdvancedControlModule
 class WaterDistributionNetworkScenarioSimulator():
     """
     Class for running a simulation of a water distribution network scenario.
-    
+
     Parameters
     ----------
     f_inp_in : `str`
@@ -67,16 +69,16 @@ class WaterDistributionNetworkScenarioSimulator():
             raise ValueError("Either 'f_inp_in' or 'scenario_config' must be set.")
         if f_inp_in is not None:
             if not isinstance(f_inp_in, str):
-                raise TypeError("'f_inp_in' must be an instance of 'str' but not of " + \
+                raise TypeError("'f_inp_in' must be an instance of 'str' but not of " +
                                 f"'{type(f_inp_in)}'")
         if f_msx_in is not None:
             if not isinstance(f_msx_in, str):
-                raise TypeError("'f_msx_in' must be an instance of 'str' but not of " + \
+                raise TypeError("'f_msx_in' must be an instance of 'str' but not of " +
                                 f"'{type(f_msx_in)}'")
         if scenario_config is not None:
             if not isinstance(scenario_config, ScenarioConfig):
-                raise TypeError("'scenario_config' must be an instance of " + \
-                                "'epyt_flow.simulation.ScenarioConfig' but not of " + \
+                raise TypeError("'scenario_config' must be an instance of " +
+                                "'epyt_flow.simulation.ScenarioConfig' but not of " +
                                 f"'{type(scenario_config)}'")
 
         self.epanet_api = None
@@ -134,8 +136,8 @@ class WaterDistributionNetworkScenarioSimulator():
     @sensor_config.setter
     def sensor_config(self, sensor_config: SensorConfig) -> None:
         if not isinstance(sensor_config, SensorConfig):
-            raise TypeError("'sensor_config' must be an instance of " + \
-                            "'epyt_flow.simulation.SensorConfig' but not of " + \
+            raise TypeError("'sensor_config' must be an instance of " +
+                            "'epyt_flow.simulation.SensorConfig' but not of " +
                             f"'{type(sensor_config)}'")
 
         self.__sensor_config = sensor_config
@@ -196,8 +198,8 @@ class WaterDistributionNetworkScenarioSimulator():
         demand_info = self.epanet_api.getDemandModel()
         general_params = {"hydraulic_time_step": self.epanet_api.getTimeHydraulicStep(),
                           "quality_time_step": self.epanet_api.getTimeQualityStep(),
-                          "simulation_duration": self.epanet_api.getTimeSimulationDuration() / \
-                                                 (24 * 3600),  # Days to seconds!
+                          "simulation_duration": self.epanet_api.getTimeSimulationDuration() /
+                          (24 * 3600),  # Days to seconds!
                           "quality_model": {"code": qual_info.QualityCode,
                                             "type": qual_info.QualityType,
                                             "chemical_name": qual_info.QualityChemName,
@@ -265,7 +267,7 @@ class WaterDistributionNetworkScenarioSimulator():
                 self.epanet_api.setPatternValue(pattern_id, t + 1, pattern[t])
 
     def set_node_demand_pattern(self, node_id: str, base_demand: float, demand_pattern_id: str,
-                                demand_pattern: numpy.ndarray) -> None:
+                                demand_pattern: np.ndarray) -> None:
         """
         Sets the demand pattern (incl. base demand) at a given node.
 
@@ -281,16 +283,16 @@ class WaterDistributionNetworkScenarioSimulator():
             Demand pattern over time. Final demand over time = base_demand * demand_pattern
         """
         if not isinstance(base_demand, float):
-            raise TypeError("'base_demand' must be an instance of 'float' " + \
+            raise TypeError("'base_demand' must be an instance of 'float' " +
                             f"but not if '{type(base_demand)}'")
         if not isinstance(demand_pattern_id, str):
-            raise TypeError("'demand_pattern_id' must be an instance of 'str' " + \
+            raise TypeError("'demand_pattern_id' must be an instance of 'str' " +
                             f"but not of '{type(demand_pattern_id)}'")
         if not isinstance(demand_pattern, np.ndarray):
-            raise TypeError("'demand_pattern' must be an instance of 'numpy.ndarray' " + \
+            raise TypeError("'demand_pattern' must be an instance of 'numpy.ndarray' " +
                             f"but not of '{type(demand_pattern)}'")
         if len(demand_pattern.shape) > 1:
-            raise ValueError(f"Inconsistent demand pattern shape '{demand_pattern.shape}' " + \
+            raise ValueError(f"Inconsistent demand pattern shape '{demand_pattern.shape}' " +
                              "detected. Expected a one dimensional array!")
 
         node_idx = self.epanet_api.getNodeIndex(node_id)
@@ -308,8 +310,8 @@ class WaterDistributionNetworkScenarioSimulator():
             Control module.
         """
         if not isinstance(control, AdvancedControlModule):
-            raise TypeError("'control' must be an instance of " + \
-                            "'epyt_flow.simulation.scada.AdvancedControlModule' not of " + \
+            raise TypeError("'control' must be an instance of " +
+                            "'epyt_flow.simulation.scada.AdvancedControlModule' not of " +
                             f"'{type(control)}'")
 
         self.__controls.append(control)
@@ -324,8 +326,8 @@ class WaterDistributionNetworkScenarioSimulator():
             Leakage.
         """
         if not isinstance(leakage_event, Leakage):
-            raise TypeError("'leakage_event' must be an instance of " + \
-                            "'epyt_flow.simulation.events.Leakage' not of " + \
+            raise TypeError("'leakage_event' must be an instance of " +
+                            "'epyt_flow.simulation.events.Leakage' not of " +
                             f"'{type(leakage_event)}'")
 
         self.__system_events.append(leakage_event)
@@ -341,7 +343,7 @@ class WaterDistributionNetworkScenarioSimulator():
             System event.
         """
         if not isinstance(event, SystemEvent):
-            raise TypeError("'event' must be an instance of " + \
+            raise TypeError("'event' must be an instance of " +
                             f"'epyt_flow.simulation.events.SystemEvent' not of '{type(event)}'")
 
         self.__system_events.append(event)
@@ -356,8 +358,8 @@ class WaterDistributionNetworkScenarioSimulator():
             Sensor fault specifications.
         """
         if not isinstance(sensor_fault_event, SensorFault):
-            raise TypeError("'sensor_fault_event' must be an instance of " + \
-                            "'epyt_flow.simulation.events.SensorFault' not of " + \
+            raise TypeError("'sensor_fault_event' must be an instance of " +
+                            "'epyt_flow.simulation.events.SensorFault' not of " +
                             f"'{type(sensor_fault_event)}'")
 
         self.__sensor_reading_events.append(sensor_fault_event)
@@ -372,8 +374,8 @@ class WaterDistributionNetworkScenarioSimulator():
             Sensor reading event.
         """
         if not isinstance(event, SensorReadingEvent):
-            raise TypeError("'event' must be an instance of " + \
-                            "'epyt_flow.simulation.events.SensorReadingEvent' not of " + \
+            raise TypeError("'event' must be an instance of " +
+                            "'epyt_flow.simulation.events.SensorReadingEvent' not of " +
                             f"'{type(event)}'")
 
         self.__sensor_reading_events.append(event)
@@ -526,7 +528,7 @@ class WaterDistributionNetworkScenarioSimulator():
         hyd_export : `str`, optional
             Path to an EPANET .hyd file for storing the simulated hydraulics -- these hydraulics 
             can be used later for an advanced quality analysis using EPANET-MSX.
-        
+
             If None, the simulated hydraulics will NOT be exported to a EPANET .hyd file.
 
             The default is None.
@@ -579,11 +581,11 @@ class WaterDistributionNetworkScenarioSimulator():
         hyd_export : `str`, optional
             Path to an EPANET .hyd file for storing the simulated hydraulics -- these hydraulics 
             can be used later for an advanced quality analysis using EPANET-MSX.
-        
+
             If None, the simulated hydraulics will NOT be exported to a EPANET .hyd file.
 
             The default is None.
-        
+
         support_abort : `bool`, optional
             If True, the simulation can be aborted after every time step -- i.e. the generator 
             takes a boolean as an input (send) to indicate whether the simulation 
@@ -692,8 +694,8 @@ class WaterDistributionNetworkScenarioSimulator():
             Model uncertainty specifications.
         """
         if not isinstance(model_uncertainty, ModelUncertainty):
-            raise TypeError("'model_uncertainty' must be an instance of " + \
-                            "'epyt_flow.uncertainties.ModelUncertainty' but not of " + \
+            raise TypeError("'model_uncertainty' must be an instance of " +
+                            "'epyt_flow.uncertainties.ModelUncertainty' but not of " +
                             f"'{type(model_uncertainty)}'")
 
         self.__model_uncertainty = model_uncertainty
@@ -708,8 +710,8 @@ class WaterDistributionNetworkScenarioSimulator():
             Sensor noise specification.
         """
         if not isinstance(sensor_noise, SensorNoise):
-            raise TypeError("'sensor_noise' must be an instance of " + \
-                            "'epyt_flow.uncertainties.SensorNoise' but not of " + \
+            raise TypeError("'sensor_noise' must be an instance of " +
+                            "'epyt_flow.uncertainties.SensorNoise' but not of " +
                             f"'{type(sensor_noise)}'")
 
         self.__sensor_noise = sensor_noise
@@ -732,9 +734,9 @@ class WaterDistributionNetworkScenarioSimulator():
             must contain the "type", the minimal pressure ("pressure_min"), 
             the required pressure ("pressure_required"),
             and the pressure exponent ("pressure_exponent").
-        
+
             The default is None.
-            
+
         simulation_duration : `int`, optional
             Number of days to be simulated.
 
@@ -782,7 +784,7 @@ class WaterDistributionNetworkScenarioSimulator():
     def __warn_if_quality_set(self):
         qual_info = self.epanet_api.getQualityInfo()
         if qual_info.QualityCode != ToolkitConstants.EN_NONE:
-            warnings.warn("You are overriding current quality settings " + \
+            warnings.warn("You are overriding current quality settings " +
                           f"'{qual_info.QualityType}'")
 
     def enable_waterage_analysis(self) -> None:
@@ -816,7 +818,7 @@ class WaterDistributionNetworkScenarioSimulator():
         self.set_general_parameters(quality_model={"type": "chem", "chemical_name": chemical_name,
                                                    "chemical_units": chemical_units})
 
-    def add_quality_source(self, node_id: str, pattern_id: str, pattern: numpy.ndarray,
+    def add_quality_source(self, node_id: str, pattern_id: str, pattern: np.ndarray,
                            source_type: str, source_strength: int = 1.) -> None:
         """
         Adds a new external water quality source at a particular node.
@@ -841,14 +843,14 @@ class WaterDistributionNetworkScenarioSimulator():
             The default is 1.
         """
         if self.epanet_api.getQualityInfo().QualityCode != ToolkitConstants.EN_CHEM:
-            raise RuntimeError("Chemical analysis is not enabled -- " + \
+            raise RuntimeError("Chemical analysis is not enabled -- " +
                                "call 'enable_chemical_analysis()' before calling this function.")
-        if not node_id in self.sensor_config.nodes:
+        if node_id not in self.sensor_config.nodes:
             raise ValueError(f"Unknown node '{node_id}'")
-        if not isinstance(pattern, numpy.ndarray):
-            raise TypeError("'pattern' must be an instance of 'numpy.ndarray' " + \
+        if not isinstance(pattern, np.ndarray):
+            raise TypeError("'pattern' must be an instance of 'numpy.ndarray' " +
                             f"but not of '{type(pattern)}'")
-        if not source_type in ["CONCEN", "MASS", "SETPOINT", "FLOWPACED"]:
+        if source_type not in ["CONCEN", "MASS", "SETPOINT", "FLOWPACED"]:
             raise ValueError("Invalid type of water quality source")
 
         node_idx = self.epanet_api.getNodeIndex(node_id)
@@ -868,7 +870,7 @@ class WaterDistributionNetworkScenarioSimulator():
         trace_node_id : `str`
             ID of the node traced in the source tracing analysis.
         """
-        if not trace_node_id in self.sensor_config.nodes:
+        if trace_node_id not in self.sensor_config.nodes:
             raise ValueError(f"Invalid node ID '{trace_node_id}'")
 
         self.__warn_if_quality_set()

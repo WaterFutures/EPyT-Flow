@@ -5,12 +5,12 @@ from typing import Any
 from copy import deepcopy
 import json
 
-from ..uncertainty import GaussianUncertainty, UniformUncertainty, ModelUncertainty, SensorNoise,\
+from ..uncertainty import GaussianUncertainty, UniformUncertainty, ModelUncertainty, SensorNoise, \
     Uncertainty
 from .sensor_config import SensorConfig
 from .scada import AdvancedControlModule
 from .events import SystemEvent, SensorReadingEvent
-from .events.sensor_faults import SensorFaultConstant, SensorFaultDrift, SensorFaultGaussian,\
+from .events.sensor_faults import SensorFaultConstant, SensorFaultDrift, SensorFaultGaussian, \
     SensorFaultPercentage, SensorFaultStuckZero
 from .events.leakages import AbruptLeakage, IncipientLeakage
 from ..serialization import serializable, Serializable, SCENARIO_CONFIG_ID
@@ -77,59 +77,59 @@ class ScenarioConfig(Serializable):
     sensor_reading_events : `list[`:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent` `]`
         List of sensor reading events -- i.e. events that affect the readings of sensors.
     """
-    def __init__(self, f_inp_in:str, f_msx_in:str=None, general_params:str=None,
-                 sensor_config:SensorConfig=None, controls:list[AdvancedControlModule]=[],
-                 sensor_noise:SensorNoise=None, model_uncertainty=ModelUncertainty(),
-                 system_events:list[SystemEvent]=[],
-                 sensor_reading_events:list[SensorReadingEvent]=[], **kwds):
+    def __init__(self, f_inp_in: str, f_msx_in: str = None, general_params: str = None,
+                 sensor_config: SensorConfig = None, controls: list[AdvancedControlModule] = [],
+                 sensor_noise: SensorNoise = None, model_uncertainty=ModelUncertainty(),
+                 system_events: list[SystemEvent] = [],
+                 sensor_reading_events: list[SensorReadingEvent] = [], **kwds):
         if not isinstance(f_inp_in, str):
-            raise TypeError("'f_inp_in' must be an instance of 'str' "+\
+            raise TypeError("'f_inp_in' must be an instance of 'str' " +
                             f"but no of '{type(f_inp_in)}'")
         if f_msx_in is not None:
             if not isinstance(f_msx_in, str):
-                raise TypeError("'f_msx_in' must be an instance of 'str' "+\
+                raise TypeError("'f_msx_in' must be an instance of 'str' " +
                                 f"but no of '{type(f_msx_in)}'")
         if general_params is not None:
             if not isinstance(general_params, dict):
-                raise TypeError("'general_params' must be an instance of 'dict' "+\
+                raise TypeError("'general_params' must be an instance of 'dict' " +
                                 f"but not of '{type(general_params)}'")
         if sensor_config is not None:
             if not isinstance(sensor_config, SensorConfig):
-                raise TypeError("'sensor_config' must be an instance of "+\
-                                "'epyt_flow.simulation.SensorConfig' but not of "+\
-                                    f"'{type(sensor_config)}'")
+                raise TypeError("'sensor_config' must be an instance of " +
+                                "'epyt_flow.simulation.SensorConfig' but not of " +
+                                f"'{type(sensor_config)}'")
         if not isinstance(controls, list):
-            raise TypeError("'controls' must be an instance of "+\
-                            "'list[epyt_flow.simualtion.scada.AdvancedControlModule]' but no of "+\
-                                f"'{type(controls)}'")
+            raise TypeError("'controls' must be an instance of " +
+                            "'list[epyt_flow.simualtion.scada.AdvancedControlModule]' but no of " +
+                            f"'{type(controls)}'")
         if len(controls) != 0:
             if any(not isinstance(c, AdvancedControlModule) for c in controls):
-                raise TypeError("Each item in 'controls' must be an instance of "+\
+                raise TypeError("Each item in 'controls' must be an instance of " +
                                 "'epyt_flow.simualtion.scada.AdvancedControlModule'")
         if sensor_noise is not None:
             if not isinstance(sensor_noise, SensorNoise):
-                raise TypeError("'sensor_noise' must be an instance of "+\
-                                "'epyt_flow.uncertainty.SensorNoise' but not of "+\
-                                    f"'{type(sensor_noise)}'")
+                raise TypeError("'sensor_noise' must be an instance of " +
+                                "'epyt_flow.uncertainty.SensorNoise' but not of " +
+                                f"'{type(sensor_noise)}'")
         if not isinstance(model_uncertainty, ModelUncertainty):
-            raise TypeError("'model_uncertainty' must be an instance of "+\
-                            "'epyt_flow.uncertainty.ModelUncertainty' but not of "+\
-                                f"'{type(model_uncertainty)}'")
+            raise TypeError("'model_uncertainty' must be an instance of " +
+                            "'epyt_flow.uncertainty.ModelUncertainty' but not of " +
+                            f"'{type(model_uncertainty)}'")
         if not isinstance(system_events, list):
-            raise TypeError("'system_events' must be an instance of "+\
-                            "'list[epyt_flow.simualtion.events.SystemEvent]' but no of "+\
-                                f"'{type(system_events)}'")
+            raise TypeError("'system_events' must be an instance of " +
+                            "'list[epyt_flow.simualtion.events.SystemEvent]' but no of " +
+                            f"'{type(system_events)}'")
         if len(system_events) != 0:
             if any(not isinstance(c, SystemEvent) for c in system_events):
-                raise TypeError("Each item in 'system_events' must be an instance of "+\
+                raise TypeError("Each item in 'system_events' must be an instance of " +
                                 "'epyt_flow.simualtion.events.SystemEvent'")
         if not isinstance(sensor_reading_events, list):
-            raise TypeError("'sensor_reading_events' must be an instance of "+\
-                            "'list[epyt_flow.simualtion.events.SensorReadingEvent]' but not of "+\
-                                f"'{type(sensor_reading_events)}'")
+            raise TypeError("'sensor_reading_events' must be an instance of " +
+                            "'list[epyt_flow.simualtion.events.SensorReadingEvent]' but not of " +
+                            f"'{type(sensor_reading_events)}'")
         if len(sensor_reading_events) != 0:
             if any(not isinstance(c, SensorReadingEvent) for c in sensor_reading_events):
-                raise TypeError("Each item in 'sensor_reading_events' must be an instance of "+\
+                raise TypeError("Each item in 'sensor_reading_events' must be an instance of " +
                                 "'epyt_flow.simualtion.events.SensorReadingEvent'")
 
         self.__f_inp_in = f_inp_in
@@ -207,7 +207,7 @@ class ScenarioConfig(Serializable):
             f"sensor_reading_events: {','.join(map(str, self.sensor_reading_events))}"
 
     @staticmethod
-    def load_from_json(config_data:str) -> Any:
+    def load_from_json(config_data: str) -> Any:
         """
         Loads a scenario configuration from a given JSON string.
 
@@ -215,7 +215,7 @@ class ScenarioConfig(Serializable):
         ----------
         config_data : `str`
             JSON data.
-        
+
         Returns
         -------
         :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
@@ -273,11 +273,11 @@ class ScenarioConfig(Serializable):
 
         # Uncertainties
         if "uncertainties" in data.keys():
-            def parse_uncertantiy(uncertainty_desc:dict) -> Uncertainty:
+            def parse_uncertantiy(uncertainty_desc: dict) -> Uncertainty:
                 uncertainty_type = uncertainty_desc["type"]
                 del uncertainty_desc["type"]
 
-                if uncertainty_type== "gaussian":
+                if uncertainty_type == "gaussian":
                     return GaussianUncertainty(**uncertainty_desc)
                 elif uncertainty_type == "uniform":
                     return UniformUncertainty(**uncertainty_desc)

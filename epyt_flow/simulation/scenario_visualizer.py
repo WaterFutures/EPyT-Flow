@@ -15,15 +15,15 @@ class ScenarioVisualizer():
     scenario : :class:`epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`
         Scenario to be visualized.
     """
-    def __init__(self, scenario:WaterDistributionNetworkScenarioSimulator):
+    def __init__(self, scenario: WaterDistributionNetworkScenarioSimulator):
         if not isinstance(scenario, WaterDistributionNetworkScenarioSimulator):
-            raise TypeError("'scenario' must be an instance of "+\
-                            "'epyt_flow.simulation.WaterDistributionNetworkScenarioSimulator' "+\
-                                f"but not of '{type(scenario)}'")
+            raise TypeError("'scenario' must be an instance of " +
+                            "'epyt_flow.simulation.WaterDistributionNetworkScenarioSimulator' " +
+                            f"but not of '{type(scenario)}'")
 
         self.__scenario = scenario
 
-    def plot_topology(self, show_sensor_config:bool=False, export_to_file:str=None) -> None:
+    def plot_topology(self, show_sensor_config: bool = False, export_to_file: str = None) -> None:
         """
         Plots the topology of the water distribution network in the given scenario.
 
@@ -52,7 +52,7 @@ class ScenarioVisualizer():
                 + sensor_config.demand_sensors + sensor_config.quality_node_sensors
             highlighted_links += sensor_config.flow_sensors + sensor_config.quality_link_sensors
 
-        self.__scenario.epanet_api.plot(highlightlink=highlighted_links,\
+        self.__scenario.epanet_api.plot(highlightlink=highlighted_links,
                                         highlightnode=highlighted_nodes, figure=False)
 
         if export_to_file is not None:
