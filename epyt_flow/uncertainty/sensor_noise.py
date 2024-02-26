@@ -18,9 +18,9 @@ class SensorNoise(Serializable):
     uncertainty : `Uncerainty`
         Sensor uncertainty.
     """
-    def __init__(self, uncertainty:Uncertainty, **kwds):
+    def __init__(self, uncertainty: Uncertainty, **kwds):
         if not isinstance(uncertainty, Uncertainty):
-            raise TypeError("'uncertainty' must be an instance of "+\
+            raise TypeError("'uncertainty' must be an instance of " +
                             f"'epyt_flow.uncertainty.Uncertainty' not of {type(uncertainty)}")
 
         self.__uncertainty = uncertainty
@@ -40,7 +40,7 @@ class SensorNoise(Serializable):
     def __str__(self) -> str:
         return f"uncertainty: {self.__uncertainty}"
 
-    def apply(self, sensor_readings:numpy.ndarray) -> numpy.ndarray:
+    def apply(self, sensor_readings: numpy.ndarray) -> numpy.ndarray:
         """
         Applies the sensor uncertainty to given sensor readings -- i.e. sensor readings
         are perturbed according to the specified uncertainty.

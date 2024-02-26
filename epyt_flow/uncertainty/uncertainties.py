@@ -2,12 +2,11 @@
 Module provides classes for implementing different types of uncertainties.
 """
 from abc import ABC, abstractmethod
-import numpy
 import numpy as np
 
 from .utils import generate_deep_random_gaussian_noise, create_deep_random_pattern
-from ..serialization import serializable, Serializable, GAUSSIAN_UNCERTAINTY_ID,\
-    UNIFORM_UNCERTAINTY_ID, DEEP_UNIFORM_UNCERTAINTY_ID, DEEP_GAUSSIAN_UNCERTAINTY_ID,\
+from ..serialization import serializable, Serializable, GAUSSIAN_UNCERTAINTY_ID, \
+    UNIFORM_UNCERTAINTY_ID, DEEP_UNIFORM_UNCERTAINTY_ID, DEEP_GAUSSIAN_UNCERTAINTY_ID, \
     DEEP_UNCERTAINTY_ID
 
 
@@ -26,7 +25,7 @@ class Uncertainty(ABC):
 
         The default is None.
     """
-    def __init__(self, min_value:float=None, max_value:float=None, **kwds):
+    def __init__(self, min_value: float = None, max_value: float = None, **kwds):
         super().__init__(**kwds)
 
         self.__min_value = min_value
@@ -49,7 +48,7 @@ class Uncertainty(ABC):
     def __str__(self) -> str:
         return f"min_value: {self.__min_value} max_value: {self.__max_value}"
 
-    def clip(self, data:numpy.ndarray) -> numpy.ndarray:
+    def clip(self, data: np.ndarray) -> np.ndarray:
         if self.__min_value is not None:
             data = np.min([data, self.__min_value])
         if self.__max_value is not None:
@@ -58,10 +57,10 @@ class Uncertainty(ABC):
         return data
 
     @abstractmethod
-    def apply(self, data:float):
+    def apply(self, data: float):
         raise NotImplementedError()
 
-    def apply_batch(self, data:numpy.ndarray) -> numpy.ndarray:
+    def apply_batch(self, data: np.ndarray) -> np.ndarray:
         for t in range(data.shape[0]):
             data[t] = self.apply(data[t])
         return data
@@ -87,7 +86,7 @@ class GaussianUncertainty(Uncertainty, Serializable):
 
         The default is None.
     """
-    def __init__(self, mean:float=None, scale:float=None, **kwds):
+    def __init__(self, mean: float = None, scale: float = None, **kwds):
         super().__init__(**kwds)
 
         self.__mean = np.random.rand() if mean is None else mean
@@ -112,11 +111,11 @@ class GaussianUncertainty(Uncertainty, Serializable):
     def __str__(self) -> str:
         return super().__str__() + f" mean: {self.__mean} scale: {self.__scale}"
 
-    def __create_uncertainties(self, n_samples:int=500) -> None:
+    def __create_uncertainties(self, n_samples: int = 500) -> None:
         self.__uncertainties_idx = 0
         self.__uncertainties = np.random.normal(self.__mean, self.__scale, size=n_samples)
 
-    def apply(self, data:float) -> float:
+    def apply(self, data: float) -> float:
         data += self.__uncertainties[self.__uncertainties_idx]
 
         self.__uncertainties_idx += 1
@@ -130,7 +129,7 @@ class GaussianUncertainty(Uncertainty, Serializable):
 class UniformUncertainty(Uncertainty, Serializable):
     """
     Class implementing uniform uncertainty -- i.e. uniform noise is added to the data.
-    
+
     Parameters
     ----------
     low : `float`, optional
@@ -142,7 +141,7 @@ class UniformUncertainty(Uncertainty, Serializable):
 
         The default is one.
     """
-    def __init__(self, low:float=0., high:float=1., **kwds):
+    def __init__(self, low: float = 0., high: float = 1., **kwds):
         super().__init__(**kwds)
 
         self.__min = low
@@ -165,7 +164,7 @@ class UniformUncertainty(Uncertainty, Serializable):
     def __str__(self) -> str:
         return super().__str__() + f" min: {self.__min} max: {self.__max}"
 
-    def apply(self, data:float) -> float:
+    def apply(self, data: float) -> float:
         data += np.random.uniform(low=self.__min, high=self.__max)
 
         return self.clip(data)
@@ -182,15 +181,16 @@ class DeepUniformUncertainty(Uncertainty, Serializable):
 
         self.__create_uncertainties()
 
-    def __create_uncertainties(self, n_samples:int=500):
+    def __create_uncertainties(self, n_samples: int = 500):
         self.__uncertainties_idx = 0
         rand_low = create_deep_random_pattern(n_samples)
         rand_high = create_deep_random_pattern(n_samples)
         rand_low = np.minimum(rand_low, rand_high)
         rand_high = np.maximum(rand_low, rand_high)
-        self.__uncertainties = [np.random.uniform(l, h) for l, h in zip(rand_low, rand_high)]
+        self.__uncertainties = [np.random.uniform(low, high)
+                                for low, high in zip(rand_low, rand_high)]
 
-    def apply(self, data:float) -> float:
+    def apply(self, data: float) -> float:
         data += self.__uncertainties[self.__uncertainties_idx]
 
         self.__uncertainties_idx += 1
@@ -211,11 +211,11 @@ class DeepGaussianUncertainty(Uncertainty, Serializable):
 
         self.__create_uncertainties()
 
-    def __create_uncertainties(self, n_samples:int=500) -> None:
+    def __create_uncertainties(self, n_samples: int = 500) -> None:
         self.__uncertainties_idx = 0
         self.__uncertainties = generate_deep_random_gaussian_noise(n_samples)
 
-    def apply(self, data:float) -> float:
+    def apply(self, data: float) -> float:
         data += self.__uncertainties[self.__uncertainties_idx]
 
         self.__uncertainties_idx += 1
@@ -230,7 +230,7 @@ class DeepUncertainty(Uncertainty, Serializable):
     """
     Class implementing deep uncertainty -- i.e. completly random noise is added to the data.
     """
-    def __init__(self, min_noise_value:float=0., max_noise_value:float=1., **kwds):
+    def __init__(self, min_noise_value: float = 0., max_noise_value: float = 1., **kwds):
         super().__init__(**kwds)
 
         self.__min_noise_value = min_noise_value
@@ -259,7 +259,7 @@ class DeepUncertainty(Uncertainty, Serializable):
         return super().__str__() + f" min_noise_value: {self.__min_noise_value} "+\
             "max_noise_value: {self.__max_noise_value}"
 
-    def __create_uncertainties(self, n_samples:int=500) -> None:
+    def __create_uncertainties(self, n_samples: int = 500) -> None:
         init_value = None
         if self.__uncertainties_idx is not None:
             init_value = self.__uncertainties[-1]
@@ -268,7 +268,7 @@ class DeepUncertainty(Uncertainty, Serializable):
         self.__uncertainties = create_deep_random_pattern(n_samples, self.__min_value,
                                                           self.__max_value, init_value)
 
-    def apply(self, data:float) -> float:
+    def apply(self, data: float) -> float:
         data += self.__uncertainties[self.__uncertainties_idx]
 
         self.__uncertainties_idx += 1

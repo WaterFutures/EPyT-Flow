@@ -1,9 +1,11 @@
+"""
+Module provides some helper functions regarding the implementation of uncertainty.
+"""
 import numpy as np
 from scipy.ndimage import gaussian_filter1d
 
 
-
-def smoothing(pattern:np.ndarray, sigma:float=10.) -> np.ndarray:
+def smoothing(pattern: np.ndarray, sigma: float = 10.) -> np.ndarray:
     """
     Smoothes a given pattern by applying a Gaussian filter.
 
@@ -15,7 +17,7 @@ def smoothing(pattern:np.ndarray, sigma:float=10.) -> np.ndarray:
         Standard deviation for the Gaussian filter.
 
         The default is 10.
-        
+
     Returns
     -------
     `numpy.ndarray`
@@ -24,7 +26,7 @@ def smoothing(pattern:np.ndarray, sigma:float=10.) -> np.ndarray:
     return gaussian_filter1d(pattern, sigma=sigma)
 
 
-def scale_to_range(pattern:np.ndarray, min_value:float, max_value:float) -> np.ndarray:
+def scale_to_range(pattern: np.ndarray, min_value: float, max_value: float) -> np.ndarray:
     """
     Scales a given pattern to an interval.
 
@@ -52,10 +54,10 @@ def scale_to_range(pattern:np.ndarray, min_value:float, max_value:float) -> np.n
             + min_value for x in pattern]
 
 
-def generate_random_gaussian_noise(n_samples:int):
+def generate_random_gaussian_noise(n_samples: int):
     """
     Generates Gaussian noise using a random mean ([0,1]) and random standard deviation ([0,1]).
-    
+
     Parameters
     ----------
     n_samples : `int`
@@ -69,7 +71,7 @@ def generate_random_gaussian_noise(n_samples:int):
     return np.random.normal(np.random.rand(), np.random.rand(), size=n_samples)
 
 
-def generate_deep_random_gaussian_noise(n_samples:int):
+def generate_deep_random_gaussian_noise(n_samples: int):
     """
     Generates random Gaussian noise where the mean and standard deviations are changing over time.
 
@@ -92,8 +94,8 @@ def generate_deep_random_gaussian_noise(n_samples:int):
     return noise
 
 
-def create_deep_random_pattern(n_samples:int, min_value:float=0., max_value:float=1.,
-                               init_value:float=None) -> np.ndarray:
+def create_deep_random_pattern(n_samples: int, min_value: float = 0., max_value: float = 1.,
+                               init_value: float = None) -> np.ndarray:
     """
     Generates a random pattern.
 
@@ -114,7 +116,7 @@ def create_deep_random_pattern(n_samples:int, min_value:float=0., max_value:floa
         If None, a random value is used.
 
         The default is None.
-    
+
     Returns
     -------
     `numpy.ndarray`
@@ -127,7 +129,8 @@ def create_deep_random_pattern(n_samples:int, min_value:float=0., max_value:floa
         if len(pattern) != 0:
             start_value = pattern[-1]
 
-        pattern += _create_deep_random_pattern(start_value, min_value=min_value, max_value=max_value)
+        pattern += _create_deep_random_pattern(start_value, min_value=min_value,
+                                               max_value=max_value)
 
     pattern = pattern[:n_samples]
 
@@ -137,8 +140,8 @@ def create_deep_random_pattern(n_samples:int, min_value:float=0., max_value:floa
     return np.array(pattern)
 
 
-def _create_deep_random_pattern(start_value:float=None, min_length:int=2, max_length:int=5,
-                                min_value:float=None, max_value:float=None) -> np.ndarray:
+def _create_deep_random_pattern(start_value: float = None, min_length: int = 2, max_length: int = 5,
+                                min_value: float = None, max_value: float = None) -> np.ndarray:
     """
     Generates a random pattern of random length.
 
