@@ -19,11 +19,6 @@ class ScadaDataExport():
     ----------
     f_out : `str`
         Path to the file to which the SCADA data will be exported.
-
-    Attributes
-    ----------
-    f_out : `str`
-        Path to the file to which the SCADA data will be exported.
     """
     def __init__(self, f_out: str, **kwds):
         self._f_out = f_out
@@ -32,6 +27,14 @@ class ScadaDataExport():
 
     @property
     def f_out(self) -> str:
+        """
+        Gets the path to the file to which the SCADA data will be exported.
+
+        Returns
+        -------
+        `str`
+            Path to the file to which the SCADA data will be exported.
+        """
         return self._f_out
 
     def create_column_desc(self, scada_data: ScadaData) -> np.ndarray:

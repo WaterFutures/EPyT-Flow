@@ -142,6 +142,14 @@ class ScadaData(Serializable):
 
     @property
     def sensor_config(self) -> SensorConfig:
+        """
+        Gets the sensor configuration.
+
+        Returns
+        -------
+        :class:`~epyt_flow.simulation.sensor_config.SensorConfig`
+            Sensor configuration.
+        """
         return deepcopy(self.__sensor_config)
 
     @sensor_config.setter
@@ -150,6 +158,14 @@ class ScadaData(Serializable):
 
     @property
     def sensor_noise(self) -> SensorNoise:
+        """
+        Gets the sensor noise.
+
+        Returns
+        -------
+        :class:`~epyt_flow.uncertainty.sensor_noise.SensorNoise`
+            Sensor noise.
+        """
         return deepcopy(self.__sensor_noise)
 
     @sensor_noise.setter
@@ -158,6 +174,14 @@ class ScadaData(Serializable):
 
     @property
     def sensor_faults(self) -> list[SensorFault]:
+        """
+        Gets all sensor faults.
+
+        Returns
+        -------
+        `list[` :class:`~epyt_flow.simulation.events.sensor_faults.SensorFault` `]`
+            All sensor faults.
+        """
         return deepcopy(self.__sensor_faults)
 
     @sensor_faults.setter
@@ -166,38 +190,110 @@ class ScadaData(Serializable):
 
     @property
     def pressure_data_raw(self) -> np.ndarray:
+        """
+        Gets the raw pressure readings.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Raw pressure readings.
+        """
         return deepcopy(self.__pressure_data_raw)
 
     @property
     def flow_data_raw(self) -> np.ndarray:
+        """
+        Gets the raw flow readings.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Raw flow readings.
+        """
         return deepcopy(self.__flow_data_raw)
 
     @property
     def demand_data_raw(self) -> np.ndarray:
+        """
+        Gets the raw demand readings.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Raw demand readings.
+        """
         return deepcopy(self.__demand_data_raw)
 
     @property
     def node_quality_data_raw(self) -> np.ndarray:
+        """
+        Gets the raw node quality readings.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Raw node quality readings.
+        """
         return deepcopy(self.__node_quality_data_raw)
 
     @property
     def link_quality_data_raw(self) -> np.ndarray:
+        """
+        Gets the raw link quality readings.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Raw link quality readings.
+        """
         return deepcopy(self.__link_quality_data_raw)
 
     @property
     def sensor_readings_time(self) -> np.ndarray:
+        """
+        Gets the sensor readings time stamps.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Sensor readings time stamps.
+        """
         return deepcopy(self.__sensor_readings_time)
 
     @property
     def pumps_state_data_raw(self) -> np.ndarray:
+        """
+        Gets the raw pump state readings.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Raw pump state readings.
+        """
         return deepcopy(self.__pumps_state_data_raw)
 
     @property
     def valves_state_data_raw(self) -> np.ndarray:
+        """
+        Gets the raw valve state readings.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Raw valve state readings.
+        """
         return deepcopy(self.__valves_state_data_raw)
 
     @property
     def tanks_level_data_raw(self) -> np.ndarray:
+        """
+        Gets the raw tank level readings.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Raw tank level readings.
+        """
         return deepcopy(self.__tanks_level_data_raw)
 
     def __init(self):
