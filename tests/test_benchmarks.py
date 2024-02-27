@@ -2,7 +2,7 @@
 Module provides tests to test the `epty_flow.data.benchmarks` module.
 """
 import numpy as np
-from epyt_flow.data.benchmarks.leakdb import load_leakdb
+from epyt_flow.data.benchmarks.leakdb import load_leakdb, load_leakdb_data
 from epyt_flow.data.benchmarks.battledim import load_battledim
 from epyt_flow.data.benchmarks.gecco_water_quality import load_gecco2017_water_quality_data, \
     load_gecco2018_water_quality_data, load_gecco2019_water_quality_data, \
@@ -17,19 +17,27 @@ from .utils import get_temp_folder
 def test_leakdb():
     # Net1
     configs = load_leakdb(scenarios_id=range(1, 5), use_net1=True, download_dir=get_temp_folder())
-
     for c in configs:
         with WaterDistributionNetworkScenarioSimulator(scenario_config=c) as sim:
             res = sim.run_simulation()
             assert res is not None
+
+    X, y, y_leak_loc = load_leakdb_data([3], use_net1=True, return_X_y=True, return_leak_locations=True)[0]
+    assert X is not None
+    assert y is not None
+    assert y_leak_loc is not None
 
     # Hanoi
     configs = load_leakdb(scenarios_id=range(1, 5), use_net1=False, download_dir=get_temp_folder())
-
     for c in configs:
         with WaterDistributionNetworkScenarioSimulator(scenario_config=c) as sim:
             res = sim.run_simulation()
             assert res is not None
+
+    X, y, y_leak_loc = load_leakdb_data([3], use_net1=False, return_X_y=True, return_leak_locations=True)[0]
+    assert X is not None
+    assert y is not None
+    assert y_leak_loc is not None
 
 
 def test_battledim():
