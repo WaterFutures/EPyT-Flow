@@ -37,32 +37,17 @@ class WaterDistributionNetworkScenarioSimulator():
     scenario_config : :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         Configuration of the scenario -- i.e. a description of the scenario to be simulated.
 
-        If this is None, then 'f_inp_in' must be set with a valid path to the .inp file 
+        If this is None, then 'f_inp_in' must be set with a valid path to the .inp file
         that is to be simulated.
 
     Attributes
     ----------
     epanet_api : `epyt.epanet`
         API to EPANET and EPANET-MSX.
-    f_inp_in : `str`
-        Path to the .inp file.
-    f_msx_in : `str`
-        Path to the .msx file.
-    model_uncertainty : :class:`~epyt_flow.uncertainty.model_uncertainty.ModelUncertainty`
-        Specification of model uncertainty.
-    sensor_noise : :class:`~epyt_flow.uncertainty.sensor_noise.SensorNoise`
-        Speciation of sensor noise -- i.e. noise/uncertainty affecting the sensor readings.
-    sensor_config : :class:`~epyt_flow.simulation.sensor_config.SensorConfig`
-        Specification of all sensors.
-    controls : `list[`:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule` `]`
-        List of control modules that are active during the simulation.
-    system_events : `list[`:class:`~epyt_flow.simulation.events.system_event.SystemEvent` `]`
-        List of system events -- i.e. events that directly affect the simulation (e.g. leakages).
-    sensor_reading_events : `list[`:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent` `]`
-        List of sensor reading events -- i.e. events that affect the readings of sensors.
     """
 
-    def __init__(self, f_inp_in: str = None, f_msx_in: str = None, scenario_config: ScenarioConfig = None):
+    def __init__(self, f_inp_in: str = None, f_msx_in: str = None,
+                 scenario_config: ScenarioConfig = None):
         if f_msx_in is not None and f_inp_in is None:
             raise ValueError("'f_inp_in' must be set if 'f_msx_in' is set.")
         if f_inp_in is None and scenario_config is None:
@@ -107,14 +92,38 @@ class WaterDistributionNetworkScenarioSimulator():
 
     @property
     def f_inp_in(self) -> str:
+        """
+        Gets the path to the .inp file.
+
+        Returns
+        -------
+        `str`
+            Path to the .inp file.
+        """
         return self.__f_inp_in
 
     @property
     def f_msx_in(self) -> str:
+        """
+        Gets the path to the .msx file.
+
+        Returns
+        -------
+        `str`
+            Path to the .msx file.
+        """
         return self.__f_msx_in
 
     @property
     def model_uncertainty(self) -> ModelUncertainty:
+        """
+        Gets the model uncertainty specification.
+
+        Returns
+        -------
+        :class:`~epyt_flow.uncertainty.model_uncertainty.ModelUncertainty`
+            Model uncertainty.
+        """
         return deepcopy(self.__model_uncertainty)
 
     @model_uncertainty.setter
@@ -123,6 +132,14 @@ class WaterDistributionNetworkScenarioSimulator():
 
     @property
     def sensor_noise(self) -> SensorNoise:
+        """
+        Gets the sensor noise/uncertainty.
+
+        Returns
+        -------
+        :class:`~epyt_flow.uncertainty.sensor_noise.SensorNoise`
+            Sensor noise.
+        """
         return deepcopy(self.__sensor_noise)
 
     @sensor_noise.setter
@@ -131,6 +148,14 @@ class WaterDistributionNetworkScenarioSimulator():
 
     @property
     def sensor_config(self) -> SensorConfig:
+        """
+        Gets the sensor configuration.
+
+        Returns
+        -------
+        :class:`~epyt_flow.simulation.sensor_config.SensorConfig`
+            Sensor configuration.
+        """
         return deepcopy(self.__sensor_config)
 
     @sensor_config.setter
@@ -144,14 +169,38 @@ class WaterDistributionNetworkScenarioSimulator():
 
     @property
     def controls(self) -> list[AdvancedControlModule]:
+        """
+        Gets all control modules.
+
+        Returns
+        -------
+        `list[`:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule` `]`
+            All control modules.
+        """
         return deepcopy(self.__controls)
 
     @property
     def system_events(self) -> list[SystemEvent]:
+        """
+        Gets all system events (e.g. leakages, etc.).
+
+        Returns
+        -------
+        `list[`:class:`~epyt_flow.simulation.events.system_event.SystemEvent` `]`
+            All system events.
+        """
         return deepcopy(self.__system_events)
 
     @property
     def sensor_reading_events(self) -> list[SensorReadingEvent]:
+        """
+        Gets all sensor reading events (e.g. sensor faults, etc.).
+
+        Returns
+        -------
+        `list[`:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent` `]`
+            All sensor reading events.
+        """
         return deepcopy(self.__sensor_reading_events)
 
     def __init(self, general_params: dict) -> None:
@@ -167,12 +216,15 @@ class WaterDistributionNetworkScenarioSimulator():
             self.set_general_parameters(**general_params)
 
     def __find_temporary_file(self) -> str:
+        # Sort files by time to find the temporary file created by EPANET
         files = list(filter(lambda f: os.path.isfile(f) and "." not in f, os.listdir()))
-        files.sort(key=os.path.getmtime)  # Sort by time to find the temporary file created by EPANET
+        files.sort(key=os.path.getmtime)
+
         return files[::-1][0]
 
     def close(self):
-        """Closes & unloads all resources and libraries.
+        """
+        Closes & unloads all resources and libraries.
 
         Call this function after the simulation is done -- do not call this function before!
         """
@@ -186,7 +238,7 @@ class WaterDistributionNetworkScenarioSimulator():
 
     def get_scenario_config(self) -> ScenarioConfig:
         """
-        Gets the configuration of this scenario -- i.e. all information & elements 
+        Gets the configuration of this scenario -- i.e. all information & elements
         that completely describe this scenario.
 
         Returns
@@ -334,8 +386,8 @@ class WaterDistributionNetworkScenarioSimulator():
 
     def add_system_event(self, event: SystemEvent) -> None:
         """
-        Adds a system event to the scenario simulation -- i.e. an event directly affecting 
-        the EPANET simulation.
+        Adds a system event to the scenario simulation -- i.e. an event directly
+        affecting the EPANET simulation.
 
         Parameters
         ----------
@@ -453,7 +505,7 @@ class WaterDistributionNetworkScenarioSimulator():
 
     def set_node_quality_sensors(self, sensor_locations: list[str]) -> None:
         """
-        Sets the node quality sensors -- i.e. measuring the water quality 
+        Sets the node quality sensors -- i.e. measuring the water quality
         (e.g. age, chlorine concentration, etc.) at some nodes in the network.
 
         Parameters
@@ -465,8 +517,8 @@ class WaterDistributionNetworkScenarioSimulator():
 
     def set_link_quality_sensors(self, sensor_locations: list[str]) -> None:
         """
-        Sets the link quality sensors -- i.e. measuring the water quality 
-        (e.g. age, chlorine concentration, etc.) at some links/pipes in the network.
+        Sets the link quality sensors -- i.e. measuring the water quality
+         (e.g. age, chlorine concentration, etc.) at some links/pipes in the network.
 
         Parameters
         ----------
@@ -526,7 +578,7 @@ class WaterDistributionNetworkScenarioSimulator():
         Parameters
         ----------
         hyd_export : `str`, optional
-            Path to an EPANET .hyd file for storing the simulated hydraulics -- these hydraulics 
+            Path to an EPANET .hyd file for storing the simulated hydraulics -- these hydraulics
             can be used later for an advanced quality analysis using EPANET-MSX.
 
             If None, the simulated hydraulics will NOT be exported to a EPANET .hyd file.
@@ -566,10 +618,10 @@ class WaterDistributionNetworkScenarioSimulator():
 
             tanks_level = np.array([[] for _ in range(res.Pressure.shape[0])])  # TODO: No tanks level data available?
 
-            return ScadaData(self.sensor_config, res.Pressure[:, :], res.Flow[:, :], res.Demand[:, :],
-                             res.NodeQuality[:, :], res.LinkQuality[:, :], pumps_state,
-                             valves_state, tanks_level, res.Time[:], self.sensor_reading_events,
-                             self.sensor_noise)
+            return ScadaData(self.sensor_config, res.Pressure[:, :], res.Flow[:, :],
+                             res.Demand[:, :], res.NodeQuality[:, :], res.LinkQuality[:, :],
+                             pumps_state, valves_state, tanks_level, res.Time[:],
+                             self.sensor_reading_events, self.sensor_noise)
 
     def run_simulation_as_generator(self, hyd_export: str = None,
                                     support_abort=False) -> Generator[ScadaData, bool, None]:
@@ -579,7 +631,7 @@ class WaterDistributionNetworkScenarioSimulator():
         Parameters
         ----------
         hyd_export : `str`, optional
-            Path to an EPANET .hyd file for storing the simulated hydraulics -- these hydraulics 
+            Path to an EPANET .hyd file for storing the simulated hydraulics -- these hydraulics
             can be used later for an advanced quality analysis using EPANET-MSX.
 
             If None, the simulated hydraulics will NOT be exported to a EPANET .hyd file.
@@ -587,16 +639,16 @@ class WaterDistributionNetworkScenarioSimulator():
             The default is None.
 
         support_abort : `bool`, optional
-            If True, the simulation can be aborted after every time step -- i.e. the generator 
-            takes a boolean as an input (send) to indicate whether the simulation 
+            If True, the simulation can be aborted after every time step -- i.e. the generator
+            takes a boolean as an input (send) to indicate whether the simulation
             is to be aborted or not.
 
             The default is False.
-        
+
         Returns
         -------
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
-            Generator with the current simulation results/states as SCADA data 
+            Generator with the current simulation results/states as SCADA data
             (i.e. sensor readings).
         """
         self.__prepare_simulation()
@@ -724,16 +776,16 @@ class WaterDistributionNetworkScenarioSimulator():
 
         Note that all these parameters can be stated in the .inp file as well.
 
-        You only have to specify the parameters which you want to change -- all others 
+        You only have to specify the parameters which you want to change -- all others
         can be left as None and will not be changed.
 
         Parameters
         ----------
         demand_model : `dict`, optional
-            Specifies the demand model (e.g. pressure-driven or demand-driven) -- the dictionary 
-            must contain the "type", the minimal pressure ("pressure_min"), 
-            the required pressure ("pressure_required"),
-            and the pressure exponent ("pressure_exponent").
+            Specifies the demand model (e.g. pressure-driven or demand-driven) -- the dictionary
+            must contain the "type", the minimal pressure ("pressure_min"),
+            the required pressure ("pressure_required"), and the
+            pressure exponent ("pressure_exponent").
 
             The default is None.
 
@@ -752,7 +804,8 @@ class WaterDistributionNetworkScenarioSimulator():
             The default is None.
         quality_model : `dict`, optional
             Specifies the quality model -- the dictionary must contain,
-            "type", "chemical_name", "chemical_units", and "trace_node_id", of the requested quality model.
+            "type", "chemical_name", "chemical_units", and "trace_node_id", of the
+            requested quality model.
 
             The default is None.
         """
@@ -789,8 +842,8 @@ class WaterDistributionNetworkScenarioSimulator():
 
     def enable_waterage_analysis(self) -> None:
         """
-        Sets water age analysis -- i.e. estimates the water age (in hours) at 
-        all places in the network.
+        Sets water age analysis -- i.e. estimates the water age (in hours) at
+         all places in the network.
         """
         self.__warn_if_quality_set()
         self.set_general_parameters(quality_model={"type": "age"})
@@ -862,7 +915,7 @@ class WaterDistributionNetworkScenarioSimulator():
 
     def enable_sourcetracing_analysis(self, trace_node_id: str):
         """
-        Set source tracing analysis -- i.e. tracks the percentage of flow from a given node 
+        Set source tracing analysis -- i.e. tracks the percentage of flow from a given node
         reaching all other nodes over time.
 
         Parameters

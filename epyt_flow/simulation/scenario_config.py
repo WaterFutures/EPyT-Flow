@@ -55,27 +55,6 @@ class ScenarioConfig(Serializable):
         List of sensor reading events -- i.e. events that affect the readings of sensors.
 
         The default is an empty list.
-
-    Attributes
-    ----------
-    f_inp_in : `str`
-        Path to the .inp file.
-    f_msx_in : `str`
-        Path to the .msx file -- only set if EPANET-MSX is used.
-    general_params : `dict`
-        General parameters such as the demand model, hydraulic time steps, etc.
-    sensor_config : :class:`~epyt_flow.simulation.sensor_config.SensorConfig`
-        Specification of all sensors.
-    sensor_noise : :class:`~epyt_flow.uncertainty.sensor_noise.SensorNoise`
-        Speciation of sensor noise -- i.e. noise/uncertainty affecting the sensor readings.
-    controls : `list[`:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule` `]`
-        List of control modules that are active during the simulation.
-    model_uncertainty : :class:`~epyt_flow.uncertainty.model_uncertainty.ModelUncertainty`
-        Specification of model uncertainty.
-    system_events : `list[`:class:`~epyt_flow.simulation.events.system_event.SystemEvent` `]`
-        List of system events -- i.e. events that directly affect the simulation (e.g. leakages).
-    sensor_reading_events : `list[`:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent` `]`
-        List of sensor reading events -- i.e. events that affect the readings of sensors.
     """
     def __init__(self, f_inp_in: str, f_msx_in: str = None, general_params: str = None,
                  sensor_config: SensorConfig = None, controls: list[AdvancedControlModule] = [],
@@ -146,10 +125,26 @@ class ScenarioConfig(Serializable):
 
     @property
     def f_inp_in(self) -> str:
+        """
+        Gets the path to the .inp file.
+
+        Returns
+        -------
+        `str`
+            Path to the .inp file.
+        """
         return self.__f_inp_in
 
     @property
     def f_msx_in(self) -> str:
+        """
+        Gets the path to the .msx file.
+
+        Returns
+        -------
+        `str`
+            Path to the .msx file.
+        """
         return self.__f_msx_in
 
     @property
@@ -158,26 +153,74 @@ class ScenarioConfig(Serializable):
 
     @property
     def sensor_config(self) -> SensorConfig:
+        """
+        Gets the sensor configuration.
+
+        Returns
+        -------
+        :class:`~epyt_flow.simulation.sensor_config.SensorConfig`
+            Sensor configuration.
+        """
         return deepcopy(self.__sensor_config)
 
     @property
     def controls(self) -> list[AdvancedControlModule]:
+        """
+        Gets the list of all control modules that are active during the simulation.
+
+        Returns
+        -------
+        `list[`:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule` `]`
+            List of all control modules that are active during the simulation.
+        """
         return deepcopy(self.__controls)
 
     @property
-    def sensor_noise(self) -> list[SensorNoise]:
+    def sensor_noise(self) -> SensorNoise:
+        """
+        Gets the sensor noise/uncertainty specification.
+
+        Returns
+        -------
+        :class:`~epyt_flow.uncertainty.sensor_noise.SensorNoise`
+            Sensor noise/uncertainty.
+        """
         return deepcopy(self.__sensor_noise)
 
     @property
     def model_uncertainty(self) -> ModelUncertainty:
+        """
+        Gets the model uncertainty specification.
+
+        Returns
+        -------
+        :class:`~epyt_flow.uncertainty.model_uncertainty.ModelUncertainty`
+            Model uncertainty specification.
+        """
         return deepcopy(self.__model_uncertainty)
 
     @property
     def system_events(self) -> list[SystemEvent]:
+        """
+        Gets all system events.
+
+        Returns
+        -------
+        `list[`:class:`~epyt_flow.simulation.events.system_event.SystemEvent` `]`
+            All system events.
+        """
         return deepcopy(self.__system_events)
 
     @property
     def sensor_reading_events(self) -> list[SensorReadingEvent]:
+        """
+        Gets all sensor reading events.
+
+        Returns
+        -------
+        `list[`:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent` `]`
+            All sensor reading events.
+        """
         return deepcopy(self.__sensor_reading_events)
 
     def get_attributes(self) -> dict:
@@ -199,11 +242,11 @@ class ScenarioConfig(Serializable):
             and self.__sensor_reading_events == other.sensor_reading_events
 
     def __str__(self) -> str:
-        return f"f_inp_in: {self.f_inp_in} f_msx_in: {self.f_msx_in} "+\
-            f"general_params: {self.general_params} sensor_config: {self.sensor_config} "+\
-            f"controls: {self.controls} sensor_noise: {self.sensor_noise} "+\
-            f"model_uncertainty: {self.model_uncertainty} "+\
-            f"system_events: {','.join(map(str, self.system_events))} "+\
+        return f"f_inp_in: {self.f_inp_in} f_msx_in: {self.f_msx_in} " +\
+            f"general_params: {self.general_params} sensor_config: {self.sensor_config} " +\
+            f"controls: {self.controls} sensor_noise: {self.sensor_noise} " +\
+            f"model_uncertainty: {self.model_uncertainty} " +\
+            f"system_events: {','.join(map(str, self.system_events))} " +\
             f"sensor_reading_events: {','.join(map(str, self.sensor_reading_events))}"
 
     @staticmethod
@@ -367,7 +410,7 @@ class ScenarioConfig(Serializable):
                 else:
                     raise ValueError(f"Unknown sensor fault '{fault_type}'")
 
-            sensor_faults = [parse_sensor_fault(sensor_fault) \
+            sensor_faults = [parse_sensor_fault(sensor_fault)
                              for sensor_fault in data["sensor_faults"]]
 
         #  Load .inp file to get a list of all nodes and links/pipes

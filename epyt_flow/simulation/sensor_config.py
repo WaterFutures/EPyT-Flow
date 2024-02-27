@@ -54,17 +54,14 @@ class SensorConfig(Serializable):
         List of all links/pipes (i.e. IDs) at which a flow sensor is placed.
 
         The default is an empty list.
-
     valve_state_sensors : `list[str]`, optional
         List of all valves (i.e. IDs) at which a valve state sensor is placed.
 
         The default is an empty list.
-
     pump_state_sensors : `list[str]`, optional
         List of all pumps (i.e. IDs) at which a pump state sensor is placed.
 
         The default is an empty list.
-    
     tank_level_sensors : `list[str]`, optional
         List of all tanks (i.e. IDs) at which a tank level sensor is placed.
 
@@ -146,13 +143,13 @@ class SensorConfig(Serializable):
                             f"but not of '{type(valve_state_sensors)}'")
         if any(link not in valves for link in valve_state_sensors):
             raise ValueError("Each item in 'valve_state_sensors' must be in 'valves' -- cannot " +
-                             "place a sensor at a non-existing valve.")   
+                             "place a sensor at a non-existing valve.")
         if not isinstance(pump_state_sensors, list):
             raise TypeError("'pump_state_sensors' must be an instance of 'list[str]' " +
                             f"but not of '{type(pump_state_sensors)}'")
         if any(link not in pumps for link in pump_state_sensors):
             raise ValueError("Each item in 'pump_state_sensors' must be in 'pumps' -- cannot " +
-                             "place a sensor at a non-existing pump.")   
+                             "place a sensor at a non-existing pump.")
         if not isinstance(tank_level_sensors, list):
             raise TypeError("'tank_level_sensors' must be an instance of 'list[str]' " +
                             f"but not of '{type(tank_level_sensors)}'")
@@ -239,26 +236,74 @@ class SensorConfig(Serializable):
 
     @property
     def nodes(self) -> list[str]:
+        """
+        Gets all node IDs.
+
+        Returns
+        -------
+        `list[str]`
+            All node IDs.
+        """
         return self.__nodes.copy()
 
     @property
     def links(self) -> list[str]:
+        """
+        Gets all link IDs.
+
+        Returns
+        -------
+        `list[str]`
+            All link IDs.
+        """
         return self.__links.copy()
 
     @property
     def valves(self) -> list[str]:
+        """
+        Gets all valve IDs (subset of link IDs).
+
+        Returns
+        -------
+        `list[str]`
+            All valve IDs.
+        """
         return self.__valves.copy()
 
     @property
     def pumps(self) -> list[str]:
+        """
+        Gets all pump IDs (subset of link IDs).
+
+        Returns
+        -------
+        `list[str]`
+            All pump IDs.
+        """
         return self.__pumps.copy()
 
     @property
     def tanks(self) -> list[str]:
+        """
+        Gets all tank IDs (subset of node IDs).
+
+        Returns
+        -------
+        `list[str]`
+            All tank IDs.
+        """
         return self.__tanks.copy()
 
     @property
     def pressure_sensors(self) -> list[str]:
+        """
+        Gets all pressure sensors (i.e. IDs of nodes at which a pressure sensor is placed).
+
+        Returns
+        -------
+        `list[str]`
+            All node IDs with a pressure sensor.
+        """
         return self.__pressure_sensors.copy()
 
     @pressure_sensors.setter
@@ -276,6 +321,14 @@ class SensorConfig(Serializable):
 
     @property
     def flow_sensors(self) -> list[str]:
+        """
+        Gets all flow sensors (i.e. IDs of links at which a flow sensor is placed).
+
+        Returns
+        -------
+        `list[str]`
+            All link IDs with a flow sensor.
+        """
         return self.__flow_sensors.copy()
 
     @flow_sensors.setter
@@ -293,6 +346,14 @@ class SensorConfig(Serializable):
 
     @property
     def demand_sensors(self) -> list[str]:
+        """
+        Gets all demand sensors (i.e. IDs of nodes at which a demand sensor is placed).
+
+        Returns
+        -------
+        `list[str]`
+            All node IDs with a demand sensor.
+        """
         return self.__demand_sensors.copy()
 
     @demand_sensors.setter
@@ -310,6 +371,14 @@ class SensorConfig(Serializable):
 
     @property
     def quality_node_sensors(self) -> list[str]:
+        """
+        Gets all node quality sensors (i.e. IDs of nodes at which a node quality sensor is placed).
+
+        Returns
+        -------
+        `list[str]`
+            All node IDs with a node quality sensor.
+        """
         return self.__quality_node_sensors.copy()
 
     @quality_node_sensors.setter
@@ -327,6 +396,14 @@ class SensorConfig(Serializable):
 
     @property
     def quality_link_sensors(self) -> list[str]:
+        """
+        Gets all link quality sensors (i.e. IDs of links at which a link quality sensor is placed).
+
+        Returns
+        -------
+        `list[str]`
+            All link IDs with a link quality sensor.
+        """
         return self.__quality_link_sensors.copy()
 
     @quality_link_sensors.setter
@@ -344,6 +421,14 @@ class SensorConfig(Serializable):
 
     @property
     def valve_state_sensors(self) -> list[str]:
+        """
+        Gets all valve state sensors (i.e. IDs of valves at which a valve state sensor is placed).
+
+        Returns
+        -------
+        `list[str]`
+            All valve IDs with a valve state sensor.
+        """
         return self.__valve_state_sensors.copy()
 
     @valve_state_sensors.setter
@@ -361,6 +446,14 @@ class SensorConfig(Serializable):
 
     @property
     def pump_state_sensors(self) -> list[str]:
+        """
+        Gets all pump state sensors (i.e. IDs of pumps at which a pump state sensor is placed).
+
+        Returns
+        -------
+        `list[str]`
+            All link IDs with a pump state sensor.
+        """
         return self.__pump_state_sensors.copy()
 
     @pump_state_sensors.setter
@@ -378,6 +471,14 @@ class SensorConfig(Serializable):
 
     @property
     def tank_level_sensors(self) -> list[str]:
+        """
+        Gets all tank level sensors (i.e. IDs of tanks at which a tank level sensor is placed).
+
+        Returns
+        -------
+        `list[str]`
+            All tank IDs with a tank level sensor.
+        """
         return self.__tank_level_sensors.copy()
 
     @tank_level_sensors.setter
@@ -395,6 +496,14 @@ class SensorConfig(Serializable):
 
     @property
     def sensors_id_to_idx(self) -> dict:
+        """
+        Gets a mapping of sensor IDs to indices in the final Numpy array returned by `get_data()`.
+
+        Returns
+        -------
+        `dict`
+            Mapping of sensor IDs to indices in the final Numpy array.
+        """
         return deepcopy(self.__sensors_id_to_idx)
 
     def get_attributes(self) -> dict:
@@ -439,8 +548,8 @@ class SensorConfig(Serializable):
                          pumps_state: np.ndarray, valves_state: np.ndarray,
                          tanks_level: np.ndarray) -> np.ndarray:
         """
-        Applies the sensor configuration to a set of raw simulation results -- 
-        i.e. computes the sensor readings as an array.
+        Applies the sensor configuration to a set of raw simulation results --
+         i.e. computes the sensor readings as an array.
 
         Parameters
         ----------
@@ -485,8 +594,8 @@ class SensorConfig(Serializable):
         """
         Gets the index of a particular sensor in the final sensor readings array.
 
-        Note that only one sensor ID is converted to an index. In case of multiple sensor IDs, 
-        call this function for each sensor ID separately.
+        Note that only one sensor ID is converted to an index. In case of multiple sensor IDs,
+         call this function for each sensor ID separately.
 
         Parameters
         ----------

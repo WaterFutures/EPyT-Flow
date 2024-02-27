@@ -30,6 +30,9 @@ class WaterDistributionNetworkScenarioControlEnv(ABC):
 
     @property
     def autoreset(self) -> bool:
+        """
+        True, if environment automatically resets after it terminated.
+        """
         return deepcopy(self.__autoreset)
 
     def __enter__(self):
