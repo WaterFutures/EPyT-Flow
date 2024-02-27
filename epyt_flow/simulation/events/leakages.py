@@ -32,15 +32,6 @@ class Leakage(SystemEvent, Serializable):
         In this case, 'link_id' must be None.
 
         The default is None.
-
-    Attributes
-    ----------
-    link_id : `str`
-        ID of the link at which the leak is placed.
-    diameter : `float`
-        Diameter of this leak.
-    profile : `numpy.ndarray`
-        Pattern of this leak.
     """
     def __init__(self, link_id: str, diameter: float, profile: np.ndarray, node_id: str = None,
                  **kwds):
@@ -81,18 +72,50 @@ class Leakage(SystemEvent, Serializable):
 
     @property
     def link_id(self) -> str:
+        """
+        Gets the ID of the link at which the leak is placed.
+
+        Returns
+        -------
+        `str`
+            ID of the link at which the leak is placed.
+        """
         return self.__link_id
 
     @property
     def node_id(self) -> str:
+        """
+        Gets the ID of the node at which the leak is placed.
+
+        Returns
+        -------
+        `str`
+            ID of the node at which the leak is placed.
+        """
         return self.__node_id
 
     @property
     def diameter(self) -> float:
+        """
+        Gets the diameter of the leak.
+
+        Returns
+        -------
+        `float`
+            Diameter of the leak.
+        """
         return self.__diameter
 
     @property
     def profile(self) -> np.ndarray:
+        """
+        Gets the pattern of the leak.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Pattern of the leak.
+        """
         return deepcopy(self.__profile)
 
     @profile.setter
@@ -222,6 +245,14 @@ class IncipientLeakage(Leakage):
 
     @property
     def peak_time(self) -> int:
+        """
+        Gets the peak time (seconds since the simulation start) of the leak.
+
+        Returns
+        -------
+        `int`
+            Peak time of the leak.
+        """
         return self.__peak_time
 
     def get_attributes(self) -> dict:

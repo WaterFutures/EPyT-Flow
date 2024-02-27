@@ -17,14 +17,6 @@ class Event(ABC):
         Time (seconds since the simulation start) when this event ends -- None if it never ends.
 
         The default is None.
-
-    Attributes
-    ----------
-    start_time : `int`
-        Starting time (seconds since the simulation start) of this event.
-    end_time : `int`
-        Time (seconds since the simulation start) when this event ends -- 
-        float("inf") if it never ends.
     """
     def __init__(self, start_time: int, end_time: int = None, **kwds):
         if not isinstance(start_time, int) or start_time < 0:
@@ -44,10 +36,27 @@ class Event(ABC):
 
     @property
     def start_time(self) -> int:
+        """
+        Gets the start time (seconds since the simulation start) of this event.
+
+        Returns
+        -------
+        `int`
+            Start time of this event.
+        """
         return self.__start_time
 
     @property
     def end_time(self) -> int:
+        """
+        Gets the end time (seconds since the simulation start) of this event. 
+        float("inf") if it never ends.
+
+        Returns
+        -------
+        `int`
+            End time of this event.
+        """
         return self.__end_time
 
     def get_attributes(self) -> dict:

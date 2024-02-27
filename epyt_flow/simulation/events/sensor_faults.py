@@ -68,6 +68,14 @@ class SensorFaultConstant(SensorFault, Serializable):
 
     @property
     def constant_shift(self) -> float:
+        """
+        Gets the Constant that is added to the sensor reading.
+
+        Returns
+        -------
+        `float`
+            Constant that is added to the sensor reading.
+        """
         return self.__constant_shift
 
     def get_attributes(self) -> dict:
@@ -100,6 +108,14 @@ class SensorFaultDrift(SensorFault, Serializable):
 
     @property
     def coef(self) -> float:
+        """
+        Gets the coefficient of the drift.
+
+        Returns
+        -------
+        `float`
+            Coefficient of the drift.
+        """
         return self.__coef
 
     def get_attributes(self) -> dict:
@@ -136,6 +152,14 @@ class SensorFaultGaussian(SensorFault, Serializable):
 
     @property
     def std(self) -> float:
+        """
+        Gets the standard deviation of the Gaussian noise.
+
+        Returns
+        -------
+        `float`
+            Standard deviation of the Gaussian noise.
+        """
         return self.__std
 
     def get_attributes(self) -> dict:
@@ -171,6 +195,14 @@ class SensorFaultPercentage(SensorFault, Serializable):
 
     @property
     def coef(self) -> float:
+        """
+        Gets the coefficient (percentage) of the shift.
+
+        Returns
+        -------
+        `float`
+            Coefficient (percentage) of the shift.
+        """
         return self.__coef
 
     def get_attributes(self) -> dict:
