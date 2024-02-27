@@ -8,8 +8,10 @@ from zipfile import ZipFile
 import umsgpack
 import numpy as np
 import networkx
+import scipy
 
 
+SCIPY_BSRARRAY_ID               = -3
 NETWORKX_GRAPH_ID               = -2
 NUMPY_ARRAY_ID                  = -1
 SENSOR_CONFIG_ID                = 0
@@ -242,13 +244,34 @@ def save_to_file(f_out: str, data: Any, use_zip: bool = True) -> None:
             myzip.writestr("data.epyt_flow", dump(data))
 
 
-# Add numpy.ndarray and networkx.Graph support
-ext_handler_pack = {np.ndarray: \
+# Add numpy.ndarray, networkx.Graph, and scipy.sparse.bsr_array support
+def encode_bsr_array(array: scipy.sparse.bsr_array
+                     ) -> tuple[tuple[int, int], tuple[list[float], tuple[list[int], list[int]]]]:
+    shape = array.shape
+    data = array.data.flatten().tolist()
+    rows = array.nonzero()[0].tolist()
+    cols = array.nonzero()[1].tolist()
+
+    return shape, (data, (rows, cols))
+
+
+def decode_bsr_array(ext_data: tuple[tuple[int, int],
+                                     tuple[list[float], tuple[list[int], list[int]]]]
+                     ) -> scipy.sparse.bsr_array:
+    shape, data = ext_data
+    return scipy.sparse.bsr_array((data[0], (data[1][0], data[1][1])), shape=(shape[0], shape[1]))
+
+
+ext_handler_pack = {np.ndarray:
                     lambda arr: umsgpack.Ext(NUMPY_ARRAY_ID, umsgpack.packb(arr.tolist())),
-                    networkx.Graph: \
-                        lambda graph: \
+                    networkx.Graph:
+                        lambda graph:
                             umsgpack.Ext(NETWORKX_GRAPH_ID,
-                                         umsgpack.packb(networkx.node_link_data(graph)))}
+                                         umsgpack.packb(networkx.node_link_data(graph))),
+                    scipy.sparse.bsr_array:
+                    lambda arr: umsgpack.Ext(SCIPY_BSRARRAY_ID,
+                                             umsgpack.packb(encode_bsr_array(arr)))}
 ext_handler_unpack = {NUMPY_ARRAY_ID: lambda ext: np.array(umsgpack.unpackb(ext.data)),
-                      NETWORKX_GRAPH_ID: \
-                        lambda ext: networkx.node_link_graph(umsgpack.unpackb(ext.data))}
+                      NETWORKX_GRAPH_ID:
+                      lambda ext: networkx.node_link_graph(umsgpack.unpackb(ext.data)),
+                      SCIPY_BSRARRAY_ID: lambda ext: decode_bsr_array(umsgpack.unpackb(ext.data))}

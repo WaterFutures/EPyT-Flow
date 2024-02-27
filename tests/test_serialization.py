@@ -2,6 +2,8 @@
 Module provides tests to test the serialization module.
 """
 import os
+import scipy
+import numpy as np
 from epyt_flow.data.networks import load_hanoi, load_net1
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator, SensorConfig, \
     ScenarioConfig, ScadaData
@@ -54,3 +56,11 @@ def test_topology():
 
         assert list(graph.nodes(data=True)) == list(g.nodes(data=True))
         assert list(graph.edges(data=True)) == list(g.edges(data=True))
+
+
+def test_sparse_matrix():
+    m = scipy.sparse.bsr_array(scipy.sparse.random(100, 20, density=0.1, format="bsr"))
+
+    m_rec = load(dump(m))
+
+    assert np.all(m.todense() == m_rec.todense())
