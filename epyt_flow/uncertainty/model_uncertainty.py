@@ -112,26 +112,74 @@ class ModelUncertainty(Serializable):
 
     @property
     def pipe_length(self) -> Uncertainty:
+        """
+        Gets the pipe length uncertainty.
+
+        Returns
+        -------
+        :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
+            Pipe length uncertainty.
+        """
         return deepcopy(self.__pipe_length)
 
     @property
     def pipe_roughness(self) -> Uncertainty:
+        """
+        Gets the pipe roughness uncertainty.
+
+        Returns
+        -------
+        :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
+            Pipe roughness uncertainty.
+        """
         return deepcopy(self.__pipe_roughness)
 
     @property
     def pipe_diameter(self) -> Uncertainty:
+        """
+        Gets the pipe diameter uncertainty.
+
+        Returns
+        -------
+        :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
+            Pipe diameter uncertainty.
+        """
         return deepcopy(self.__pipe_diameter)
 
     @property
     def demand_base(self) -> Uncertainty:
+        """
+        Gets the demand base uncertainty.
+
+        Returns
+        -------
+        :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
+            Demand base uncertainty.
+        """
         return deepcopy(self.__demand_base)
 
     @property
     def demand_pattern(self) -> Uncertainty:
+        """
+        Gets the demand pattern uncertainty.
+
+        Returns
+        -------
+        :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
+            Demand pattern uncertainty.
+        """
         return deepcopy(self.__demand_pattern)
 
     @property
     def elevation(self) -> Uncertainty:
+        """
+        Gets the node elevation uncertainty.
+
+        Returns
+        -------
+        :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
+            Node elevation uncertainty.
+        """
         return deepcopy(self.__elevation)
 
     @property

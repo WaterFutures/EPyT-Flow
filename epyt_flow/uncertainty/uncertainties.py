@@ -33,10 +33,26 @@ class Uncertainty(ABC):
 
     @property
     def min_value(self) -> float:
+        """
+        Gets the lower bound on the data/signal.
+
+        Returns
+        -------
+        `float`
+            Lower bound.
+        """
         return self.__min_value
 
     @property
     def max_value(self) -> float:
+        """
+        Gets the upper bound on the data/signal.
+
+        Returns
+        -------
+        `float`
+            Upper bound.
+        """
         return self.__max_value
 
     def get_attributes(self) -> dict:
@@ -96,10 +112,26 @@ class GaussianUncertainty(Uncertainty, Serializable):
 
     @property
     def mean(self) -> float:
+        """
+        Gets the mean of the Gaussian noise.
+
+        Returns
+        -------
+        `float`
+            Mean of the Gaussian noise.
+        """
         return self.__mean
 
     @property
     def scale(self) -> float:
+        """
+        Gets the scale (i.e. standard deviation) of the Gaussian noise.
+
+        Returns
+        -------
+        `float`
+            Scale (i.e. standard deviation) of the Gaussian noise.
+        """
         return self.__scale
 
     def get_attributes(self) -> dict:
@@ -144,28 +176,44 @@ class UniformUncertainty(Uncertainty, Serializable):
     def __init__(self, low: float = 0., high: float = 1., **kwds):
         super().__init__(**kwds)
 
-        self.__min = low
-        self.__max = high
+        self.__low = low
+        self.__high = high
 
     @property
-    def min(self) -> float:
-        return self.__min
+    def low(self) -> float:
+        """
+        Gets the lower bound of the uniform noise.
+
+        Returns
+        -------
+        `float`
+            Lower bound of the uniform noise.
+        """
+        return self.__low
 
     @property
-    def max(self) -> float:
-        return self.__max
+    def high(self) -> float:
+        """
+        Gets the upper bound of the uniform noise.
+
+        Returns
+        -------
+        `float`
+            Upper bound of the uniform noise.
+        """
+        return self.__high
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"min": self.__min, "low": self.__max}
+        return super().get_attributes() | {"low": self.__low, "high": self.__high}
 
     def __eq__(self, other) -> bool:
-        return super().__eq__(other) and self.__min == other.min and self.__max == other.max
+        return super().__eq__(other) and self.__low == other.low and self.__high == other.high
 
     def __str__(self) -> str:
-        return super().__str__() + f" min: {self.__min} max: {self.__max}"
+        return super().__str__() + f" low: {self.__low} high: {self.__high}"
 
     def apply(self, data: float) -> float:
-        data += np.random.uniform(low=self.__min, high=self.__max)
+        data += np.random.uniform(low=self.__low, high=self.__high)
 
         return self.clip(data)
 
@@ -229,6 +277,13 @@ class DeepGaussianUncertainty(Uncertainty, Serializable):
 class DeepUncertainty(Uncertainty, Serializable):
     """
     Class implementing deep uncertainty -- i.e. completly random noise is added to the data.
+
+    Parameters
+    ----------
+    min_noise_value : `float`
+        Lower bound on the noise.
+    max_noise_value : `float`
+        Upper bound on the noise.
     """
     def __init__(self, min_noise_value: float = 0., max_noise_value: float = 1., **kwds):
         super().__init__(**kwds)
@@ -241,10 +296,26 @@ class DeepUncertainty(Uncertainty, Serializable):
 
     @property
     def min_noise_value(self) -> float:
+        """
+        Gets the lower bound on the noise.
+
+        Returns
+        -------
+        `float`
+            Lower bound on the noise.
+        """
         return self.__min_noise_value
 
     @property
     def max_noise_value(self) -> float:
+        """
+        Gets the upper bound on the noise.
+
+        Returns
+        -------
+        `float`
+            Upper bound on the noise.
+        """
         return self.__max_noise_value
 
     def get_attributes(self) -> dict:
@@ -256,8 +327,8 @@ class DeepUncertainty(Uncertainty, Serializable):
             self.__max_noise_value == other.max_noise_value
 
     def __str__(self) -> str:
-        return super().__str__() + f" min_noise_value: {self.__min_noise_value} "+\
-            "max_noise_value: {self.__max_noise_value}"
+        return super().__str__() + f" min_noise_value: {self.__min_noise_value} " +\
+            f"max_noise_value: {self.__max_noise_value}"
 
     def __create_uncertainties(self, n_samples: int = 500) -> None:
         init_value = None

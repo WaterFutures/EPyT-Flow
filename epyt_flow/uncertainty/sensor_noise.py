@@ -29,6 +29,14 @@ class SensorNoise(Serializable):
 
     @property
     def uncertainty(self) -> Uncertainty:
+        """
+        Gets the Sensor readings uncertainty.
+
+        Returns
+        -------
+        :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
+            Sensor readings uncertainty.
+        """
         return deepcopy(self.__uncertainty)
 
     def get_attributes(self) -> dict:
