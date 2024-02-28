@@ -2,7 +2,11 @@ epyt>=1.0.8
 requests>=2.31.0
 scipy>=1.11.4
 u-msgpack-python>=2.8.0
+networkx>=3.2.1
+scikit-learn>=1.4.0
 
 sphinx>=7.2.6
 sphinx-rtd-theme>=2.0.0
 pytest>=7.4.4
+pytest-cov>=4.1.0
+pygount>=1.6.1
