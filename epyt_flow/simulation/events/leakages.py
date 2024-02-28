@@ -20,7 +20,7 @@ class Leakage(SystemEvent, Serializable):
     ----------
     link_id : `str`
         ID of the link at which the leak is placed.
-        Note that if the leak is placed at a node, then 'link_id' must be None and the 
+        Note that if the leak is placed at a node, then 'link_id' must be None and the
         ID of the node must be set in 'node_id'
     diameter : `float`
         Diameter of this leak.
@@ -28,7 +28,7 @@ class Leakage(SystemEvent, Serializable):
         Pattern of this leak.
     node_id : `str`, optional
         ID of the node at which the leak is placed.
-        This parameter must only be set if the leak is placed at a node instead of a link. 
+        This parameter must only be set if the leak is placed at a node instead of a link.
         In this case, 'link_id' must be None.
 
         The default is None.
@@ -145,13 +145,53 @@ class Leakage(SystemEvent, Serializable):
             f"profile: {self.profile} node_id: {self.__node_id}"
 
     def compute_leak_area(self, diameter: float, factor_units: float = 100.) -> float:
-        # factor_units=100 changes the units to EPANET default units
+        """
+        Computes the leak area given the diameter.
+
+        Parameters
+        ----------
+        diameter : `float`
+            Diameter of the leak.
+        factor_units : `float`, optional
+            Factor for converting units.
+
+            The default is 100 to change the units to EPANET default units.
+
+        Returns
+        -------
+        `float`
+            Leak area.
+        """
         return (np.pi * (diameter / 2) ** 2) * factor_units
 
     def compute_leak_emitter_coefficient(self, area: float, discharg_coef: float = .75,
                                          g: float = 9.8) -> float:
-        # leak_demand = emitter_coef * pressure^alpha    with alpha = .5
-        # emitter_coef = discharg_coef * area * sqrt(2*g)   with g = 9.8, discharg_coef = .75
+        """
+        Computes the leak emitter coefficient.
+
+        emitter_coef = discharg_coef * area * sqrt(2*g)   where g = 9.8, discharg_coef = .75
+
+        leak_demand = emitter_coef * pressure^alpha       where alpha = .5
+
+        Parameters
+        ----------
+        area : `float`
+            Leak area as computed in
+            :func:`epyt_flow.simulation.events.leakages.Leakage.compute_leak_area`.
+        discharg_coef : `float`, optional
+            Discharg coefficient.
+
+            The default is set to 0.75
+        g : `float`, optional
+            Gravitational constant. Do not change this!
+
+            The default is 9.8
+
+        Returns
+        -------
+        `float`
+            Leak emitter coefficient.
+        """
         return discharg_coef * area * np.sqrt(2. * g)
 
     def init(self, epanet_api: epyt.epanet) -> None:
@@ -196,7 +236,7 @@ class AbruptLeakage(Leakage):
     link_id : `str`
         ID of the link at which the leak is placed.
     diameter : `float`
-        Maximum diameter of the leak -- i.e. small leak diameter in the beginning, 
+        Maximum diameter of the leak -- i.e. small leak diameter in the beginning,
         growing over time until peak time is reached.
     """
     def __init__(self, link_id: str, diameter: float, **kwds):
@@ -227,10 +267,10 @@ class IncipientLeakage(Leakage):
     link_id : `str`
         ID of the link at which the leak is placed.
     diameter : `float`
-        Maximum diameter of the leak -- i.e. small leak diameter in the beginning, 
+        Maximum diameter of the leak -- i.e. small leak diameter in the beginning,
         growing over time until peak time is reached.
     peak_time : `int`
-        Time (seconds since the simulation start) when this leak reaches 
+        Time (seconds since the simulation start) when this leak reaches
         its larges size (leak diameter).
     """
     def __init__(self, link_id: str, diameter: float, peak_time: int, **kwds):

@@ -15,7 +15,7 @@ def download_if_necessary(download_path: str, url: str) -> None:
     Parameters
     ----------
     download_path : `str`
-        Local path to the file -- if this path does not exist, the file will be downloaded from 
+        Local path to the file -- if this path does not exist, the file will be downloaded from
         the provided 'url' and stored in 'download_dir'.
     url : `str`
         Web-URL.
@@ -27,6 +27,19 @@ def download_if_necessary(download_path: str, url: str) -> None:
 
 
 def create_empty_sensor_config(f_inp: str) -> SensorConfig:
+    """
+    Creates an empty sensor configuration for a given .inp file.
+
+    Parameters
+    ----------
+    f_inp : `str`
+        Path to the .inp file.
+
+    Returns
+    -------
+    :class:`~epyt_flow.simulation.sensor_config.SensorConfig`
+        Sensor configuration.
+    """
     with WaterDistributionNetworkScenarioSimulator(f_inp_in=f_inp) as sim:
         return sim.sensor_config
 
@@ -40,7 +53,7 @@ def load_inp(f_in: str, include_empty_sensor_config: bool = True) -> ScenarioCon
     f_in : `str`
         Path to the .inp file.
     include_empty_sensor_config : `bool`, optional
-        If True, an empty sensor configuraion will be included in the returned 
+        If True, an empty sensor configuraion will be included in the returned
         scenario configuration.
 
         The default is True.
@@ -77,7 +90,7 @@ def load_net1(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Net1.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/"+\
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" +\
         "asce-tf-wdst/Net1.inp"
 
     download_if_necessary(f_in, url)
@@ -102,7 +115,7 @@ def load_net2(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Net2.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/"+\
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" +\
         "asce-tf-wdst/Net2.inp"
 
     download_if_necessary(f_in, url)
@@ -127,7 +140,7 @@ def load_net3(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Net3.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/"+\
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" +\
         "asce-tf-wdst/Net3.inp"
 
     download_if_necessary(f_in, url)
@@ -152,7 +165,7 @@ def load_richmond(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Richmond_standard.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/"+\
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" +\
         "exeter-benchmarks/Richmond_standard.inp"
 
     download_if_necessary(f_in, url)
@@ -177,7 +190,7 @@ def load_anytown(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Anytown.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/"+\
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" +\
         "asce-tf-wdst/Anytown.inp"
 
     download_if_necessary(f_in, url)
@@ -211,7 +224,7 @@ def load_kentucky(wdn_id: int = 1, download_dir: str = get_temp_folder()) -> Sce
         raise ValueError(f"Unknown network 'ky{wdn_id}.inp'")
 
     f_in = os.path.join(download_dir, f"ky{wdn_id}.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/"+\
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" +\
         f"asce-tf-wdst/ky{wdn_id}.inp"
 
     download_if_necessary(f_in, url)
@@ -241,7 +254,7 @@ def load_hanoi(download_dir: str = get_temp_folder(),
         :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Hanoi.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/"+\
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" +\
         "asce-tf-wdst/Hanoi.inp"
 
     download_if_necessary(f_in, url)
@@ -269,8 +282,8 @@ def load_ltown(download_dir: str = get_temp_folder(),
 
         The default is the OS specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
     include_default_sensor_placement : `bool`, optional
-        If True, a default sensor placement (as proposed in the BattLeDim challenge -- 
-        see https://github.com/KIOS-Research/BattLeDIM) will be included in the returned 
+        If True, a default sensor placement (as proposed in the BattLeDim challenge --
+        see https://github.com/KIOS-Research/BattLeDIM) will be included in the returned
         scenario configuration.
 
         The default is False

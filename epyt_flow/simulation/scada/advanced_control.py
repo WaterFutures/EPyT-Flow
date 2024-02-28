@@ -93,8 +93,8 @@ class AdvancedControlModule(ABC):
     def set_node_quality_source_value(self, node_id: str, pattern_id: str,
                                       qual_value: float) -> None:
         """
-        Sets the quality source at a particular node to a specific value -- e.g. 
-        setting the chlorine concentration injection to a specified value.
+        Sets the quality source at a particular node to a specific value -- e.g.
+         setting the chlorine concentration injection to a specified value.
 
         Parameters
         ----------

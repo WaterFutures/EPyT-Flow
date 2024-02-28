@@ -13,7 +13,7 @@ def get_temp_folder() -> str:
 
 def f1_micro_score(y_pred: np.ndarray, y: np.ndarray) -> float:
     """
-    Computes the F1 score using for a multi-class classification by 
+    Computes the F1 score using for a multi-class classification by
     counting the total true positives, false negatives and false positives.
 
     Parameters

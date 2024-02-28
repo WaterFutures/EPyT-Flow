@@ -44,11 +44,27 @@ class SensorReadingEvent(Event):
         super().__init__(**kwds)
 
     @property
-    def sensor_id(self) -> int:
+    def sensor_id(self) -> str:
+        """
+        Gets the ID of the node or link that is affected by this event.
+
+        Returns
+        -------
+        `str`
+            Node or link ID.
+        """
         return self.__sensor_id
 
     @property
     def sensor_type(self) -> int:
+        """
+        Gets the sensor type code.
+
+        Returns
+        -------
+        `int`
+            Sensor type code.
+        """
         return self.__sensor_type
 
     def get_attributes(self) -> dict:
@@ -66,7 +82,7 @@ class SensorReadingEvent(Event):
     def apply(self, sensor_readings: numpy.ndarray,
               sensor_readings_time: numpy.ndarray) -> numpy.ndarray:
         """
-        Applies the sensor reading event to sensor reading values -- i.e. 
+        Applies the sensor reading event to sensor reading values -- i.e.
         modify the sensor readings.
 
         Parameters

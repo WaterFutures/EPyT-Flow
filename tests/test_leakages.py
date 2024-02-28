@@ -2,7 +2,8 @@
 Module provides test to test different types of leakages.
 """
 from epyt_flow.data.networks import load_hanoi
-from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator, IncipientLeakage, AbruptLeakage
+from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator, IncipientLeakage, \
+    AbruptLeakage
 
 from .utils import get_temp_folder
 

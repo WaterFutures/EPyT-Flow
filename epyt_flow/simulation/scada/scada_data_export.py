@@ -1,5 +1,5 @@
 """
-Module provides a classes for exporting SCADA data stored in 
+Module provides a classes for exporting SCADA data stored in
 :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`.
 """
 from abc import abstractmethod
@@ -12,7 +12,7 @@ from .scada_data import ScadaData
 
 class ScadaDataExport():
     """
-    Base class for exporting SCADA data stored in 
+    Base class for exporting SCADA data stored in
     :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`.
 
     Parameters
@@ -50,8 +50,8 @@ class ScadaDataExport():
         -------
         `numpy.ndarray`
             2-dimensional array describing all columns of the sensor readings:
-            The first dimension describes the sensor type, and the second dimension 
-            describes the sensor location. 
+            The first dimension describes the sensor type, and the second dimension
+            describes the sensor location.
         """
         sensor_readings = scada_data.get_data()
 

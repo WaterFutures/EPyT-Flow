@@ -20,6 +20,19 @@ class SensorFault(SensorReadingEvent):
     """
 
     def compute_multiplier(self, cur_time: int) -> float:
+        """
+        Computes the multiplier for a given time stamp.
+
+        Parameters
+        ----------
+        cur_time : `int`
+            Time in seconds.
+
+        Returns
+        -------
+        `float`
+            Multiplier.
+        """
         b1 = 0
         b2 = 0
         a1 = 1
@@ -134,8 +147,8 @@ class SensorFaultDrift(SensorFault, Serializable):
 @serializable(SENSOR_FAULT_GAUSSIAN_ID, ".epytflow_sensorfault_gaussian")
 class SensorFaultGaussian(SensorFault, Serializable):
     """
-    Class implementing a Gaussian shift sensor fault -- i.e. 
-    adding Gaussian noise (centered at zero) to the sensor reading.
+    Class implementing a Gaussian shift sensor fault -- i.e.
+     adding Gaussian noise (centered at zero) to the sensor reading.
 
     Parameters
     ----------

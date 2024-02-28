@@ -49,7 +49,7 @@ class Event(ABC):
     @property
     def end_time(self) -> int:
         """
-        Gets the end time (seconds since the simulation start) of this event. 
+        Gets the end time (seconds since the simulation start) of this event.
         float("inf") if it never ends.
 
         Returns

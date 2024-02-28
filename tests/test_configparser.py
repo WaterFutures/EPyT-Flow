@@ -1,5 +1,5 @@
 """
-Module provides tests to test parsing a :class:`~epty_flow.simulation.ScenarioConfig` 
+Module provides tests to test parsing a :class:`~epty_flow.simulation.ScenarioConfig`
 instance from text data.
 """
 import os

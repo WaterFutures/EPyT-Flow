@@ -38,21 +38,21 @@ def compute_evaluation_score(y_pred: np.ndarray, y: np.ndarray) -> dict:
 
 def load_water_usage(download_dir: str = None, return_X_y: bool = True) -> dict:
     """
-    "Monitoring domestic water consumption: A comparative study of model-based and data-driven 
-    end-use disaggregation methods" by P. Pavlou, S. Filippou, S. Solonos, S. G. Vrachimis, 
-    K. Malialis, D. G. Eliades, T. Theocharides, M. M. Polycarpou is a benchmark concerning the 
-    monitoring of water usage of different household appliances. Informing consumers about it has 
-    been shown to have an impact on their behavior toward drinking water conservation. The data 
-    were created using the STochastic Residential water End-use Model (STREaM) 
-    (Cominola et al., 2018), a modelling software developed that generates synthetic time series 
+    "Monitoring domestic water consumption: A comparative study of model-based and data-driven
+    end-use disaggregation methods" by P. Pavlou, S. Filippou, S. Solonos, S. G. Vrachimis,
+    K. Malialis, D. G. Eliades, T. Theocharides, M. M. Polycarpou is a benchmark concerning the
+    monitoring of water usage of different household appliances. Informing consumers about it has
+    been shown to have an impact on their behavior toward drinking water conservation. The data
+    were created using the STochastic Residential water End-use Model (STREaM)
+    (Cominola et al., 2018), a modelling software developed that generates synthetic time series
     data of a household.
 
-    This benchmark data set is for identifying active appliances from the aggregated water 
-    consumption -- i.e. a multi-class classification probelm. The data set considers the use 
-    of standard toilet, standard shower, standard faucet, high efficiency clothes washer, 
-    and standard dishwasher in a 2-person household for a period of 180 days (6 months) and 
+    This benchmark data set is for identifying active appliances from the aggregated water
+    consumption -- i.e. a multi-class classification probelm. The data set considers the use
+    of standard toilet, standard shower, standard faucet, high efficiency clothes washer,
+    and standard dishwasher in a 2-person household for a period of 180 days (6 months) and
     it has a resolution of 10s.
-    The data set is already split into 3 sub-sets for training (90 days), validation (45 days), 
+    The data set is already split into 3 sub-sets for training (90 days), validation (45 days),
     and testing (45 days).
 
     For more information see https://github.com/KIOS-Research/Water-Usage-Dataset/
@@ -69,7 +69,7 @@ def load_water_usage(download_dir: str = None, return_X_y: bool = True) -> dict:
 
         The default is None.
     return_X_y : `bool`, optional
-        If True, the data is returned together with the multi-class labels as two Numpy arrays, 
+        If True, the data is returned together with the multi-class labels as two Numpy arrays,
         otherwise the data is returned as Pandas data frame.
 
         The default is True.
@@ -77,15 +77,16 @@ def load_water_usage(download_dir: str = None, return_X_y: bool = True) -> dict:
     Returns
     -------
     `dict`
-        The data set as a dictionary with entries "train", "validation", and "test" containing 
+        The data set as a dictionary with entries "train", "validation", and "test" containing
         the respective data.
     """
     # Download data if necessary
     download_dir = download_dir if download_dir is not None else get_temp_folder()
 
-    url_train_data = "https://github.com/KIOS-Research/Water-Usage-Dataset/raw/main/Dataset/Trainset.csv"
-    url_valid_data = "https://github.com/KIOS-Research/Water-Usage-Dataset/raw/main/Dataset/Validationset.csv"
-    url_test_data = "https://github.com/KIOS-Research/Water-Usage-Dataset/raw/main/Dataset/Testset.csv"
+    base_url = "https://github.com/KIOS-Research/Water-Usage-Dataset/raw/main/Dataset/"
+    url_train_data = base_url + "Trainset.csv"
+    url_valid_data = base_url + "Validationset.csv"
+    url_test_data = base_url + "Testset.csv"
 
     f_train_in = os.path.join(download_dir, "train_water_usage.csv")
     f_valid_in = os.path.join(download_dir, "valid_water_usage.csv")

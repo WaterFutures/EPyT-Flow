@@ -34,22 +34,22 @@ def compute_evaluation_score(y_pred: np.ndarray, y: np.ndarray) -> float:
 
 def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool = True) -> Any:
     """
-    GECCO Industrial Challenge 2017 Dataset: A water quality dataset for the 
-    "Monitoring of drinking-water quality" competition organized by M. Friese, J. Stork, 
-    A. Fischbach, M. Rebolledo, T. Bartz-Beielstein at the Genetic and Evolutionary 
+    GECCO Industrial Challenge 2017 Dataset: A water quality dataset for the
+    "Monitoring of drinking-water quality" competition organized by M. Friese, J. Stork,
+    A. Fischbach, M. Rebolledo, T. Bartz-Beielstein at the Genetic and Evolutionary
     Computation Conference 2017, Berlin, Germany
 
-    This is a benchmark for anomaly detection algorithms on water quality. The data is provided by 
-    the "Thüringer Fernwasserversorgung" (Germany) and constitutes a real-world data set. In this 
-    data set, 9 numeric water quality features are given at a sampling rate of 1 min over approx. 
+    This is a benchmark for anomaly detection algorithms on water quality. The data is provided by
+    the "Thüringer Fernwasserversorgung" (Germany) and constitutes a real-world data set. In this
+    data set, 9 numeric water quality features are given at a sampling rate of 1 min over approx.
     3 month. The goal is to predict the presence of an anomaly -- i.e. binary classification.
 
-    More information can be found in https://zenodo.org/records/3884465 and 
+    More information can be found in https://zenodo.org/records/3884465 and
     http://www.spotseven.de/gecco-challenge/gecco-challenge-2017/
 
     .. note::
 
-        Note that this is NOT a simulated scenario and therefore only the final 
+        Note that this is NOT a simulated scenario and therefore only the final
         data set is provided.
 
     Parameters
@@ -60,7 +60,7 @@ def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool
 
         The default is None.
     return_X_y : `bool`, optional
-        If True, the data is returned together with the labels as two Numpy arrays, 
+        If True, the data is returned together with the labels as two Numpy arrays,
         otherwise the data is returned as Pandas data frame.
 
         The default is True.
@@ -94,24 +94,24 @@ def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool
 
 def load_gecco2018_water_quality_data(download_dir: str = None, return_X_y: bool = True) -> Any:
     """
-    GECCO Industrial Challenge 2018 Dataset: A water quality dataset for the 
-    "Internet of Things: Online Anomaly Detection for Drinking Water Quality" competition 
-    organized by F. Rehbach, M. Rebolledo, S. Moritz, S. Chandrasekaran, T. Bartz-Beielstein at 
+    GECCO Industrial Challenge 2018 Dataset: A water quality dataset for the
+    "Internet of Things: Online Anomaly Detection for Drinking Water Quality" competition
+    organized by F. Rehbach, M. Rebolledo, S. Moritz, S. Chandrasekaran, T. Bartz-Beielstein at
     the Genetic and Evolutionary Computation Conference 2018, Kyoto, Japan.
 
     This is a benchmark 
-    (based on :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2017_water_quality_data`) 
-    for anomaly detection algorithms on water quality. The data is provided by the 
-    "Thüringer Fernwasserversorgung" (Germany) and constitutes a real-world data set. In this 
-    data set, 9 numeric water quality features are given at a sampling rate of 1 min over approx. 
+    (based on :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2017_water_quality_data`)
+    for anomaly detection algorithms on water quality. The data is provided by the
+    "Thüringer Fernwasserversorgung" (Germany) and constitutes a real-world data set. In this
+    data set, 9 numeric water quality features are given at a sampling rate of 1 min over approx.
     3 month. The goal is to predict the presence of an anomaly -- i.e. binary classification.
 
-    More information can be found in https://zenodo.org/records/3884398 and 
+    More information can be found in https://zenodo.org/records/3884398 and
     http://www.spotseven.de/gecco/gecco-challenge/gecco-challenge-2018/
 
     .. note::
 
-        Note that this is NOT a simulated scenario and therefore only the final 
+        Note that this is NOT a simulated scenario and therefore only the final
         data set is provided.
 
     Parameters
@@ -122,7 +122,7 @@ def load_gecco2018_water_quality_data(download_dir: str = None, return_X_y: bool
 
         The default is None.
     return_X_y : `bool`, optional
-        If True, the data is returned together with the labels as two Numpy arrays, 
+        If True, the data is returned together with the labels as two Numpy arrays,
         otherwise the data is returned as Pandas data frame.
 
         The default is True.
@@ -157,25 +157,25 @@ def load_gecco2018_water_quality_data(download_dir: str = None, return_X_y: bool
 
 def load_gecco2019_water_quality_data(download_dir: str = None, return_X_y: bool = True) -> dict:
     """
-    GECCO Industrial Challenge 2019 Dataset: A water quality dataset for the "Internet of Things: 
-    Online Event Detection for Drinking Water Quality Control" competition organized by 
-    F. Rehbach, S. Moritz, T. Bartz-Beielstein at the Genetic and Evolutionary Computation 
+    GECCO Industrial Challenge 2019 Dataset: A water quality dataset for the "Internet of Things:
+    Online Event Detection for Drinking Water Quality Control" competition organized by
+    F. Rehbach, S. Moritz, T. Bartz-Beielstein at the Genetic and Evolutionary Computation
     Conference 2019, Prague, Czech Republic.
 
-    This is a benchmark 
-    (based on :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2018_water_quality_data`) 
-    for anomaly detection algorithms on water quality. The data is provided by the 
-    "Thüringer Fernwasserversorgung" (Germany) and constitutes a real-world data set. In this 
-    data set, 6 numeric water quality features are given at a sampling rate of 1 min over approx. 
-    3 month. The goal is to predict the presence of an anomaly -- i.e. binary classification. 
+    This is a benchmark
+    (based on :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2018_water_quality_data`)
+    for anomaly detection algorithms on water quality. The data is provided by the
+    "Thüringer Fernwasserversorgung" (Germany) and constitutes a real-world data set. In this
+    data set, 6 numeric water quality features are given at a sampling rate of 1 min over approx.
+    3 month. The goal is to predict the presence of an anomaly -- i.e. binary classification.
     The data set itself comes in three splits: A train set, a validation set, and a test set.
 
-    More information can be found in https://zenodo.org/records/4304080 and 
+    More information can be found in https://zenodo.org/records/4304080 and
     https://www.th-koeln.de/informatik-und-ingenieurwissenschaften/gecco-challenge-2019_63244.php
 
     .. note::
 
-        Note that this is NOT a simulated scenario and therefore only the final 
+        Note that this is NOT a simulated scenario and therefore only the final
         data set is provided.
 
     Parameters
@@ -186,7 +186,7 @@ def load_gecco2019_water_quality_data(download_dir: str = None, return_X_y: bool
 
         The default is None.
     return_X_y : `bool`, optional
-        If True, the data is returned together with the labels as two Numpy arrays, 
+        If True, the data is returned together with the labels as two Numpy arrays,
         otherwise the data is returned as Pandas data frame.
 
         The default is True.
@@ -194,7 +194,7 @@ def load_gecco2019_water_quality_data(download_dir: str = None, return_X_y: bool
     Returns
     -------
     `dict`
-        The data set as a dictionary with entries "train", "validation", and "test" containing 
+        The data set as a dictionary with entries "train", "validation", and "test" containing
         the respective data.
     """
     # Download data if necessary

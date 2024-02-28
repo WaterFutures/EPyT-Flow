@@ -39,13 +39,13 @@ def load_leakdb_data(scenarios_id: list[int], use_net1: bool = True, download_di
 
         The default is None.
     return_X_y : `bool`, optional
-        If True, the data is returned together with the labels (presence of a leakage) as 
-        two Numpy arrays, otherwise the data is returned as 
+        If True, the data is returned together with the labels (presence of a leakage) as
+        two Numpy arrays, otherwise the data is returned as
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances.
 
         The default is False.
     return_leak_locations : `bool`
-        If True, the leak locations are returned as well -- 
+        If True, the leak locations are returned as well --
         as an instance of `scipy.sparse.bsr_array`.
 
         The default is False.
@@ -53,9 +53,9 @@ def load_leakdb_data(scenarios_id: list[int], use_net1: bool = True, download_di
     Returns
     -------
     `list[`:class:`~epyt_flow.simulation.scada.scada_data.ScadaData` `]` or `list[tuple[numpy.ndarray, numpy.ndarray]]`
-        The simulated benchmark scenarios as either a list of 
-        :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances or as a list of 
-        (X, y) Numpy arrays. If 'return_leak_locations' is True, the leak locations are included 
+        The simulated benchmark scenarios as either a list of
+        :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances or as a list of
+        (X, y) Numpy arrays. If 'return_leak_locations' is True, the leak locations are included
         as an instance of `scipy.sparse.bsr_array` as well.
     """
     download_dir = download_dir if download_dir is not None else get_temp_folder()
@@ -179,25 +179,26 @@ def __gen_dem(download_dir, use_net1):
 
     return dem_final
 
+
 def load_leakdb(scenarios_id: list[int], use_net1: bool = True,
                 download_dir: str = None) -> list[ScenarioConfig]:
     """
-    LeakDB (Leakage Diagnosis Benchmark) by Vrachimis, S. G., Kyriakou, M. S., Eliades, D. G. 
-    and Polycarpou, M. M. (2018), is a realistic leakage dataset for water distribution networks. 
-    The dataset is comprised of 1000 artificially created but realistic leakage 
+    LeakDB (Leakage Diagnosis Benchmark) by Vrachimis, S. G., Kyriakou, M. S., Eliades, D. G.
+    and Polycarpou, M. M. (2018), is a realistic leakage dataset for water distribution networks.
+    The dataset is comprised of 1000 artificially created but realistic leakage
     scenarios, on different water distribution networks, under varying conditions.
 
     See https://github.com/KIOS-Research/LeakDB/ for details.
 
     .. note::
-        Note that due to the randomness in the demand creation as well as in the model 
-        uncertainties, the generated scenarios will differ between different runs, and 
-        will also differ from the "official" data set available at 
-        https://github.com/KIOS-Research/LeakDB/. 
-        However, the leakages (i.e. location and profile) will be always the same and be 
+        Note that due to the randomness in the demand creation as well as in the model
+        uncertainties, the generated scenarios will differ between different runs, and
+        will also differ from the "official" data set available at
+        https://github.com/KIOS-Research/LeakDB/.
+        However, the leakages (i.e. location and profile) will be always the same and be
         consistent with the "official" data set.
 
-    This implementation is based on 
+    This implementation is based on
     https://github.com/KIOS-Research/LeakDB/blob/master/CCWI-WDSA2018/Dataset_Generator_Py3/demandGenerator.py
     and https://github.com/KIOS-Research/LeakDB/blob/master/CCWI-WDSA2018/Dataset_Generator_Py3/leakDataset.py
 
@@ -228,9 +229,9 @@ def load_leakdb(scenarios_id: list[int], use_net1: bool = True,
                       "hydraulic_time_step": hydraulic_time_step}  # 30min time steps
 
     # Add demand patterns
-    week_pattern_url = "https://github.com/KIOS-Research/LeakDB/raw/master/CCWI-WDSA2018/"+\
+    week_pattern_url = "https://github.com/KIOS-Research/LeakDB/raw/master/CCWI-WDSA2018/" +\
         "Dataset_Generator_Py3/weekPat_30min.mat"
-    year_offset_url = "https://github.com/KIOS-Research/LeakDB/raw/master/CCWI-WDSA2018/"+\
+    year_offset_url = "https://github.com/KIOS-Research/LeakDB/raw/master/CCWI-WDSA2018/" +\
         "Dataset_Generator_Py3/yearOffset_30min.mat"
 
     download_if_necessary(os.path.join(download_dir, "weekPat_30min.mat"), week_pattern_url)
@@ -276,7 +277,7 @@ def load_leakdb(scenarios_id: list[int], use_net1: bool = True,
             super().__init__(**kwds)
 
         def apply(self, data: float) -> float:
-            z = data * np.random.uniform(low=self.min, high=self.max)
+            z = data * np.random.uniform(low=self.low, high=self.high)
             lower = data - z
             upper = data + z
             return lower + np.random.uniform() * (upper - lower)
