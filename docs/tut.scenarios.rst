@@ -183,15 +183,33 @@ Also note that in some cases (i.e. Hanoi and L-TOWN) a predefined sensor placeme
 +------------+-------------------------------------------------+
 | Net3       | :func:`~epyt_flow.data.networks.load_net3`      |
 +------------+-------------------------------------------------+
+| Net6       | :func:`~epyt_flow.data.networks.load_net6`      |
++------------+-------------------------------------------------+
 | Richmond   | :func:`~epyt_flow.data.networks.load_richmond`  |
 +------------+-------------------------------------------------+
+| MICROPOLIS | :func:`~epyt_flow.data.networks.load_micropolis`|
++------------+-------------------------------------------------+
+| Balerma    | :func:`~epyt_flow.data.networks.load_balerma`   |
++------------+-------------------------------------------------+
+| Rural      | :func:`~epyt_flow.data.networks.load_rural`     |
++------------+-------------------------------------------------+
+| BSWN-1     | :func:`~epyt_flow.data.networks.load_bwsn1`     |
++------------+-------------------------------------------------+
+| BWSN-2     | :func:`~epyt_flow.data.networks.load_bwsn2`     |
++------------+-------------------------------------------------+
 | Anytown    | :func:`~epyt_flow.data.networks.load_anytown`   |
++------------+-------------------------------------------------+
+| D-Town     | :func:`~epyt_flow.data.networks.load_dtown`     |
++------------+-------------------------------------------------+
+| C-Town     | :func:`~epyt_flow.data.networks.load_ctown`     |
 +------------+-------------------------------------------------+
 | Kentucky   | :func:`~epyt_flow.data.networks.load_kentucky`  |
 +------------+-------------------------------------------------+
 | Hanoi      | :func:`~epyt_flow.data.networks.load_hanoi`     |
 +------------+-------------------------------------------------+
 | L-TOWN     | :func:`~epyt_flow.data.networks.load_ltown`     |
++------------+-------------------------------------------------+
+| L-TOWN-A   | :func:`~epyt_flow.data.networks.load_ltown_a`   |
 +------------+-------------------------------------------------+
 
 
