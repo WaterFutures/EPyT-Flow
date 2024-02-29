@@ -40,3 +40,11 @@ epyt_flow.simulation.events.sensor_faults
 .. automodule:: epyt_flow.simulation.events.sensor_faults
    :members:
    :show-inheritance:
+
+
+epyt_flow.simulation.events.sensor_reading_attack
+-------------------------------------------------
+
+.. automodule:: epyt_flow.simulation.events.sensor_reading_attack
+   :members:
+   :show-inheritance:

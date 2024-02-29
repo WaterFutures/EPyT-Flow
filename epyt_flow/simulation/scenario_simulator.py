@@ -16,7 +16,7 @@ from .sensor_config import SensorConfig, SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK
     SENSOR_TYPE_NODE_DEMAND, SENSOR_TYPE_NODE_PRESSURE, SENSOR_TYPE_NODE_QUALITY, \
     SENSOR_TYPE_PUMP_STATE, SENSOR_TYPE_TANK_LEVEL, SENSOR_TYPE_VALVE_STATE
 from ..uncertainty import ModelUncertainty, SensorNoise
-from .events import SystemEvent, Leakage, SensorFault, SensorReadingEvent
+from .events import SystemEvent, Leakage, SensorFault, SensorReadingAttack, SensorReadingEvent
 from .scada import ScadaData, AdvancedControlModule
 
 
@@ -416,6 +416,22 @@ class WaterDistributionNetworkScenarioSimulator():
 
         self.__sensor_reading_events.append(sensor_fault_event)
 
+    def add_sensor_reading_attack(self, sensor_reading_attack: SensorReadingAttack) -> None:
+        """
+        Adds a sensor reading attack to the scenario simulation.
+
+        Parameters
+        ----------
+        sensor_reading_attack : :class:`~epyt_flow.simulation.events.sensor_reading_attack.SensorReadingAttack`
+            Sensor fault specifications.
+        """
+        if not isinstance(sensor_reading_attack, SensorReadingAttack):
+            raise TypeError("'sensor_reading_attack' must be an instance of " +
+                            "'epyt_flow.simulation.events.SensorReadingAttack' not of " +
+                            f"'{type(sensor_reading_attack)}'")
+
+        self.__sensor_reading_events.append(sensor_reading_attack)
+
     def add_sensor_reading_event(self, event: SensorReadingEvent) -> None:
         """
         Adds a sensor reading event to the scenario simulation.
@@ -618,10 +634,15 @@ class WaterDistributionNetworkScenarioSimulator():
 
             tanks_level = np.array([[] for _ in range(res.Pressure.shape[0])])  # TODO: No tanks level data available?
 
-            return ScadaData(self.sensor_config, res.Pressure[:, :], res.Flow[:, :],
-                             res.Demand[:, :], res.NodeQuality[:, :], res.LinkQuality[:, :],
-                             pumps_state, valves_state, tanks_level, res.Time[:],
-                             self.sensor_reading_events, self.sensor_noise)
+            return ScadaData(sensor_config=self.sensor_config, pressure_data_raw=res.Pressure[:, :],
+                             flow_data_raw=res.Flow[:, :],
+                             demand_data_raw=res.Demand[:, :],
+                             node_quality_data_raw=res.NodeQuality[:, :],
+                             link_quality_data_raw=res.LinkQuality[:, :],
+                             pumps_state_data_raw=pumps_state, valves_state_data_raw=valves_state,
+                             tanks_level_data_raw=tanks_level, sensor_readings_time=res.Time[:],
+                             sensor_reading_events=self.__sensor_reading_events,
+                             sensor_noise=self.__sensor_noise)
 
     def run_simulation_as_generator(self, hyd_export: str = None,
                                     support_abort=False) -> Generator[ScadaData, bool, None]:
@@ -708,10 +729,17 @@ class WaterDistributionNetworkScenarioSimulator():
                 link_valve_idx = self.epanet_api.getLinkValveIndex()
                 valves_state_data = self.epanet_api.getLinkStatus(link_valve_idx).reshape(1, -1)
 
-                scada_data = ScadaData(self.__sensor_config, pressure_data, flow_data, demand_data,
-                                       quality_node_data, quality_link_data, pumps_state_data,
-                                       valves_state_data, tanks_level_data, np.array([total_time]),
-                                       self.__sensor_reading_events, self.__sensor_noise)
+                scada_data = ScadaData(sensor_config=self.__sensor_config,
+                                       pressure_data_raw=pressure_data, flow_data_raw=flow_data,
+                                       demand_data_raw=demand_data,
+                                       node_quality_data_raw=quality_node_data,
+                                       link_quality_data_raw=quality_link_data,
+                                       pumps_state_data_raw=pumps_state_data,
+                                       valves_state_data_raw=valves_state_data,
+                                       tanks_level_data_raw=tanks_level_data,
+                                       sensor_readings_time=np.array([total_time]),
+                                       sensor_reading_events=self.__sensor_reading_events,
+                                       sensor_noise=self.__sensor_noise)
 
                 # Yield results in a regular time interval only!
                 if total_time % requested_time_step == 0:

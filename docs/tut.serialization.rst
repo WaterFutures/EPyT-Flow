@@ -78,15 +78,15 @@ those will be passed to the constructor when deserializing an instance of this c
 The decorator requires a **unique ID** of the class that is made serializeable -- 
 i.e. every class (more general every data type) is assigned a unique ID to make it 
 recognizable by the parser. All reserved IDs (you cannot use those!) are listed in 
-:mod:`epyt_flow.serialization.py` -- right now any number greater than 17 is free for use.
+:mod:`epyt_flow.serialization.py` -- right now any number greater than 19 is free for use.
 Furthermore, a file extension is required which should allow the user to infer the type of content 
 -- this file extension is appended to the path automatically, if not already present.
 
-Example of making a new class `MyClass` serializable -- this class is assigned the ID `18`:
+Example of making a new class `MyClass` serializable -- this class is assigned the ID `42`:
 
 .. code-block:: python
 
-    @serializable(18, ".my_file_ext")
+    @serializable(42, ".my_file_ext")
     class MyNewClass(Serializable):
         def __init__(self, my_var_1, my_var_2, **kwds):
             self.my_var_1 = my_var_1

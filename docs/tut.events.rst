@@ -112,6 +112,76 @@ of a given :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
         # ...
 
 
+Sensor Reading Attacks
+++++++++++++++++++++++
+
+To support the simulation of cyber-(physical) attacks on water distribution networks, 
+EPyT-Flow comes with a set of pre-defined sensor reading attacks:
+
++---------------------------------------------------------------------------------+--------------------------------------------------------------+
+| Implementation                                                                  | Attack description                                           |
++=================================================================================+==============================================================+
+| :class:`~epyt_flow.simulation.events.sensor_reading_attack.SensorReplayAttack`  | Sensor readings are replaced by historical readings.         |
++---------------------------------------------------------------------------------+--------------------------------------------------------------+
+| :class:`~epyt_flow.simulation.events.sensor_reading_attack.SensorOverrideAttack`| Sensor readings are overriden with some pre-defined values.  |
++---------------------------------------------------------------------------------+--------------------------------------------------------------+
+
+Sensor reading attack can be added BEFORE running the simulation by calling 
+:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.add_sensor_reading_attack`
+of a :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator` instance, 
+or AFTERWARDS by calling :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.change_sensor_reading_attacks`  
+of a :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance.
+
+Example of a sensor replay attack on a pressure sensor:
+
+.. code-block:: python
+
+    # Load the first LeakDB Hanoi scenario
+    config = load_leakdb(scenarios_id=["1"], use_net1=False)[0]
+    with WaterDistributionNetworkScenarioSimulator(scenario_config=config) as sim:
+        # Set simulaton duration to two days
+        sim.set_general_parameters(simulation_duration=2)
+
+        # Add a sensor replay attack -- pressure readings at node "13" between 18000s and 27000s
+        # (i.e. time steps 10 - 15) are replaced by the historical readings collected from 0 to
+        # 9000s (i.e. first 5 time steps)
+        sim.add_sensor_reading_event(SensorReplayAttack(replay_data_time_window_start=0,
+                                                        replay_data_time_window_end=9000,
+                                                        start_time=18000, end_time=27000,
+                                                        sensor_id="13",
+                                                        sensor_type=SENSOR_TYPE_NODE_PRESSURE))
+
+        # Run simulation and and retrieve pressure readings
+        res = sim.run_simulation()
+
+        pressure_readings = res.get_data_pressures(sensor_locations=["13"])
+        print(pressure_readings)
+
+
+Example of a sensor override attack on a flow sensor -- the flow readings are set to 42:
+
+.. code-block:: python
+
+    # Load the first LeakDB Hanoi scenario
+    config = load_leakdb(scenarios_id=["1"], use_net1=False)[0]
+    with WaterDistributionNetworkScenarioSimulator(scenario_config=config) as sim:
+        # Set simulaton duration to two days
+        sim.set_general_parameters(simulation_duration=2)
+
+        # Override the sensor readings of the flow sensor at link "1" with the value "42" for
+        # the time 18000s to 27000s (i.e. time steps 10 - 15)
+        new_sensor_values = np.array([42]*5)
+        sim.add_sensor_reading_event(SensorOverrideAttack(new_sensor_values, start_time=18000,
+                                                          end_time=27000, sensor_id="1",
+                                                          sensor_type=SENSOR_TYPE_LINK_FLOW))
+
+        # Run simulation and and retrieve flow readings
+        res = sim.run_simulation()
+
+        flow_readings = res.get_data_pressures(sensor_locations=["1"])
+        print(flow_readings)
+
+
 Custom Events
 +++++++++++++
 
@@ -186,7 +256,7 @@ Sensor reading events
 ---------------------
 
 Sensor reading events are events that affect sensor readings only (e.g. sensor faults, 
-communication events, etc.). Those events must be derived from 
+sensor reading attacks, etc.). Those events must be derived from 
 :class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent` 
 and must implement the :func:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent.apply` 
 method. This method gets the raw sensor readings as well as the time steps as input, applies the event's logic to it, and 

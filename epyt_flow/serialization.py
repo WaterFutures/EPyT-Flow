@@ -32,6 +32,8 @@ LEAKAGE_ID                      = 14
 ABRUPT_LEAKAGE_ID               = 15
 INCIPIENT_LEAKAGE_ID            = 16
 SCADA_DATA_ID                   = 17
+SENSOR_ATTACK_OVERRIDE_ID       = 18
+SENSOR_ATTACK_REPLAY_ID         = 19
 
 
 def my_packb(data: Any) -> bytes:
@@ -74,8 +76,8 @@ def serializable(my_id: int, my_file_ext: str):
 
 class Serializable(ABC):
     """
-    Base class for a serializable class -- must be used in conjunction with the 
-    decorator `@serializable`.
+    Base class for a serializable class -- must be used in conjunction with the
+     decorator `@serializable`.
     """
     def __init__(self, **kwds):
         super().__init__(**kwds)
