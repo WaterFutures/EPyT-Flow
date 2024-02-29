@@ -3,6 +3,7 @@ Module provides functions for loading different water distribution networks.
 """
 import os
 import requests
+from tqdm import tqdm
 
 from ..simulation import ScenarioConfig, WaterDistributionNetworkScenarioSimulator, SensorConfig
 from ..utils import get_temp_folder
@@ -21,9 +22,16 @@ def download_if_necessary(download_path: str, url: str) -> None:
         Web-URL.
     """
     if not os.path.isfile(download_path):
-        r = requests.get(url, allow_redirects=True, timeout=1000)
-        with open(download_path, "wb") as f_out:
-            f_out.write(r.content)
+        response = requests.get(url, stream=True, allow_redirects=True, timeout=1000)
+        content_length = int(response.headers.get('content-length', 0))
+        with open(download_path, "wb") as file, tqdm(desc=download_path,
+                                                     total=content_length,
+                                                     unit='B',
+                                                     unit_scale=True,
+                                                     unit_divisor=1024) as progress_bar:
+            for data in response.iter_content(chunk_size=1024):
+                size = file.write(data)
+                progress_bar.update(size)
 
 
 def create_empty_sensor_config(f_inp: str) -> SensorConfig:

@@ -4,3 +4,4 @@ scipy>=1.11.4
 u-msgpack-python>=2.8.0
 networkx>=3.2.1
 scikit-learn>=1.4.0
+tqdm>=4.66.2
