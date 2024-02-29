@@ -223,10 +223,10 @@ Example of loading the Hanoi network:
         # Run simulation ...
 
 
-Predefined benchmarks
----------------------
+Benchmarks scenarios
+--------------------
 
-EPyT-Flow comes with a set of benchmarks. Usually, those are pre-defined scenarios for 
+EPyT-Flow comes with a set of benchmarks scenarios. Usually, those are pre-defined scenarios for 
 different tasks such as leakage detection and localization.
 
 +------------+--------------------------------------------------------------+
@@ -236,3 +236,22 @@ different tasks such as leakage detection and localization.
 +------------+--------------------------------------------------------------+
 | BattLeDIM  | :func:`~epyt_flow.data.benchmarks.battledim.load_battledim`  |
 +------------+--------------------------------------------------------------+
+
+
+Benchmark data sets
++++++++++++++++++++
+
+In addition to benchmark scenarios (see previous section), EPyT-Flow also includes
+several (WDN related) benchmark data sets from the literature:
+
++------------------------------+---------------------------------------------------------------------------------------------+
+| Benchmark                    | Function for loading                                                                        |
++==============================+=============================================================================================+
+| GECCO Water Quality 2017     | :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2017_water_quality_data`    |
++------------------------------+---------------------------------------------------------------------------------------------+
+| GECCO Water Quality 2018     | :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2018_water_quality_data`    |
++------------------------------+---------------------------------------------------------------------------------------------+
+| GECCO Water Quality 2019     | :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2019_water_quality_data`    |
++------------------------------+---------------------------------------------------------------------------------------------+
+| Water Usage                  | :func:`~epyt_flow.data.benchmarks.water_usage.load_water_usage`                             |
++------------------------------+---------------------------------------------------------------------------------------------+

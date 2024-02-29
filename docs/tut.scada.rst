@@ -204,13 +204,22 @@ Example for exporting and important :class:`~epyt_flow.simulation.scada.scada_da
         scada_data = sim.run_simulation()
 
         # Store simulation results in a file
-        scada_data.save_to_file("myHanoiResuls.epytflow_scada")
+        scada_data.save_to_file("myHanoiResuls.epytflow_scada_data")
 
     # ...
 
     # Load SCADA results from file
-    scada_data = ScadaData.load_from_file("myHanoiResuls.epytflow_scada")
+    scada_data = ScadaData.load_from_file("myHanoiResuls.epytflow_scada_data")
 
+
+.. note::
+
+    Note that the use of the ".epytflow_scada_data" file extension is **mandatory** and will be
+    appended automatically if not already present.
+
+
+Export to other file formats
+----------------------------
 
 EPyT-Flow also supports the export of SCADA data to Numpy, .xlsx, MatLab files -- 
 see :ref:`here <epyt_flow.simulation.scada.scada_data_export>`.
