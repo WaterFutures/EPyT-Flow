@@ -692,6 +692,7 @@ class WaterDistributionNetworkScenarioSimulator():
         tmp_file = self.__find_temporary_file()
 
         requested_time_step = self.epanet_api.getTimeHydraulicStep()
+        reporting_time_step = self.epanet_api.getTimeReportingStep()
 
         if verbose is True:
             n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
@@ -761,7 +762,7 @@ class WaterDistributionNetworkScenarioSimulator():
                                        sensor_noise=self.__sensor_noise)
 
                 # Yield results in a regular time interval only!
-                if total_time % requested_time_step == 0:
+                if total_time % reporting_time_step == 0:
                     yield scada_data
 
                 # Apply control modules
@@ -817,7 +818,7 @@ class WaterDistributionNetworkScenarioSimulator():
 
     def set_general_parameters(self, demand_model: dict = None, simulation_duration: int = None,
                                hydraulic_time_step: int = None, quality_time_step: int = None,
-                               quality_model: dict = None) -> None:
+                               reporting_time_step: int = None, quality_model: dict = None) -> None:
         """
         Sets some general parameters.
 
@@ -841,12 +842,21 @@ class WaterDistributionNetworkScenarioSimulator():
 
             The default is None.
         hydraulic_time_step : `int`, optional
-            Hydraulic time step -- i.e. the interval at which hydraulics are computed and reported.
+            Hydraulic time step -- i.e. the interval at which hydraulics are computed.
 
             The default is None.
         quality_time_step : `int`, optional
             Quality time step -- i.e. the interval at which qualities are computed.
             Should be much smaller than the hydraulic time step!
+
+            The default is None.
+        reporting_time_step : `int`, optional
+            Report time step -- i.e. the interval at which hydraulics and quality states are
+            reported.
+
+            Must be a multiple of `hydraulic_time_step`.
+
+            If None, it will be set equal to `hydraulic_time_step`
 
             The default is None.
         quality_model : `dict`, optional
@@ -865,7 +875,14 @@ class WaterDistributionNetworkScenarioSimulator():
                 simulation_duration * 24 * 3600)  # TODO: Changing the simulation duration from .inp file seems to break EPANET-MSX
         if hydraulic_time_step is not None:
             self.epanet_api.setTimeHydraulicStep(hydraulic_time_step)
-            self.epanet_api.setTimeReportingStep(hydraulic_time_step)
+            if reporting_time_step is None:
+                self.epanet_api.setTimeReportingStep(hydraulic_time_step)
+        if reporting_time_step is not None:
+            hydraulic_time_step = self.epanet_api.getTimeHydraulicStep()
+            if reporting_time_step % hydraulic_time_step != 0:
+                raise ValueError("'reporting_time_step' must be a multiple of " +
+                                 "'hydraulic_time_step'")
+            self.epanet_api.setTimeReportingStep(reporting_time_step)
         if quality_time_step is not None:
             self.epanet_api.setTimeQualityStep(quality_time_step)
         if quality_model is not None:
