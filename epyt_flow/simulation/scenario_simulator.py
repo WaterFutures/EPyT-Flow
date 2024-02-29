@@ -6,10 +6,12 @@ from typing import Generator
 from copy import deepcopy
 import warnings
 import random
+import math
 import numpy as np
 from epyt import epanet
 from epyt.epanet import ToolkitConstants
 import networkx
+from tqdm import tqdm
 
 from .scenario_config import ScenarioConfig
 from .sensor_config import SensorConfig, SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY, \
@@ -587,7 +589,7 @@ class WaterDistributionNetworkScenarioSimulator():
             for c in self.__controls:
                 c.init(self.epanet_api)
 
-    def run_simulation(self, hyd_export: str = None) -> ScadaData:
+    def run_simulation(self, hyd_export: str = None, verbose: bool = False) -> ScadaData:
         """
         Runs the simulation of this scenario.
 
@@ -600,6 +602,10 @@ class WaterDistributionNetworkScenarioSimulator():
             If None, the simulated hydraulics will NOT be exported to a EPANET .hyd file.
 
             The default is None.
+        verbose : `bool`, optional
+            If True, method will be verbose (e.g. showing a progress bar).
+
+            The default is False.
 
         Returns
         -------
@@ -610,7 +616,8 @@ class WaterDistributionNetworkScenarioSimulator():
         if len(self.__controls) != 0 or len(self.__system_events) != 0 or hyd_export is not None:
             result = None
 
-            for scada_data in self.run_simulation_as_generator(hyd_export):
+            for scada_data in self.run_simulation_as_generator(hyd_export=hyd_export,
+                                                               verbose=verbose):
                 if result is None:
                     result = scada_data
                 else:
@@ -644,8 +651,8 @@ class WaterDistributionNetworkScenarioSimulator():
                              sensor_reading_events=self.__sensor_reading_events,
                              sensor_noise=self.__sensor_noise)
 
-    def run_simulation_as_generator(self, hyd_export: str = None,
-                                    support_abort=False) -> Generator[ScadaData, bool, None]:
+    def run_simulation_as_generator(self, hyd_export: str = None, verbose: bool = False,
+                                    support_abort: bool = False) -> Generator[ScadaData, bool, None]:
         """
         Runs the simulation of this scenario and provides the results as a generator.
 
@@ -658,7 +665,10 @@ class WaterDistributionNetworkScenarioSimulator():
             If None, the simulated hydraulics will NOT be exported to a EPANET .hyd file.
 
             The default is None.
+        verbose : `bool`, optional
+            If True, method will be verbose (e.g. showing a progress bar).
 
+            The default is False.
         support_abort : `bool`, optional
             If True, the simulation can be aborted after every time step -- i.e. the generator
             takes a boolean as an input (send) to indicate whether the simulation
@@ -683,6 +693,11 @@ class WaterDistributionNetworkScenarioSimulator():
 
         requested_time_step = self.epanet_api.getTimeHydraulicStep()
 
+        if verbose is True:
+            n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
+                                     requested_time_step)
+            progress_bar = iter(tqdm(range(n_iterations + 1), desc="Time steps"))
+
         try:
             # Run simulation step by step
             total_time = 0
@@ -697,6 +712,10 @@ class WaterDistributionNetworkScenarioSimulator():
                 if first_itr is True:  # Fix current time in the first iteration
                     tstep = 0
                     first_itr = False
+
+                if verbose is True:
+                    if (total_time + tstep) % requested_time_step == 0:
+                        next(progress_bar)
 
                 # Apply system events in a regular time interval only!
                 if (total_time + tstep) % requested_time_step == 0:
