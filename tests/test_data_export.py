@@ -4,11 +4,26 @@ Module provides tests to test different :class:`~epyt_flow.simulation.scada.Scad
 import os
 import numpy as np
 from epyt_flow.data.networks import load_hanoi
-from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
+from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator, ScadaData
 from epyt_flow.simulation.scada import ScadaDataNumpyExport, ScadaDataXlsxExport, \
     ScadaDataMatlabExport
 
 from .utils import get_temp_folder
+
+
+def test_customformat():
+    hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
+                                      include_default_sensor_placement=True)
+    with WaterDistributionNetworkScenarioSimulator(scenario_config=hanoi_network_config) as sim:
+        sim.set_general_parameters(simulation_duration=2)
+
+        res = sim.run_simulation()
+
+        f_out = os.path.join(get_temp_folder(), "data_export.epytflow_scada_data")
+        res.save_to_file(f_out)
+
+        res_restored = ScadaData.load_from_file(f_out)
+        assert res == res_restored
 
 
 def test_numpyexport():
