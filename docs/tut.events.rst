@@ -178,7 +178,7 @@ Example of a sensor override attack on a flow sensor -- the flow readings are se
         # Run simulation and and retrieve flow readings
         res = sim.run_simulation()
 
-        flow_readings = res.get_data_pressures(sensor_locations=["1"])
+        flow_readings = res.get_data_flows(sensor_locations=["1"])
         print(flow_readings)
 
 
