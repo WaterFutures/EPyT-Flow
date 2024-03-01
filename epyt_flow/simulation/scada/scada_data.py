@@ -534,8 +534,11 @@ class ScadaData(Serializable):
             raise TypeError(f"'other' must be an instance of 'ScadaData' but not of {type(other)}")
         if self.__sensor_config != other.sensor_config:
             raise ValueError("Sensor configurations must be the same!")
-        # TODO: Check for different sensor reading events!
-
+        if len(self.__sensor_reading_events) != len(other.sensor_reading_events):
+            raise ValueError("'other' must have the same sensor reading events as this instance!")
+        if any(e1 != e2 for e1, e2 in zip(self.__sensor_reading_events,
+                                          other.sensor_reading_events)):
+            raise ValueError("'other' must have the same sensor reading events as this instance!")
         self.__pressure_data_raw = np.concatenate(
             (self.__pressure_data_raw, other.pressure_data_raw), axis=0)
         self.__flow_data_raw = np.concatenate(

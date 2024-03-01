@@ -877,21 +877,36 @@ class WaterDistributionNetworkScenarioSimulator():
                                            demand_model["pressure_required"],
                                            demand_model["pressure_exponent"])
         if simulation_duration is not None:
+            if not isinstance(simulation_duration, int) or simulation_duration <= 0:
+                raise ValueError("'simulation_duration' must be a positive integer specifying " +
+                                 "the number of days to simulate")
             self.epanet_api.setTimeSimulationDuration(
                 simulation_duration * 24 * 3600)  # TODO: Changing the simulation duration from .inp file seems to break EPANET-MSX
         if hydraulic_time_step is not None:
+            if not isinstance(hydraulic_time_step, int) or hydraulic_time_step <= 0:
+                raise ValueError("'hydraulic_time_step' must be a positive integer specifying " +
+                                 "the time steps of the hydraulic simulation")
             self.epanet_api.setTimeHydraulicStep(hydraulic_time_step)
             if reporting_time_step is None:
+                warnings.warn("No report time steps specified -- using 'hydraulic_time_step'")
                 self.epanet_api.setTimeReportingStep(hydraulic_time_step)
         if reporting_time_step is not None:
             hydraulic_time_step = self.epanet_api.getTimeHydraulicStep()
-            if reporting_time_step % hydraulic_time_step != 0:
-                raise ValueError("'reporting_time_step' must be a multiple of " +
-                                 "'hydraulic_time_step'")
+            if not isinstance(reporting_time_step, int) or \
+                    reporting_time_step % hydraulic_time_step != 0:
+                raise ValueError("'reporting_time_step' must be a positive integer " +
+                                 "and a multiple of 'hydraulic_time_step'")
             self.epanet_api.setTimeReportingStep(reporting_time_step)
         if reporting_time_start is not None:
+            if not isinstance(reporting_time_start, int) or reporting_time_start <= 0:
+                raise ValueError("'reporting_time_start' must be a positive integer specifying " +
+                                 "the time at which reporting starts")
             self.epanet_api.setTimeReportingStart(reporting_time_start)
         if quality_time_step is not None:
+            if not isinstance(quality_time_step, int) or quality_time_step <= 0 or \
+                    quality_time_step > self.epanet_api.getTimeHydraulicStep():
+                raise ValueError("'quality_time_step' must be a positive integer that is not " +
+                                 "greater than the hydraulic time step")
             self.epanet_api.setTimeQualityStep(quality_time_step)
         if quality_model is not None:
             if quality_model["type"] == "none":

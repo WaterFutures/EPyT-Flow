@@ -47,6 +47,8 @@ class Leakage(SystemEvent, Serializable):
         if not isinstance(diameter, float):
             raise TypeError("'diameter must be an instance of 'float' but " +
                             f"not of '{type(diameter)}'")
+        if diameter <= 0:
+            raise ValueError("'diameter' must be greater than zero")
         if profile is not None:
             if not isinstance(profile, np.ndarray):
                 raise TypeError("'profile' must be an instance of 'numpy.ndarray' but " +
@@ -199,6 +201,9 @@ class Leakage(SystemEvent, Serializable):
 
         # Split pipe if leak is placed at a link/pipe
         if self.__link_id is not None:
+            if self.__link_id not in self._epanet_api.getLinkNameID():
+                raise ValueError(f"Unknown link/pipe '{self.__link_id}'")
+
             new_link_id = f"leak_pipe_{self.link_id}"
             new_node_id = f"leak_node_{self.link_id}"
 
@@ -209,6 +214,9 @@ class Leakage(SystemEvent, Serializable):
             self._epanet_api.splitPipe(self.link_id, new_link_id, new_node_id)
             self.__leaky_node_id = self._epanet_api.getNodeIndex(new_node_id)
         else:
+            if self.__node_id not in self._epanet_api.getNodeNameID():
+                raise ValueError(f"Unknown node '{self.__node_id}'")
+
             self.__leaky_node_id = self._epanet_api.getNodeIndex(self.__node_id)
 
         # Compute and set leak emitter coefficient
