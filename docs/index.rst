@@ -10,7 +10,8 @@ It aims to provide a high-level interface for the easy generation of hydraulic a
 However, it also provides access to low-level functions by `EPANET <https://github.com/OpenWaterAnalytics/epanet>`_ 
 and `EPANET-MSX <https://github.com/OpenWaterAnalytics/epanet-msx>`_.
 
-EPyT-Flow also provides an evironment for developing and testing control algorithms.
+EPyT-Flow provides easy access to popular benchmark data sets for event detection and localization.
+Furthermore, it also provides an evironment for developing and testing control algorithms.
 
 .. toctree::
     :maxdepth: 2
