@@ -2,7 +2,7 @@
 Module provides the leakage configurations for LeakDB.
 """
 
-net1_leakages = """{
+NET1_LEAKAGES = """{
     "1": [
         {
             "node_id": "13",
@@ -9255,7 +9255,7 @@ net1_leakages = """{
     ]
 }"""
 
-hanoi_leakages = """{
+HANOI_LEAKAGES = """{
     "2": [
         {
             "node_id": "6",

@@ -10,7 +10,7 @@ import numpy as np
 from scipy.sparse import bsr_array
 
 from ..networks import load_net1, load_hanoi, download_if_necessary
-from .leakdb_data import net1_leakages, hanoi_leakages
+from .leakdb_data import NET1_LEAKAGES, HANOI_LEAKAGES
 from ...utils import get_temp_folder
 from ...simulation import WaterDistributionNetworkScenarioSimulator
 from ...simulation.events import AbruptLeakage, IncipientLeakage
@@ -64,9 +64,9 @@ def load_leakdb_data(scenarios_id: list[int], use_net1: bool = True, download_di
         f"{'Net1/' if use_net1 is True else 'Hanoi/'}"
 
     if use_net1 is True:
-        leaks_info = json.loads(net1_leakages)
+        leaks_info = json.loads(NET1_LEAKAGES)
     else:
-        leaks_info = json.loads(hanoi_leakages)
+        leaks_info = json.loads(HANOI_LEAKAGES)
 
     def leak_time_to_idx(t: int, round_up: bool = False):
         if round_up is False:
@@ -300,9 +300,9 @@ def load_leakdb(scenarios_id: list[int], use_net1: bool = True,
     leaks_all = []
 
     if use_net1 is True:
-        leaks_info = json.loads(net1_leakages)
+        leaks_info = json.loads(NET1_LEAKAGES)
     else:
-        leaks_info = json.loads(hanoi_leakages)
+        leaks_info = json.loads(HANOI_LEAKAGES)
 
     for s_id in scenarios_id:
         leaks_data = []

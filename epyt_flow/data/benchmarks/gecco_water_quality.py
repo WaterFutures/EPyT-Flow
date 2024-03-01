@@ -99,8 +99,9 @@ def load_gecco2018_water_quality_data(download_dir: str = None, return_X_y: bool
     organized by F. Rehbach, M. Rebolledo, S. Moritz, S. Chandrasekaran, T. Bartz-Beielstein at
     the Genetic and Evolutionary Computation Conference 2018, Kyoto, Japan.
 
-    This is a benchmark 
-    (based on :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2017_water_quality_data`)
+    This is a benchmark
+    (based on
+    :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2017_water_quality_data`)
     for anomaly detection algorithms on water quality. The data is provided by the
     "Thüringer Fernwasserversorgung" (Germany) and constitutes a real-world data set. In this
     data set, 9 numeric water quality features are given at a sampling rate of 1 min over approx.
@@ -163,7 +164,8 @@ def load_gecco2019_water_quality_data(download_dir: str = None, return_X_y: bool
     Conference 2019, Prague, Czech Republic.
 
     This is a benchmark
-    (based on :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2018_water_quality_data`)
+    (based on
+    :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2018_water_quality_data`)
     for anomaly detection algorithms on water quality. The data is provided by the
     "Thüringer Fernwasserversorgung" (Germany) and constitutes a real-world data set. In this
     data set, 6 numeric water quality features are given at a sampling rate of 1 min over approx.
@@ -200,9 +202,10 @@ def load_gecco2019_water_quality_data(download_dir: str = None, return_X_y: bool
     # Download data if necessary
     download_dir = download_dir if download_dir is not None else get_temp_folder()
 
-    url_train_data = "https://zenodo.org/records/4304080/files/7_gecco2019_train_water_quality.csv?download=1"
-    url_valid_data = "https://zenodo.org/records/4304080/files/8_gecco2019_valid_water_qulity.csv?download=1"
-    url_test_data = "https://zenodo.org/records/4304080/files/6_gecco2019_test_water_quality.csv?download=1"
+    base_url = "https://zenodo.org/records/4304080/files/"
+    url_train_data = base_url + "7_gecco2019_train_water_quality.csv?download=1"
+    url_valid_data = base_url + "8_gecco2019_valid_water_qulity.csv?download=1"
+    url_test_data = base_url + "6_gecco2019_test_water_quality.csv?download=1"
 
     f_train_in = os.path.join(download_dir, "gecco2019_train_water_quality.csv")
     f_valid_in = os.path.join(download_dir, "gecco2019_valid_water_qulity.csv")

@@ -8,7 +8,8 @@ from datetime import datetime
 import numpy as np
 from scipy.sparse import bsr_array
 
-from .battledim_data import start_time_test, start_time_train, leaks_config_test, leaks_config_train
+from .battledim_data import START_TIME_TEST, START_TIME_TRAIN, LEAKS_CONFIG_TEST, \
+    LEAKS_CONFIG_TRAIN
 from ..networks import load_ltown, download_if_necessary
 from ...simulation.events import AbruptLeakage, IncipientLeakage, Leakage
 from ...simulation import ScenarioConfig
@@ -103,8 +104,8 @@ def load_battledim_data(test_scenario: bool, download_dir: str = None, return_X_
         else:
             return math.ceil(t / 1800)
 
-    start_time = start_time_test if test_scenario is True else start_time_train
-    leaks_config = leaks_config_test if test_scenario is True else leaks_config_train
+    start_time = START_TIME_TEST if test_scenario is True else START_TIME_TRAIN
+    leaks_config = LEAKS_CONFIG_TEST if test_scenario is True else LEAKS_CONFIG_TRAIN
     leakages = parse_leak_config(start_time, leaks_config)
 
     leak_locations_row = []
@@ -181,8 +182,8 @@ def load_battledim(test_scenario: bool, download_dir: str = None) -> ScenarioCon
                       "hydraulic_time_step": 300}   # 5min time steps
 
     # Add events
-    start_time = start_time_test if test_scenario is True else start_time_train
-    leaks_config = leaks_config_test if test_scenario is True else leaks_config_train
+    start_time = START_TIME_TEST if test_scenario is True else START_TIME_TRAIN
+    leaks_config = LEAKS_CONFIG_TEST if test_scenario is True else LEAKS_CONFIG_TRAIN
     leakages = parse_leak_config(start_time, leaks_config)
 
     # Build final scenario

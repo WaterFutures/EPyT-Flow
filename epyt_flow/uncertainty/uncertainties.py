@@ -56,6 +56,15 @@ class Uncertainty(ABC):
         return self.__max_value
 
     def get_attributes(self) -> dict:
+        """
+        Gets all attributes to be serialized -- these attributes are passed to the
+        constructor when the object is deserialized.
+
+        Returns
+        -------
+        `dict`
+            Dictionary of attributes -- i.e. pairs of attribute name + value.
+        """
         return {"min_value": self.__min_value, "max_value": self.__max_value}
 
     def __eq__(self, other) -> bool:
@@ -65,6 +74,19 @@ class Uncertainty(ABC):
         return f"min_value: {self.__min_value} max_value: {self.__max_value}"
 
     def clip(self, data: np.ndarray) -> np.ndarray:
+        """
+        Clips values in a given array -- i.e. every value must be in [min_value, max_value].
+
+        Parameters
+        ----------
+        data : `numpy.ndarray`
+            Array to be clipped.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Clipped data.
+        """
         if self.__min_value is not None:
             data = np.min([data, self.__min_value])
         if self.__max_value is not None:
@@ -74,9 +96,35 @@ class Uncertainty(ABC):
 
     @abstractmethod
     def apply(self, data: float):
+        """
+        Applies the uncertainty to a single value.
+
+        Parameters
+        ----------
+        data : `float`
+            The value to which the uncertainty is applied.
+
+        Returns
+        -------
+        `float`
+            Uncerainty applied to 'data'.
+        """
         raise NotImplementedError()
 
     def apply_batch(self, data: np.ndarray) -> np.ndarray:
+        """
+        Applies the uncertainty to an array of values.
+
+        Parameters
+        ----------
+        data : `numpy.ndarray`
+            Array of values to which the uncertainty is applied.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Uncertainty applied to `data`.
+        """
         for t in range(data.shape[0]):
             data[t] = self.apply(data[t])
         return data
@@ -292,6 +340,7 @@ class DeepUncertainty(Uncertainty, Serializable):
         self.__max_noise_value = max_noise_value
 
         self.__uncertainties_idx = None
+        self.__uncertainties = None
         self.__create_uncertainties()
 
     @property

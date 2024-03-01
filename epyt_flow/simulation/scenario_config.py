@@ -149,6 +149,14 @@ class ScenarioConfig(Serializable):
 
     @property
     def general_params(self) -> dict:
+        """
+        Gets general parameters such as hydraulic time step, etc.
+
+        Returns
+        -------
+        `dict`
+            All general parameters as dictionary -- the parameter name serves as a key.
+        """
         return deepcopy(self.__general_params)
 
     @property
