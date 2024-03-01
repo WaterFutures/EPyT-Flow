@@ -277,6 +277,8 @@ class ScenarioConfig(Serializable):
         general_params["quality_time_step"] = general_settings["quality_time_step"]
         if "reporting_time_step" in general_settings.keys():
             general_params["reporting_time_step"] = general_settings["reporting_time_step"]
+        if "reporting_time_start" in general_settings.keys():
+            general_params["reporting_time_start"] = general_settings["reporting_time_start"]
         if "demand_model" in general_settings.keys():
             general_params["demand_model"] = general_settings["demand_model"]
         if "quality_model" in general_settings.keys():

@@ -692,6 +692,7 @@ class WaterDistributionNetworkScenarioSimulator():
         tmp_file = self.__find_temporary_file()
 
         requested_time_step = self.epanet_api.getTimeHydraulicStep()
+        reporting_time_start = self.epanet_api.getTimeReportingStart()
         reporting_time_step = self.epanet_api.getTimeReportingStep()
 
         if verbose is True:
@@ -762,7 +763,7 @@ class WaterDistributionNetworkScenarioSimulator():
                                        sensor_noise=self.__sensor_noise)
 
                 # Yield results in a regular time interval only!
-                if total_time % reporting_time_step == 0:
+                if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
                     yield scada_data
 
                 # Apply control modules
@@ -818,7 +819,8 @@ class WaterDistributionNetworkScenarioSimulator():
 
     def set_general_parameters(self, demand_model: dict = None, simulation_duration: int = None,
                                hydraulic_time_step: int = None, quality_time_step: int = None,
-                               reporting_time_step: int = None, quality_model: dict = None) -> None:
+                               reporting_time_step: int = None, reporting_time_start: int = None,
+                               quality_model: dict = None) -> None:
         """
         Sets some general parameters.
 
@@ -859,6 +861,10 @@ class WaterDistributionNetworkScenarioSimulator():
             If None, it will be set equal to `hydraulic_time_step`
 
             The default is None.
+        reporting_time_start : `int`, optional
+            Start time (in seconds) at which reporting of hydraulic and quality states starts.
+
+            The default is None.
         quality_model : `dict`, optional
             Specifies the quality model -- the dictionary must contain,
             "type", "chemical_name", "chemical_units", and "trace_node_id", of the
@@ -883,6 +889,8 @@ class WaterDistributionNetworkScenarioSimulator():
                 raise ValueError("'reporting_time_step' must be a multiple of " +
                                  "'hydraulic_time_step'")
             self.epanet_api.setTimeReportingStep(reporting_time_step)
+        if reporting_time_start is not None:
+            self.epanet_api.setTimeReportingStart(reporting_time_start)
         if quality_time_step is not None:
             self.epanet_api.setTimeQualityStep(quality_time_step)
         if quality_model is not None:
