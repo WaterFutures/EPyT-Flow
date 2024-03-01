@@ -35,7 +35,7 @@ class SensorReadingEvent(Event):
         if not isinstance(sensor_type, int):
             raise TypeError("'sensor_type' mut be an instance of 'int' but not of " +
                             f"'{type(sensor_type)}'")
-        if not 1 <= sensor_type <= 5:
+        if not 1 <= sensor_type <= 8:
             raise ValueError("Invalid value of 'sensor_type'")
 
         self.__sensor_id = sensor_id
