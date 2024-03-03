@@ -60,6 +60,15 @@ class Event(ABC):
         return self.__end_time
 
     def get_attributes(self) -> dict:
+        """
+        Gets all attributes to be serialized -- these attributes are passed to the
+        constructor when the object is deserialized.
+
+        Returns
+        -------
+        `dict`
+            Dictionary of attributes -- i.e. pairs of attribute name and value.
+        """
         return {"start_time": self.__start_time, "end_time": self.__end_time}
 
     def __str__(self) -> str:
