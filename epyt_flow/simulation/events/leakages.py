@@ -219,19 +219,20 @@ class Leakage(SystemEvent, Serializable):
 
             self.__leaky_node_id = self._epanet_api.getNodeIndex(self.__node_id)
 
-        # Compute and set leak emitter coefficient
+        self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_id, 0.)
+
+        # Compute leak emitter coefficient
         self.__leak_emitter_coef = self.compute_leak_emitter_coefficient(
             self.compute_leak_area(self.__diameter))
+
+    def exit(self, cur_time) -> None:
         self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_id, 0.)
 
     def apply(self, cur_time: int) -> None:
-        if self.start_time <= cur_time < self.end_time:
-            self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_id,
-                                                 self.__leak_emitter_coef
-                                                 * self.__profile[self.__time_pattern_idx])
-            self.__time_pattern_idx += 1
-        elif cur_time >= self.end_time:
-            self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_id, 0.)
+        self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_id,
+                                             self.__leak_emitter_coef *
+                                             self.__profile[self.__time_pattern_idx])
+        self.__time_pattern_idx += 1
 
 
 @serializable(ABRUPT_LEAKAGE_ID, ".epytflow_leakage_abrupt")

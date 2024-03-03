@@ -722,7 +722,7 @@ class WaterDistributionNetworkScenarioSimulator():
                 # Apply system events in a regular time interval only!
                 if (total_time + tstep) % requested_time_step == 0:
                     for event in self.__system_events:
-                        event.apply(total_time + tstep)
+                        event.step(total_time + tstep)
 
                 # Compute current time step
                 t = self.epanet_api.runHydraulicAnalysis()

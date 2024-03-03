@@ -78,6 +78,10 @@ class SensorReadingEvent(Event):
         return f"{super().__str__()} sensor_id: {self.__sensor_id} " +\
             f"sensor_type: {self.__sensor_type}"
 
+    def __call__(self, sensor_readings: numpy.ndarray,
+                 sensor_readings_time: numpy.ndarray) -> numpy.ndarray:
+        return self.apply(sensor_readings, sensor_readings_time)
+
     @abstractmethod
     def apply(self, sensor_readings: numpy.ndarray,
               sensor_readings_time: numpy.ndarray) -> numpy.ndarray:

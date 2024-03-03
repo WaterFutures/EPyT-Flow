@@ -196,17 +196,15 @@ System events
 System events are events that directly affect the simulation (e.g. leakages, actuator events, etc.).
 System events must be derived from :class:`~epyt_flow.simulation.events.system_event.SystemEvent` 
 and must implement the :func:`~epyt_flow.simulation.events.system_event.SystemEvent.apply` method. 
-This function is called in every simulation step to apply the event's logic by making use of 
-the EPANET and EPANET-MSX interface.
-
-.. note::
-    Note that the function gets the current simulation time 
-    passed as an argument and must respect the start and end time of the event 
-    as stored in its parent class :class:`~epyt_flow.simulation.events.event.Event`.
+This function is called at every simulation step, when the event is active, and is supposed to
+apply the event's logic by making use of the EPANET and EPANET-MSX interface.
 
 Optionally, the :func:`~epyt_flow.simulation.events.system_event.SystemEvent.init` method can also 
 be override for running some initialization logic -- make sure to call the parent's 
 :func:`~epyt_flow.simulation.events.system_event.SystemEvent.init` first.
+Also, if some "clean-up" logic is needed (i.e. some code that must run after the end of the event),
+the method :func:`~epyt_flow.simulation.events.system_event.SystemEvent.init` can be overriden --
+this method is called ONCE after the end of the event.
 
 Example of a system event that activates a pump:
 
@@ -227,9 +225,8 @@ Example of a system event that activates a pump:
 
         def apply(self, cur_time:int) -> None:
             # Activate pump "9" while this event is active
-            if self.start_time <= cur_time < self.end_time:
-                pump_status = 2
-                self._epanet_api.setLinkStatus(self.pump_link_idx, pump_status)
+            pump_status = 2
+            self._epanet_api.setLinkStatus(self.pump_link_idx, pump_status)
 
 
 System events can be added to a scenario by calling 
