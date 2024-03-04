@@ -7,6 +7,7 @@ import numpy as np
 from epyt_flow.data.networks import load_hanoi, load_net1
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator, SensorConfig, \
     ScenarioConfig, ScadaData
+from epyt_flow.utils import to_seconds
 from epyt_flow.serialization import load, dump
 
 from .utils import get_temp_folder
@@ -24,7 +25,7 @@ def test_scenarioconfig():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
                                       include_default_sensor_placement=True)
     with WaterDistributionNetworkScenarioSimulator(scenario_config=hanoi_network_config) as sim:
-        sim.set_general_parameters(simulation_duration=2)
+        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
         assert ScenarioConfig.load(sim.get_scenario_config().dump()) == sim.get_scenario_config()
 
