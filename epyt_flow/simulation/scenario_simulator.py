@@ -289,7 +289,7 @@ class WaterDistributionNetworkScenarioSimulator():
         general_params = {"hydraulic_time_step": self.epanet_api.getTimeHydraulicStep(),
                           "quality_time_step": self.epanet_api.getTimeQualityStep(),
                           "simulation_duration": self.epanet_api.getTimeSimulationDuration() /
-                          (24 * 3600),  # Days to seconds!
+                                                 (24 * 3600),  # Days to seconds!
                           "quality_model": {"code": qual_info.QualityCode,
                                             "type": qual_info.QualityType,
                                             "chemical_name": qual_info.QualityChemName,
@@ -931,7 +931,8 @@ class WaterDistributionNetworkScenarioSimulator():
             if not isinstance(simulation_duration, int) or simulation_duration <= 0:
                 raise ValueError("'simulation_duration' must be a positive integer specifying " +
                                  "the number of seconds to simulate")
-            self.epanet_api.setTimeSimulationDuration(simulation_duration)  # TODO: Changing the simulation duration from .inp file seems to break EPANET-MSX
+            self.epanet_api.setTimeSimulationDuration(simulation_duration)  # TODO: Changing the simulation
+            # duration from .inp file seems to break EPANET-MSX
         if hydraulic_time_step is not None:
             if not isinstance(hydraulic_time_step, int) or hydraulic_time_step <= 0:
                 raise ValueError("'hydraulic_time_step' must be a positive integer specifying " +
