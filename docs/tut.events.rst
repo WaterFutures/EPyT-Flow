@@ -47,6 +47,27 @@ Example for adding an abrupt and an incipient leakage:
         scada_data = sim.run_simulation()
 
 
+Actuator Events
++++++++++++++++
+
+EPyT-Flow comes with implementations of many different actuator events -- i.e. events that affect
+actuators such as pumps and valves:
+
++-------------------------------------------------------------------------+--------------------------+
+| Implementation                                                          | Description              |
++=========================================================================+==========================+
+| :class:`~epyt_flow.simulation.events.actuator_events.PumpStateEvent`    | Starts or stops a pump.  |
++-------------------------------------------------------------------------+--------------------------+
+| :class:`~epyt_flow.simulation.events.actuator_events.PumpSpeedEvent`    | Changes the pump speed.  |
++-------------------------------------------------------------------------+--------------------------+
+| :class:`~epyt_flow.simulation.events.actuator_events.ValveStateEvent`   | Opens or closes a valve. |
++-------------------------------------------------------------------------+--------------------------+
+
+Such actuator events can be added to the scenario simulation by calling
+:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.add_actuator_event`  
+of a :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator` instance.
+
+
 Sensor Faults
 +++++++++++++
 

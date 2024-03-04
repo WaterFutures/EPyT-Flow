@@ -18,7 +18,8 @@ from .sensor_config import SensorConfig, SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK
     SENSOR_TYPE_NODE_DEMAND, SENSOR_TYPE_NODE_PRESSURE, SENSOR_TYPE_NODE_QUALITY, \
     SENSOR_TYPE_PUMP_STATE, SENSOR_TYPE_TANK_LEVEL, SENSOR_TYPE_VALVE_STATE
 from ..uncertainty import ModelUncertainty, SensorNoise
-from .events import SystemEvent, Leakage, SensorFault, SensorReadingAttack, SensorReadingEvent
+from .events import SystemEvent, Leakage, ActuatorEvent, SensorFault, SensorReadingAttack, \
+    SensorReadingEvent
 from .scada import ScadaData, AdvancedControlModule
 
 
@@ -385,6 +386,21 @@ class WaterDistributionNetworkScenarioSimulator():
                             f"'{type(leakage_event)}'")
 
         self.__system_events.append(leakage_event)
+
+    def add_actuator_event(self, event: ActuatorEvent) -> None:
+        """
+        Adds an actuator event to the scenario simulation.
+
+        Parameters
+        ----------
+        event : :class:`~epyt_flow.simulation.events.actuator_event.ActuatorEvent`
+            Actuator event.
+        """
+        if not isinstance(event, ActuatorEvent):
+            raise TypeError("'event' must be an instance of " +
+                            f"'epyt_flow.simulation.events.ActuatorEvent' not of '{type(event)}'")
+
+        self.__system_events.append(event)
 
     def add_system_event(self, event: SystemEvent) -> None:
         """
