@@ -3,6 +3,7 @@ Example on the implementation of an abrupt leakage.
 """
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator, AbruptLeakage
+from epyt_flow.utils import to_seconds
 
 
 if __name__ == "__main__":
@@ -12,11 +13,13 @@ if __name__ == "__main__":
     # Create scenario
     with WaterDistributionNetworkScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         # Set simulation duration to 7 days
-        sim.set_general_parameters(simulation_duration=7)
+        sim.set_general_parameters(simulation_duration=to_seconds(days=7))
 
         # Add an abrupt leakage at link/pipe "14" -- the leakage is active for 26hrs and
         # starts at 2hrs after simulation begin -- recall that the time arguments are seconds!
-        leak = AbruptLeakage(link_id="14", diameter=0.01, start_time=7200, end_time=100800)
+        leak = AbruptLeakage(link_id="14", diameter=0.01,
+                             start_time=to_seconds(hours=2),
+                             end_time=to_seconds(hours=28))
         sim.add_leakage(leak)
 
         # Run entire simulation

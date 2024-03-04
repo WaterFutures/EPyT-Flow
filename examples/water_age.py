@@ -3,6 +3,7 @@ Example on water age analysis.
 """
 from epyt_flow.data.networks import load_richmond
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
+from epyt_flow.utils import to_seconds
 
 
 if __name__ == "__main__":
@@ -10,12 +11,12 @@ if __name__ == "__main__":
     network_config = load_richmond()
     with WaterDistributionNetworkScenarioSimulator(scenario_config=network_config) as sim:
         # Set simulation duration to two days
-        sim.set_general_parameters(simulation_duration=2)
+        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
         # Enable water age analysis
         sim.enable_waterage_analysis()
 
-        # Places quality sensors at all nodes -- i.e. measuring the water age at each node
+        # Place quality sensors at all nodes -- i.e. measuring the water age at each node
         sim.set_node_quality_sensors(sensor_locations=sim.sensor_config.nodes)
 
         # Run simulation

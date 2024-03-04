@@ -5,6 +5,7 @@ from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator, \
     SENSOR_TYPE_NODE_PRESSURE
 from epyt_flow.simulation.events import SensorFaultStuckZero
+from epyt_flow.utils import to_seconds
 
 
 if __name__ == "__main__":
@@ -13,15 +14,16 @@ if __name__ == "__main__":
 
     with WaterDistributionNetworkScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         # Set simulaton duration to two days
-        sim.set_general_parameters(simulation_duration=2)
+        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
         # Add a pressure sensor fault (i.e. power failure, sensor readings are set to zero) at
-        # node "16" that is active for 90min (i.e. starts at 9000s after simulation begin and ends
-        # at 14400s after simulation start).
+        # node "16" that is active for 90min (i.e. starts at 150min after simulation begin and ends
+        # at 240min after simulation start).
         sim.add_sensor_fault(
             SensorFaultStuckZero(sensor_id="16",
                                  sensor_type=SENSOR_TYPE_NODE_PRESSURE,
-                                 start_time=9000, end_time=14400))
+                                 start_time=to_seconds(minutes=150),
+                                 end_time=to_seconds(minutes=240)))
 
         # Run entire simulation
         res = sim.run_simulation()

@@ -11,6 +11,7 @@ Quick example
 
     from epyt_flow.data.networks import load_hanoi
     from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
+    from epyt_flow.utils import to_seconds
 
 
     if __name__ == "__main__":
@@ -20,7 +21,7 @@ Quick example
         # Create scenario
         with WaterDistributionNetworkScenarioSimulator(scenario_config=network_config) as sim:
             # Set simulation duration to two days
-            sim.set_general_parameters(simulation_duration=2)
+            sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
             # Place pressure sensors at nodes "13", "16", "22", and "30"
             sim.set_pressure_sensors(sensor_locations=["13", "16", "22", "30"])
