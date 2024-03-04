@@ -183,6 +183,29 @@ class WaterDistributionNetworkScenarioSimulator():
         return deepcopy(self.__controls)
 
     @property
+    def leakages(self) -> list[Leakage]:
+        """
+        Gets all leakages.
+
+        Returns
+        -------
+        `list[`:class:`~epyt_flow.simulation.events.leakages.Leakage` `]`
+            All leakages.
+        """
+        return deepcopy(filter(lambda e: isinstance(e, Leakage), self.__system_events))
+
+    def actuator_events(self) -> list[ActuatorEvent]:
+        """
+        Gets all actuator events.
+
+        Returns
+        -------
+        `list[`:class:`~epyt_flow.simulation.events.actuator_event.ActuatorEvent` `]`
+            All actuator events.
+        """
+        return deepcopy(filter(lambda e: isinstance(e, ActuatorEvent), self.__system_events))
+
+    @property
     def system_events(self) -> list[SystemEvent]:
         """
         Gets all system events (e.g. leakages, etc.).
@@ -193,6 +216,18 @@ class WaterDistributionNetworkScenarioSimulator():
             All system events.
         """
         return deepcopy(self.__system_events)
+
+    @property
+    def sensor_faults(self) -> list[SensorFault]:
+        """
+        Gets all sensor faults.
+
+        Returns
+        -------
+        `list[`:class:`~epyt_flow.simulation.events.sensor_faults.SensorFault` `]`
+            All sensor faults.
+        """
+        return deepcopy(filter(lambda e: isinstance(e, SensorFault), self.__sensor_reading_events))
 
     @property
     def sensor_reading_events(self) -> list[SensorReadingEvent]:
@@ -393,7 +428,7 @@ class WaterDistributionNetworkScenarioSimulator():
 
         Parameters
         ----------
-        event : :class:`~epyt_flow.simulation.events.actuator_event.ActuatorEvent`
+        event : :class:`~epyt_flow.simulation.events.actuator_events.ActuatorEvent`
             Actuator event.
         """
         if not isinstance(event, ActuatorEvent):
