@@ -288,8 +288,7 @@ class WaterDistributionNetworkScenarioSimulator():
         demand_info = self.epanet_api.getDemandModel()
         general_params = {"hydraulic_time_step": self.epanet_api.getTimeHydraulicStep(),
                           "quality_time_step": self.epanet_api.getTimeQualityStep(),
-                          "simulation_duration": self.epanet_api.getTimeSimulationDuration() /
-                          (24 * 3600),  # Days to seconds!
+                          "simulation_duration": self.epanet_api.getTimeSimulationDuration(),
                           "quality_model": {"code": qual_info.QualityCode,
                                             "type": qual_info.QualityType,
                                             "chemical_name": qual_info.QualityChemName,
