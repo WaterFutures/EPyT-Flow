@@ -8,6 +8,14 @@ from sklearn.metrics import f1_score as skelarn_f1_scpre
 
 
 def get_temp_folder() -> str:
+    """
+    Gets a path to a temporary folder -- i.e. a folder for storing temporary files.
+
+    Returns
+    -------
+    `str`
+        Path to a temporary folder.
+    """
     return tempfile.gettempdir()
 
 
