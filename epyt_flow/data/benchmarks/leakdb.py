@@ -11,7 +11,7 @@ from scipy.sparse import bsr_array
 
 from ..networks import load_net1, load_hanoi, download_if_necessary
 from .leakdb_data import NET1_LEAKAGES, HANOI_LEAKAGES
-from ...utils import get_temp_folder
+from ...utils import get_temp_folder, to_seconds
 from ...simulation import WaterDistributionNetworkScenarioSimulator
 from ...simulation.events import AbruptLeakage, IncipientLeakage
 from ...simulation import ScenarioConfig
@@ -225,7 +225,7 @@ def load_leakdb(scenarios_id: list[int], use_net1: bool = True,
 
     # Set simulation duration
     hydraulic_time_step = 1800
-    general_params = {"simulation_duration": 365,   # One year
+    general_params = {"simulation_duration": to_seconds(days=365),   # One year
                       "hydraulic_time_step": hydraulic_time_step}  # 30min time steps
 
     # Add demand patterns
@@ -245,8 +245,7 @@ def load_leakdb(scenarios_id: list[int], use_net1: bool = True,
         if not os.path.exists(f_inp_in):
             with WaterDistributionNetworkScenarioSimulator(f_inp_in=network_config.f_inp_in) as wdn:
                 wdn.epanet_api.setTimeHydraulicStep(general_params["hydraulic_time_step"])
-                wdn.epanet_api.setTimeSimulationDuration(general_params["simulation_duration"] *
-                                                         24*3600)
+                wdn.epanet_api.setTimeSimulationDuration(general_params["simulation_duration"])
                 wdn.epanet_api.setTimePatternStep(general_params["hydraulic_time_step"])
 
                 wdn.epanet_api.deletePatternsAll()

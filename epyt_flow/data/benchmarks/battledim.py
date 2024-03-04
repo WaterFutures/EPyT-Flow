@@ -14,7 +14,7 @@ from ..networks import load_ltown, download_if_necessary
 from ...simulation.events import AbruptLeakage, IncipientLeakage, Leakage
 from ...simulation import ScenarioConfig
 from ...simulation.scada import ScadaData
-from ...utils import get_temp_folder
+from ...utils import get_temp_folder, to_seconds
 
 
 def parse_leak_config(start_time: str, leaks_config: str) -> list[Leakage]:
@@ -178,7 +178,7 @@ def load_battledim(test_scenario: bool, download_dir: str = None) -> ScenarioCon
         ltown_config = load_ltown(use_realistic_demands=True, include_default_sensor_placement=True)
 
     # Set simulation duration
-    general_params = {"simulation_duration": 365,   # One year
+    general_params = {"simulation_duration": to_seconds(days=365),   # One year
                       "hydraulic_time_step": 300}   # 5min time steps
 
     # Add events
