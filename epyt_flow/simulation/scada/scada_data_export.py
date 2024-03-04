@@ -20,6 +20,7 @@ class ScadaDataExport():
     f_out : `str`
         Path to the file to which the SCADA data will be exported.
     """
+
     def __init__(self, f_out: str, **kwds):
         self._f_out = f_out
 
@@ -133,13 +134,11 @@ class ScadaDataXlsxExport(ScadaDataExport):
 
         with pd.ExcelWriter(self.f_out) as writer:
             pd.DataFrame(sensor_readings, columns=[f"Sensor {i}" for i in
-                                                   range(1, sensor_readings.shape[1] + 1)]).\
-                                                    to_excel(writer,
-                                                             sheet_name="Sensor readings",
-                                                             index=False)
-            pd.DataFrame(sensor_readings_time, columns=["Time (s)"]).\
+                                                   range(1, sensor_readings.shape[1] + 1)]). \
+                to_excel(writer, sheet_name="Sensor readings", index=False)
+            pd.DataFrame(sensor_readings_time, columns=["Time (s)"]). \
                 to_excel(writer, sheet_name="Sensor readings time", index=False)
-            pd.DataFrame(col_desc, columns=["Name", "Type", "Location"]).\
+            pd.DataFrame(col_desc, columns=["Name", "Type", "Location"]). \
                 to_excel(writer, sheet_name="Sensors description", index=False)
 
 
