@@ -35,12 +35,16 @@ Example for adding an abrupt and an incipient leakage:
     network_config = load_hanoi(include_default_sensor_placement=True)
     with WaterDistributionNetworkScenarioSimulator(scenario_config=network_config) as sim:
         # Place a large abrupt leakage at link/pipe "12"
-        leak = AbruptLeakage(link_id="12", diameter=0.1, start_time=7200, end_time=100800)
+        leak = AbruptLeakage(link_id="12", diameter=0.1,
+                             start_time=to_seconds(hours=2),
+                             end_time=to_seconds(hours=28))
         sim.add_leakage(leak)
 
         # Place a small incipient leakage at link/pipe "9"
-        leak = IncipientLeakage(link_id="9", diameter=0.01,\
-                                start_time=7200, end_time=100800, peak_time=54000)
+        leak = IncipientLeakage(link_id="9", diameter=0.01,
+                                start_time=to_seconds(hours=2),
+                                end_time=to_seconds(hours=28),
+                                peak_time=to_seconds(hours=15))
         sim.add_leakage(leak)
         
         # Run simulation
@@ -104,7 +108,8 @@ of a :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkSc
         sim.add_sensor_fault(SensorFaultConstant(constant_shift=2.,
                                                 sensor_id="16",
                                                 sensor_type=SENSOR_TYPE_NODE_PRESSURE,
-                                                start_time=5000, end_time=100000))
+                                                start_time=to_seconds(minutes=80),
+                                                end_time=to_seconds(minutes=180)))
         
         # Run simulation
         scada_data = sim.run_simulation()
@@ -126,8 +131,9 @@ of a given :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
 
         # Sets a single sensor fault: Gaussian noise to the pressure reading at node "16"
         sensor_fault = SensorFaultGaussian(std=1., sensor_id="16",
-                                            sensor_type=SENSOR_TYPE_NODE_PRESSURE,
-                                            start_time=5000, end_time=100000)
+                                           sensor_type=SENSOR_TYPE_NODE_PRESSURE,
+                                           start_time=to_seconds(minutes=80),
+                                           end_time=to_seconds(minutes=180))
         scada_data.change_sensor_faults([sensor_fault])  # Overrides all existing sensor faults!
         
         # ...
@@ -161,14 +167,16 @@ Example of a sensor replay attack on a pressure sensor:
     config = load_leakdb(scenarios_id=["1"], use_net1=False)[0]
     with WaterDistributionNetworkScenarioSimulator(scenario_config=config) as sim:
         # Set simulaton duration to two days
-        sim.set_general_parameters(simulation_duration=2)
+        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
-        # Add a sensor replay attack -- pressure readings at node "13" between 18000s and 27000s
-        # (i.e. time steps 10 - 15) are replaced by the historical readings collected from 0 to
-        # 9000s (i.e. first 5 time steps)
+        # Add a sensor replay attack -- pressure readings at node "13" between 5hrs and 7hrs
+        # after simulation start (time steps 10 - 15) are replaced by the historical readings
+        # collected from the first 150min (i.e. first 5 time steps)
         sim.add_sensor_reading_event(SensorReplayAttack(replay_data_time_window_start=0,
-                                                        replay_data_time_window_end=9000,
-                                                        start_time=18000, end_time=27000,
+                                                        replay_data_time_window_end=to_seconds(
+                                                            minutes=150),
+                                                        start_time=to_seconds(hours=5),
+                                                        end_time=to_seconds(hours=7),
                                                         sensor_id="13",
                                                         sensor_type=SENSOR_TYPE_NODE_PRESSURE))
 
@@ -187,13 +195,15 @@ Example of a sensor override attack on a flow sensor -- the flow readings are se
     config = load_leakdb(scenarios_id=["1"], use_net1=False)[0]
     with WaterDistributionNetworkScenarioSimulator(scenario_config=config) as sim:
         # Set simulaton duration to two days
-        sim.set_general_parameters(simulation_duration=2)
+        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
         # Override the sensor readings of the flow sensor at link "1" with the value "42" for
-        # the time 18000s to 27000s (i.e. time steps 10 - 15)
+        # 2hrs -- i.e. time steps 10 - 15.
         new_sensor_values = np.array([42]*5)
-        sim.add_sensor_reading_event(SensorOverrideAttack(new_sensor_values, start_time=18000,
-                                                          end_time=27000, sensor_id="1",
+        sim.add_sensor_reading_event(SensorOverrideAttack(new_sensor_values,
+                                                          start_time=to_seconds(hours=5),
+                                                          end_time=to_seconds(hours=7),
+                                                          sensor_id="1",
                                                           sensor_type=SENSOR_TYPE_LINK_FLOW))
 
         # Run simulation and and retrieve flow readings
@@ -264,7 +274,8 @@ instance BEFORE running the simulation:
         # ...
 
         # Add the system event implemented in the "MySystemEvent" class
-        sim.add_system_event(MySystemEvent(start_time=5000, end_time=100000))
+        sim.add_system_event(MySystemEvent(start_time=to_seconds(hours=5),
+                                           end_time=to_seconds(hours=7)))
 
         # Run simulation
         # ....
