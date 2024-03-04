@@ -411,9 +411,9 @@ class SensorConfig(Serializable):
         if not isinstance(quality_link_sensors, list):
             raise TypeError("'quality_link_sensors' must be an instance of 'list[str]' " +
                             f"but not of '{type(quality_link_sensors)}'")
-        if any(n not in self.__nodes for n in quality_link_sensors):
-            raise ValueError("Each item in 'quality_link_sensors' must be in 'nodes' -- cannot " +
-                             "place a sensor at a non-existing node.")
+        if any(link not in self.__links for link in quality_link_sensors):
+            raise ValueError("Each item in 'quality_link_sensors' must be in 'links' -- cannot " +
+                             "place a sensor at a non-existing link/pipe.")
 
         self.__quality_link_sensors = quality_link_sensors
 
