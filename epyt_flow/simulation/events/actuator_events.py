@@ -1,6 +1,7 @@
 """
 Module provides implementations of different types of actuator events.
 """
+from epyt.epanet import epanet
 import numpy as np
 
 from .system_event import SystemEvent
@@ -25,6 +26,12 @@ class PumpEvent(ActuatorEvent):
         self.__pump_id = pump_id
 
         super().__init__(**kwds)
+
+    def init(self, epanet_api: epanet) -> None:
+        if self.__pump_id not in epanet_api.getLinkPumpNameID():
+            raise ValueError(f"Invalid pump ID '{self.__pump_id}'")
+
+        super().init(epanet_api)
 
     @property
     def pump_id(self) -> str:
@@ -153,6 +160,12 @@ class ValveStateEvent(ActuatorEvent):
         self.__valve_state = valve_state
 
         super().__init__(**kwds)
+
+    def init(self, epanet_api: epanet) -> None:
+        if self.__valve_id not in epanet_api.getLinkValveNameID():
+            raise ValueError(f"Invalid valve ID '{self.__valve_id}'")
+
+        super().init(epanet_api)
 
     @property
     def valve_id(self) -> str:
