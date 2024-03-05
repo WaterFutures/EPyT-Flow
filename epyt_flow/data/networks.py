@@ -95,7 +95,7 @@ def load_net1(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         Net1 network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Net1.inp")
     url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
@@ -120,7 +120,7 @@ def load_net2(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         Net2 network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Net2.inp")
     url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
@@ -145,7 +145,7 @@ def load_net3(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         Net3 network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Net3.inp")
     url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
@@ -170,7 +170,7 @@ def load_net6(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         Net6 network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Net6.inp")
     url = "https://github.com/OpenWaterAnalytics/WNTR/raw/main/examples/networks/Net6.inp"
@@ -194,7 +194,7 @@ def load_richmond(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         Richmond network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Richmond_standard.inp")
     url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
@@ -219,7 +219,7 @@ def load_micropolis(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         MICROPOLIS network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "MICROPOLIS_v1.inp")
     url = "https://github.com/OpenWaterAnalytics/EPyT/raw/main/epyt/networks/asce-tf-wdst/" + \
@@ -244,7 +244,7 @@ def load_balerma(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         Balerma network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Balerma.inp")
     url = "https://github.com/OpenWaterAnalytics/EPyT/raw/main/epyt/networks/" + \
@@ -269,7 +269,7 @@ def load_rural(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         Rural network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "RuralNetwork.inp")
     url = "https://github.com/OpenWaterAnalytics/EPyT/raw/main/epyt/networks/" + \
@@ -294,7 +294,7 @@ def load_bwsn1(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         BWSN-1 network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "BWSN_Network_1.inp")
     url = "https://github.com/OpenWaterAnalytics/EPyT/raw/main/epyt/networks/" + \
@@ -319,7 +319,7 @@ def load_bwsn2(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         BWSN-2 network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "BWSN_Network_2.inp")
     url = "https://github.com/OpenWaterAnalytics/EPyT/raw/main/epyt/networks/" + \
@@ -344,7 +344,7 @@ def load_anytown(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         Anytown network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Anytown.inp")
     url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
@@ -369,7 +369,7 @@ def load_dtown(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         D-Town network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "d-town.inp")
     url = "https://www.exeter.ac.uk/media/universityofexeter/emps/research/cws/downloads/d-town.inp"
@@ -393,7 +393,7 @@ def load_ctown(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         C-Town network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "CTOWN.INP")
     url = "https://github.com/scy-phy/www.batadal.net/raw/master/data/CTOWN.INP"
@@ -421,7 +421,7 @@ def load_kentucky(wdn_id: int = 1, download_dir: str = get_temp_folder()) -> Sce
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         Kentucky network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     if not isinstance(wdn_id, int):
         raise ValueError("'wdn_id' must be an integer in [1, 15]")
@@ -456,7 +456,7 @@ def load_hanoi(download_dir: str = get_temp_folder(),
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         Hanoi network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Hanoi.inp")
     url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
@@ -501,7 +501,7 @@ def load_ltown(download_dir: str = get_temp_folder(), use_realistic_demands: boo
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         L-TOWN_v2 network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_inp = "L-TOWN_v2_Model.inp" if use_realistic_demands is False else "L-TOWN_v2_Real.inp"
 
@@ -554,7 +554,7 @@ def load_ltown_a(download_dir: str = get_temp_folder(), use_realistic_demands: b
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
         L-TOWN-A network loaded into a scenario configuration that can be passed on to
-        :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+        :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_inp = "L-TOWN_v2-A_Model.inp" if use_realistic_demands is False else "L-TOWN_v2-A_Real.inp"
 
