@@ -2,8 +2,7 @@
 Example of implementing a sensor fault.
 """
 from epyt_flow.data.networks import load_hanoi
-from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator, \
-    SENSOR_TYPE_NODE_PRESSURE
+from epyt_flow.simulation import ScenarioSimulator, SENSOR_TYPE_NODE_PRESSURE
 from epyt_flow.simulation.events import SensorFaultStuckZero
 from epyt_flow.utils import to_seconds
 
@@ -12,7 +11,7 @@ if __name__ == "__main__":
     # Load the Hanoi network with default sensor configuration
     hanoi_network_config = load_hanoi(include_default_sensor_placement=True)
 
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=hanoi_network_config) as sim:
+    with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         # Set simulaton duration to two days
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 

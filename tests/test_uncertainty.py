@@ -2,7 +2,7 @@
 Module provides tests to test different types of uncertainties and noise.
 """
 from epyt_flow.data.networks import load_hanoi
-from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
+from epyt_flow.simulation import ScenarioSimulator
 from epyt_flow.uncertainty import GaussianUncertainty, UniformUncertainty, ModelUncertainty, \
     SensorNoise
 from epyt_flow.utils import to_seconds
@@ -13,7 +13,7 @@ from .utils import get_temp_folder
 def test_model_uncertainty():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
                                       include_default_sensor_placement=True)
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=hanoi_network_config) as sim:
+    with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
         sim.set_model_uncertainty(
             ModelUncertainty(pipe_length_uncertainty=GaussianUncertainty(mean=0., scale=1.),
@@ -30,7 +30,7 @@ def test_model_uncertainty():
 def test_sensor_noise():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
                                       include_default_sensor_placement=True)
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=hanoi_network_config) as sim:
+    with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
         sim.set_sensor_noise(SensorNoise(GaussianUncertainty(mean=0, scale=1.)))
 

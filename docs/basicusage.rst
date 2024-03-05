@@ -10,7 +10,7 @@ Quick example
 .. code-block:: python
 
     from epyt_flow.data.networks import load_hanoi
-    from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
+    from epyt_flow.simulation import ScenarioSimulator
     from epyt_flow.utils import to_seconds
 
 
@@ -19,7 +19,7 @@ Quick example
         network_config = load_hanoi()
 
         # Create scenario
-        with WaterDistributionNetworkScenarioSimulator(scenario_config=network_config) as sim:
+        with ScenarioSimulator(scenario_config=network_config) as sim:
             # Set simulation duration to two days
             sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 

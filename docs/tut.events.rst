@@ -14,8 +14,8 @@ and an incipient leakage implemented in :class:`~epyt_flow.simulation.events.lea
 Custom leakages can be implemented by deriving a sub-class from :class:`~epyt_flow.simulation.events.leakages.Leakage`.
 
 The created leakage can be added to the scenario by calling 
-:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.add_leakage`  
-of a :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator` instance.
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_leakage`  
+of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
 
 In both cases, the ID of the link/pipe, the leak diameter (i.e. size of the leak), 
 and start and end time in seconds (after simulation start) are needed.
@@ -33,7 +33,7 @@ Example for adding an abrupt and an incipient leakage:
 
     # Load Hanoi network with a default sensor configuration
     network_config = load_hanoi(include_default_sensor_placement=True)
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=network_config) as sim:
+    with ScenarioSimulator(scenario_config=network_config) as sim:
         # Place a large abrupt leakage at link/pipe "12"
         leak = AbruptLeakage(link_id="12", diameter=0.1,
                              start_time=to_seconds(hours=2),
@@ -68,8 +68,8 @@ actuators such as pumps and valves:
 +-------------------------------------------------------------------------+--------------------------+
 
 Such actuator events can be added to the scenario simulation by calling
-:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.add_actuator_event`  
-of a :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator` instance.
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_actuator_event`  
+of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
 
 
 Sensor Faults
@@ -96,14 +96,14 @@ need a starting and end time, as well as the location (i.e. type and location of
 Furthermore, most sensor faults also need a parameter describing the strength of the fault (e.g. variance of the Gaussian noise).
 
 Sensor faults (i.e. instances of :class:`~epyt_flow.simulation.events.sensor_faults.SensorFault`) can be directly added to the simulation by 
-calling :func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.add_sensor_fault`  
-of a :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator` instance BEFORE running the simulation.
+calling :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_sensor_fault`  
+of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance BEFORE running the simulation.
 
 .. code-block:: python
 
     # Load Hanoi network with a default sensor configuration
     network_config = load_hanoi(include_default_sensor_placement=True)
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=network_config) as sim:
+    with ScenarioSimulator(scenario_config=network_config) as sim:
         # Add a sensor fault that adds a constant to the original pressure reading at node "16"
         sim.add_sensor_fault(SensorFaultConstant(constant_shift=2.,
                                                 sensor_id="16",
@@ -125,7 +125,7 @@ of a given :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
 
     # Load Hanoi network with a default sensor configuration
     network_config = load_hanoi(include_default_sensor_placement=True)
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=network_config) as sim:        
+    with ScenarioSimulator(scenario_config=network_config) as sim:        
         # Run simulation
         scada_data = sim.run_simulation()
 
@@ -154,8 +154,8 @@ EPyT-Flow comes with a set of pre-defined sensor reading attacks:
 +---------------------------------------------------------------------------------+--------------------------------------------------------------+
 
 Sensor reading attack can be added BEFORE running the simulation by calling 
-:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.add_sensor_reading_attack`
-of a :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator` instance, 
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_sensor_reading_attack`
+of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance, 
 or AFTERWARDS by calling :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.change_sensor_reading_attacks`  
 of a :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance.
 
@@ -165,7 +165,7 @@ Example of a sensor replay attack on a pressure sensor:
 
     # Load the first LeakDB Hanoi scenario
     config = load_leakdb(scenarios_id=["1"], use_net1=False)[0]
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=config) as sim:
+    with ScenarioSimulator(scenario_config=config) as sim:
         # Set simulaton duration to two days
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
@@ -193,7 +193,7 @@ Example of a sensor override attack on a flow sensor -- the flow readings are se
 
     # Load the first LeakDB Hanoi scenario
     config = load_leakdb(scenarios_id=["1"], use_net1=False)[0]
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=config) as sim:
+    with ScenarioSimulator(scenario_config=config) as sim:
         # Set simulaton duration to two days
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
@@ -261,15 +261,15 @@ Example of a system event that activates a pump:
 
 
 System events can be added to a scenario by calling 
-:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.add_system_event`  
-of a :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator` 
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_system_event`  
+of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` 
 instance BEFORE running the simulation:
 
 .. code-block:: python
 
     # Open/Create a new scenario based on the Net1 network
     config = load_net1()
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=config) as sim:
+    with ScenarioSimulator(scenario_config=config) as sim:
         # Setup scenario settings
         # ...
 
@@ -313,8 +313,8 @@ Example of a custom sensor reading event that adds Gaussian noise to the sensor 
             return sensor_readings
 
 System events can be added to a scenario by calling 
-:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.add_sensor_reading_event`  
-of a :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator` 
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_sensor_reading_event`  
+of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` 
 instance BEFORE running the simulation:
 
 .. note::

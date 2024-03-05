@@ -5,7 +5,7 @@ import os
 import requests
 from tqdm import tqdm
 
-from ..simulation import ScenarioConfig, WaterDistributionNetworkScenarioSimulator, SensorConfig
+from ..simulation import ScenarioConfig, ScenarioSimulator, SensorConfig
 from ..utils import get_temp_folder
 
 
@@ -48,7 +48,7 @@ def create_empty_sensor_config(f_inp: str) -> SensorConfig:
     :class:`~epyt_flow.simulation.sensor_config.SensorConfig`
         Sensor configuration.
     """
-    with WaterDistributionNetworkScenarioSimulator(f_inp_in=f_inp) as sim:
+    with ScenarioSimulator(f_inp_in=f_inp) as sim:
         return sim.sensor_config
 
 

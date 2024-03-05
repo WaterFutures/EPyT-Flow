@@ -4,10 +4,10 @@ Module provides a base class for control environments.
 from abc import abstractmethod, ABC
 from copy import deepcopy
 
-from ..simulation import WaterDistributionNetworkScenarioSimulator, ScenarioConfig, ScadaData
+from ..simulation import ScenarioSimulator, ScenarioConfig, ScadaData
 
 
-class WaterDistributionNetworkScenarioControlEnv(ABC):
+class ScenarioControlEnv(ABC):
     """
     Base class for a control environment challenge.
 
@@ -62,7 +62,7 @@ class WaterDistributionNetworkScenarioControlEnv(ABC):
         if self._scenario_sim is not None:
             self._scenario_sim.close()
 
-        self._scenario_sim = WaterDistributionNetworkScenarioSimulator(
+        self._scenario_sim = ScenarioSimulator(
             scenario_config=self.__scenario_config)
         self._sim_generator = self._scenario_sim.run_simulation_as_generator(support_abort=True)
 

@@ -4,8 +4,7 @@ Module provides tests to test sensor replay and override attacks.
 import numpy as np
 
 from epyt_flow.data.benchmarks import load_leakdb
-from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator, \
-    SENSOR_TYPE_NODE_PRESSURE
+from epyt_flow.simulation import ScenarioSimulator, SENSOR_TYPE_NODE_PRESSURE
 from epyt_flow.simulation.events import SensorReplayAttack, SensorOverrideAttack
 from epyt_flow.utils import to_seconds
 
@@ -14,7 +13,7 @@ from .utils import get_temp_folder
 
 def test_replay_attack():
     config = load_leakdb(download_dir=get_temp_folder(), scenarios_id=["1"], use_net1=False)[0]
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=config) as sim:
+    with ScenarioSimulator(scenario_config=config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
         sim.add_sensor_reading_event(SensorReplayAttack(replay_data_time_window_start=0,
@@ -31,7 +30,7 @@ def test_replay_attack():
 
 def test_override_attack():
     config = load_leakdb(download_dir=get_temp_folder(), scenarios_id=["1"], use_net1=False)[0]
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=config) as sim:
+    with ScenarioSimulator(scenario_config=config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
         new_sensor_values = np.array([42]*5)

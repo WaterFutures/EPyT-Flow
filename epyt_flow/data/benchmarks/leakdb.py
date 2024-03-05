@@ -12,7 +12,7 @@ from scipy.sparse import bsr_array
 from ..networks import load_net1, load_hanoi, download_if_necessary
 from .leakdb_data import NET1_LEAKAGES, HANOI_LEAKAGES
 from ...utils import get_temp_folder, to_seconds
-from ...simulation import WaterDistributionNetworkScenarioSimulator
+from ...simulation import ScenarioSimulator
 from ...simulation.events import AbruptLeakage, IncipientLeakage
 from ...simulation import ScenarioConfig
 from ...simulation.scada import ScadaData
@@ -243,7 +243,7 @@ def load_leakdb(scenarios_id: list[int], use_net1: bool = True,
         scenarios_inp.append(f_inp_in)
 
         if not os.path.exists(f_inp_in):
-            with WaterDistributionNetworkScenarioSimulator(f_inp_in=network_config.f_inp_in) as wdn:
+            with ScenarioSimulator(f_inp_in=network_config.f_inp_in) as wdn:
                 wdn.epanet_api.setTimeHydraulicStep(general_params["hydraulic_time_step"])
                 wdn.epanet_api.setTimeSimulationDuration(general_params["simulation_duration"])
                 wdn.epanet_api.setTimePatternStep(general_params["hydraulic_time_step"])

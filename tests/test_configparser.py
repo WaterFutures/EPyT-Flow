@@ -4,7 +4,7 @@ instance from text data.
 """
 import os
 from epyt_flow.data.networks import load_hanoi
-from epyt_flow.simulation import ScenarioConfig, WaterDistributionNetworkScenarioSimulator
+from epyt_flow.simulation import ScenarioConfig, ScenarioSimulator
 
 from .utils import get_temp_folder
 
@@ -48,5 +48,5 @@ def test_configparser():
 
     # Load config from JSON and run the simulation
     config = ScenarioConfig.load_from_json(config_as_json)
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=config) as sim:
+    with ScenarioSimulator(scenario_config=config) as sim:
         sim.run_simulation()

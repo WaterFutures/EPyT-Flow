@@ -23,7 +23,7 @@ from .events import SystemEvent, Leakage, ActuatorEvent, SensorFault, SensorRead
 from .scada import ScadaData, AdvancedControlModule
 
 
-class WaterDistributionNetworkScenarioSimulator():
+class ScenarioSimulator():
     """
     Class for running a simulation of a water distribution network scenario.
 

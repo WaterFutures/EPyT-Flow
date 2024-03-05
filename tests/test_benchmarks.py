@@ -9,7 +9,7 @@ from epyt_flow.data.benchmarks.gecco_water_quality import load_gecco2017_water_q
     compute_evaluation_score as gecco_evaluation_score
 from epyt_flow.data.benchmarks.water_usage import load_water_usage, \
     compute_evaluation_score as water_usage_evaluation_score
-from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator
+from epyt_flow.simulation import ScenarioSimulator
 
 from .utils import get_temp_folder
 
@@ -18,7 +18,7 @@ def test_leakdb():
     # Net1
     configs = load_leakdb(scenarios_id=range(1, 5), use_net1=True, download_dir=get_temp_folder())
     for c in configs:
-        with WaterDistributionNetworkScenarioSimulator(scenario_config=c) as sim:
+        with ScenarioSimulator(scenario_config=c) as sim:
             res = sim.run_simulation()
             assert res is not None
 
@@ -30,7 +30,7 @@ def test_leakdb():
     # Hanoi
     configs = load_leakdb(scenarios_id=range(1, 5), use_net1=False, download_dir=get_temp_folder())
     for c in configs:
-        with WaterDistributionNetworkScenarioSimulator(scenario_config=c) as sim:
+        with ScenarioSimulator(scenario_config=c) as sim:
             res = sim.run_simulation()
             assert res is not None
 

@@ -59,15 +59,15 @@ Example of implementing a custom control module:
 
 
 Custom control modules & algorithms can be added to a scenario by calling 
-:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.add_control`  
-of a :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator` 
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_control`  
+of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` 
 instance BEFORE running the simulation:
 
 .. code-block:: python
 
     # Open/Create a new scenario based on the Net1 network
     config = load_net1()
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=config) as sim:
+    with ScenarioSimulator(scenario_config=config) as sim:
         # Setup scenario settings
         # ...
 

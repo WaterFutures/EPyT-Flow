@@ -427,8 +427,8 @@ class ScenarioConfig(Serializable):
 
         #  Load .inp file to get a list of all nodes and links/pipes
         sensor_config = None
-        from .scenario_simulator import WaterDistributionNetworkScenarioSimulator
-        with WaterDistributionNetworkScenarioSimulator(f_inp_in) as scenario:
+        from .scenario_simulator import ScenarioSimulator
+        with ScenarioSimulator(f_inp_in) as scenario:
             sensor_config = SensorConfig(scenario.sensor_config.nodes,
                                          scenario.sensor_config.links,
                                          scenario.sensor_config.valves,

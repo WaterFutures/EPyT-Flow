@@ -2,7 +2,7 @@
 Example on the implementation of an abrupt leakage.
 """
 from epyt_flow.data.networks import load_hanoi
-from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator, AbruptLeakage
+from epyt_flow.simulation import ScenarioSimulator, AbruptLeakage
 from epyt_flow.utils import to_seconds
 
 
@@ -11,7 +11,7 @@ if __name__ == "__main__":
     hanoi_network_config = load_hanoi(include_default_sensor_placement=True)
 
     # Create scenario
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=hanoi_network_config) as sim:
+    with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         # Set simulation duration to 7 days
         sim.set_general_parameters(simulation_duration=to_seconds(days=7))
 

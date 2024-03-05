@@ -2,8 +2,7 @@
 Module provides test to test different types of leakages.
 """
 from epyt_flow.data.networks import load_hanoi
-from epyt_flow.simulation import WaterDistributionNetworkScenarioSimulator, IncipientLeakage, \
-    AbruptLeakage
+from epyt_flow.simulation import ScenarioSimulator, IncipientLeakage, AbruptLeakage
 from epyt_flow.utils import to_seconds
 
 from .utils import get_temp_folder
@@ -12,7 +11,7 @@ from .utils import get_temp_folder
 def test_abrupt_leakage():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
                                       include_default_sensor_placement=True)
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=hanoi_network_config) as sim:
+    with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
         leak = AbruptLeakage(link_id="12", diameter=0.1, start_time=7200, end_time=100800)
@@ -25,7 +24,7 @@ def test_abrupt_leakage():
 def test_incipient_leakage():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
                                       include_default_sensor_placement=True)
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=hanoi_network_config) as sim:
+    with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
         leak = IncipientLeakage(link_id="12", diameter=0.01,

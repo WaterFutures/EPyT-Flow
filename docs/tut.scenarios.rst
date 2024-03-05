@@ -17,37 +17,37 @@ Basics
 There are two important classes for working with scenarios in EPyT-Flow.
 The class :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` for
 describing the scenario, and the class
-:class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`
+:class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
 for simulating the scenario.
 
-For creating new instance of :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`
+For creating new instance of :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
 either an .inp file (together with an optional .msx file) are needed, or an instance of 
 :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` describing and precisely specifying the scenario to be simulated.
 
 .. note::
-    When using the :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator` class, 
+    When using the :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` class, 
     it is important to close it so that EPANET is unloaded correctly.
 
-Closing a :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator` 
+Closing a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` 
 instance can done in automatically by using a ``with`` statement:
 
 .. code-block:: python
 
     # Creates a new scenario based on the Hanoi network -- 
     # it will be closed automatically after the with block is left!
-    with WaterDistributionNetworkScenarioSimulator(f_inp="Hanoi.inp") as sim:
+    with ScenarioSimulator(f_inp="Hanoi.inp") as sim:
         # Set any additional parameters and finalize the scenario configuration ....
         # Run simulation ...
 
 Alternatively, you can close and unload everything manually by calling 
-:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.close`.
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.close`.
 Beware of any potential exceptions that might occur during the process of setting up and running
 the simulation.
 
 .. code-block:: python
 
     # Open/Create a new scenario based on the Hanoi network
-    sim = WaterDistributionNetworkScenarioSimulator(f_inp="Hanoi.inp")
+    sim = ScenarioSimulator(f_inp="Hanoi.inp")
         
     # Set any additional parameters and finalize the scenario configuration ....
     # Run simulation ...
@@ -56,9 +56,9 @@ the simulation.
     sim.close()
 
 The simulation (i.e. hydraulics and quality analysis) itself is run by calling 
-:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.run_simulation`.
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.run_simulation`.
 Alternatively, the simulation can also be run step-by-step by calling 
-:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.run_simulation_as_generator`.
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.run_simulation_as_generator`.
 In both cases, the result of the simulation is provided as a 
 :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` object.
 In the latter case, the result is provided as a generator.
@@ -66,7 +66,7 @@ In the latter case, the result is provided as a generator.
 .. code-block:: python
 
     # Load Hanoi network
-    with WaterDistributionNetworkScenarioSimulator(f_inp="Hanoi.inp") as sim:
+    with ScenarioSimulator(f_inp="Hanoi.inp") as sim:
         # Run simulation
         scada_data = sim.run_simulation()
 
@@ -75,7 +75,7 @@ More details on :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` are gi
 Scenario Configurations
 +++++++++++++++++++++++
 
-An alternative to passing the path to an .inp file (and .msx file) to :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`, 
+An alternative to passing the path to an .inp file (and .msx file) to :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`, 
 is to use a :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` instance which completly describes/specifies a scenario.
 
 Because :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` instances are immutable, 
@@ -92,7 +92,7 @@ Example of loading a scenario from a JSON configuration file called `myScenarioC
         scenario_config = ScenarioConfig.load_from_json(f.read())
 
     # Create scenario based on scenario configuration
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=scenario_config) as sim:
+    with ScenarioSimulator(scenario_config=scenario_config) as sim:
         # Make some modifications to the scenario configuration ....
         # Run simulation ...
 
@@ -139,7 +139,7 @@ and uncertanties with respect to pipe length and roughtness, as well as sensor n
 Note that the individual entries in the JSON file correspond to the classes at implemented in EPyT-Flow.
 
 At every time, a complete :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` can be obtained by calling 
-:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.get_scenario_config`.
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.get_scenario_config`.
 This scenario configuration could be than, for instance, be stored in a file so that it can be reloaded in the future 
 without having to make all the manual specifications again -- see :ref:`Serialization <tut.serialization>` for details.
 
@@ -148,7 +148,7 @@ Example of obtaining and storing the current scenario configuration:
 .. code-block:: python
 
     # Open/Create a new scenario based on the Hanoi network
-    with WaterDistributionNetworkScenarioSimulator(f_inp="Hanoi.inp") as sim:
+    with ScenarioSimulator(f_inp="Hanoi.inp") as sim:
         # Make some modifications to the scenario configuration ....
         
         # Get final scenario configuration
@@ -161,7 +161,7 @@ Example of obtaining and storing the current scenario configuration:
 
     # Load scenario configuration
     scenario_config = ScenarioConfig.load("myHanoiConfig.epytflow_config")
-    with WaterDistributionNetworkScenarioSimulator(scenario_config) as sim:
+    with ScenarioSimulator(scenario_config) as sim:
         # ....
 
 
@@ -170,7 +170,7 @@ Predefined networks
 
 EPyT-Flow comes with set of popular benchmark water distribution networks already included.
 These networks are, if necessary, downloaded and wrapped inside a :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` 
-instance, so that they can directly be passed to :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`.
+instance, so that they can directly be passed to :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
 
 Also note that in some cases (i.e. Hanoi and L-TOWN) a predefined sensor placement can be included as well.
 
@@ -218,7 +218,7 @@ Example of loading the Hanoi network:
 .. code-block:: python
 
     network_config = load_hanoi()   # Load Hanoi network
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=network_config) as sim:
+    with ScenarioSimulator(scenario_config=network_config) as sim:
         # Set any additional parameters and finalize the scenario configuration ....
         # Run simulation ...
 

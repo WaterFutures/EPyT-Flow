@@ -18,15 +18,15 @@ and source tracing analysis.
 
 The requested quality analysis must be set (i.e. activated) before the simulation is run:
 
-+-------------------+----------------------------------------------------------------------------------------------------------------------------+
-| Quality Analysis  | Function for enabling the analysis                                                                                         |
-+===================+============================================================================================================================+
-| Water age         | :func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.enable_waterage_analysis`        |
-+-------------------+----------------------------------------------------------------------------------------------------------------------------+
-| Chemical          | :func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.enable_chemical_analysis`        |
-+-------------------+----------------------------------------------------------------------------------------------------------------------------+
-| Source tracing    | :func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.enable_sourcetracing_analysis`   |
-+-------------------+----------------------------------------------------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------------------------+
+| Quality Analysis  | Function for enabling the analysis                                                                 |
++===================+====================================================================================================+
+| Water age         | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.enable_waterage_analysis`        |
++-------------------+----------------------------------------------------------------------------------------------------+
+| Chemical          | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.enable_chemical_analysis`        |
++-------------------+----------------------------------------------------------------------------------------------------+
+| Source tracing    | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.enable_sourcetracing_analysis`   |
++-------------------+----------------------------------------------------------------------------------------------------+
 
 In order to access the quality results, quality sensors must be placed at the links and 
 nodes of interest.
@@ -37,7 +37,7 @@ Example for performing a water age analysis at all nodes:
 
     # Open/Create a new scenario based on the Hanoi network
     network_config = load_hanoi()
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=network_config) as sim:
+    with ScenarioSimulator(scenario_config=network_config) as sim:
         # Enable water age analysis
         sim.enable_waterage_analysis()
 
@@ -56,8 +56,8 @@ Chemical Analysis
 
 In the case of a chemical analysis, it is also necessary to set at least one source of chemicals 
 if not already set in the .inp file. This can be done by calling 
-:func:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator.add_quality_source` 
-of the :class:`~epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator` instance.
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_quality_source` 
+of the :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
 Besides the location (i.e. node ID), the source pattern together with is type and name must be specified as well.
 Note that the pattern repeats automatically when the simulation duration is exceeding the pattern length.
 
@@ -94,7 +94,7 @@ Example for running a chemical analysis where the concentration at the reservoir
 
     # Open/Create a new scenario based on the Hanoi network
     network_config = load_hanoi()
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=network_config) as sim:
+    with ScenarioSimulator(scenario_config=network_config) as sim:
         # Enable chemical analysis
         sim.enable_chemical_analysis()
 

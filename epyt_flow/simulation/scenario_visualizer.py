@@ -3,7 +3,7 @@ Module provides a class for visualizing scenarios.
 """
 import matplotlib.pyplot as plt
 
-from .scenario_simulator import WaterDistributionNetworkScenarioSimulator
+from .scenario_simulator import ScenarioSimulator
 
 
 class ScenarioVisualizer():
@@ -12,13 +12,13 @@ class ScenarioVisualizer():
 
     Parameters
     ----------
-    scenario : :class:`epyt_flow.simulation.scenario_simulator.WaterDistributionNetworkScenarioSimulator`
+    scenario : :class:`epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
         Scenario to be visualized.
     """
-    def __init__(self, scenario: WaterDistributionNetworkScenarioSimulator):
-        if not isinstance(scenario, WaterDistributionNetworkScenarioSimulator):
+    def __init__(self, scenario: ScenarioSimulator):
+        if not isinstance(scenario, ScenarioSimulator):
             raise TypeError("'scenario' must be an instance of " +
-                            "'epyt_flow.simulation.WaterDistributionNetworkScenarioSimulator' " +
+                            "'epyt_flow.simulation.ScenarioSimulator' " +
                             f"but not of '{type(scenario)}'")
 
         self.__scenario = scenario

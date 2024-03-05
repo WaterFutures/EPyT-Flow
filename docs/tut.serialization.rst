@@ -34,7 +34,7 @@ Example for exporting and importing a sensor configuration to/from a byte array:
 
     # Open/Create a new scenario based on the Hanoi network
     network_config = load_hanoi()
-    with WaterDistributionNetworkScenarioSimulator(scenario_config=network_config) as sim:
+    with ScenarioSimulator(scenario_config=network_config) as sim:
         # Create sensor placement ...
 
         # Export sensor config to byte array
