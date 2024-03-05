@@ -77,7 +77,7 @@ def test_hanoi():
 
 
 def test_ltown():
-    assert load_ltown(get_temp_folder()) is not None
+    assert load_ltown(get_temp_folder(), use_realistic_demands=True) is not None
 
 
 def test_ltown_a():

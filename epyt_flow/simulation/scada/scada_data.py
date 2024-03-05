@@ -61,6 +61,7 @@ class ScadaData(Serializable):
 
         The default is None.
     """
+
     def __init__(self, sensor_config: SensorConfig, pressure_data_raw: np.ndarray,
                  flow_data_raw: np.ndarray, demand_data_raw: np.ndarray,
                  node_quality_data_raw: np.ndarray, link_quality_data_raw: np.ndarray,
@@ -143,8 +144,8 @@ class ScadaData(Serializable):
 
         self.__sensor_config = sensor_config
         self.__sensor_noise = sensor_noise
-        self.__sensor_reading_events = sensor_faults + sensor_reading_attacks +\
-            sensor_reading_events
+        self.__sensor_reading_events = sensor_faults + sensor_reading_attacks + \
+                                       sensor_reading_events
         self.__pressure_data_raw = pressure_data_raw
         self.__flow_data_raw = flow_data_raw
         self.__demand_data_raw = demand_data_raw
@@ -420,15 +421,15 @@ class ScadaData(Serializable):
             return False
 
     def __str__(self) -> str:
-        return f"sensor_config: {self.__sensor_config} sensor_noise: {self.__sensor_noise} " +\
-            f"sensor_reading_events: {self.__sensor_reading_events} " +\
-            f"pressure_data_raw: {self.__pressure_data_raw} " +\
-            f"flow_data_raw: {self.__flow_data_raw} demand_data_raw: {self.__demand_data_raw} " +\
-            f"node_quality_data_raw: {self.__node_quality_data_raw} " +\
-            f"link_quality_data_raw: {self.__link_quality_data_raw} " +\
-            f"sensor_readings_time: {self.__sensor_readings_time} " +\
-            f"pumps_state_data_raw: {self.__pumps_state_data_raw} " +\
-            f"valves_state_data_raw: {self.__valves_state_data_raw}" +\
+        return f"sensor_config: {self.__sensor_config} sensor_noise: {self.__sensor_noise} " + \
+            f"sensor_reading_events: {self.__sensor_reading_events} " + \
+            f"pressure_data_raw: {self.__pressure_data_raw} " + \
+            f"flow_data_raw: {self.__flow_data_raw} demand_data_raw: {self.__demand_data_raw} " + \
+            f"node_quality_data_raw: {self.__node_quality_data_raw} " + \
+            f"link_quality_data_raw: {self.__link_quality_data_raw} " + \
+            f"sensor_readings_time: {self.__sensor_readings_time} " + \
+            f"pumps_state_data_raw: {self.__pumps_state_data_raw} " + \
+            f"valves_state_data_raw: {self.__valves_state_data_raw}" + \
             f"tanks_level_data_raw: {self.__tanks_level_data_raw}"
 
     def change_sensor_config(self, sensor_config: SensorConfig) -> None:
@@ -482,8 +483,7 @@ class ScadaData(Serializable):
         self.__sensor_reading_events += sensor_faults
         self.__init()
 
-    def change_sensor_reading_attacks(self,
-                                      sensor_reading_attacks: list[SensorReadingAttack]) -> None:
+    def change_sensor_reading_attacks(self, sensor_reading_attacks: list[SensorReadingAttack]) -> None:
         """
         Changes the sensor reading attacks -- overrides all previous sensor reading attacks!
 

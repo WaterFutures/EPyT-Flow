@@ -56,6 +56,7 @@ class ScenarioConfig(Serializable):
 
         The default is an empty list.
     """
+
     def __init__(self, f_inp_in: str, f_msx_in: str = None, general_params: str = None,
                  sensor_config: SensorConfig = None, controls: list[AdvancedControlModule] = [],
                  sensor_noise: SensorNoise = None, model_uncertainty=ModelUncertainty(),
@@ -79,12 +80,12 @@ class ScenarioConfig(Serializable):
                                 f"'{type(sensor_config)}'")
         if not isinstance(controls, list):
             raise TypeError("'controls' must be an instance of " +
-                            "'list[epyt_flow.simualtion.scada.AdvancedControlModule]' but no of " +
+                            "'list[epyt_flow.simulation.scada.AdvancedControlModule]' but no of " +
                             f"'{type(controls)}'")
         if len(controls) != 0:
             if any(not isinstance(c, AdvancedControlModule) for c in controls):
                 raise TypeError("Each item in 'controls' must be an instance of " +
-                                "'epyt_flow.simualtion.scada.AdvancedControlModule'")
+                                "'epyt_flow.simulation.scada.AdvancedControlModule'")
         if sensor_noise is not None:
             if not isinstance(sensor_noise, SensorNoise):
                 raise TypeError("'sensor_noise' must be an instance of " +
@@ -96,20 +97,20 @@ class ScenarioConfig(Serializable):
                             f"'{type(model_uncertainty)}'")
         if not isinstance(system_events, list):
             raise TypeError("'system_events' must be an instance of " +
-                            "'list[epyt_flow.simualtion.events.SystemEvent]' but no of " +
+                            "'list[epyt_flow.simulation.events.SystemEvent]' but no of " +
                             f"'{type(system_events)}'")
         if len(system_events) != 0:
             if any(not isinstance(c, SystemEvent) for c in system_events):
                 raise TypeError("Each item in 'system_events' must be an instance of " +
-                                "'epyt_flow.simualtion.events.SystemEvent'")
+                                "'epyt_flow.simulation.events.SystemEvent'")
         if not isinstance(sensor_reading_events, list):
             raise TypeError("'sensor_reading_events' must be an instance of " +
-                            "'list[epyt_flow.simualtion.events.SensorReadingEvent]' but not of " +
+                            "'list[epyt_flow.simulation.events.SensorReadingEvent]' but not of " +
                             f"'{type(sensor_reading_events)}'")
         if len(sensor_reading_events) != 0:
             if any(not isinstance(c, SensorReadingEvent) for c in sensor_reading_events):
                 raise TypeError("Each item in 'sensor_reading_events' must be an instance of " +
-                                "'epyt_flow.simualtion.events.SensorReadingEvent'")
+                                "'epyt_flow.simulation.events.SensorReadingEvent'")
 
         self.__f_inp_in = f_inp_in
         self.__f_msx_in = f_msx_in
@@ -250,11 +251,11 @@ class ScenarioConfig(Serializable):
             and self.__sensor_reading_events == other.sensor_reading_events
 
     def __str__(self) -> str:
-        return f"f_inp_in: {self.f_inp_in} f_msx_in: {self.f_msx_in} " +\
-            f"general_params: {self.general_params} sensor_config: {self.sensor_config} " +\
-            f"controls: {self.controls} sensor_noise: {self.sensor_noise} " +\
-            f"model_uncertainty: {self.model_uncertainty} " +\
-            f"system_events: {','.join(map(str, self.system_events))} " +\
+        return f"f_inp_in: {self.f_inp_in} f_msx_in: {self.f_msx_in} " + \
+            f"general_params: {self.general_params} sensor_config: {self.sensor_config} " + \
+            f"controls: {self.controls} sensor_noise: {self.sensor_noise} " + \
+            f"model_uncertainty: {self.model_uncertainty} " + \
+            f"system_events: {','.join(map(str, self.system_events))} " + \
             f"sensor_reading_events: {','.join(map(str, self.sensor_reading_events))}"
 
     @staticmethod
@@ -279,10 +280,9 @@ class ScenarioConfig(Serializable):
         f_inp_in = general_settings["file_inp"]
         f_msx_in = general_settings["file_msx"] if "file_msx" in general_settings.keys() else None
 
-        general_params = {}
-        general_params["simulation_duration"] = general_settings["simulation_duration"]
-        general_params["hydraulic_time_step"] = general_settings["hydraulic_time_step"]
-        general_params["quality_time_step"] = general_settings["quality_time_step"]
+        general_params = {"simulation_duration": general_settings["simulation_duration"],
+                          "hydraulic_time_step": general_settings["hydraulic_time_step"],
+                          "quality_time_step": general_settings["quality_time_step"]}
         if "reporting_time_step" in general_settings.keys():
             general_params["reporting_time_step"] = general_settings["reporting_time_step"]
         if "reporting_time_start" in general_settings.keys():

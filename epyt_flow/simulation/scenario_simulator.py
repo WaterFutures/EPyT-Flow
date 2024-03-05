@@ -257,6 +257,7 @@ class ScenarioSimulator():
         # Sort files by time to find the temporary file created by EPANET
         files = list(filter(lambda f: os.path.isfile(f) and "." not in f, os.listdir()))
         files.sort(key=os.path.getmtime)
+        files = [self.f_inp_in]
 
         return files[::-1][0]
 
@@ -288,7 +289,8 @@ class ScenarioSimulator():
         demand_info = self.epanet_api.getDemandModel()
         general_params = {"hydraulic_time_step": self.epanet_api.getTimeHydraulicStep(),
                           "quality_time_step": self.epanet_api.getTimeQualityStep(),
-                          "simulation_duration": self.epanet_api.getTimeSimulationDuration(),
+                          "simulation_duration": self.epanet_api.getTimeSimulationDuration() /
+                                                 (24 * 3600),  # Days to seconds!
                           "quality_model": {"code": qual_info.QualityCode,
                                             "type": qual_info.QualityType,
                                             "chemical_name": qual_info.QualityChemName,
