@@ -37,6 +37,9 @@ def test_numpyexport():
         data = res.get_data()
         time = res.sensor_readings_time
 
+        f_out = os.path.join(get_temp_folder(), "numpy_export_raw.npz")
+        ScadaDataNumpyExport(f_out=f_out, export_raw_data=True).export(res)
+
         f_out = os.path.join(get_temp_folder(), "numpy_export.npz")
         ScadaDataNumpyExport(f_out=f_out).export(res)
 
@@ -54,6 +57,9 @@ def test_xlsx_export():
 
         res = sim.run_simulation()
 
+        f_out = os.path.join(get_temp_folder(), "excel_export_raw.xlsx")
+        ScadaDataXlsxExport(f_out=f_out, export_raw_data=True).export(res)
+
         f_out = os.path.join(get_temp_folder(), "excel_export.xlsx")
         ScadaDataXlsxExport(f_out=f_out).export(res)
 
@@ -65,6 +71,9 @@ def test_mat_export():
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
         res = sim.run_simulation()
+
+        f_out = os.path.join(get_temp_folder(), "matlab_export_raw.mat")
+        ScadaDataMatlabExport(f_out=f_out, export_raw_data=True).export(res)
 
         f_out = os.path.join(get_temp_folder(), "matlab_export.mat")
         ScadaDataMatlabExport(f_out=f_out).export(res)
