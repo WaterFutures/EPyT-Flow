@@ -16,5 +16,7 @@ def test_randomize_demands():
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
         sim.randomize_demands()
 
+        sim.estimate_memory_consumption()
         res = sim.run_simulation()
+
         res.get_data()

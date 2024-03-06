@@ -304,6 +304,25 @@ class ScenarioSimulator():
                               self.controls, self.sensor_noise, self.model_uncertainty,
                               self.system_events, self.sensor_reading_events)
 
+    def estimate_memory_consumption(self) -> float:
+        """
+        Estimates the memory consumption of the simulation -- i.e. the amount of memory that is
+        needed on the hard disk as well as in RAM.
+
+        Returns
+        -------
+        `float`
+            Estimated memory consumption in MB.
+        """
+        n_time_steps = int(self.epanet_api.getTimeSimulationDuration() /
+                           self.epanet_api.getTimeReportingStep())
+        n_quantities = self.epanet_api.getNodeCount() * 3 + self.epanet_api.getNodeTankCount() + \
+            self.epanet_api.getLinkValveCount() + self.epanet_api.getLinkPumpCount() + \
+            self.epanet_api.getLinkCount() * 2
+        n_bytes_per_quantity = 64
+
+        return n_time_steps * n_quantities * n_bytes_per_quantity * .000001
+
     def get_topology(self) -> networkx.Graph:
         """
         Gets the topology (incl. information such as eleveations, pipe diameters, etc.) of this WDN.
