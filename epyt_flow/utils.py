@@ -2,9 +2,25 @@
 Module provides helper functions.
 """
 import tempfile
+import zipfile
 import numpy as np
 from sklearn.metrics import roc_auc_score as skelarn_roc_auc_score
 from sklearn.metrics import f1_score as skelarn_f1_scpre
+
+
+def unpack_zip_archive(f_in: str, folder_out: str) -> None:
+    """
+    Unpacks a .zip archive.
+
+    Parameters
+    ----------
+    f_in : `str`
+        Path to the .zip file.
+    folder_out : `str`
+        Path to the folder where the unpacked files will be stored.
+    """
+    with zipfile.ZipFile(f_in, "r") as f:
+        f.extractall(folder_out)
 
 
 def get_temp_folder() -> str:

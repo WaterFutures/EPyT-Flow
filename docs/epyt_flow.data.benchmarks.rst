@@ -18,6 +18,14 @@ epyt_flow.data.benchmarks.battledim
    :show-inheritance:
 
 
+epyt_flow.data.benchmarks.batadal
+---------------------------------
+
+.. automodule:: epyt_flow.data.benchmarks.batadal
+   :members:
+   :show-inheritance:
+
+
 epyt_flow.data.benchmarks.water_usage
 -------------------------------------
 

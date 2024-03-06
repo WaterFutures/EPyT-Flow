@@ -2,6 +2,7 @@
 Module provides tests to test the `epty_flow.data.benchmarks` module.
 """
 import numpy as np
+from epyt_flow.data.benchmarks.batadal import load_batadal_data
 from epyt_flow.data.benchmarks.leakdb import load_leakdb, load_leakdb_data
 from epyt_flow.data.benchmarks.battledim import load_battledim
 from epyt_flow.data.benchmarks.gecco_water_quality import load_gecco2017_water_quality_data, \
@@ -12,6 +13,22 @@ from epyt_flow.data.benchmarks.water_usage import load_water_usage, \
 from epyt_flow.simulation import ScenarioSimulator
 
 from .utils import get_temp_folder
+
+
+def test_batadal():
+    data = load_batadal_data(download_dir=get_temp_folder())
+    assert data is not None
+
+    data = load_batadal_data(download_dir=get_temp_folder(), return_X_y=True)
+    assert data is not None
+
+    data = load_batadal_data(download_dir=get_temp_folder(), return_X_y=True,
+                             return_ground_truth=True)
+    assert data is not None
+
+    data = load_batadal_data(download_dir=get_temp_folder(), return_X_y=True,
+                             return_ground_truth=True, return_features_desc=True)
+    assert data is not None
 
 
 def test_leakdb():

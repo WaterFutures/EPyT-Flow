@@ -236,6 +236,8 @@ different tasks such as leakage detection and localization.
 +------------+--------------------------------------------------------------+
 | BattLeDIM  | :func:`~epyt_flow.data.benchmarks.battledim.load_battledim`  |
 +------------+--------------------------------------------------------------+
+| BATADAL    | :func:`~epyt_flow.data.benchmarks.batadal.load_batadal`      |
++------------+--------------------------------------------------------------+
 
 
 Benchmark data sets
