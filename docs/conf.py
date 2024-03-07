@@ -43,6 +43,11 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+# LaTeX
+latex_elements = {
+    'maxlistdepth': "10",
+    'printindex': r'\def\twocolumn[#1]{#1}\printindex'
+}
 
 # -- Options for HTML output -------------------------------------------------
 
