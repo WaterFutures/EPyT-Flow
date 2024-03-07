@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('../'))
 
 project = 'EPyT-Flow'
 copyright = 'EPyT-Flow Developers, 2024'
-author = 'André Artelt et al.'
+author = 'André Artelt, Marios S. Kyriakou, Stelios G. Vrachimis'
 
 
 # -- General configuration ---------------------------------------------------
@@ -31,7 +31,8 @@ autodoc_mock_imports = ["epyt", "pandas", "numpy", "scipy", "matplotlib", "sklea
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'nbsphinx'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

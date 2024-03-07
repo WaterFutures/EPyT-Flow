@@ -22,7 +22,17 @@ Furthermore, it also provides an evironment for developing and testing control a
 
     tutorial
 
+Examples
+========
+.. toctree::
+   :maxdepth: 2
+   :caption: Jupyter notebooks
 
+   examples/basic_usage
+
+
+API Reference
+=============
 .. toctree::
     :maxdepth: 2
     :caption: API Reference
