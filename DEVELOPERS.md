@@ -24,3 +24,22 @@ Code must work with all current Python versions from 3.9 to 3.12. Also, code mus
 - Any implemented feature must come with corresponding tests.
 
 - [Nox](https://nox.thea.codes/en/stable/) is used to test different Python versions -- see [noxfile.py](noxfile.py).
+
+## Building the documentation
+
+1. Install all REQUIREMENTS listed in [requirements.txt](docs/requirements.txt) by running:
+```
+pip install -r docs/requirements.txt
+```
+2. Install EPyT-Flow by running:
+```
+pip install .
+```
+3. Build the HTML files by running:
+```
+make html
+```
+4. Build the PDF file by running
+```
+make latexpdf
+```
