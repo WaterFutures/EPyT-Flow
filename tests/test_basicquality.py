@@ -51,7 +51,17 @@ def test_chlorine_injection():
         sim.set_sensors(SENSOR_TYPE_NODE_QUALITY, sensor_locations=sim.sensor_config.nodes)
 
         sim.enable_chemical_analysis()
-        sim.add_quality_source("1", "my-chl-pattern", np.array([1.]), "CONCEN")
+        sim.add_quality_source(node_id="1", pattern=np.array([1.]), source_type="CONCEN",
+                               pattern_id="my-chl-pattern")
+
+        res = sim.run_simulation()
+        res.get_data()
+
+    with ScenarioSimulator(scenario_config=network_config) as sim:
+        sim.set_sensors(SENSOR_TYPE_NODE_QUALITY, sensor_locations=sim.sensor_config.nodes)
+
+        sim.enable_chemical_analysis()
+        sim.add_quality_source(node_id="1", pattern=np.array([1.]), source_type="CONCEN")
 
         res = sim.run_simulation()
         res.get_data()

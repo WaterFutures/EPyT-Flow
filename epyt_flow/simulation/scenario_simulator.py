@@ -1028,8 +1028,8 @@ class ScenarioSimulator():
         self.set_general_parameters(quality_model={"type": "chem", "chemical_name": chemical_name,
                                                    "chemical_units": chemical_units})
 
-    def add_quality_source(self, node_id: str, pattern_id: str, pattern: np.ndarray,
-                           source_type: str, source_strength: int = 1.) -> None:
+    def add_quality_source(self, node_id: str, pattern: np.ndarray, source_type: str,
+                           pattern_id: str = None, source_strength: int = 1.) -> None:
         """
         Adds a new external water quality source at a particular node.
 
@@ -1037,8 +1037,6 @@ class ScenarioSimulator():
         ----------
         node_id : `str`
             ID of the node at which this external water quality source is placed.
-        pattern_id : `str`
-            ID of the source pattern.
         pattern : `numpy.ndarray`
             1d source pattern.
         source_type : `str`,
@@ -1047,6 +1045,13 @@ class ScenarioSimulator():
                 - MASS Injects a given mass/minute into a node
                 - SETPOINT Sets the concentration leaving a node to a given value
                 - FLOWPACED Adds a given value to the concentration leaving a node
+        pattern_id : `str`, optional
+            ID of the source pattern.
+
+            If None, a pattern_id will be generated automatically -- be aware that this
+            could conflict with existing pattern IDs (in this case, an exception is raised).
+
+            The default is None.
         source_strength : `int`, optional
             Quality source strength -- i.e. quality-source = source_strength * pattern.
 
@@ -1062,6 +1067,12 @@ class ScenarioSimulator():
                             f"but not of '{type(pattern)}'")
         if source_type not in ["CONCEN", "MASS", "SETPOINT", "FLOWPACED"]:
             raise ValueError("Invalid type of water quality source")
+
+        if pattern_id is None:
+            pattern_id = f"quality_source_pattern_node={node_id}"
+        if pattern_id in self.epanet_api.getPatternNameID():
+            raise ValueError("Invalid 'pattern_id' -- " +
+                             f"there already exists a pattern with ID '{pattern_id}'")
 
         node_idx = self.epanet_api.getNodeIndex(node_id)
         pattern_idx = self.epanet_api.addPattern(pattern_id, pattern)
