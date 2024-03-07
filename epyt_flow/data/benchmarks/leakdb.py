@@ -1,5 +1,15 @@
 """
-Module provides functions for loading LeakDB scenarios.
+LeakDB (Leakage Diagnosis Benchmark) by Vrachimis, S. G., Kyriakou, M. S., Eliades, D. G.
+and Polycarpou, M. M. (2018), is a realistic leakage dataset for water distribution networks.
+The dataset is comprised of 1000 artificially created but realistic leakage
+scenarios, on different water distribution networks, under varying conditions.
+
+See https://github.com/KIOS-Research/LeakDB/ for details.
+
+This module provides functions for loading the original LeakDB data set
+:func:`~epyt_flow.data.benchmarks.leakdb.load_data`, as well as methods for loading the scenarios
+:func:`~epyt_flow.data.benchmarks.leakdb.load_scenarios` and pre-generated SCADA data
+:func:`~epyt_flow.data.benchmarks.leakdb.load_scada_data`.
 """
 import os
 from typing import Any
@@ -19,11 +29,49 @@ from ...simulation.scada import ScadaData
 from ...uncertainty import ModelUncertainty, UniformUncertainty
 
 
-def load_leakdb_data(scenarios_id: list[int], use_net1: bool = True, download_dir: str = None,
-                     return_X_y: bool = False, return_leak_locations: bool = False) -> list[Any]:
-
+def load_data(scenarios_id: list[int], use_net1: bool = True, download_dir: str = None,
+              return_leak_locations: bool = False) -> list[Any]:
     """
-    Loads (some of) the simulated LeakDB benchmark scenarios.
+    Loads the original LeakDB benchmark data set.
+
+    Parameters
+    ----------
+    scenarios_id : `list[int]`
+        List of scenarios ID that are to be loaded -- there are a total number of 1000 scenarios.
+    use_net1 : `bool`, optional
+        If True, Net1 LeakDB will be loaded, otherwise the Hanoi LeakDB will be loaded.
+
+        The default is True.
+    download_dir : `str`, optional
+        Path to the data files -- if None, the temp folder will be used.
+        If the path does not exist, the data files will be downloaded to the give path.
+
+        The default is None.
+    return_X_y : `bool`, optional
+        If True, the data is returned together with the labels (presence of a leakage) as
+        two Numpy arrays, otherwise the data is returned as Pandas data frames.
+
+        The default is False.
+    return_leak_locations : `bool`
+        If True, the leak locations are returned as well --
+        as an instance of `scipy.sparse.bsr_array`.
+
+        The default is False.
+    """
+    raise NotImplementedError()
+
+
+def load_scada_data(scenarios_id: list[int], use_net1: bool = True, download_dir: str = None,
+                    return_X_y: bool = False, return_leak_locations: bool = False) -> list[Any]:
+    """
+    Loads the SCADA data of the simulated LeakDB benchmark scenarios -- see
+    :func:`~epyt_flow.data.benchmarks.leakdb.load_scenarios`.
+
+    .. note::
+        Note that due to the randomness in the demand creation as well as in the model
+        uncertainties, the SCADA data differs from the original data set
+        which can be loaded by calling :func:`~epyt_flow.data.benchmarks.leakdb.load_data`.
+        However, the leakages (i.e. location and profile) are consisten with the original data set.
 
     Parameters
     ----------
@@ -121,82 +169,20 @@ def load_leakdb_data(scenarios_id: list[int], use_net1: bool = True, download_di
     return r
 
 
-# Taken from https://github.com/KIOS-Research/LeakDB/blob/master/CCWI-WDSA2018/Dataset_Generator_Py3/demandGenerator.py
-def __gen_dem(download_dir, use_net1):
-    week_pat = scipy.io.loadmat(os.path.join(download_dir, "weekPat_30min.mat"))
-    a_w = week_pat['Aw']
-    nw = week_pat['nw']
-    year_offset = scipy.io.loadmat(os.path.join(download_dir, "yearOffset_30min.mat"))
-    a_y = year_offset['Ay']
-    ny = year_offset['ny']
-
-    # Create yearly component
-    days = 365
-
-    t = (288/6)*days    # one year period in five minute intervals
-    w = 2*np.pi/t
-    k = np.arange(1, days*288/6+1, 1)   # number of time steps in time series
-    n = ny[0][0]    # number of fourier coefficients
-    h_y = [1]*len(k)
-
-    for i in range(1, n+1):
-        h_y = np.column_stack((h_y, np.sin(i*w*k), np.cos(i*w*k)))
-
-    unc_y = 0.1
-    a_y_r = a_y*(1-unc_y + 2*unc_y*np.random.rand(int(a_y.shape[0]), int(a_y.shape[1])))
-    year_offset = np.dot(h_y, a_y_r)
-
-    # Create weekly component
-    t = (288/6)*7   # one week period in five minute intervals
-    w = 2*np.pi/t
-    k = np.arange(1, days*288/6+1, 1)   # number of time steps in time series
-    n = nw[0][0]    # number of fourier coefficients
-    h_w = [1]*len(k)
-    for i in range(1, n+1):
-        h_w = np.column_stack((h_w, np.sin(i*w*k), np.cos(i*w*k)))
-
-    unc_w = 0.1
-    a_w_r = a_w*(1-unc_w + 2*unc_w*np.random.rand(int(a_w.shape[0]), int(a_w.shape[1])))
-    week_year_pat = np.dot(h_w, a_w_r)
-
-    # Create random component
-    unc_r = 0.05
-    random = np.random.normal(0, (-unc_r+2*unc_r),
-                              (int(week_year_pat.shape[0]), int(week_year_pat.shape[1])))
-
-    # Create demand
-    if use_net1 is True:
-        base = 1
-        variation = 0.75 + np.random.normal(0, 0.07)  # from 0 to 1
-    else:
-        base = 0.5
-        variation = np.random.normal(0, 0.07)
-    dem = base * (year_offset+1) * (week_year_pat*variation+1) * (random+1)
-    dem = dem.tolist()
-    dem_final = []
-    for d in dem:
-        dem_final.append(d[0])
-
-    return dem_final
-
-
-def load_leakdb(scenarios_id: list[int], use_net1: bool = True,
-                download_dir: str = None) -> list[ScenarioConfig]:
+def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
+                   download_dir: str = None) -> list[ScenarioConfig]:
     """
-    LeakDB (Leakage Diagnosis Benchmark) by Vrachimis, S. G., Kyriakou, M. S., Eliades, D. G.
-    and Polycarpou, M. M. (2018), is a realistic leakage dataset for water distribution networks.
-    The dataset is comprised of 1000 artificially created but realistic leakage
-    scenarios, on different water distribution networks, under varying conditions.
-
-    See https://github.com/KIOS-Research/LeakDB/ for details.
+    Creates and returns the LeakDB scenarios -- they can be either modified or
+    passed directly to the simulator
+    :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
 
     .. note::
         Note that due to the randomness in the demand creation as well as in the model
-        uncertainties, the generated scenarios will differ between different runs, and
-        will also differ from the "official" data set available at
-        https://github.com/KIOS-Research/LeakDB/.
+        uncertainties, the simulation results will differ between different runs, and
+        will also differ from the original data set
+        (see :func:`~epyt_flow.data.benchmarks.leakdb.load_data`).
         However, the leakages (i.e. location and profile) will be always the same and be
-        consistent with the "official" data set.
+        consistent with the original data set.
 
     This implementation is based on
     https://github.com/KIOS-Research/LeakDB/blob/master/CCWI-WDSA2018/Dataset_Generator_Py3/demandGenerator.py
@@ -229,6 +215,64 @@ def load_leakdb(scenarios_id: list[int], use_net1: bool = True,
                       "hydraulic_time_step": hydraulic_time_step}  # 30min time steps
 
     # Add demand patterns
+    def gen_dem(download_dir, use_net1):
+        # Taken from https://github.com/KIOS-Research/LeakDB/blob/master/CCWI-WDSA2018/Dataset_Generator_Py3/demandGenerator.py
+        week_pat = scipy.io.loadmat(os.path.join(download_dir, "weekPat_30min.mat"))
+        a_w = week_pat['Aw']
+        nw = week_pat['nw']
+        year_offset = scipy.io.loadmat(os.path.join(download_dir, "yearOffset_30min.mat"))
+        a_y = year_offset['Ay']
+        ny = year_offset['ny']
+
+        # Create yearly component
+        days = 365
+
+        t = (288/6)*days    # one year period in five minute intervals
+        w = 2*np.pi/t
+        k = np.arange(1, days*288/6+1, 1)   # number of time steps in time series
+        n = ny[0][0]    # number of fourier coefficients
+        h_y = [1]*len(k)
+
+        for i in range(1, n+1):
+            h_y = np.column_stack((h_y, np.sin(i*w*k), np.cos(i*w*k)))
+
+        unc_y = 0.1
+        a_y_r = a_y*(1-unc_y + 2*unc_y*np.random.rand(int(a_y.shape[0]), int(a_y.shape[1])))
+        year_offset = np.dot(h_y, a_y_r)
+
+        # Create weekly component
+        t = (288/6)*7   # one week period in five minute intervals
+        w = 2*np.pi/t
+        k = np.arange(1, days*288/6+1, 1)   # number of time steps in time series
+        n = nw[0][0]    # number of fourier coefficients
+        h_w = [1]*len(k)
+        for i in range(1, n+1):
+            h_w = np.column_stack((h_w, np.sin(i*w*k), np.cos(i*w*k)))
+
+        unc_w = 0.1
+        a_w_r = a_w*(1-unc_w + 2*unc_w*np.random.rand(int(a_w.shape[0]), int(a_w.shape[1])))
+        week_year_pat = np.dot(h_w, a_w_r)
+
+        # Create random component
+        unc_r = 0.05
+        random = np.random.normal(0, (-unc_r+2*unc_r),
+                                  (int(week_year_pat.shape[0]), int(week_year_pat.shape[1])))
+
+        # Create demand
+        if use_net1 is True:
+            base = 1
+            variation = 0.75 + np.random.normal(0, 0.07)  # from 0 to 1
+        else:
+            base = 0.5
+            variation = np.random.normal(0, 0.07)
+        dem = base * (year_offset+1) * (week_year_pat*variation+1) * (random+1)
+        dem = dem.tolist()
+        dem_final = []
+        for d in dem:
+            dem_final.append(d[0])
+
+        return dem_final
+
     week_pattern_url = "https://github.com/KIOS-Research/LeakDB/raw/master/CCWI-WDSA2018/" +\
         "Dataset_Generator_Py3/weekPat_30min.mat"
     year_offset_url = "https://github.com/KIOS-Research/LeakDB/raw/master/CCWI-WDSA2018/" +\
@@ -259,7 +303,7 @@ def load_leakdb(scenarios_id: list[int], use_net1: bool = True,
                     node_idx = wdn.epanet_api.getNodeIndex(node_id)
                     base_demand = wdn.epanet_api.getNodeBaseDemands(node_idx)[1][0]
 
-                    my_demand_pattern = np.array(__gen_dem(download_dir, use_net1))
+                    my_demand_pattern = np.array(gen_dem(download_dir, use_net1))
 
                     wdn.set_node_demand_pattern(node_id=node_id, base_demand=base_demand,
                                                 demand_pattern_id=f"demand_{node_id}",

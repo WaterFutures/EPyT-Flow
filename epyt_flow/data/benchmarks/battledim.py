@@ -1,5 +1,17 @@
 """
-Module provides functions for loading BattLeDIM scenarios.
+The Battle of the Leakage Detection and Isolation Methods (*BattLeDIM*) 2020, organized by
+S. G. Vrachimis, D. G. Eliades, R. Taormina, Z. Kapelan, A. Ostfeld, S. Liu, M. Kyriakou,
+P. Pavlou, M. Qiu, and M. M. Polycarpou, as part of the 2nd International CCWI/WDSA Joint
+Conference in Beijing, China, aims at objectively comparing the performance of methods for
+the detection and localization of leakage events, relying on SCADA measurements of flow and
+pressure sensors installed within water distribution networks.
+
+See https://github.com/KIOS-Research/BattLeDIM for details.
+
+This module provides functions for loading the original BattLeDIM data set
+:func:`~epyt_flow.data.benchmarks.battledim.load_data`, as well as methods for loading the scenarios
+:func:`~epyt_flow.data.benchmarks.battledim.load_scenario` and pre-generated SCADA data
+:func:`~epyt_flow.data.benchmarks.battledim.load_scada_data`.
 """
 from typing import Any
 import os
@@ -46,10 +58,42 @@ def parse_leak_config(start_time: str, leaks_config: str) -> list[Leakage]:
     return leakages
 
 
-def load_battledim_data(test_scenario: bool, download_dir: str = None, return_X_y: bool = False,
-                        return_leak_locations: bool = False) -> list[Any]:
+def load_data(return_test_scenario: bool, download_dir: str = None, return_X_y: bool = False,
+              return_leak_locations: bool = False) -> list[Any]:
     """
-    Loads the simulated BattLeDIM benchmark scenario.
+    Laods the original BattLeDIM benchmark data set.
+
+    Parameters
+    ----------
+    return_test_scenario : `bool`
+        If True, the evaluation/test scenario is returned, otherwise the historical
+        (i.e. training) scenario is returned.
+    download_dir : `str`, optional
+        Path to the data files -- if None, the temp folder will be used.
+        If the path does not exist, the data files will be downloaded to the give path.
+
+        The default is None.
+    return_X_y : `bool`, optional
+        If True, the data is returned together with the labels (presence of a leakage) as
+        two Numpy arrays, otherwise the data is returned as a
+        :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance.
+
+        The default is False.
+    return_leak_locations : `bool`
+        If True, the leak locations are returned as well --
+        as an instance of `scipy.sparse.bsr_array`.
+
+        The default is False.
+    """
+    raise NotImplementedError()
+
+
+def load_scada_data(return_test_scenario: bool, download_dir: str = None,
+                    return_X_y: bool = False, return_leak_locations: bool = False) -> list[Any]:
+    """
+    Loads the SCADA data of the simulated BattLeDIM benchmark scenario -- note that due to
+    randomness, these differ from the original data set which can be loaded by calling
+    :func:`~epyt_flow.data.benchmarks.battledim.load_data`.
 
     .. warning::
 
@@ -58,7 +102,7 @@ def load_battledim_data(test_scenario: bool, download_dir: str = None, return_X_
 
     Parameters
     ----------
-    test_scenario : `bool`
+    return_test_scenario : `bool`
         If True, the evaluation/test scenario is returned, otherwise the historical
         (i.e. training) scenario is returned.
     download_dir : `str`, optional
@@ -90,7 +134,7 @@ def load_battledim_data(test_scenario: bool, download_dir: str = None, return_X_
 
     url_data = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/BattLeDIM/"
 
-    f_in = f"{'battledim_test' if test_scenario is True else 'battledim_train'}.epytflow_scada_data"
+    f_in = f"{'battledim_test' if return_test_scenario else 'battledim_train'}.epytflow_scada_data"
     download_if_necessary(os.path.join(download_dir, f_in), url_data + f_in)
 
     data = ScadaData.load_from_file(os.path.join(download_dir, f_in))
@@ -104,8 +148,8 @@ def load_battledim_data(test_scenario: bool, download_dir: str = None, return_X_
         else:
             return math.ceil(t / 1800)
 
-    start_time = START_TIME_TEST if test_scenario is True else START_TIME_TRAIN
-    leaks_config = LEAKS_CONFIG_TEST if test_scenario is True else LEAKS_CONFIG_TRAIN
+    start_time = START_TIME_TEST if return_test_scenario is True else START_TIME_TRAIN
+    leaks_config = LEAKS_CONFIG_TEST if return_test_scenario is True else LEAKS_CONFIG_TRAIN
     leakages = parse_leak_config(start_time, leaks_config)
 
     leak_locations_row = []
@@ -137,25 +181,24 @@ def load_battledim_data(test_scenario: bool, download_dir: str = None, return_X_
             return data
 
 
-def load_battledim(test_scenario: bool, download_dir: str = None) -> ScenarioConfig:
+def load_scenario(return_test_scenario: bool, download_dir: str = None) -> ScenarioConfig:
     """
-    The Battle of the Leakage Detection and Isolation Methods (*BattLeDIM*) 2020, organized by
-    S. G. Vrachimis, D. G. Eliades, R. Taormina, Z. Kapelan, A. Ostfeld, S. Liu, M. Kyriakou,
-    P. Pavlou, M. Qiu, and M. M. Polycarpou, as part of the 2nd International CCWI/WDSA Joint
-    Conference in Beijing, China, aims at objectively comparing the performance of methods for
-    the detection and localization of leakage events, relying on SCADA measurements of flow and
-    pressure sensors installed within water distribution networks.
-
-    See https://github.com/KIOS-Research/BattLeDIM for details.
-
+    Creates and returns the BattLeDIM scenario -- it can be either modified or
+    passed directly to the simulator
+    :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
 
     This method supports two different scenario configurations:
         - *Training/Historical configuration:* https://github.com/KIOS-Research/BattLeDIM/blob/master/Dataset%20Generator/dataset_configuration_historical.yalm
         - *Test/Evaluation configuraton:* https://github.com/KIOS-Research/BattLeDIM/blob/master/Dataset%20Generator/dataset_configuration_evaluation.yalm
 
+    .. note::
+
+        Note that due to randomness, the simulation results differ from the original data set which
+        can be loaded by calling :func:`~epyt_flow.data.benchmarks.battledim.load_data`.
+
     Parameters
     ----------
-    test_scenario : `bool`
+    return_test_scenario : `bool`
         If True, the evaluation/test scenario is returned, otherwise the historical
         (i.e. training) scenario is returned.
     download_dir : `str`, optional
@@ -166,8 +209,8 @@ def load_battledim(test_scenario: bool, download_dir: str = None) -> ScenarioCon
 
     Returns
     -------
-    :class:`epyt_flow.simulation.scenario_config.ScenarioConfig`
-        Complete scenario configuration for this benchmark.
+    :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
+        Complete scenario configuration of the BattLeDIM benchmark scenario.
     """
 
     # Load L-Town network including the sensor placement
@@ -182,8 +225,8 @@ def load_battledim(test_scenario: bool, download_dir: str = None) -> ScenarioCon
                       "hydraulic_time_step": 300}   # 5min time steps
 
     # Add events
-    start_time = START_TIME_TEST if test_scenario is True else START_TIME_TRAIN
-    leaks_config = LEAKS_CONFIG_TEST if test_scenario is True else LEAKS_CONFIG_TRAIN
+    start_time = START_TIME_TEST if return_test_scenario is True else START_TIME_TRAIN
+    leaks_config = LEAKS_CONFIG_TEST if return_test_scenario is True else LEAKS_CONFIG_TRAIN
     leakages = parse_leak_config(start_time, leaks_config)
 
     # Build final scenario

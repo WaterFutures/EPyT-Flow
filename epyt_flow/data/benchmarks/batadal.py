@@ -1,5 +1,28 @@
 """
-Module provides functions for loading the BATADAL scenarios and data sets.
+The BATtle of the Attack Detection ALgorithms (*BATADAL*) by Riccardo Taormina, Stefano Galelli,
+Nils Ole Tippenhauer, Avi Ostfeld, Elad Salomons, Demetrios Eliades is a competition on planning
+and management of water networks undertaken within the Water Distribution Systems Analysis
+Symposium. The goal of the battle was to compare the performance of algorithms for the detection
+of cyber-physical attacks, whose frequency has increased in the last few years along with the
+adoption of smart water technologies. The design challenge was set for the C-Town network,
+a real-world, medium-sized water distribution system operated through programmable logic
+controllers and a supervisory control and data acquisition (SCADA) system. Participants were
+provided with data sets containing (simulated) SCADA observations, and challenged to design
+an attack detection algorithm. The effectiveness of all submitted algorithms was evaluated in
+terms of time-to-detection and classification accuracy. Seven teams participated in the battle
+and proposed a variety of successful approaches leveraging data analysis, model-based detection
+mechanisms, and rule checking. Results were presented at the Water Distribution Systems Analysis
+Symposium (World Environmental and Water Resources Congress) in Sacramento, California on
+May 21-25, 2017.
+The `paper <https://doi.org/10.1061/(ASCE)WR.1943-5452.0000969>`_ summarizes the BATADAL
+problem, proposed algorithms, results, and future research directions.
+
+See https://www.batadal.net/ for details.
+
+This module provides functions for loading the original BATADAL data set
+:func:`~epyt_flow.data.benchmarks.batadal.load_data`, as well as functions for loading the
+scenarios :func:`~epyt_flow.data.benchmarks.batadal.load_scenario` and pre-generated
+SCADA data :func:`~epyt_flow.data.benchmarks.batadal.load_scada_data`.
 """
 import os
 from datetime import datetime
@@ -10,6 +33,7 @@ from .batadal_data import TRAINING_DATA_2_ATTACKS_TIME, TRAINING_DATA_2_START_TI
     TEST_DATA_ATTACKS_TIME, TEST_DATA_START_TIME
 from ..networks import download_if_necessary
 from ...utils import get_temp_folder, unpack_zip_archive, to_seconds
+from ...simulation import ScenarioConfig
 
 
 def parse_attacks_time(start_time: str, attacks_time):
@@ -28,31 +52,10 @@ def parse_attacks_time(start_time: str, attacks_time):
     return events
 
 
-def load_batadal_data(download_dir: str = None, return_X_y: bool = False,
-                      return_ground_truth: bool = False,
-                      return_features_desc: bool = False) -> dict:
+def load_data(download_dir: str = None, return_X_y: bool = False,
+              return_ground_truth: bool = False, return_features_desc: bool = False) -> dict:
     """
     Loads the original BATADAL competition data.
-
-    The BATtle of the Attack Detection ALgorithms (*BATADAL*) by Riccardo Taormina, Stefano Galelli,
-    Nils Ole Tippenhauer, Avi Ostfeld, Elad Salomons, Demetrios Eliades is a competition on planning
-    and management of water networks undertaken within the Water Distribution Systems Analysis
-    Symposium. The goal of the battle was to compare the performance of algorithms for the detection
-    of cyber-physical attacks, whose frequency has increased in the last few years along with the
-    adoption of smart water technologies. The design challenge was set for the C-Town network,
-    a real-world, medium-sized water distribution system operated through programmable logic
-    controllers and a supervisory control and data acquisition (SCADA) system. Participants were
-    provided with data sets containing (simulated) SCADA observations, and challenged to design
-    an attack detection algorithm. The effectiveness of all submitted algorithms was evaluated in
-    terms of time-to-detection and classification accuracy. Seven teams participated in the battle
-    and proposed a variety of successful approaches leveraging data analysis, model-based detection
-    mechanisms, and rule checking. Results were presented at the Water Distribution Systems Analysis
-    Symposium (World Environmental and Water Resources Congress) in Sacramento, California on
-    May 21-25, 2017.
-    The `paper <https://doi.org/10.1061/(ASCE)WR.1943-5452.0000969>`_ summarizes the BATADAL
-    problem, proposed algorithms, results, and future research directions.
-
-    See https://www.batadal.net/ for details.
 
     Parameters
     ----------
@@ -176,8 +179,63 @@ def load_batadal_data(download_dir: str = None, return_X_y: bool = False,
         return {"train_1": df_train_1, "train_2": df_train_2, "test": df_test}
 
 
-def load_batadal():
+def load_scada_data(download_dir: str = None, return_X_y: bool = False,
+                    return_ground_truth: bool = False, return_features_desc: bool = False):
     """
-    TODO.
+    Loads the SCADA data of the simulated BATADAL benchmark scenario -- note that due to
+    randomness and undocumented aspects of the original BATADAL data set, these differ from
+    the original data set which can be loaded by calling
+    :func:`~epyt_flow.data.benchmarks.batadal.load_data`.
+
+    Parameters
+    ----------
+    download_dir : `str`, optional
+        Path to the data files -- if None, the temp folder will be used.
+        If the path does not exist, the data files will be downloaded to the give path.
+
+        The default is None.
+    return_X_y : `bool`, optional
+        If True, the data together with the labels is returned as pairs of Numpy arrays.
+        Otherwise the data is returned as Pandas data frames.
+
+        The default is False.
+    return_ground_truth : `bool`
+        If True and if `return_X_y` is True, the ground truth labels are included in the
+        returned dictionary -- note that the labels provided in the benchmark constitute
+        a partial labeling only.
+
+        Thed default is False.
+    return_features_desc : `bool`
+        If True and if `return_X_y` is True, feature names (i.e. descriptions) are included
+        in the returned dictionary.
+
+        The default is False.
+    """
+    raise NotImplementedError()
+
+
+def load_scenario(download_dir: str = None) -> ScenarioConfig:
+    """
+    Creates and returns the BATADAL scenario -- it can be either modified or directly passed
+    to the simulator :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
+
+    .. note::
+
+        Note that due to randomness and undocumented aspects of the original BATADAL benchmark,
+        the simulation results differ from the original data set which can be loaded by calling
+        :func:`~epyt_flow.data.benchmarks.batadal.load_data`.
+
+    Parameters
+    ----------
+    download_dir : `str`, optional
+        Path to the data files -- if None, the temp folder will be used.
+        If the path does not exist, the data files will be downloaded to the give path.
+
+        The default is None.
+
+    Returns
+    -------
+    :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
+        The BATADAL scenario.
     """
     raise NotImplementedError()

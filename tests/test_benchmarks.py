@@ -2,9 +2,9 @@
 Module provides tests to test the `epty_flow.data.benchmarks` module.
 """
 import numpy as np
-from epyt_flow.data.benchmarks.batadal import load_batadal_data
-from epyt_flow.data.benchmarks.leakdb import load_leakdb, load_leakdb_data
-from epyt_flow.data.benchmarks.battledim import load_battledim
+from epyt_flow.data.benchmarks import load_batadal_data
+from epyt_flow.data.benchmarks import load_leakdb_scenarios, load_leakdb_scada_data
+from epyt_flow.data.benchmarks import load_battledim_scenario
 from epyt_flow.data.benchmarks.gecco_water_quality import load_gecco2017_water_quality_data, \
     load_gecco2018_water_quality_data, load_gecco2019_water_quality_data, \
     compute_evaluation_score as gecco_evaluation_score
@@ -33,35 +33,41 @@ def test_batadal():
 
 def test_leakdb():
     # Net1
-    configs = load_leakdb(scenarios_id=range(1, 5), use_net1=True, download_dir=get_temp_folder())
+    configs = load_leakdb_scenarios(scenarios_id=range(1, 5), use_net1=True,
+                                    download_dir=get_temp_folder())
     for c in configs:
         with ScenarioSimulator(scenario_config=c) as sim:
             res = sim.run_simulation()
             assert res is not None
 
-    X, y, y_leak_loc = load_leakdb_data([3], use_net1=True, return_X_y=True, return_leak_locations=True)[0]
+    X, y, y_leak_loc = load_leakdb_scada_data(scenarios_id=[3], use_net1=True, return_X_y=True,
+                                              return_leak_locations=True)[0]
     assert X is not None
     assert y is not None
     assert y_leak_loc is not None
 
     # Hanoi
-    configs = load_leakdb(scenarios_id=range(1, 5), use_net1=False, download_dir=get_temp_folder())
+    configs = load_leakdb_scenarios(scenarios_id=range(1, 5), use_net1=False,
+                                    download_dir=get_temp_folder())
     for c in configs:
         with ScenarioSimulator(scenario_config=c) as sim:
             res = sim.run_simulation()
             assert res is not None
 
-    X, y, y_leak_loc = load_leakdb_data([3], use_net1=False, return_X_y=True, return_leak_locations=True)[0]
+    X, y, y_leak_loc = load_leakdb_scada_data(scenarios_id=[3], use_net1=False, return_X_y=True,
+                                              return_leak_locations=True)[0]
     assert X is not None
     assert y is not None
     assert y_leak_loc is not None
 
 
 def test_battledim():
-    hist_scenario = load_battledim(test_scenario=False, download_dir=get_temp_folder())
+    hist_scenario = load_battledim_scenario(return_test_scenario=False,
+                                            download_dir=get_temp_folder())
     assert hist_scenario is not None
 
-    eval_scenario = load_battledim(test_scenario=True, download_dir=get_temp_folder())
+    eval_scenario = load_battledim_scenario(return_test_scenario=True,
+                                            download_dir=get_temp_folder())
     assert eval_scenario is not None
 
 
