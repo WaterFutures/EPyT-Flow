@@ -17,11 +17,12 @@ import math
 import json
 import scipy
 import numpy as np
+import pandas as pd
 from scipy.sparse import bsr_array
 
 from ..networks import load_net1, load_hanoi, download_if_necessary
 from .leakdb_data import NET1_LEAKAGES, HANOI_LEAKAGES
-from ...utils import get_temp_folder, to_seconds
+from ...utils import get_temp_folder, to_seconds, unpack_zip_archive, create_path_if_not_exist
 from ...simulation import ScenarioSimulator
 from ...simulation.events import AbruptLeakage, IncipientLeakage
 from ...simulation import ScenarioConfig
@@ -29,19 +30,31 @@ from ...simulation.scada import ScadaData
 from ...uncertainty import ModelUncertainty, UniformUncertainty
 
 
-def load_data(scenarios_id: list[int], use_net1: bool = True, download_dir: str = None,
-              return_leak_locations: bool = False) -> list[Any]:
+def leak_time_to_idx(t: int, round_up: bool = False):
+    if round_up is False:
+        return math.floor(t / 1800)
+    else:
+        return math.ceil(t / 1800)
+
+
+def load_data(scenarios_id: list[int], use_net1: bool, download_dir: str = None,
+              return_X_y: bool = False, return_features_desc: bool = False,
+              return_leak_locations: bool = False) -> dict:
     """
     Loads the original LeakDB benchmark data set.
+
+    .. warning::
+
+        All scenarios together are a huge data set -- approx. 8GB for Net1 and 25GB for Hanoi.
+        Downloading and loading might take some time! Also, a sufficient amount of hard disk
+        memory as required.
 
     Parameters
     ----------
     scenarios_id : `list[int]`
         List of scenarios ID that are to be loaded -- there are a total number of 1000 scenarios.
-    use_net1 : `bool`, optional
+    use_net1 : `bool`
         If True, Net1 LeakDB will be loaded, otherwise the Hanoi LeakDB will be loaded.
-
-        The default is True.
     download_dir : `str`, optional
         Path to the data files -- if None, the temp folder will be used.
         If the path does not exist, the data files will be downloaded to the give path.
@@ -52,13 +65,113 @@ def load_data(scenarios_id: list[int], use_net1: bool = True, download_dir: str 
         two Numpy arrays, otherwise the data is returned as Pandas data frames.
 
         The default is False.
+    return_features_desc : `bool`, optional
+        If True and if `return_X_y` is True, the returned dictionary contains the
+        features' describtions (i.e. names) under the key "features_desc".
+
+        The default is False.
     return_leak_locations : `bool`
-        If True, the leak locations are returned as well --
+        If True and if `return_X_y` is True, the leak locations are returned as well --
         as an instance of `scipy.sparse.bsr_array`.
 
         The default is False.
+
+    Returns
+    -------
+    `dict`
+        Dictionary containing the scenario data sets. Data of each requested scenario
+        can be accessed by using the scenario ID as a key.
     """
-    raise NotImplementedError()
+    url_data = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/LeakDB-Original/" +\
+        f"{'Net1_CMH/' if use_net1 is True else 'Hanoi_CMH/'}"
+
+    if use_net1 is True:
+        network_desc = "Net1"
+        leaks_info = json.loads(NET1_LEAKAGES)
+    else:
+        network_desc = "Hanoi"
+        leaks_info = json.loads(HANOI_LEAKAGES)
+
+    download_dir = download_dir if download_dir is not None else get_temp_folder()
+    download_dir = os.path.join(download_dir, network_desc)
+    create_path_if_not_exist(download_dir)
+
+    results = {}
+    for s_id in scenarios_id:
+        scenario_data = f"Scenario-{s_id}.zip"
+        scenario_data_url = url_data + scenario_data
+        scenario_data_file_in = os.path.join(download_dir, scenario_data)
+        scenario_data_folder_in = os.path.join(download_dir, f"Scenario-{s_id}")
+
+        download_if_necessary(scenario_data_file_in, scenario_data_url)
+        create_path_if_not_exist(scenario_data_folder_in)
+        unpack_zip_archive(scenario_data_file_in, scenario_data_folder_in)
+
+        # Load and parse data
+        pressure_files = list(filter(lambda d: d.endswith(".csv"),
+                                     os.listdir(os.path.join(scenario_data_folder_in,
+                                                             "Pressures"))))
+        pressure_readings = {}
+        all_nodes = []
+        for f_in in pressure_files:
+            df = pd.read_csv(os.path.join(scenario_data_folder_in, "Pressures", f_in))
+            node_id = f_in.replace(".csv", "")
+            all_nodes.append(node_id)
+            pressure_readings[f"Pressure-{node_id}"] = df["Value"]
+
+        flow_files = list(filter(lambda d: d.endswith(".csv"),
+                                 os.listdir(os.path.join(scenario_data_folder_in, "Flows"))))
+        flow_readings = {}
+        for f_in in flow_files:
+            df = pd.read_csv(os.path.join(scenario_data_folder_in, "Flows", f_in))
+            flow_readings[f"Flow-{f_in.replace('.csv', '')}"] = df["Value"]
+
+        df_labels = pd.read_csv(os.path.join(scenario_data_folder_in, "Labels.csv"))
+        labels = df_labels["Label"]
+
+        df_timestamps = pd.read_csv(os.path.join(scenario_data_folder_in, "Timestamps.csv"))
+        sensor_reading_times = df_timestamps["Timestamp"]
+
+        df_final = pd.DataFrame(pressure_readings | flow_readings |
+                                {"labels": labels, "timestamps": sensor_reading_times})
+
+        # Parse leak configuration
+        leak_locations_row = []
+        leak_locations_col = []
+        if str(s_id) in leaks_info:
+            hydraulic_time_step = 1800
+            for leak in leaks_info[str(s_id)]:
+                t_idx_start = leak_time_to_idx(leak["leak_start_time"] * hydraulic_time_step)
+                t_idx_end = leak_time_to_idx(leak["leak_end_time"] * hydraulic_time_step,
+                                             round_up=True)
+
+                leak_node_idx = all_nodes.index(f"Node_{leak['node_id']}")
+
+                for t in range(t_idx_end - t_idx_start):
+                    leak_locations_row.append(t_idx_start + t)
+                    leak_locations_col.append(leak_node_idx)
+
+        # Prepare final data
+        if return_X_y is True:
+            X = df_final[list(pressure_readings.keys()) + list(flow_readings.keys())].to_numpy()
+            y = labels.to_numpy()
+
+            if return_features_desc is True and "features_desc" not in results:
+                results["features_desc"] = list(pressure_readings.keys()) + \
+                    list(flow_readings.keys())
+
+            if return_leak_locations is True:
+                y_leak_locations = bsr_array(
+                    (np.ones(len(leak_locations_row)), (leak_locations_row, leak_locations_col)),
+                    shape=(X.shape[0], len(pressure_readings.keys())))
+
+                results[s_id] = (X, y, y_leak_locations)
+            else:
+                results[s_id] = (X, y)
+        else:
+            results[s_id] = df_final
+
+    return results
 
 
 def load_scada_data(scenarios_id: list[int], use_net1: bool = True, download_dir: str = None,
@@ -115,12 +228,6 @@ def load_scada_data(scenarios_id: list[int], use_net1: bool = True, download_dir
         leaks_info = json.loads(NET1_LEAKAGES)
     else:
         leaks_info = json.loads(HANOI_LEAKAGES)
-
-    def leak_time_to_idx(t: int, round_up: bool = False):
-        if round_up is False:
-            return math.floor(t / 1800)
-        else:
-            return math.ceil(t / 1800)
 
     r = []
 

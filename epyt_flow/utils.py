@@ -3,9 +3,22 @@ Module provides helper functions.
 """
 import tempfile
 import zipfile
+from pathlib import Path
 import numpy as np
 from sklearn.metrics import roc_auc_score as skelarn_roc_auc_score
 from sklearn.metrics import f1_score as skelarn_f1_scpre
+
+
+def create_path_if_not_exist(path_in: str) -> None:
+    """
+    Creates a directory and all its parent directories if they do not already exist.
+
+    Parameters
+    ----------
+    path_in : `str`
+        Path to be created.
+    """
+    Path(path_in).mkdir(parents=True, exist_ok=True)
 
 
 def unpack_zip_archive(f_in: str, folder_out: str) -> None:
