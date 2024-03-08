@@ -495,6 +495,18 @@ def load_ltown(download_dir: str = get_temp_folder(), use_realistic_demands: boo
                                           "n636", "n644", "n679", "n722", "n726", "n740", "n752",
                                           "n769"]
         sensor_config.flow_sensors = ["p227", "p235"]
+        sensor_config.tank_level_sensors = ["T1"]
+        sensor_config.demand_sensors = ["n1", "n2",	"n3", "n4", "n6", "n7",	"n8", "n9",	"n10",
+                                        "n11", "n13", "n16", "n17", "n18", "n19", "n20", "n21",
+                                        "n22",	"n23", "n24", "n25", "n26", "n27", "n28", "n29",
+                                        "n30", "n31", "n32", "n33",	"n34", "n35", "n36", "n39",
+                                        "n40", "n41", "n42", "n43",	"n44", "n45", "n343", "n344",
+                                        "n345",	"n346",	"n347",	"n349",	"n350",	"n351",	"n352",
+                                        "n353",	"n354",	"n355",	"n356",	"n357",	"n358",	"n360",
+                                        "n361",	"n362",	"n364",	"n365",	"n366",	"n367", "n368",
+                                        "n369",	"n370",	"n371",	"n372",	"n373",	"n374", "n375",
+                                        "n376",	"n377",	"n378", "n379",	"n381",	"n382",	"n383",
+                                        "n384",	"n385",	"n386", "n387",	"n388",	"n389"]
 
         config = ScenarioConfig(f_inp_in=config.f_inp_in, sensor_config=sensor_config)
 
