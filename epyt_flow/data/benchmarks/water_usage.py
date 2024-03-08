@@ -5,8 +5,8 @@ import os
 import numpy as np
 import pandas as pd
 
-from ..networks import download_if_necessary
-from ...utils import get_temp_folder, accuracy_score, precision_score, roc_auc_score, f1_micro_score
+from ...utils import get_temp_folder, accuracy_score, precision_score, roc_auc_score, \
+    f1_micro_score, download_if_necessary
 
 
 def compute_evaluation_score(y_pred: np.ndarray, y: np.ndarray) -> dict:

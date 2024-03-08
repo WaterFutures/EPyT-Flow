@@ -31,8 +31,7 @@ import numpy as np
 
 from .batadal_data import TRAINING_DATA_2_ATTACKS_TIME, TRAINING_DATA_2_START_TIME, \
     TEST_DATA_ATTACKS_TIME, TEST_DATA_START_TIME
-from ..networks import download_if_necessary
-from ...utils import get_temp_folder, unpack_zip_archive, to_seconds
+from ...utils import get_temp_folder, unpack_zip_archive, to_seconds, download_if_necessary
 from ...simulation import ScenarioConfig
 
 

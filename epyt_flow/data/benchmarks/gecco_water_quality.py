@@ -6,8 +6,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from ..networks import download_if_necessary
-from ...utils import get_temp_folder, f1_score
+from ...utils import get_temp_folder, f1_score, download_if_necessary
 
 
 def compute_evaluation_score(y_pred: np.ndarray, y: np.ndarray) -> float:

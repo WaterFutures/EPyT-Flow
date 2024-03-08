@@ -25,11 +25,11 @@ from scipy.sparse import bsr_array
 
 from .battledim_data import START_TIME_TEST, START_TIME_TRAIN, LEAKS_CONFIG_TEST, \
     LEAKS_CONFIG_TRAIN
-from ..networks import load_ltown, download_if_necessary
+from ..networks import load_ltown
 from ...simulation.events import AbruptLeakage, IncipientLeakage, Leakage
 from ...simulation import ScenarioConfig
 from ...simulation.scada import ScadaData
-from ...utils import get_temp_folder, to_seconds, create_path_if_not_exist
+from ...utils import get_temp_folder, to_seconds, create_path_if_not_exist, download_if_necessary
 
 
 def parse_leak_config(start_time: str, leaks_config: str) -> list[Leakage]:

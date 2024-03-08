@@ -20,9 +20,10 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import bsr_array
 
-from ..networks import load_net1, load_hanoi, download_if_necessary
+from ..networks import load_net1, load_hanoi
 from .leakdb_data import NET1_LEAKAGES, HANOI_LEAKAGES
-from ...utils import get_temp_folder, to_seconds, unpack_zip_archive, create_path_if_not_exist
+from ...utils import get_temp_folder, to_seconds, unpack_zip_archive, create_path_if_not_exist, \
+    download_if_necessary
 from ...simulation import ScenarioSimulator
 from ...simulation.events import AbruptLeakage, IncipientLeakage
 from ...simulation import ScenarioConfig
