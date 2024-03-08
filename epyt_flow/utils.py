@@ -1,12 +1,37 @@
 """
 Module provides helper functions.
 """
+import os
 import tempfile
 import zipfile
 from pathlib import Path
-import numpy as np
-from sklearn.metrics import roc_auc_score as skelarn_roc_auc_score
-from sklearn.metrics import f1_score as skelarn_f1_scpre
+import requests
+from tqdm import tqdm
+
+
+def download_if_necessary(download_path: str, url: str) -> None:
+    """
+    Downloads a file from a given URL if it does not already exist in a given path.
+
+    Parameters
+    ----------
+    download_path : `str`
+        Local path to the file -- if this path does not exist, the file will be downloaded from
+        the provided 'url' and stored in 'download_dir'.
+    url : `str`
+        Web-URL.
+    """
+    if not os.path.isfile(download_path):
+        response = requests.get(url, stream=True, allow_redirects=True, timeout=1000)
+        content_length = int(response.headers.get('content-length', 0))
+        with open(download_path, "wb") as file, tqdm(desc=download_path,
+                                                     total=content_length,
+                                                     unit='B',
+                                                     unit_scale=True,
+                                                     unit_divisor=1024) as progress_bar:
+            for data in response.iter_content(chunk_size=1024):
+                size = file.write(data)
+                progress_bar.update(size)
 
 
 def create_path_if_not_exist(path_in: str) -> None:
@@ -91,107 +116,3 @@ def to_seconds(days: int = None, hours: int = None, minutes: int = None) -> int:
         sec += 60 * minutes
 
     return sec
-
-
-def f1_micro_score(y_pred: np.ndarray, y: np.ndarray) -> float:
-    """
-    Computes the F1 score using for a multi-class classification by
-    counting the total true positives, false negatives and false positives.
-
-    Parameters
-    ----------
-    y_pred : `numpy.ndarray`
-        Predicted labels.
-    y : `numpy.ndarray`
-        Ground truth labels.
-
-    Returns
-    -------
-    `float`
-        F1 score.
-    """
-    return skelarn_f1_scpre(y, y_pred, average="micro")
-
-
-def roc_auc_score(y_pred: np.ndarray, y: np.ndarray) -> float:
-    """
-    Computes the Area Under the Curve (AUC) of a classification.
-
-    Parameters
-    ----------
-    y_pred : `numpy.ndarray`
-        Predicted labels.
-    y : `numpy.ndarray`
-        Ground truth labels.
-
-    Returns
-    -------
-    `float`
-        ROC AUC score.
-    """
-    return skelarn_roc_auc_score(y, y_pred)
-
-
-def precision_score(y_pred: np.ndarray, y: np.ndarray) -> float:
-    """
-    Computes the precision of a classification.
-
-    Parameters
-    ----------
-    y_pred : `numpy.ndarray`
-        Predicted labels.
-    y : `numpy.ndarray`
-        Ground truth labels.
-
-    Returns
-    -------
-    `float`
-        Precision score.
-    """
-    tp = np.sum([np.all(y[i] == y_pred[i]) for i in range(len(y))])
-    fp = np.sum([np.any((y[i] == 0) & (y_pred[i] == 1)) for i in range(len(y))])
-
-    return tp / (tp + fp)
-
-
-def accuracy_score(y_pred: np.ndarray, y: np.ndarray) -> float:
-    """
-    Computes the accuracy of a classification.
-
-    Parameters
-    ----------
-    y_pred : `numpy.ndarray`
-        Predicted labels.
-    y : `numpy.ndarray`
-        Ground truth labels.
-
-    Returns
-    -------
-    `float`
-        Accuracy score.
-    """
-    tp = np.sum([np.all(y[i] == y_pred[i]) for i in range(len(y))])
-    return tp / len(y)
-
-
-def f1_score(y_pred: np.ndarray, y: np.ndarray) -> float:
-    """
-    Computes the F1-score for a binary classification.
-
-    Parameters
-    ----------
-    y_pred : `numpy.ndarray`
-        Predicted labels.
-    y : `numpy.ndarray`
-        Ground truth labels.
-
-    Returns
-    -------
-    `float`
-        F1-score.
-    """
-    tp = np.sum((y == 1) & (y_pred == 1))
-    fp = np.sum((y == 0) & (y_pred == 1))
-    fn = np.sum((y == 1) & (y_pred == 0))
-
-    return (2. * tp) / (2. * tp + fp + fn)
