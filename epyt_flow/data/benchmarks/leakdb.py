@@ -31,11 +31,38 @@ from ...simulation.scada import ScadaData
 from ...uncertainty import ModelUncertainty, UniformUncertainty
 
 
-def leak_time_to_idx(t: int, round_up: bool = False):
-    if round_up is False:
-        return math.floor(t / 1800)
-    else:
-        return math.ceil(t / 1800)
+def __create_labels(s_id: int, n_time_steps: int, nodes: list[str],
+                    leaks_info: dict) -> tuple[np.ndarray, scipy.sparse.bsr_array]:
+    y = np.zeros(n_time_steps)
+
+    def leak_time_to_idx(t: int, round_up: bool = False):
+        if round_up is False:
+            return math.floor(t / 1800)
+        else:
+            return math.ceil(t / 1800)
+
+    leak_locations_row = []
+    leak_locations_col = []
+    if str(s_id) in leaks_info:
+        hydraulic_time_step = 1800
+        for leak in leaks_info[str(s_id)]:
+            t_idx_start = leak_time_to_idx(leak["leak_start_time"] * hydraulic_time_step)
+            t_idx_end = leak_time_to_idx(leak["leak_end_time"] * hydraulic_time_step,
+                                         round_up=True)
+
+            leak_node_idx = nodes.index(leak["node_id"])
+
+            for t in range(t_idx_end - t_idx_start):
+                leak_locations_row.append(t_idx_start + t)
+                leak_locations_col.append(leak_node_idx)
+
+            y[t_idx_start:t_idx_end] = 1
+
+    y_leak_locations = bsr_array(
+        (np.ones(len(leak_locations_row)), (leak_locations_row, leak_locations_col)),
+        shape=(n_time_steps, len(nodes)))
+
+    return y, y_leak_locations
 
 
 def load_data(scenarios_id: list[int], use_net1: bool, download_dir: str = None,
@@ -136,36 +163,21 @@ def load_data(scenarios_id: list[int], use_net1: bool, download_dir: str = None,
         df_final = pd.DataFrame(pressure_readings | flow_readings |
                                 {"labels": labels, "timestamps": sensor_reading_times})
 
-        # Parse leak configuration
-        leak_locations_row = []
-        leak_locations_col = []
-        if str(s_id) in leaks_info:
-            hydraulic_time_step = 1800
-            for leak in leaks_info[str(s_id)]:
-                t_idx_start = leak_time_to_idx(leak["leak_start_time"] * hydraulic_time_step)
-                t_idx_end = leak_time_to_idx(leak["leak_end_time"] * hydraulic_time_step,
-                                             round_up=True)
-
-                leak_node_idx = all_nodes.index(f"Node_{leak['node_id']}")
-
-                for t in range(t_idx_end - t_idx_start):
-                    leak_locations_row.append(t_idx_start + t)
-                    leak_locations_col.append(leak_node_idx)
-
         # Prepare final data
         if return_X_y is True:
             X = df_final[list(pressure_readings.keys()) + list(flow_readings.keys())].to_numpy()
             y = labels.to_numpy()
+
+            network_config = load_net1(download_dir) if use_net1 is True \
+                else load_hanoi(download_dir)
+            nodes = network_config.sensor_config.nodes
+            _, y_leak_locations = __create_labels(s_id, X.shape[0], nodes, leaks_info)
 
             if return_features_desc is True and "features_desc" not in results:
                 results["features_desc"] = list(pressure_readings.keys()) + \
                     list(flow_readings.keys())
 
             if return_leak_locations is True:
-                y_leak_locations = bsr_array(
-                    (np.ones(len(leak_locations_row)), (leak_locations_row, leak_locations_col)),
-                    shape=(X.shape[0], len(pressure_readings.keys())))
-
                 results[s_id] = (X, y, y_leak_locations)
             else:
                 results[s_id] = (X, y)
@@ -239,29 +251,8 @@ def load_scada_data(scenarios_id: list[int], use_net1: bool = True, download_dir
         data = ScadaData.load_from_file(os.path.join(download_dir, f_in))
 
         X = data.get_data()
-        y = np.zeros(X.shape[0])
-
-        leak_locations_row = []
-        leak_locations_col = []
-        if str(s_id) in leaks_info:
-            hydraulic_time_step = 1800
-            for leak in leaks_info[str(s_id)]:
-                t_idx_start = leak_time_to_idx(leak["leak_start_time"] * hydraulic_time_step)
-                t_idx_end = leak_time_to_idx(leak["leak_end_time"] * hydraulic_time_step,
-                                             round_up=True)
-
-                leak_node_idx = data.sensor_config.nodes.index(leak["node_id"])
-
-                for t in range(t_idx_end - t_idx_start):
-                    leak_locations_row.append(t_idx_start + t)
-                    leak_locations_col.append(leak_node_idx)
-
-                y[t_idx_start:t_idx_end] = 1
-
-        if return_leak_locations is True:
-            y_leak_locations = bsr_array(
-                (np.ones(len(leak_locations_row)), (leak_locations_row, leak_locations_col)),
-                shape=(X.shape[0], len(data.sensor_config.nodes)))
+        y, y_leak_locations = __create_labels(s_id, X.shape[0], data.sensor_config.nodes,
+                                              leaks_info)
 
         if return_X_y is True:
             if return_leak_locations is True:
@@ -291,10 +282,6 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
         (see :func:`~epyt_flow.data.benchmarks.leakdb.load_data`).
         However, the leakages (i.e. location and profile) will be always the same and be
         consistent with the original data set.
-
-    This implementation is based on
-    https://github.com/KIOS-Research/LeakDB/blob/master/CCWI-WDSA2018/Dataset_Generator_Py3/demandGenerator.py
-    and https://github.com/KIOS-Research/LeakDB/blob/master/CCWI-WDSA2018/Dataset_Generator_Py3/leakDataset.py
 
     Parameters
     ----------
