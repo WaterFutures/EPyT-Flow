@@ -32,7 +32,7 @@ from ...simulation.scada import ScadaData
 from ...utils import get_temp_folder, to_seconds, create_path_if_not_exist, download_if_necessary
 
 
-def parse_leak_config(start_time: str, leaks_config: str) -> list[Leakage]:
+def __parse_leak_config(start_time: str, leaks_config: str) -> list[Leakage]:
     leakages = []
     for leak in leaks_config.splitlines():
         # Parse entry
@@ -61,13 +61,13 @@ def parse_leak_config(start_time: str, leaks_config: str) -> list[Leakage]:
     return leakages
 
 
-def create_labels(n_time_steps: int, return_test_scenario: bool,
-                  links: list[str]) -> tuple[np.ndarray, scipy.sparse.bsr_array]:
+def __create_labels(n_time_steps: int, return_test_scenario: bool,
+                    links: list[str]) -> tuple[np.ndarray, scipy.sparse.bsr_array]:
     y = np.zeros(n_time_steps)
 
     start_time = START_TIME_TEST if return_test_scenario is True else START_TIME_TRAIN
     leaks_config = LEAKS_CONFIG_TEST if return_test_scenario is True else LEAKS_CONFIG_TRAIN
-    leakages = parse_leak_config(start_time, leaks_config)
+    leakages = __parse_leak_config(start_time, leaks_config)
 
     def leak_time_to_idx(t: int, round_up: bool = False):
         if round_up is False:
@@ -164,16 +164,16 @@ def load_data(return_test_scenario: bool, download_dir: str = None, return_X_y: 
     df_final = functools.reduce(lambda left, right: pd.merge(left, right, on="Timestamp"),
                                 [df_pressures, df_flows, df_levels, df_demands])
 
-    network_config = load_ltown(download_dir)
-    links = network_config.sensor_config.links
-
     # Prepare and return final data
     if return_X_y is True:
         features_desc = list(df_final.columns)
         features_desc.remove("Timestamp")
 
+        network_config = load_ltown(download_dir)
+        links = network_config.sensor_config.links
+
         X = df_final[features_desc].to_numpy()
-        y, y_leak_locations = create_labels(X.shape[0], return_test_scenario, links)
+        y, y_leak_locations = __create_labels(X.shape[0], return_test_scenario, links)
 
         if return_features_desc is True:
             if return_leak_locations is True:
@@ -241,7 +241,8 @@ def load_scada_data(return_test_scenario: bool, download_dir: str = None,
     data = ScadaData.load_from_file(os.path.join(download_dir, f_in))
 
     X = data.get_data()
-    y, y_leak_locations = create_labels(X.shape[0], return_test_scenario, data.sensor_config.links)
+    y, y_leak_locations = __create_labels(X.shape[0], return_test_scenario,
+                                          data.sensor_config.links)
 
     if return_X_y is True:
         if return_leak_locations is True:
@@ -297,7 +298,7 @@ def load_scenario(return_test_scenario: bool, download_dir: str = None) -> Scena
     # Add events
     start_time = START_TIME_TEST if return_test_scenario is True else START_TIME_TRAIN
     leaks_config = LEAKS_CONFIG_TEST if return_test_scenario is True else LEAKS_CONFIG_TRAIN
-    leakages = parse_leak_config(start_time, leaks_config)
+    leakages = __parse_leak_config(start_time, leaks_config)
 
     # Build final scenario
     return ScenarioConfig(f_inp_in=ltown_config.f_inp_in, general_params=general_params,
