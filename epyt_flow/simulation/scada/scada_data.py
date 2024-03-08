@@ -519,11 +519,11 @@ class ScadaData(Serializable):
     def join(self, other) -> None:
         """
         Joins two :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData` instances -- i.e.
-         add scada data from another given
-         :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData` instance to this one.
+        add scada data from another given
+        :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData` instance to this one.
 
         Note that the two :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData` instances
-         must be the same in all other attributs (e.g. sensor configuration, etc.).
+        must be the same in all other attributs (e.g. sensor configuration, etc.).
 
         Parameters
         ----------
@@ -561,7 +561,7 @@ class ScadaData(Serializable):
     def get_data(self) -> np.ndarray:
         """
         Computes the final sensor readings -- note that those might be subject to
-         given sensor faults and sensor noise/uncertainty.
+        given sensor faults and sensor noise/uncertainty.
 
         Returns
         -------
@@ -592,13 +592,13 @@ class ScadaData(Serializable):
     def get_data_pressures(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
         Gets the final pressure sensor readings -- note that those might be subject to
-         given sensor faults and sensor noise/uncertainty.
+        given sensor faults and sensor noise/uncertainty.
 
         Parameters
         ----------
         sensor_locations : `list[str]`, optional
             Existing pressure sensor locations for which the sensor readings are requested.
-             If None, the readings from all pressure sensors are returned.
+            If None, the readings from all pressure sensors are returned.
 
             The default is None.
 
@@ -630,13 +630,13 @@ class ScadaData(Serializable):
     def get_data_flows(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
         Gets the final flow sensor readings -- note that those might be subject to
-         given sensor faults and sensor noise/uncertainty.
+        given sensor faults and sensor noise/uncertainty.
 
         Parameters
         ----------
         sensor_locations : `list[str]`, optional
             Existing flow sensor locations for which the sensor readings are requested.
-             If None, the readings from all flow sensors are returned.
+            If None, the readings from all flow sensors are returned.
 
             The default is None.
 
@@ -668,13 +668,13 @@ class ScadaData(Serializable):
     def get_data_demands(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
         Gets the final demand sensor readings -- note that those might be subject to
-         given sensor faults and sensor noise/uncertainty.
+        given sensor faults and sensor noise/uncertainty.
 
         Parameters
         ----------
         sensor_locations : `list[str]`, optional
             Existing demand sensor locations for which the sensor readings are requested.
-             If None, the readings from all demand sensors are returned.
+            If None, the readings from all demand sensors are returned.
 
             The default is None.
 
@@ -706,13 +706,13 @@ class ScadaData(Serializable):
     def get_data_nodes_quality(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
         Gets the final node quality sensor readings -- note that those might be subject to
-         given sensor faults and sensor noise/uncertainty.
+        given sensor faults and sensor noise/uncertainty.
 
         Parameters
         ----------
         sensor_locations : `list[str]`, optional
             Existing node quality sensor locations for which the sensor readings are requested.
-             If None, the readings from all node quality sensors are returned.
+            If None, the readings from all node quality sensors are returned.
 
             The default is None.
 
@@ -745,13 +745,13 @@ class ScadaData(Serializable):
     def get_data_links_quality(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
         Gets the final link quality sensor readings -- note that those might be subject to
-         given sensor faults and sensor noise/uncertainty.
+        given sensor faults and sensor noise/uncertainty.
 
         Parameters
         ----------
         sensor_locations : `list[str]`, optional
             Existing link quality sensor locations for which the sensor readings are requested.
-             If None, the readings from all link quality sensors are returned.
+            If None, the readings from all link quality sensors are returned.
 
             The default is None.
 
@@ -784,13 +784,13 @@ class ScadaData(Serializable):
     def get_data_pumps_state(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
         Gets the final pump state sensor readings -- note that those might be subject to
-         given sensor faults and sensor noise/uncertainty.
+        given sensor faults and sensor noise/uncertainty.
 
         Parameters
         ----------
         sensor_locations : `list[str]`, optional
             Existing pump state sensor locations for which the sensor readings are requested.
-             If None, the readings from all pump state sensors are returned.
+            If None, the readings from all pump state sensors are returned.
 
             The default is None.
 
@@ -822,13 +822,13 @@ class ScadaData(Serializable):
     def get_data_valves_state(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
         Gets the final valve state sensor readings -- note that those might be subject to
-         given sensor faults and sensor noise/uncertainty.
+        given sensor faults and sensor noise/uncertainty.
 
         Parameters
         ----------
         sensor_locations : `list[str]`, optional
             Existing valve state sensor locations for which the sensor readings are requested.
-             If None, the readings from all valve state sensors are returned.
+            If None, the readings from all valve state sensors are returned.
 
             The default is None.
 
@@ -860,13 +860,13 @@ class ScadaData(Serializable):
     def get_data_tanks_water_level(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
         Gets the final water tanks level sensor readings -- note that those might be subject to
-         given sensor faults and sensor noise/uncertainty.
+        given sensor faults and sensor noise/uncertainty.
 
         Parameters
         ----------
         sensor_locations : `list[str]`, optional
             Existing flow sensor locations for which the sensor readings are requested.
-             If None, the readings from all water tanks level sensors are returned.
+            If None, the readings from all water tanks level sensors are returned.
 
             The default is None.
 

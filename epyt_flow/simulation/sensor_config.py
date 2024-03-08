@@ -595,7 +595,7 @@ class SensorConfig(Serializable):
         Gets the index of a particular sensor in the final sensor readings array.
 
         Note that only one sensor ID is converted to an index. In case of multiple sensor IDs,
-         call this function for each sensor ID separately.
+        call this function for each sensor ID separately.
 
         Parameters
         ----------

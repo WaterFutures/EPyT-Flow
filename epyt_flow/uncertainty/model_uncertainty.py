@@ -13,7 +13,7 @@ from .uncertainties import Uncertainty
 class ModelUncertainty(Serializable):
     """
     Class implementing model uncertainty -- i.e. uncertainties in pipe length, pipe roughness,
-     base demand, etc.
+    base demand, etc.
 
     Parameters
     ----------

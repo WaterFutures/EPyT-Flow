@@ -77,7 +77,7 @@ def serializable(my_id: int, my_file_ext: str):
 class Serializable(ABC):
     """
     Base class for a serializable class -- must be used in conjunction with the
-     decorator `@serializable`.
+    decorator `@serializable`.
     """
     def __init__(self, **kwds):
         super().__init__(**kwds)

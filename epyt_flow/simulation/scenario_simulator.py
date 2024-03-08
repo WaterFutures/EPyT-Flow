@@ -1041,6 +1041,7 @@ class ScenarioSimulator():
             1d source pattern.
         source_type : `str`,
             Types of the external water quality source -- must be of the following:
+
                 - CONCEN Sets the concentration of external inflow entering a node
                 - MASS Injects a given mass/minute into a node
                 - SETPOINT Sets the concentration leaving a node to a given value
