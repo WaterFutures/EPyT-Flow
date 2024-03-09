@@ -1,5 +1,17 @@
 """
 Module provides functions for loading different GECCO water quality data sets.
+
++------------------------------+---------------------------------------------------------------------------------------------+
+| GECCO Water Quality 2017     | :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2017_water_quality_data`    |
++------------------------------+---------------------------------------------------------------------------------------------+
+| GECCO Water Quality 2018     | :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2018_water_quality_data`    |
++------------------------------+---------------------------------------------------------------------------------------------+
+| GECCO Water Quality 2019     | :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2019_water_quality_data`    |
++------------------------------+---------------------------------------------------------------------------------------------+
+
+Note that the scoring/evaluation algorithm is the same for all GECCO water quality benchmarks
+and is implemented in
+:func:`~epyt_flow.data.benchmarks.gecco_water_quality.compute_evaluation_score`.
 """
 import os
 from typing import Any
