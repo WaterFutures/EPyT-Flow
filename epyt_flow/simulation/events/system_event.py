@@ -28,6 +28,14 @@ class SystemEvent(Event):
         """
         self._epanet_api = epanet_api
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        if "_epanet_api" in state:
+            # Do not pickle EPyT instance!
+            del state["_epanet_api"]
+
+        return state
+
     def __call__(self, cur_time) -> None:
         return self.step(cur_time)
 
