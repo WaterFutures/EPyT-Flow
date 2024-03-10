@@ -890,7 +890,7 @@ class ScenarioSimulator():
     def set_general_parameters(self, demand_model: dict = None, simulation_duration: int = None,
                                hydraulic_time_step: int = None, quality_time_step: int = None,
                                reporting_time_step: int = None, reporting_time_start: int = None,
-                               quality_model: dict = None) -> None:
+                               flow_units: int = None, quality_model: dict = None) -> None:
         """
         Sets some general parameters.
 
@@ -935,6 +935,24 @@ class ScenarioSimulator():
             Start time (in seconds) at which reporting of hydraulic and quality states starts.
 
             The default is None.
+        flow_units : `int`, optional
+            Specifies the flow units -- i.e. all flows will be reported in these units.
+            If None, the units from the .inp file will be used.
+
+            Must be one of the following EPANET toolkit constants:
+
+                - EN_CFS = 0
+                - EN_GPM = 1
+                - EN_MGD = 2
+                - EN_IMGD = 3
+                - EN_AFD = 4
+                - EN_LPS = 5
+                - EN_LPM = 6
+                - EN_MLD = 7
+                - EN_CMH = 8
+                - EN_CMD = 9
+
+            The default is None.
         quality_model : `dict`, optional
             Specifies the quality model -- the dictionary must contain,
             "type", "chemical_name", "chemical_units", and "trace_node_id", of the
@@ -946,12 +964,14 @@ class ScenarioSimulator():
             self.epanet_api.setDemandModel(demand_model["type"], demand_model["pressure_min"],
                                            demand_model["pressure_required"],
                                            demand_model["pressure_exponent"])
+
         if simulation_duration is not None:
             if not isinstance(simulation_duration, int) or simulation_duration <= 0:
                 raise ValueError("'simulation_duration' must be a positive integer specifying " +
                                  "the number of seconds to simulate")
             self.epanet_api.setTimeSimulationDuration(simulation_duration)  # TODO: Changing the simulation
             # duration from .inp file seems to break EPANET-MSX
+
         if hydraulic_time_step is not None:
             if not isinstance(hydraulic_time_step, int) or hydraulic_time_step <= 0:
                 raise ValueError("'hydraulic_time_step' must be a positive integer specifying " +
@@ -960,6 +980,7 @@ class ScenarioSimulator():
             if reporting_time_step is None:
                 warnings.warn("No report time steps specified -- using 'hydraulic_time_step'")
                 self.epanet_api.setTimeReportingStep(hydraulic_time_step)
+
         if reporting_time_step is not None:
             hydraulic_time_step = self.epanet_api.getTimeHydraulicStep()
             if not isinstance(reporting_time_step, int) or \
@@ -967,17 +988,44 @@ class ScenarioSimulator():
                 raise ValueError("'reporting_time_step' must be a positive integer " +
                                  "and a multiple of 'hydraulic_time_step'")
             self.epanet_api.setTimeReportingStep(reporting_time_step)
+
         if reporting_time_start is not None:
             if not isinstance(reporting_time_start, int) or reporting_time_start <= 0:
                 raise ValueError("'reporting_time_start' must be a positive integer specifying " +
                                  "the time at which reporting starts")
             self.epanet_api.setTimeReportingStart(reporting_time_start)
+
         if quality_time_step is not None:
             if not isinstance(quality_time_step, int) or quality_time_step <= 0 or \
                     quality_time_step > self.epanet_api.getTimeHydraulicStep():
                 raise ValueError("'quality_time_step' must be a positive integer that is not " +
                                  "greater than the hydraulic time step")
             self.epanet_api.setTimeQualityStep(quality_time_step)
+
+        if flow_units is not None:
+            if flow_units == ToolkitConstants.EN_CFS:
+                self.epanet_api.setFlowUnitsCFS()
+            elif flow_units == ToolkitConstants.EN_GPM:
+                self.epanet_api.setFlowUnitsGPM()
+            elif flow_units == ToolkitConstants.EN_MGD:
+                self.epanet_api.setFlowUnitsMGD()
+            elif flow_units == ToolkitConstants.EN_IMGD:
+                self.epanet_api.setFlowUnitsIMGD()
+            elif flow_units == ToolkitConstants.EN_AFD:
+                self.epanet_api.setFlowUnitsAFD()
+            elif flow_units == ToolkitConstants.EN_LPS:
+                self.epanet_api.setFlowUnitsLPS()
+            elif flow_units == ToolkitConstants.EN_LPM:
+                self.epanet_api.setFlowUnitsLPM()
+            elif flow_units == ToolkitConstants.EN_MLD:
+                self.epanet_api.setFlowUnitsMLD()
+            elif flow_units == ToolkitConstants.EN_CMH:
+                self.epanet_api.setFlowUnitsCMH()
+            elif flow_units == ToolkitConstants.EN_CMD:
+                self.epanet_api.setFlowUnitsCMD()
+            else:
+                raise ValueError(f"Unknown flow units '{flow_units}'")
+
         if quality_model is not None:
             if quality_model["type"] == "none":
                 self.epanet_api.setQualityType("none")
