@@ -45,6 +45,50 @@ def roc_auc_score(y_pred: np.ndarray, y: np.ndarray) -> float:
     return skelarn_roc_auc_score(y, y_pred)
 
 
+def true_positive_rate(y_pred: np.ndarray, y: np.ndarray) -> float:
+    """
+    Computes the true positive rate (also called sensitivity).
+
+    Parameters
+    ----------
+    y_pred : `numpy.ndarray`
+        Predicted labels.
+    y : `numpy.ndarray`
+        Ground truth labels.
+
+    Returns
+    -------
+    `float`
+        True positive rate.
+    """
+    tp = np.sum((y == 1) & (y_pred == 1))
+    fn = np.sum((y == 1) & (y_pred == 0))
+
+    return tp / (tp + fn)
+
+
+def true_negative_rate(y_pred: np.ndarray, y: np.ndarray) -> float:
+    """
+    Computes the true negative rate (also called specificity).
+
+    Parameters
+    ----------
+    y_pred : `numpy.ndarray`
+        Predicted labels.
+    y : `numpy.ndarray`
+        Ground truth labels.
+
+    Returns
+    -------
+    `float`
+        True negative rate.
+    """
+    tn = np.sum((y == 0) & (y_pred == 0))
+    fp = np.sum((y == 0) & (y_pred == 1))
+
+    return tn / (tn + fp)
+
+
 def precision_score(y_pred: np.ndarray, y: np.ndarray) -> float:
     """
     Computes the precision of a classification.

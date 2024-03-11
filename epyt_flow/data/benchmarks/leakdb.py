@@ -10,6 +10,11 @@ This module provides functions for loading the original LeakDB data set
 :func:`~epyt_flow.data.benchmarks.leakdb.load_data`, as well as methods for loading the scenarios
 :func:`~epyt_flow.data.benchmarks.leakdb.load_scenarios` and pre-generated SCADA data
 :func:`~epyt_flow.data.benchmarks.leakdb.load_scada_data`.
+The official scoring/evaluation is implemented in
+:func:`~epyt_flow.data.benchmarks.leakdb.compute_evaluation_score` -- i.e. those results can be
+directly compared to the official paper.
+Besides this, the user can choose to evaluate predictions using any other metric from
+:mod:`~epyt_flow.metrics`.
 """
 import os
 from typing import Any
@@ -24,6 +29,7 @@ from ..networks import load_net1, load_hanoi
 from .leakdb_data import NET1_LEAKAGES, HANOI_LEAKAGES
 from ...utils import get_temp_folder, to_seconds, unpack_zip_archive, create_path_if_not_exist, \
     download_if_necessary
+from ...metrics import f1_score, true_positive_rate, true_negative_rate
 from ...simulation import ScenarioSimulator
 from ...simulation.events import AbruptLeakage, IncipientLeakage
 from ...simulation import ScenarioConfig
@@ -31,24 +37,39 @@ from ...simulation.scada import ScadaData
 from ...uncertainty import ModelUncertainty, UniformUncertainty
 
 
+def __leak_time_to_idx(t: int, round_up: bool = False):
+    if round_up is False:
+        return math.floor(t / 1800)
+    else:
+        return math.ceil(t / 1800)
+
+
+def __get_leak_time_windows(s_id: int, leaks_info: dict) -> list[tuple[int, int]]:
+    time_windows = []
+    if str(s_id) in leaks_info:
+        hydraulic_time_step = 1800
+        for leak in leaks_info[str(s_id)]:
+            t_idx_start = __leak_time_to_idx(leak["leak_start_time"] * hydraulic_time_step)
+            t_idx_end = __leak_time_to_idx(leak["leak_end_time"] * hydraulic_time_step,
+                                           round_up=True)
+
+            time_windows.append((t_idx_start, t_idx_end))
+
+    return time_windows
+
+
 def __create_labels(s_id: int, n_time_steps: int, nodes: list[str],
                     leaks_info: dict) -> tuple[np.ndarray, scipy.sparse.bsr_array]:
     y = np.zeros(n_time_steps)
-
-    def leak_time_to_idx(t: int, round_up: bool = False):
-        if round_up is False:
-            return math.floor(t / 1800)
-        else:
-            return math.ceil(t / 1800)
 
     leak_locations_row = []
     leak_locations_col = []
     if str(s_id) in leaks_info:
         hydraulic_time_step = 1800
         for leak in leaks_info[str(s_id)]:
-            t_idx_start = leak_time_to_idx(leak["leak_start_time"] * hydraulic_time_step)
-            t_idx_end = leak_time_to_idx(leak["leak_end_time"] * hydraulic_time_step,
-                                         round_up=True)
+            t_idx_start = __leak_time_to_idx(leak["leak_start_time"] * hydraulic_time_step)
+            t_idx_end = __leak_time_to_idx(leak["leak_end_time"] * hydraulic_time_step,
+                                           round_up=True)
 
             leak_node_idx = nodes.index(leak["node_id"])
 
@@ -63,6 +84,86 @@ def __create_labels(s_id: int, n_time_steps: int, nodes: list[str],
         shape=(n_time_steps, len(nodes)))
 
     return y, y_leak_locations
+
+
+def compute_evaluation_score(scenarios_id: list[int], use_net1: bool,
+                             y_pred_labels_per_scenario: list[np.ndarray]) -> dict:
+    """
+    Evaluates the predictions (leakage detection) for a list of given scenarios.
+
+    Parameters
+    ----------
+    scenarios_id : `list[int]`
+        List of scenarios ID that are to be evaluated -- there is a total number of 1000 scenarios.
+    use_net1 : `bool`
+        If True, Net1 LeakDB will be used for evaluation, otherwise the Hanoi LeakDB will be used.
+    y_pred_labels_per_scenario : `list[numpy.ndarray]`
+        Predicted binary labels (over time) for each scenario in `scenarios_id`.
+
+    Returns
+    -------
+    `dict`
+        Dictionary containing the f1-score, true positive rate, true negative rate,
+        and early detection score.
+    """
+    # Original MATLAB implementation: https://github.com/KIOS-Research/LeakDB/blob/master/CCWI-WDSA2018/Scoring%20Function/scoring_algorithm.m
+    if len(scenarios_id) != len(y_pred_labels_per_scenario):
+        raise ValueError("Number of scenarios does not match number of predictions -- " +
+                         f"expected {len(scenarios_id)} but got {len(y_pred_labels_per_scenario)}")
+
+    # Load ground truth
+    if use_net1 is True:
+        leaks_info = json.loads(NET1_LEAKAGES)
+    else:
+        leaks_info = json.loads(HANOI_LEAKAGES)
+
+    network_config = load_net1() if use_net1 is True \
+        else load_hanoi()
+    nodes = network_config.sensor_config.nodes
+
+    y_true = []
+    for i, s_id in enumerate(scenarios_id):
+        y, _ = __create_labels(s_id, len(y_pred_labels_per_scenario[i]), nodes, leaks_info)
+        if len(y) != len(y_pred_labels_per_scenario[i]):
+            raise ValueError("A prediction must be provided for each time step -- " +
+                             f"mismatch for scenario {i}, expected {len(y)} but got " +
+                             f"{y_pred_labels_per_scenario[i]}")
+        y_true.append(y)
+
+    y_true = np.stack(y_true, axis=0)
+    y_pred = np.stack(y_pred_labels_per_scenario, axis=0)
+
+    # Evaluate predictions
+    f1 = f1_score(y_pred, y_true)
+    tpr = true_positive_rate(y_pred, y_true)
+    tnr = true_negative_rate(y_pred, y_true)
+
+    early_detection_score = 0
+    normalizing = []
+    n_time_steps_tolerance = 10
+    detection_threshold = .75
+    for i, s_id in enumerate(scenarios_id):
+        y_pred_i = y_pred_labels_per_scenario[i]
+        leaks_time_window = __get_leak_time_windows(s_id, leaks_info)
+
+        scores = []
+        for t0, _ in leaks_time_window:
+            normalizing.append(1.)
+
+            y_pred_window = y_pred_i[t0:t0+n_time_steps_tolerance]
+            if 1 in y_pred_window and \
+                    np.sum(y_pred_window) / len(y_pred_window) > detection_threshold:
+                t_idx = np.argwhere(y_pred_window)[0] + 1
+                scores.append(2. / (1 + np.exp((5. / n_time_steps_tolerance) * t_idx)))
+            else:
+                scores.append(0.)
+
+        early_detection_score += np.sum(scores)
+
+    early_detection_score = early_detection_score / np.sum(normalizing)
+
+    return {"f1_score": f1, "true_positive_rate": tpr,
+            "true_negative_rate": tnr, "early_detection_score": early_detection_score}
 
 
 def load_data(scenarios_id: list[int], use_net1: bool, download_dir: str = None,
