@@ -105,7 +105,7 @@ def precision_score(y_pred: np.ndarray, y: np.ndarray) -> float:
     `float`
         Precision score.
     """
-    tp = np.sum([np.all(y[i] == y_pred[i]) for i in range(len(y))])
+    tp = np.sum([np.all((y[i] == 1) & (y_pred[i] == 1)) for i in range(len(y))])
     fp = np.sum([np.any((y[i] == 0) & (y_pred[i] == 1)) for i in range(len(y))])
 
     return tp / (tp + fp)
