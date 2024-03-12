@@ -3,6 +3,7 @@ Module provides functions and classes for serialization.
 """
 from typing import Any
 from abc import abstractmethod, ABC
+from io import BufferedIOBase
 import zipfile
 from zipfile import ZipFile
 import umsgpack
@@ -37,10 +38,16 @@ SENSOR_ATTACK_REPLAY_ID         = 19
 
 
 def my_packb(data: Any) -> bytes:
+    """
+    Overriden `umsgpack.packb` method to support custom serialization handlers.
+    """
     return umsgpack.packb(data, ext_handlers=ext_handler_pack)
 
 
-def my_unpackb(data: bytes) -> Any:
+def my_unpackb(data: Any) -> Any:
+    """
+    Overriden `umsgpack.unpackb` method to support custom serialization handlers.
+    """
     return umsgpack.unpackb(data, ext_handlers=ext_handler_unpack)
 
 
@@ -77,7 +84,7 @@ def serializable(my_id: int, my_file_ext: str):
 class Serializable(ABC):
     """
     Base class for a serializable class -- must be used in conjunction with the
-    decorator `@serializable`.
+    :func:`~epyt_flow.serialization.serializable` decorator.
     """
     def __init__(self, **kwds):
         super().__init__(**kwds)
@@ -95,18 +102,40 @@ class Serializable(ABC):
         """
         return {}
 
+    def file_ext(self) -> str:
+        """
+        Returns the file extension of this class.
+
+        This function is automatically implemented by applying the
+        :func:`~epyt_flow.serialization.serializable` decorator.
+
+        Returns
+        -------
+        `str`
+            File extension.
+        """
+        raise NotImplementedError()
+
     def packb(self) -> bytes:
+        """
+        Serializes the attributes of this object.
+
+        Returns
+        -------
+        `bytes`
+            Serialized object.
+        """
         return my_packb(self.get_attributes())
 
     @staticmethod
-    def load(data: bytes) -> Any:
+    def load(data: Any) -> Any:
         """
         Deserializes an instance of this class.
 
         Parameters
         ----------
-        data : `bytes`
-            Serialized data.
+        data : `bytes` or `io.BufferedIOBase`
+            Serialized data or stream from which serialized data can be read.
 
         Returns
         -------
@@ -137,16 +166,24 @@ class Serializable(ABC):
         """
         return load_from_file(f_in, use_zip)
 
-    def dump(self) -> bytes:
+    def dump(self, stream_out: BufferedIOBase = None) -> Any:
         """
         Serializes this object to a byte array.
+
+        Parameters
+        ----------
+        stream_out : `io.BufferedIOBase`, optional
+            Stream to which the serialized object is written.
+            If None, the serialized object is returned as a `bytes` array.
+
+            The default is None.
 
         Returns
         -------
         `bytes`
-            Serialized object.
+            If `stream_out` is None, the serialized object is returned as a `bytes` array.
         """
-        return dump(self)
+        return dump(self, stream_out)
 
     def save_to_file(self, f_out: str, use_zip: bool = True) -> None:
         """
@@ -168,33 +205,54 @@ class Serializable(ABC):
         return save_to_file(f_out, self, use_zip)
 
 
-def load(data: bytes) -> Any:
+def load(data: Any) -> Any:
     """
     Deserializes data.
 
     Parameters
     ----------
-    data : `bytes`
-        Serialized data.
+    data : `bytes` or `io.BufferedIOBase`
+        Serialized data or stream from which serialized data can be read.
 
     Returns
     -------
     `Any`
         Deserialized data.
     """
-    return my_unpackb(data)
+    if isinstance(data, bytes):
+        return my_unpackb(data)
+    elif isinstance(data, BufferedIOBase):
+        return my_unpackb(data.read())
+    else:
+        raise TypeError("Invalid type of 'data' -- must be either instance of 'bytes' or " +
+                        f"'io.BufferedIOBase' but not of '{type(data)}'")
 
 
-def dump(data: Any) -> bytes:
+def dump(data: Any, stream_out: BufferedIOBase = None) -> Any:
     """
     Serializes some given data to a byte array.
+
+    Parameters
+    ----------
+    stream_out : `io.BufferedIOBase`, optional
+        Stream to which the serialized object is written.
+        If None, the serialized object is returned as a `bytes` array.
+
+        The default is None.
 
     Returns
     -------
     `bytes`
         Serialized data.
     """
-    return my_packb(data)
+    if stream_out is None:
+        return my_packb(data)
+    else:
+        if not isinstance(stream_out, BufferedIOBase):
+            raise TypeError("'stream_out' must be an instance of 'io.BufferedIOBase' " +
+                            f"but not of '{type(stream_out)}'")
+
+        stream_out.write(my_packb(data))
 
 
 def load_from_file(f_in: str, use_zip: bool = True) -> Any:
@@ -247,8 +305,8 @@ def save_to_file(f_out: str, data: Any, use_zip: bool = True) -> None:
 
 
 # Add numpy.ndarray, networkx.Graph, and scipy.sparse.bsr_array support
-def encode_bsr_array(array: scipy.sparse.bsr_array
-                     ) -> tuple[tuple[int, int], tuple[list[float], tuple[list[int], list[int]]]]:
+def __encode_bsr_array(array: scipy.sparse.bsr_array
+                       ) -> tuple[tuple[int, int], tuple[list[float], tuple[list[int], list[int]]]]:
     shape = array.shape
     data = array.data.flatten().tolist()
     rows = array.nonzero()[0].tolist()
@@ -257,9 +315,9 @@ def encode_bsr_array(array: scipy.sparse.bsr_array
     return shape, (data, (rows, cols))
 
 
-def decode_bsr_array(ext_data: tuple[tuple[int, int],
-                                     tuple[list[float], tuple[list[int], list[int]]]]
-                     ) -> scipy.sparse.bsr_array:
+def __decode_bsr_array(ext_data: tuple[tuple[int, int],
+                                       tuple[list[float], tuple[list[int], list[int]]]]
+                       ) -> scipy.sparse.bsr_array:
     shape, data = ext_data
     return scipy.sparse.bsr_array((data[0], (data[1][0], data[1][1])), shape=(shape[0], shape[1]))
 
@@ -272,8 +330,8 @@ ext_handler_pack = {np.ndarray:
                                          umsgpack.packb(networkx.node_link_data(graph))),
                     scipy.sparse.bsr_array:
                     lambda arr: umsgpack.Ext(SCIPY_BSRARRAY_ID,
-                                             umsgpack.packb(encode_bsr_array(arr)))}
+                                             umsgpack.packb(__encode_bsr_array(arr)))}
 ext_handler_unpack = {NUMPY_ARRAY_ID: lambda ext: np.array(umsgpack.unpackb(ext.data)),
                       NETWORKX_GRAPH_ID:
                       lambda ext: networkx.node_link_graph(umsgpack.unpackb(ext.data)),
-                      SCIPY_BSRARRAY_ID: lambda ext: decode_bsr_array(umsgpack.unpackb(ext.data))}
+                      SCIPY_BSRARRAY_ID: lambda ext: __decode_bsr_array(umsgpack.unpackb(ext.data))}

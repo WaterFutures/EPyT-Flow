@@ -43,6 +43,14 @@ def test_scadadata():
 
         assert res == res_loaded
 
+        f = os.path.join(get_temp_folder(), "my_hanoi_2.epytflow_scada_data")
+        with open(f, "wb") as f_out:
+            res.dump(f_out)
+
+        with open(f, "rb") as f_in:
+            res_loaded = ScadaData.load(f_in)
+            assert res == res_loaded
+
 
 def test_topology():
     # Load Net1 network
