@@ -68,20 +68,21 @@ Note that the pattern repeats automatically when the simulation duration is exce
     # Adds a source pattern called "my-pattern" at node "1".
     # The pattern alternates the chemical concentration leaving this node between 1.0 and 0.0.
     sim.add_quality_source(node_id="1", pattern_id="my-pattern",
-                            pattern=numpy.array([1., 0.]), source_type="SETPOINT")
+                            pattern=numpy.array([1., 0.]),
+                            source_type=ToolkitConstants.EN_SETPOINT)
 
 Different types of source patterns are supported:
 
 +--------------+------------------------------------------------------------+
 | Source type  | Description                                                |
 +==============+============================================================+
-| CONCEN       | Sets the concentration of external inflow entering a node  |
+| EN_CONCEN    | Sets the concentration of external inflow entering a node  |
 +--------------+------------------------------------------------------------+
-| MASS         | Injects a given mass/minute into a node                    |
+| EN_MASS      | Injects a given mass/minute into a node                    |
 +--------------+------------------------------------------------------------+
-| SETPOINT     | Sets the concentration leaving a node to a given value     |
+| EN_SETPOINT  | Sets the concentration leaving a node to a given value     |
 +--------------+------------------------------------------------------------+
-| FLOWPACED    | Adds a given value to the concentration leaving a node     |
+| EN_FLOWPACED | Adds a given value to the concentration leaving a node     |
 +--------------+------------------------------------------------------------+
 
 
@@ -101,7 +102,8 @@ Example for running a chemical analysis where the concentration at the reservoir
         # Sets the concentration at node "1" (reservoir) to 1.0 for all time steps -- 
         # this constant concentration pattern is named "my-constant-pattern"
         sim.add_quality_source(node_id="1", pattern_id="my-constant-pattern",
-                                pattern=numpy.array([1.]), source_type="CONCEN")
+                                pattern=numpy.array([1.]),
+                                source_type=ToolkitConstants.EN_CONCEN)
 
         # Places quality sensors at all nodes -- 
         # i.e. measuring the chemical concentration at all nodes

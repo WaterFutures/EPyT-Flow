@@ -290,6 +290,7 @@ class ScenarioSimulator():
         general_params = {"hydraulic_time_step": self.epanet_api.getTimeHydraulicStep(),
                           "quality_time_step": self.epanet_api.getTimeQualityStep(),
                           "simulation_duration": self.epanet_api.getTimeSimulationDuration(),
+                          "flow_units": self.epanet_api.api.ENgetflowunits(),
                           "quality_model": {"code": qual_info.QualityCode,
                                             "type": qual_info.QualityType,
                                             "chemical_name": qual_info.QualityChemName,
@@ -1076,7 +1077,7 @@ class ScenarioSimulator():
         self.set_general_parameters(quality_model={"type": "chem", "chemical_name": chemical_name,
                                                    "chemical_units": chemical_units})
 
-    def add_quality_source(self, node_id: str, pattern: np.ndarray, source_type: str,
+    def add_quality_source(self, node_id: str, pattern: np.ndarray, source_type: int,
                            pattern_id: str = None, source_strength: int = 1.) -> None:
         """
         Adds a new external water quality source at a particular node.
@@ -1087,13 +1088,20 @@ class ScenarioSimulator():
             ID of the node at which this external water quality source is placed.
         pattern : `numpy.ndarray`
             1d source pattern.
-        source_type : `str`,
+        source_type : `int`,
             Types of the external water quality source -- must be of the following:
 
-                - CONCEN Sets the concentration of external inflow entering a node
-                - MASS Injects a given mass/minute into a node
-                - SETPOINT Sets the concentration leaving a node to a given value
-                - FLOWPACED Adds a given value to the concentration leaving a node
+                - EN_CONCEN     = 0
+                - EN_MASS       = 1
+                - EN_SETPOINT   = 2
+                - EN_FLOWPACED  = 3
+
+            Description:
+
+                - E_CONCEN Sets the concentration of external inflow entering a node
+                - EN_MASS Injects a given mass/minute into a node
+                - EN_SETPOINT Sets the concentration leaving a node to a given value
+                - EN_FLOWPACED Adds a given value to the concentration leaving a node
         pattern_id : `str`, optional
             ID of the source pattern.
 
@@ -1114,7 +1122,7 @@ class ScenarioSimulator():
         if not isinstance(pattern, np.ndarray):
             raise TypeError("'pattern' must be an instance of 'numpy.ndarray' " +
                             f"but not of '{type(pattern)}'")
-        if source_type not in ["CONCEN", "MASS", "SETPOINT", "FLOWPACED"]:
+        if not isinstance(source_type, int) or not 0 <= source_type <= 3:
             raise ValueError("Invalid type of water quality source")
 
         if pattern_id is None:
@@ -1126,7 +1134,7 @@ class ScenarioSimulator():
         node_idx = self.epanet_api.getNodeIndex(node_id)
         pattern_idx = self.epanet_api.addPattern(pattern_id, pattern)
 
-        self.epanet_api.setNodeSourceType(pattern_idx, source_type)
+        self.epanet_api.api.ENsetnodevalue(node_idx, ToolkitConstants.EN_SOURCETYPE, source_type)
         self.epanet_api.setNodeSourceQuality(node_idx, source_strength)
         self.epanet_api.setNodeSourcePatternIndex(node_idx, pattern_idx)
 
