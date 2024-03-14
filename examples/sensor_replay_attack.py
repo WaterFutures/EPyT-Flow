@@ -1,7 +1,7 @@
 """
 Example of implementing a sensor replay attack.
 """
-from epyt_flow.data.benchmarks import load_leakdb
+from epyt_flow.data.benchmarks import load_leakdb_scenarios
 from epyt_flow.simulation import ScenarioSimulator, SENSOR_TYPE_NODE_PRESSURE
 from epyt_flow.simulation.events import SensorReplayAttack
 from epyt_flow.utils import to_seconds
@@ -9,7 +9,7 @@ from epyt_flow.utils import to_seconds
 
 if __name__ == "__main__":
     # Load the first LeakDB Hanoi scenario
-    config = load_leakdb(scenarios_id=["1"], use_net1=False)[0]
+    config = load_leakdb_scenarios(scenarios_id=["1"], use_net1=False)[0]
     with ScenarioSimulator(scenario_config=config) as sim:
         # Set simulation duration to two days
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
