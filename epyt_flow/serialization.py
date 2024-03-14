@@ -1,7 +1,7 @@
 """
 Module provides functions and classes for serialization.
 """
-from typing import Any
+from typing import Any, Union
 from abc import abstractmethod, ABC
 from io import BufferedIOBase
 import zipfile
@@ -51,7 +51,7 @@ def my_unpackb(data: Any) -> Any:
     return umsgpack.unpackb(data, ext_handlers=ext_handler_unpack)
 
 
-def serializable(my_id: int, my_file_ext: str):
+def serializable(my_id: int, my_file_ext: str) -> Any:
     """
     Decorator for a serializable class -- i.e. subclass of
     :class:`~epyt_flow.serialization.Serializable`.
@@ -128,7 +128,7 @@ class Serializable(ABC):
         return my_packb(self.get_attributes())
 
     @staticmethod
-    def load(data: Any) -> Any:
+    def load(data: Union[bytes, BufferedIOBase]) -> Any:
         """
         Deserializes an instance of this class.
 
@@ -205,7 +205,7 @@ class Serializable(ABC):
         return save_to_file(f_out, self, use_zip)
 
 
-def load(data: Any) -> Any:
+def load(data: Union[bytes, BufferedIOBase]) -> Any:
     """
     Deserializes data.
 
@@ -228,7 +228,7 @@ def load(data: Any) -> Any:
                         f"'io.BufferedIOBase' but not of '{type(data)}'")
 
 
-def dump(data: Any, stream_out: BufferedIOBase = None) -> Any:
+def dump(data: Any, stream_out: BufferedIOBase = None) -> Union[bytes, None]:
     """
     Serializes some given data to a byte array.
 
@@ -243,7 +243,7 @@ def dump(data: Any, stream_out: BufferedIOBase = None) -> Any:
     Returns
     -------
     `bytes`
-        Serialized data.
+        Serialized data if `stream_out` is None -- otherwise, nothing is returned.
     """
     if stream_out is None:
         return my_packb(data)
