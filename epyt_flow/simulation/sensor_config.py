@@ -185,7 +185,8 @@ class SensorConfig(Serializable):
         self.__quality_node_idx = np.array([self.__nodes.index(n)
                                             for n in self.__quality_node_sensors], dtype=np.int32)
         self.__quality_link_idx = np.array([self.__links.index(link)
-                                            for link in self.__quality_link_sensors], dtype=np.int32)
+                                            for link in self.__quality_link_sensors],
+                                           dtype=np.int32)
         self.__valve_state_idx = np.array([self.__valves.index(v)
                                            for v in self.__valve_state_sensors], dtype=np.int32)
         self.__pump_state_idx = np.array([self.__pumps.index(p)

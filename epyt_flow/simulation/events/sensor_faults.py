@@ -47,7 +47,26 @@ class SensorFault(SensorReadingEvent):
         return b1 - b2
 
     @abstractmethod
-    def apply_sensor_fault(self, b, sensor_reading: float, cur_time: int) -> float:
+    def apply_sensor_fault(self, cur_multiplier: float, sensor_reading: float,
+                           cur_time: int) -> float:
+        """
+        Applies this sensor fault to a given single sensor reading value --
+        i.e. the sensor reading value is perturbed by this fault.
+
+        Parameters:
+        -----------
+        cur_multiplier : `float`
+            Current multiplier -- i.e. controls the "strength" of the fault.
+        sensor_reading : `float`
+            Sensor reading value.
+        cur_time : `int`
+            Current time stamp (in seconds) in the simulation.
+
+        Returns
+        -------
+        `float`
+            Perturbed sensor reading value.
+        """
         raise NotImplementedError()
 
     def apply(self, sensor_readings: np.ndarray,
@@ -100,8 +119,9 @@ class SensorFaultConstant(SensorFault, Serializable):
     def __str__(self) -> str:
         return f"{type(self).__name__} {super().__str__()} constant: {self.__constant_shift}"
 
-    def apply_sensor_fault(self, b: float, sensor_reading: float, cur_time: int) -> float:
-        return sensor_reading + b * self.__constant_shift
+    def apply_sensor_fault(self, cur_multiplier: float, sensor_reading: float,
+                           cur_time: int) -> float:
+        return sensor_reading + cur_multiplier * self.__constant_shift
 
 
 @serializable(SENSOR_FAULT_DRIFT_ID, ".epytflow_sensorfault_drift")
@@ -140,8 +160,9 @@ class SensorFaultDrift(SensorFault, Serializable):
     def __str__(self) -> str:
         return f"{type(self).__name__} {super().__str__()} coef: {self.__coef}"
 
-    def apply_sensor_fault(self, b: float, sensor_reading: float, cur_time: int) -> float:
-        return sensor_reading + b * (self.__coef * (cur_time - self.start_time))
+    def apply_sensor_fault(self, cur_multiplier: float, sensor_reading: float,
+                           cur_time: int) -> float:
+        return sensor_reading + cur_multiplier * (self.__coef * (cur_time - self.start_time))
 
 
 @serializable(SENSOR_FAULT_GAUSSIAN_ID, ".epytflow_sensorfault_gaussian")
@@ -184,8 +205,9 @@ class SensorFaultGaussian(SensorFault, Serializable):
     def __str__(self) -> str:
         return f"{type(self).__name__} {super().__str__()} std: {self.__std}"
 
-    def apply_sensor_fault(self, b: float, sensor_reading: float, cur_time: int) -> float:
-        return sensor_reading + b * np.random.normal(loc=0, scale=self.__std)
+    def apply_sensor_fault(self, cur_multiplier: float, sensor_reading: float,
+                           cur_time: int) -> float:
+        return sensor_reading + cur_multiplier * np.random.normal(loc=0, scale=self.__std)
 
 
 @serializable(SENSOR_FAULT_PERCENTAGE_ID, ".epytflow_sensorfault_percentage",)
@@ -227,8 +249,9 @@ class SensorFaultPercentage(SensorFault, Serializable):
     def __str__(self) -> str:
         return f"{type(self).__name__} {super().__str__()} coef: {self.__coef}"
 
-    def apply_sensor_fault(self, b: float, sensor_reading: float, cur_time: int) -> float:
-        return sensor_reading + b * self.__coef * sensor_reading
+    def apply_sensor_fault(self, cur_multiplier: float, sensor_reading: float,
+                           cur_time: int) -> float:
+        return sensor_reading + cur_multiplier * self.__coef * sensor_reading
 
 
 @serializable(SENSOR_FAULT_STUCKATZERO_ID, ".epytflow_sensorfault_zero")
@@ -240,5 +263,6 @@ class SensorFaultStuckZero(SensorFault, Serializable):
     def __str__(self) -> str:
         return f"{type(self).__name__} {super().__str__()}"
 
-    def apply_sensor_fault(self, b: float, sensor_reading: float, cur_time: int) -> float:
-        return sensor_reading + b * (-1. * sensor_reading)
+    def apply_sensor_fault(self, cur_multiplier: float, sensor_reading: float,
+                           cur_time: int) -> float:
+        return sensor_reading + cur_multiplier * (-1. * sensor_reading)

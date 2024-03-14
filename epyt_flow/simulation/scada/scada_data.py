@@ -145,7 +145,7 @@ class ScadaData(Serializable):
         self.__sensor_config = sensor_config
         self.__sensor_noise = sensor_noise
         self.__sensor_reading_events = sensor_faults + sensor_reading_attacks + \
-                                       sensor_reading_events
+            sensor_reading_events
         self.__pressure_data_raw = pressure_data_raw
         self.__flow_data_raw = flow_data_raw
         self.__demand_data_raw = demand_data_raw
@@ -483,7 +483,8 @@ class ScadaData(Serializable):
         self.__sensor_reading_events += sensor_faults
         self.__init()
 
-    def change_sensor_reading_attacks(self, sensor_reading_attacks: list[SensorReadingAttack]) -> None:
+    def change_sensor_reading_attacks(self,
+                                      sensor_reading_attacks: list[SensorReadingAttack]) -> None:
         """
         Changes the sensor reading attacks -- overrides all previous sensor reading attacks!
 
