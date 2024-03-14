@@ -2,8 +2,114 @@
 This module provides different metrics for evaluation.
 """
 import numpy as np
-from sklearn.metrics import roc_auc_score as skelarn_roc_auc_score
-from sklearn.metrics import f1_score as skelarn_f1_scpre
+from sklearn.metrics import roc_auc_score as skelarn_roc_auc_score, f1_score as skelarn_f1_scpre, \
+    mean_absolute_error
+
+
+def running_mse(y_pred: np.ndarray, y: np.ndarray):
+    """
+    Computes the running Mean Squared Error (MSE).
+
+    Parameters
+    ----------
+    y_pred : `numpy.ndarray`
+        Predicted outputs.
+    y : `numpy.ndarray`
+        Ground truth outputs.
+
+    Returns
+    -------
+    `float`
+        Running MSE.
+    """
+    e_sq = np.square(y - y_pred)
+    r_mse = list(esq for esq in e_sq)
+
+    for i in range(1, len(y)):
+        r_mse[i] = ((i * r_mse[i - 1]) / (i + 1)) + (r_mse[i] / (i + 1))
+
+    return r_mse
+
+
+def mape(y_pred: np.ndarray, y: np.ndarray, epsilon: float = .05) -> float:
+    """
+    Computes the Mean Absolute Percentage Error (MAPE).
+
+    Parameters
+    ----------
+    y_pred : `numpy.ndarray`
+        Predicted outputs.
+    y : `numpy.ndarray`
+        Ground truth outputs.
+    epsilon : `float`, optional
+        Small number added to predictions and ground truth to avoid division-by-zero.
+
+        The default is 0.05
+
+    Returns
+    -------
+    `float`
+        MAPE score.
+    """
+    y_ = y + epsilon
+    y_pred_ = y_pred + epsilon
+    return np.mean(np.abs((y_ - y_pred_) / y_))
+
+
+def smape(y_pred: np.ndarray, y: np.ndarray, epsilon: float = .05) -> float:
+    """
+    Computes the Symmetric Mean Absolute Percentage Error (SMAPE).
+
+    Parameters
+    ----------
+    y_pred : `numpy.ndarray`
+        Predicted outputs.
+    y : `numpy.ndarray`
+        Ground truth outputs.
+    epsilon : `float`, optional
+        Small number added to predictions and ground truth to avoid division-by-zero.
+
+        The default is 0.05
+
+    Returns
+    -------
+    `float`
+        SMAPE score.
+    """
+    y_ = y + epsilon
+    y_pred_ = y_pred + epsilon
+    return 2. * np.mean(np.abs(y_ - y_pred_) / (np.abs(y_) + np.abs(y_pred_)))
+
+
+def mase(y_pred: np.ndarray, y: np.ndarray, epsilon: float = .05) -> float:
+    """
+    Computes the Mean Absolute Scaled Error (MASE).
+
+    Parameters
+    ----------
+    y_pred : `numpy.ndarray`
+        Predicted outputs.
+    y : `numpy.ndarray`
+        Ground truth outputs.
+    epsilon : `float`, optional
+        Small number added to predictions and ground truth to avoid division-by-zero.
+
+        The default is 0.05
+
+    Returns
+    -------
+    `float`
+        MASE score.
+    """
+    try:
+        y_ = y + epsilon
+        y_pred_ = y_pred + epsilon
+
+        mae = mean_absolute_error(y_, y_pred_)
+        naive_error = np.mean(np.abs(y_[1:] - y_pred_[:-1]))
+        return mae / naive_error
+    except Exception:
+        return None
 
 
 def f1_micro_score(y_pred: np.ndarray, y: np.ndarray) -> float:
