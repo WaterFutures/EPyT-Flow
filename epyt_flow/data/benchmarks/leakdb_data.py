@@ -225,16 +225,6 @@ NET1_LEAKAGES = """{
             "leak_peak_time": 16402
         }
     ],
-    "36": [
-        {
-            "node_id": "21",
-            "leak_diameter": 0.0,
-            "leak_type": "incipient",
-            "leak_start_time": 14308,
-            "leak_end_time": 14313,
-            "leak_peak_time": 14308
-        }
-    ],
     "41": [
         {
             "node_id": "23",
@@ -3247,16 +3237,6 @@ NET1_LEAKAGES = """{
             "leak_start_time": 15836,
             "leak_end_time": 16641,
             "leak_peak_time": 15836
-        }
-    ],
-    "375": [
-        {
-            "node_id": "12",
-            "leak_diameter": 0.0,
-            "leak_type": "incipient",
-            "leak_start_time": 17511,
-            "leak_end_time": 17513,
-            "leak_peak_time": 17511
         }
     ],
     "379": [
@@ -9760,16 +9740,6 @@ HANOI_LEAKAGES = """{
             "leak_peak_time": 8532
         }
     ],
-    "51": [
-        {
-            "node_id": "5",
-            "leak_diameter": 0.0,
-            "leak_type": "incipient",
-            "leak_start_time": 17497,
-            "leak_end_time": 17514,
-            "leak_peak_time": 17497
-        }
-    ],
     "52": [
         {
             "node_id": "20",
@@ -15039,14 +15009,6 @@ HANOI_LEAKAGES = """{
         }
     ],
     "590": [
-        {
-            "node_id": "18",
-            "leak_diameter": 0.0,
-            "leak_type": "incipient",
-            "leak_start_time": 10058,
-            "leak_end_time": 10152,
-            "leak_peak_time": 10058
-        },
         {
             "node_id": "29",
             "leak_diameter": 0.189237529214,
