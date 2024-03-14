@@ -458,7 +458,7 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
         if use_net1 is True:
             base = 1
         else:
-            base = 0.6  # Avoid negative pressure in Hanoi
+            base = 0.3  # Avoid negative pressure in Hanoi
         variation = 0.75 + np.random.normal(0, 0.07)  # from 0 to 1
         dem = base * (year_offset+1) * (week_year_pat*variation+1) * (random+1)
         dem = dem.tolist()
