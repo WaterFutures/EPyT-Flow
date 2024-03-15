@@ -7,6 +7,102 @@ import zipfile
 from pathlib import Path
 import requests
 from tqdm import tqdm
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, show: bool = True) -> None:
+    """
+    Plots a single or multiple time series.
+
+    Parameters
+    ----------
+    data : `numpy.ndarray`
+        Time series data -- each row in `data` corresponds to a complete time series.
+    labels : `list[str]`, optional
+        Labels for each time series in `data`.
+        If None, no labels are shown.
+
+        The default is None.
+    show : `bool`, optional
+        If True, the plot/figure is shown in a window.
+
+        The default is True.
+    """
+    if not isinstance(data, np.ndarray):
+        raise TypeError(f"'data' must be an instance of 'numpy.ndarray' but not of '{type(data)}'")
+    if not len(data.shape) != 2:
+        raise ValueError("'data' must be a 2d array where each row corresponds to a time series")
+    if labels is not None:
+        if not isinstance(labels, list) or not all(isinstance(label, str) for label in labels):
+            raise TypeError("'labels' must be a instance of 'list[str]'")
+    if not isinstance(show, bool):
+        raise TypeError(f"'show' must be an instance of 'bool' but not of '{type(show)}'")
+
+    plt.figure()
+
+    labels = labels if labels is not None else [None] * data.shape[0]
+
+    for i in range(data.shape[0]):
+        plt.plot(data[i, :], ".-", label=labels[i])
+
+    if not any(label is None for label in labels):
+        plt.legend()
+
+    if show is True:
+        plt.show()
+
+
+def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
+                               confidence_interval: np.ndarray = None, show: bool = True) -> None:
+    """
+    Plots the prediction (e.g. forecast) of *single* time series together with the
+    ground truth time series. In addition, confidence intervals can be plotted as well.
+
+    Parameters
+    ----------
+    y : `numpy.ndarray`
+        Ground truth values.
+    y_pred : `numpy.ndarray`
+        Predicted values.
+    confidence_interval : `numpy.ndarray`, optional
+        Confidence interval (upper and lower value) for each prediction in `y_pred`.
+        If not None, the confidence interval is plotted as well.
+
+        The default is None.
+    show : `bool`, optional
+        If True, the plot/figure is shown in a window.
+
+        The default is True.
+    """
+    if not isinstance(y_pred, np.ndarray):
+        raise TypeError("'y_pred' must be an instance of 'numpy.ndarray' " +
+                        f"but not of '{type(y_pred)}'")
+    if not isinstance(y, np.ndarray):
+        raise TypeError("'y' must be an instance of 'numpy.ndarray' " +
+                        f"but not of '{type(y)}'")
+    if y_pred.shape != y.shape:
+        raise ValueError(f"Shape mismatch: {y_pred.shape} vs. {y.shape}")
+    if len(y_pred.shape) != 1:
+        raise ValueError("'y_pred' must be a 1d array")
+    if len(y.shape) != 1:
+        raise ValueError("'y' must be a 1d array")
+    if not isinstance(show, bool):
+        raise TypeError(f"'show' must be an instance of 'bool' but not of '{type(show)}'")
+
+    plt.figure()
+
+    if confidence_interval is not None:
+        plt.fill_between(range(len(y_pred)),
+                         y_pred - confidence_interval[0],
+                         y_pred + confidence_interval[1],
+                         alpha=0.5)
+    plt.plot(y_pred, ".-", label="Prediction")
+    plt.plot(y, ".-", label="Ground truth")
+    plt.legend()
+
+    if show is True:
+        plt.show()
 
 
 def download_if_necessary(download_path: str, url: str) -> None:
