@@ -14,7 +14,7 @@ and is implemented in
 :func:`~epyt_flow.data.benchmarks.gecco_water_quality.compute_evaluation_score`.
 """
 import os
-from typing import Any
+from typing import Union
 import numpy as np
 import pandas as pd
 
@@ -44,7 +44,8 @@ def compute_evaluation_score(y_pred: np.ndarray, y: np.ndarray) -> float:
     return f1_score(y_pred, y)
 
 
-def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool = True) -> Any:
+def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool = True
+                                      ) -> Union[pd.DataFrame, tuple[np.ndarray, np.ndarray]]:
     """
     GECCO Industrial Challenge 2017 Dataset: A water quality dataset for the
     "Monitoring of drinking-water quality" competition organized by M. Friese, J. Stork,
@@ -104,7 +105,8 @@ def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool
         return X, y
 
 
-def load_gecco2018_water_quality_data(download_dir: str = None, return_X_y: bool = True) -> Any:
+def load_gecco2018_water_quality_data(download_dir: str = None, return_X_y: bool = True
+                                      ) -> Union[pd.DataFrame, tuple[np.ndarray, np.ndarray]]:
     """
     GECCO Industrial Challenge 2018 Dataset: A water quality dataset for the
     "Internet of Things: Online Anomaly Detection for Drinking Water Quality" competition

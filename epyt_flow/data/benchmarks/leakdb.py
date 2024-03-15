@@ -17,7 +17,7 @@ Besides this, the user can choose to evaluate predictions using any other metric
 :mod:`~epyt_flow.metrics`.
 """
 import os
-from typing import Any
+from typing import Union
 import math
 import json
 import scipy
@@ -289,7 +289,8 @@ def load_data(scenarios_id: list[int], use_net1: bool, download_dir: str = None,
 
 
 def load_scada_data(scenarios_id: list[int], use_net1: bool = True, download_dir: str = None,
-                    return_X_y: bool = False, return_leak_locations: bool = False) -> list[Any]:
+                    return_X_y: bool = False, return_leak_locations: bool = False
+                    ) -> Union[list[ScadaData], list[tuple[np.ndarray, np.ndarray]]]:
     """
     Loads the SCADA data of the simulated LeakDB benchmark scenarios -- see
     :func:`~epyt_flow.data.benchmarks.leakdb.load_scenarios`.

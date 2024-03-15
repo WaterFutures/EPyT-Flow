@@ -118,7 +118,7 @@ class ScadaDataExport():
         return np.array(col_desc, dtype=object)
 
     @abstractmethod
-    def export(self, scada_data: ScadaData):
+    def export(self, scada_data: ScadaData) -> None:
         """
         Exports given SCADA data.
 
@@ -135,7 +135,7 @@ class ScadaDataNumpyExport(ScadaDataExport):
     Class for exporting SCADA data to numpy (.npz file).
     """
 
-    def export(self, scada_data: ScadaData):
+    def export(self, scada_data: ScadaData) -> None:
         """
         Exports given SCADA data.
 
@@ -169,10 +169,10 @@ class ScadaDataNumpyExport(ScadaDataExport):
 
 class ScadaDataXlsxExport(ScadaDataExport):
     """
-    Class for exporting SCADA data to excep (.xlsx file).
+    Class for exporting SCADA data to Excel (.xlsx file).
     """
 
-    def export(self, scada_data: ScadaData):
+    def export(self, scada_data: ScadaData) -> None:
         """
         Exports given SCADA data.
 
@@ -218,7 +218,7 @@ class ScadaDataMatlabExport(ScadaDataExport):
     Class for exporting SCADA data to MATLAB (.mat file).
     """
 
-    def export(self, scada_data: ScadaData):
+    def export(self, scada_data: ScadaData) -> None:
         """
         Exports given SCADA data.
 
