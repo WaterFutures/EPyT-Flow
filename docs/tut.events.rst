@@ -104,7 +104,8 @@ of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instanc
     # Load Hanoi network with a default sensor configuration
     network_config = load_hanoi(include_default_sensor_placement=True)
     with ScenarioSimulator(scenario_config=network_config) as sim:
-        # Add a sensor fault that adds a constant to the original pressure reading at node "16"
+        # Add a sensor fault that adds a constant to the original pressure reading
+        # at node "16"
         sim.add_sensor_fault(SensorFaultConstant(constant_shift=2.,
                                                 sensor_id="16",
                                                 sensor_type=SENSOR_TYPE_NODE_PRESSURE,
@@ -130,11 +131,12 @@ of a given :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
         scada_data = sim.run_simulation()
 
         # Sets a single sensor fault: Gaussian noise to the pressure reading at node "16"
+        # Note that this overrides all existing sensor faults!
         sensor_fault = SensorFaultGaussian(std=1., sensor_id="16",
                                            sensor_type=SENSOR_TYPE_NODE_PRESSURE,
                                            start_time=to_seconds(minutes=80),
                                            end_time=to_seconds(minutes=180))
-        scada_data.change_sensor_faults([sensor_fault])  # Overrides all existing sensor faults!
+        scada_data.change_sensor_faults([sensor_fault])
         
         # ...
 
@@ -172,13 +174,14 @@ Example of a sensor replay attack on a pressure sensor:
         # Add a sensor replay attack -- pressure readings at node "13" between 5hrs and 7hrs
         # after simulation start (time steps 10 - 15) are replaced by the historical readings
         # collected from the first 150min (i.e. first 5 time steps)
-        sim.add_sensor_reading_event(SensorReplayAttack(replay_data_time_window_start=0,
-                                                        replay_data_time_window_end=to_seconds(
-                                                            minutes=150),
-                                                        start_time=to_seconds(hours=5),
-                                                        end_time=to_seconds(hours=7),
-                                                        sensor_id="13",
-                                                        sensor_type=SENSOR_TYPE_NODE_PRESSURE))
+        sensor_replay_attack = SensorReplayAttack(replay_data_time_window_start=0,
+                                                  replay_data_time_window_end=to_seconds(
+                                                    minutes=150),
+                                                  start_time=to_seconds(hours=5),
+                                                  end_time=to_seconds(hours=7),
+                                                  sensor_id="13",
+                                                  sensor_type=SENSOR_TYPE_NODE_PRESSURE)
+        sim.add_sensor_reading_event(sensor_replay_attack)
 
         # Run simulation and and retrieve pressure readings
         res = sim.run_simulation()

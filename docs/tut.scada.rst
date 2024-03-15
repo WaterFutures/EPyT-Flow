@@ -146,8 +146,9 @@ of a given :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
         observed_sensor_readings = scada_data.get_data()
 
         # Access pressure readings at node "5"
-        pressure_sensor_5_idx = scada_data.sensor_config.get_index_of_reading(pressure_sensor="5")
-        pressures_at_node_5 = observed_sensor_readings[:,pressure_sensor_5_idx]
+        pressure_sensor_5_idx = scada_data.sensor_config.get_index_of_reading(
+            pressure_sensor="5")
+        pressures_at_node_5 = observed_sensor_readings[:, pressure_sensor_5_idx]
 
 
 Alternatively, one can use sensor type specific function for retrieving the readings of all 

@@ -58,15 +58,17 @@ In the case of a chemical analysis, it is also necessary to set at least one sou
 if not already set in the .inp file. This can be done by calling 
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_quality_source` 
 of the :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
-Besides the location (i.e. node ID), the source pattern together with is type and name must be specified as well.
-Note that the pattern repeats automatically when the simulation duration is exceeding the pattern length.
+Besides the location (i.e. node ID), the source pattern together with is type and (name, optional)
+must be specified as well.
+Note that the pattern repeats automatically when the simulation duration is exceeding the
+pattern length.
 
 .. code-block:: python
 
     # ...
     
     # Adds a source pattern called "my-pattern" at node "1".
-    # The pattern alternates the chemical concentration leaving this node between 1.0 and 0.0.
+    # The pattern alternates the chemical concentration leaving this node between 1. and 0.
     sim.add_quality_source(node_id="1", pattern_id="my-pattern",
                             pattern=numpy.array([1., 0.]),
                             source_type=ToolkitConstants.EN_SETPOINT)
