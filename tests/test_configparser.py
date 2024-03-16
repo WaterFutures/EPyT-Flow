@@ -20,9 +20,9 @@ def test_configparser():
                 "quality_time_step": 300
             },
             "uncertainties": {
-                "pipe_length": {"type": "gaussian", "mean": 0, "scale": 1},
-                "pipe_roughness": {"type": "uniform", "low": 0, "hight": 1},
-                "sensor_noise": {"type": "gaussian", "mean": 0, "scale": 0.01}
+                "pipe_length": {"type": "absolute_gaussian", "mean": 0, "scale": 1},
+                "pipe_roughness": {"type": "absolute_uniform", "low": 0, "hight": 1},
+                "sensor_noise": {"type": "relative_gaussian", "scale": 0.01}
             },
             "sensors": {
                 "pressure_sensors": ["13", "16", "22", "30"],

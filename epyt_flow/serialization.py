@@ -4,37 +4,42 @@ Module provides functions and classes for serialization.
 from typing import Any, Union
 from abc import abstractmethod, ABC
 from io import BufferedIOBase
-import zipfile
-from zipfile import ZipFile
+import gzip
 import umsgpack
 import numpy as np
 import networkx
 import scipy
 
 
-SCIPY_BSRARRAY_ID               = -3
-NETWORKX_GRAPH_ID               = -2
-NUMPY_ARRAY_ID                  = -1
-SENSOR_CONFIG_ID                = 0
-SCENARIO_CONFIG_ID              = 1
-MODEL_UNCERTAINTY_ID            = 2
-SENSOR_NOISE_ID                 = 3
-GAUSSIAN_UNCERTAINTY_ID         = 4
-UNIFORM_UNCERTAINTY_ID          = 5
-DEEP_UNIFORM_UNCERTAINTY_ID     = 6
-DEEP_GAUSSIAN_UNCERTAINTY_ID    = 7
-DEEP_UNCERTAINTY_ID             = 8
-SENSOR_FAULT_CONSTANT_ID        = 9
-SENSOR_FAULT_DRIFT_ID           = 10
-SENSOR_FAULT_GAUSSIAN_ID        = 11
-SENSOR_FAULT_PERCENTAGE_ID      = 12
-SENSOR_FAULT_STUCKATZERO_ID     = 13
-LEAKAGE_ID                      = 14
-ABRUPT_LEAKAGE_ID               = 15
-INCIPIENT_LEAKAGE_ID            = 16
-SCADA_DATA_ID                   = 17
-SENSOR_ATTACK_OVERRIDE_ID       = 18
-SENSOR_ATTACK_REPLAY_ID         = 19
+SCIPY_BSRARRAY_ID                       = -3
+NETWORKX_GRAPH_ID                       = -2
+NUMPY_ARRAY_ID                          = -1
+SENSOR_CONFIG_ID                        = 0
+SCENARIO_CONFIG_ID                      = 1
+MODEL_UNCERTAINTY_ID                    = 2
+SENSOR_NOISE_ID                         = 3
+ABSOLUTE_GAUSSIAN_UNCERTAINTY_ID        = 4
+RELATIVE_GAUSSIAN_UNCERTAINTY_ID        = 5
+ABSOLUTE_UNIFORM_UNCERTAINTY_ID         = 6
+RELATIVE_UNIFORM_UNCERTAINTY_ID         = 7
+PERCENTAGE_DEVIATON_UNCERTAINTY_ID      = 8
+ABSOLUTE_DEEP_UNIFORM_UNCERTAINTY_ID    = 9
+RELATIVE_DEEP_UNIFORM_UNCERTAINTY_ID    = 10
+ABSOLUTE_DEEP_GAUSSIAN_UNCERTAINTY_ID   = 11
+RELATIVE_DEEP_GAUSSIAN_UNCERTAINTY_ID   = 12
+ABSOLUTE_DEEP_UNCERTAINTY_ID            = 13
+RELATIVE_DEEP_UNCERTAINTY_ID            = 14
+SENSOR_FAULT_CONSTANT_ID                = 15
+SENSOR_FAULT_DRIFT_ID                   = 16
+SENSOR_FAULT_GAUSSIAN_ID                = 17
+SENSOR_FAULT_PERCENTAGE_ID              = 18
+SENSOR_FAULT_STUCKATZERO_ID             = 19
+LEAKAGE_ID                              = 20
+ABRUPT_LEAKAGE_ID                       = 21
+INCIPIENT_LEAKAGE_ID                    = 22
+SCADA_DATA_ID                           = 23
+SENSOR_ATTACK_OVERRIDE_ID               = 24
+SENSOR_ATTACK_REPLAY_ID                 = 25
 
 
 def my_packb(data: Any) -> bytes:
@@ -255,7 +260,7 @@ def dump(data: Any, stream_out: BufferedIOBase = None) -> Union[bytes, None]:
         stream_out.write(my_packb(data))
 
 
-def load_from_file(f_in: str, use_zip: bool = True) -> Any:
+def load_from_file(f_in: str, use_compression: bool = True) -> Any:
     """
     Deserializes data from a (compressed) file.
 
@@ -263,8 +268,8 @@ def load_from_file(f_in: str, use_zip: bool = True) -> Any:
     ----------
     f_in : `str`
         Path to the file from which to deserialize the data.
-    use_zip : `bool`, optional
-        If True, the file `f_in` is supposed to be zip compressed -- False,
+    use_compression : `bool`, optional
+        If True, the file `f_in` is supposed to be gzip compressed -- False,
         if no compression was used when serializing the data.
 
         The default is True.
@@ -274,16 +279,15 @@ def load_from_file(f_in: str, use_zip: bool = True) -> Any:
     `Any`
         Deserialized data.
     """
-    if use_zip is False:
+    if use_compression is False:
         with open(f_in, "rb") as f:
             return umsgpack.unpack(f, ext_handlers=ext_handler_unpack)
     else:
-        with ZipFile(f_in, "r", zipfile.ZIP_DEFLATED) as myzip:
-            with myzip.open("data.epyt_flow") as f:
-                return load(f.read())
+        with gzip.open(f_in, "rb") as f:
+            return load(f.read())
 
 
-def save_to_file(f_out: str, data: Any, use_zip: bool = True) -> None:
+def save_to_file(f_out: str, data: Any, use_compression: bool = True) -> None:
     """
     Serializes data and stores it in a (compressed) file.
 
@@ -291,17 +295,17 @@ def save_to_file(f_out: str, data: Any, use_zip: bool = True) -> None:
     ----------
     f_in : `str`
         Path to the file where the serialized data will be stored.
-    use_zip : `bool`, optional
-        If True, the file `f_in` is will be zip compressed -- False, if no compression is wanted.
+    use_compression : `bool`, optional
+        If True, the file `f_in` is will be gzip compressed -- False, if no compression is wanted.
 
         The default is True.
     """
-    if use_zip is False:
+    if use_compression is False:
         with open(f_out, "wb") as f:
             umsgpack.pack(data, f, ext_handlers=ext_handler_pack)
     else:
-        with ZipFile(f_out, "w", zipfile.ZIP_DEFLATED) as myzip:
-            myzip.writestr("data.epyt_flow", dump(data))
+        with gzip.open(f_out, "wb") as f:
+            f.write(dump(data))
 
 
 # Add numpy.ndarray, networkx.Graph, and scipy.sparse.bsr_array support

@@ -12,7 +12,7 @@ almost any EPyT-Flow class to/from a file or byte array.
 This allows an easy and fast storing/loading & sharing of configurations and results.
 
 The implemented serialization mechanism is based on `MessagePack <https://msgpack.org/>`_ 
-and enriched with zip compression.
+and enriched with gzip compression.
 
 Every serializable EPyT-Flow class supports the following functions:
 
@@ -78,7 +78,7 @@ those will be passed to the constructor when deserializing an instance of this c
 The decorator requires a **unique ID** of the class that is made serializeable -- 
 i.e. every class (more general every data type) is assigned a unique ID to make it 
 recognizable by the parser. All reserved IDs (you cannot use those!) are listed in 
-:mod:`epyt_flow.serialization.py` -- right now any number greater than 19 is free for use.
+:mod:`epyt_flow.serialization.py` -- right now any number greater than 25 is free for use.
 Furthermore, a file extension is required which should allow the user to infer the type of content 
 -- this file extension is appended to the path automatically, if not already present.
 

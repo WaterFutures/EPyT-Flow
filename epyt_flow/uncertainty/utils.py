@@ -71,14 +71,19 @@ def generate_random_gaussian_noise(n_samples: int):
     return np.random.normal(np.random.rand(), np.random.rand(), size=n_samples)
 
 
-def generate_deep_random_gaussian_noise(n_samples: int):
+def generate_deep_random_gaussian_noise(n_samples: int, mean: float = None):
     """
-    Generates random Gaussian noise where the mean and standard deviations are changing over time.
+    Generates random Gaussian noise where the standard deviations (and mean) are changing over time.
 
     Parameters
     ----------
     n_samples : `int`
         Number of random samples.
+    mean : `float`, optional
+        Fixed mean at all points in time.
+        If None, random means are generated.
+
+        The default is None.
 
     Returns
     -------
@@ -87,9 +92,12 @@ def generate_deep_random_gaussian_noise(n_samples: int):
     """
     noise = []
 
-    rand_mean = create_deep_random_pattern(n_samples, min_value=-1., max_value=1.)
+    if mean is None:
+        mean = create_deep_random_pattern(n_samples, min_value=-1., max_value=1.)
+    else:
+        mean = [mean] * n_samples
     rand_std = create_deep_random_pattern(n_samples)
-    noise = np.array([np.random.normal(m, s) for m, s in zip(rand_mean, rand_std)])
+    noise = np.array([np.random.normal(m, s) for m, s in zip(mean, rand_std)])
 
     return noise
 
@@ -195,4 +203,4 @@ def _create_deep_random_pattern(start_value: float = None, min_length: int = 2, 
             elif cur_value > max_value:
                 vec = -.1
 
-    return np.array(pattern)
+    return pattern

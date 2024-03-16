@@ -5,9 +5,12 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from .utils import generate_deep_random_gaussian_noise, create_deep_random_pattern
-from ..serialization import serializable, Serializable, GAUSSIAN_UNCERTAINTY_ID, \
-    UNIFORM_UNCERTAINTY_ID, DEEP_UNIFORM_UNCERTAINTY_ID, DEEP_GAUSSIAN_UNCERTAINTY_ID, \
-    DEEP_UNCERTAINTY_ID
+from ..serialization import serializable, Serializable, ABSOLUTE_GAUSSIAN_UNCERTAINTY_ID, \
+    RELATIVE_GAUSSIAN_UNCERTAINTY_ID, ABSOLUTE_UNIFORM_UNCERTAINTY_ID, \
+    RELATIVE_UNIFORM_UNCERTAINTY_ID, ABSOLUTE_DEEP_UNIFORM_UNCERTAINTY_ID, \
+    RELATIVE_DEEP_UNIFORM_UNCERTAINTY_ID, ABSOLUTE_DEEP_GAUSSIAN_UNCERTAINTY_ID, \
+    RELATIVE_DEEP_GAUSSIAN_UNCERTAINTY_ID, ABSOLUTE_DEEP_UNCERTAINTY_ID, \
+    RELATIVE_DEEP_UNCERTAINTY_ID, PERCENTAGE_DEVIATON_UNCERTAINTY_ID
 
 
 class Uncertainty(ABC):
@@ -68,6 +71,10 @@ class Uncertainty(ABC):
         return {"min_value": self.__min_value, "max_value": self.__max_value}
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, Uncertainty):
+            raise TypeError("Can not compare 'Uncertainty' instance " +
+                            f"with '{type(other)}' instance")
+
         return self.__min_value == other.min_value and self.__max_value == other.max_value
 
     def __str__(self) -> str:
@@ -130,10 +137,9 @@ class Uncertainty(ABC):
         return data
 
 
-@serializable(GAUSSIAN_UNCERTAINTY_ID, ".epytflow_uncertainty_gaussian")
-class GaussianUncertainty(Uncertainty, Serializable):
+class GaussianUncertainty(Uncertainty):
     """
-    Class implementing Gaussian uncertainty -- i.e. Gaussian noise is added to the data.
+    Base class implementing Gaussian uncertainty
 
     Parameters
     ----------
@@ -155,8 +161,6 @@ class GaussianUncertainty(Uncertainty, Serializable):
 
         self.__mean = np.random.rand() if mean is None else mean
         self.__scale = np.random.rand() if scale is None else scale
-
-        self.__create_uncertainties()
 
     @property
     def mean(self) -> float:
@@ -186,29 +190,54 @@ class GaussianUncertainty(Uncertainty, Serializable):
         return super().get_attributes() | {"mean": self.__mean, "scale": self.__scale}
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, GaussianUncertainty):
+            raise TypeError("Can not compare 'GaussianUncertainty' instance " +
+                            f"with '{type(other)}' instance")
+
         return super().__eq__(other) and self.__mean == other.mean and self.__scale == other.scale
 
     def __str__(self) -> str:
         return super().__str__() + f" mean: {self.__mean} scale: {self.__scale}"
 
-    def __create_uncertainties(self, n_samples: int = 500) -> None:
-        self.__uncertainties_idx = 0
-        self.__uncertainties = np.random.normal(self.__mean, self.__scale, size=n_samples)
 
+@serializable(ABSOLUTE_GAUSSIAN_UNCERTAINTY_ID, ".epytflow_uncertainty_absolute_gaussian")
+class AbsoluteGaussianUncertainty(GaussianUncertainty, Serializable):
+    """
+    Class implementing absolute Gaussian uncertainty -- i.e. Gaussian noise is added to the data.
+    """
     def apply(self, data: float) -> float:
-        data += self.__uncertainties[self.__uncertainties_idx]
-
-        self.__uncertainties_idx += 1
-        if self.__uncertainties_idx >= len(self.__uncertainties):
-            self.__create_uncertainties()
+        data += np.random.normal(loc=self.mean, scale=self.scale)
 
         return self.clip(data)
 
 
-@serializable(UNIFORM_UNCERTAINTY_ID, ".epytflow_uncertainty_uniform")
-class UniformUncertainty(Uncertainty, Serializable):
+@serializable(RELATIVE_GAUSSIAN_UNCERTAINTY_ID, ".epytflow_uncertainty_relative_gaussian")
+class RelativeGaussianUncertainty(GaussianUncertainty, Serializable):
     """
-    Class implementing uniform uncertainty -- i.e. uniform noise is added to the data.
+    Class implementing relative Gaussian uncertainty -- i.e. data is perturbed by Gaussian noise
+    centered at zero.
+
+    Parameters
+    ----------
+    scale : `float`, optional
+        Scale (i.e. standard deviation) of the Gaussian noise.
+
+        If None, scale will be assigned a random value between 0 and 1.
+
+        The default is None.
+    """
+    def __init__(self, scale: float = None, **kwds):
+        super().__init__(mean=0., scale=scale, **kwds)
+
+    def apply(self, data: float) -> float:
+        data += np.random.normal(loc=0, scale=self.scale)
+
+        return self.clip(data)
+
+
+class UniformUncertainty(Uncertainty):
+    """
+    Base class implementing uniform uncertainty.
 
     Parameters
     ----------
@@ -255,22 +284,67 @@ class UniformUncertainty(Uncertainty, Serializable):
         return super().get_attributes() | {"low": self.__low, "high": self.__high}
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, UniformUncertainty):
+            raise TypeError("Can not compare 'UniformUncertainty' instance " +
+                            f"with '{type(other)}' instance")
+
         return super().__eq__(other) and self.__low == other.low and self.__high == other.high
 
     def __str__(self) -> str:
         return super().__str__() + f" low: {self.__low} high: {self.__high}"
 
+
+@serializable(ABSOLUTE_UNIFORM_UNCERTAINTY_ID, ".epytflow_uncertainty_absolute_uniform")
+class AbsoluteUniformUncertainty(UniformUncertainty, Serializable):
+    """
+    Class implementing absolute uniform uncertainty -- i.e. uniform noise is added to the data.
+    """
     def apply(self, data: float) -> float:
-        data += np.random.uniform(low=self.__low, high=self.__high)
+        data += np.random.uniform(low=self.low, high=self.high)
 
         return self.clip(data)
 
 
-@serializable(DEEP_UNIFORM_UNCERTAINTY_ID, ".epytflow_uncertainty_deep_uniform")
-class DeepUniformUncertainty(Uncertainty, Serializable):
+@serializable(RELATIVE_UNIFORM_UNCERTAINTY_ID, ".epytflow_uncertainty_relative_uniform")
+class RelativeUniformUncertainty(UniformUncertainty, Serializable):
     """
-    Class implementing deep uniform uncertainty -- i.e. random uniform noise
-    (shape of the noise is changing over time) is added to the data.
+    Class implementing relative uniform uncertainty -- i.e. data is multiplied by uniform noise.
+    """
+    def apply(self, data: float) -> float:
+        data *= np.random.uniform(low=self.low, high=self.high)
+
+        return self.clip(data)
+
+
+@serializable(PERCENTAGE_DEVIATON_UNCERTAINTY_ID, ".epytflow_uncertainty_percentage_deviation")
+class PercentageDeviationUncertainty(UniformUncertainty, Serializable):
+    """
+    Class implementing a uniform data deviation -- i.e. the data can deviate up to some percentage
+    from its original value.
+
+    Parameters
+    ----------
+    deviation_percentage : `float`
+        Percentage (0-1) the data can deviate from its original value.
+    """
+    def __init__(self, deviation_percentage: float, **kwds):
+        if not isinstance(deviation_percentage, float):
+            raise TypeError("'deviation_percentage' must be an instance of 'float' " +
+                            f"but not of {type(deviation_percentage)}")
+        if not 0 < deviation_percentage < 1:
+            raise ValueError("'deviation_percentage' must be in (0,1)")
+
+        super().__init__(low=1. - deviation_percentage, high=1. + deviation_percentage, **kwds)
+
+    def apply(self, data: float) -> float:
+        data *= np.random.uniform(low=self.low, high=self.high)
+
+        return self.clip(data)
+
+
+class DeepUniformUncertainty(Uncertainty):
+    """
+    Base class implementing deep uniform uncertainty.
     """
     def __init__(self, **kwds):
         super().__init__(**kwds)
@@ -278,53 +352,109 @@ class DeepUniformUncertainty(Uncertainty, Serializable):
         self.__create_uncertainties()
 
     def __create_uncertainties(self, n_samples: int = 500):
-        self.__uncertainties_idx = 0
+        self._uncertainties_idx = 0
         rand_low = create_deep_random_pattern(n_samples)
         rand_high = create_deep_random_pattern(n_samples)
         rand_low = np.minimum(rand_low, rand_high)
         rand_high = np.maximum(rand_low, rand_high)
-        self.__uncertainties = [np.random.uniform(low, high)
-                                for low, high in zip(rand_low, rand_high)]
+        self._uncertainties = [np.random.uniform(low, high)
+                               for low, high in zip(rand_low, rand_high)]
 
+    @abstractmethod
     def apply(self, data: float) -> float:
-        data += self.__uncertainties[self.__uncertainties_idx]
-
-        self.__uncertainties_idx += 1
-        if self.__uncertainties_idx >= len(self.__uncertainties):
+        self._uncertainties_idx += 1
+        if self._uncertainties_idx >= len(self._uncertainties):
             self.__create_uncertainties()
 
         return self.clip(data)
 
 
-@serializable(DEEP_GAUSSIAN_UNCERTAINTY_ID, ".epytflow_uncertainty_deep_gaussian")
+@serializable(ABSOLUTE_DEEP_UNIFORM_UNCERTAINTY_ID, ".epytflow_uncertainty_absolute_deep_uniform")
+class AbsoluteDeepUniformUncertainty(DeepUniformUncertainty, Serializable):
+    """
+    Class implementing absolute deep uniform uncertainty -- i.e. random uniform noise
+    (shape of the noise is changing over time) is added to the data.
+    """
+    def apply(self, data: float) -> float:
+        data += self._uncertainties[self._uncertainties_idx]
+
+        return super().apply(data)
+
+
+@serializable(RELATIVE_DEEP_UNIFORM_UNCERTAINTY_ID, ".epytflow_uncertainty_relative_deep_uniform")
+class RelativeDeepUniformUncertainty(DeepUniformUncertainty, Serializable):
+    """
+    Class implementing relative deep uniform uncertainty -- i.e. data is multplied by
+    random uniform noise (shape of the noise is changing over time).
+    """
+    def apply(self, data: float) -> float:
+        data *= self._uncertainties[self._uncertainties_idx]
+
+        return super().apply(data)
+
+
 class DeepGaussianUncertainty(Uncertainty, Serializable):
     """
-    Class implementing deep Gaussian uncertainty -- i.e. random Gaussian noise
-    (mean and variance are changing over time) is added to the data.
+    Base class implementing deep Gaussian uncertainty.
+
+    Parameters
+    ----------
+    mean : `float`, optional
+        Fixed mean of Gaussian noise.
+        If None, random means are generated.
+
+        The default is None.
     """
-    def __init__(self, **kwds):
+    def __init__(self, mean: float = None, **kwds):
+        self.__mean = mean
+
         super().__init__(**kwds)
 
         self.__create_uncertainties()
 
     def __create_uncertainties(self, n_samples: int = 500) -> None:
-        self.__uncertainties_idx = 0
-        self.__uncertainties = generate_deep_random_gaussian_noise(n_samples)
+        self._uncertainties_idx = 0
+        self._uncertainties = generate_deep_random_gaussian_noise(n_samples, self.__mean)
 
+    @abstractmethod
     def apply(self, data: float) -> float:
-        data += self.__uncertainties[self.__uncertainties_idx]
-
-        self.__uncertainties_idx += 1
-        if self.__uncertainties_idx >= len(self.__uncertainties):
+        self._uncertainties_idx += 1
+        if self._uncertainties_idx >= len(self._uncertainties):
             self.__create_uncertainties()
 
         return self.clip(data)
 
 
-@serializable(DEEP_UNCERTAINTY_ID, ".epytflow_uncertainty_deep")
-class DeepUncertainty(Uncertainty, Serializable):
+@serializable(ABSOLUTE_DEEP_GAUSSIAN_UNCERTAINTY_ID, ".epytflow_uncertainty_absolute_deep_gaussian")
+class AbsoluteDeepGaussianUncertainty(DeepGaussianUncertainty, Serializable):
     """
-    Class implementing deep uncertainty -- i.e. completly random noise is added to the data.
+    Class implementing absolute deep Gaussian uncertainty -- i.e. random Gaussian noise
+    (mean and variance are changing over time) is added to the data.
+    """
+    def apply(self, data: float) -> float:
+        data += self._uncertainties[self._uncertainties_idx]
+
+        return super().apply(data)
+
+
+@serializable(RELATIVE_DEEP_GAUSSIAN_UNCERTAINTY_ID, ".epytflow_uncertainty_relative_deep_gaussian")
+class RelativeDeepGaussianUncertainty(DeepGaussianUncertainty, Serializable):
+    """
+    Class implementing realtive deep Gaussian uncertainty -- i.e. data is multiplied by
+    random Gaussian noise (mean and variance are changing over time).
+    """
+    def __init__(self, **kwds):
+        super().__init__(mean=0., **kwds)
+
+    def apply(self, data: float) -> float:
+        data += self._uncertainties[self._uncertainties_idx]
+
+        return super().apply(data)
+
+
+class DeepUncertainty(Uncertainty):
+    """
+    Base class implementing deep uncertainty.
 
     Parameters
     ----------
@@ -339,8 +469,8 @@ class DeepUncertainty(Uncertainty, Serializable):
         self.__min_noise_value = min_noise_value
         self.__max_noise_value = max_noise_value
 
-        self.__uncertainties_idx = None
-        self.__uncertainties = None
+        self._uncertainties_idx = None
+        self._uncertainties = None
         self.__create_uncertainties()
 
     @property
@@ -372,6 +502,10 @@ class DeepUncertainty(Uncertainty, Serializable):
                                            "max_noise_value": self.__max_noise_value}
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, DeepUncertainty):
+            raise TypeError("Can not compare 'DeepUncertainty' instance " +
+                            f"with '{type(other)}' instance")
+
         return super().__eq__(other) and self.__min_noise_value == other.min_noise_value and \
             self.__max_noise_value == other.max_noise_value
 
@@ -381,18 +515,41 @@ class DeepUncertainty(Uncertainty, Serializable):
 
     def __create_uncertainties(self, n_samples: int = 500) -> None:
         init_value = None
-        if self.__uncertainties_idx is not None:
-            init_value = self.__uncertainties[-1]
+        if self._uncertainties_idx is not None:
+            init_value = self._uncertainties[-1]
 
-        self.__uncertainties_idx = 0
-        self.__uncertainties = create_deep_random_pattern(n_samples, self.__min_value,
-                                                          self.__max_value, init_value)
+        self._uncertainties_idx = 0
+        self._uncertainties = create_deep_random_pattern(n_samples, self.__min_noise_value,
+                                                         self.__max_noise_value, init_value)
 
+    @abstractmethod
     def apply(self, data: float) -> float:
-        data += self.__uncertainties[self.__uncertainties_idx]
-
-        self.__uncertainties_idx += 1
-        if self.__uncertainties_idx >= len(self.__uncertainties):
+        self._uncertainties_idx += 1
+        if self._uncertainties_idx >= len(self._uncertainties):
             self.__create_uncertainties()
 
         return self.clip(data)
+
+
+@serializable(ABSOLUTE_DEEP_UNCERTAINTY_ID, ".epytflow_uncertainty_absolute_deep")
+class AbsoluteDeepUncertainty(DeepUncertainty, Serializable):
+    """
+    Class implementing absolute deep uncertainty -- i.e. completly random noise
+    is added to the data.
+    """
+    def apply(self, data: float) -> float:
+        data += self._uncertainties[self._uncertainties_idx]
+
+        return super().apply(data)
+
+
+@serializable(RELATIVE_DEEP_UNCERTAINTY_ID, ".epytflow_uncertainty_relative_deep")
+class RelativeDeepUncertainty(DeepUncertainty, Serializable):
+    """
+    Class implementing realtive deep uncertainty -- i.e. data is multiplied by
+    completly random noise.
+    """
+    def apply(self, data: float) -> float:
+        data *= self._uncertainties[self._uncertainties_idx]
+
+        return super().apply(data)

@@ -5,8 +5,9 @@ from typing import Any
 from copy import deepcopy
 import json
 
-from ..uncertainty import GaussianUncertainty, UniformUncertainty, ModelUncertainty, SensorNoise, \
-    Uncertainty
+from ..uncertainty import AbsoluteGaussianUncertainty, RelativeGaussianUncertainty, \
+    AbsoluteUniformUncertainty, RelativeUniformUncertainty, ModelUncertainty, \
+    SensorNoise, Uncertainty
 from .sensor_config import SensorConfig
 from .scada import AdvancedControlModule
 from .events import SystemEvent, SensorReadingEvent
@@ -57,9 +58,11 @@ class ScenarioConfig(Serializable):
         The default is an empty list.
     """
 
-    def __init__(self, f_inp_in: str, f_msx_in: str = None, general_params: str = None,
-                 sensor_config: SensorConfig = None, controls: list[AdvancedControlModule] = [],
-                 sensor_noise: SensorNoise = None, model_uncertainty=ModelUncertainty(),
+    def __init__(self, f_inp_in: str, f_msx_in: str = None, general_params: dict = None,
+                 sensor_config: SensorConfig = None,
+                 controls: list[AdvancedControlModule] = [],
+                 sensor_noise: SensorNoise = None,
+                 model_uncertainty: ModelUncertainty = ModelUncertainty(),
                  system_events: list[SystemEvent] = [],
                  sensor_reading_events: list[SensorReadingEvent] = [], **kwds):
         if not isinstance(f_inp_in, str):
@@ -243,6 +246,10 @@ class ScenarioConfig(Serializable):
                                            "sensor_reading_events": self.__sensor_reading_events}
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, ScenarioConfig):
+            raise TypeError("Can not compare 'ScenarioConfig' instance " +
+                            f"with '{type(other)}' instance")
+
         return self.__f_inp_in == other.f_inp_in and self.__f_msx_in == other.f_msx_in \
             and self.__general_params == other.general_params \
             and self.__sensor_config == other.sensor_config and self.__controls == other.controls \
@@ -334,10 +341,14 @@ class ScenarioConfig(Serializable):
                 uncertainty_type = uncertainty_desc["type"]
                 del uncertainty_desc["type"]
 
-                if uncertainty_type == "gaussian":
-                    return GaussianUncertainty(**uncertainty_desc)
-                elif uncertainty_type == "uniform":
-                    return UniformUncertainty(**uncertainty_desc)
+                if uncertainty_type == "absolute_gaussian":
+                    return AbsoluteGaussianUncertainty(**uncertainty_desc)
+                elif uncertainty_type == "relative_gaussian":
+                    return RelativeGaussianUncertainty(**uncertainty_desc)
+                elif uncertainty_type == "absolute_uniform":
+                    return AbsoluteUniformUncertainty(**uncertainty_desc)
+                elif uncertainty_type == "relative_uniform":
+                    return RelativeUniformUncertainty(**uncertainty_desc)
                 else:
                     raise ValueError(f"Unknown uncertainty '{uncertainty_type}'")
 

@@ -10,4 +10,5 @@ In-depth Tutorial
     tut.quality
     tut.control
     tut.events
+    tut.uncertainty
     tut.serialization
