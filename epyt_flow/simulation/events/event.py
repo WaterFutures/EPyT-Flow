@@ -75,4 +75,7 @@ class Event(ABC):
         return f"start_time: {self.__start_time} end_time: {self.__end_time}"
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, Event):
+            raise TypeError(f"Can not compare 'Event' instance with '{type(other)}' instance")
+
         return self.__start_time == other.start_time and self.__end_time == other.end_time

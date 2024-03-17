@@ -521,6 +521,10 @@ class SensorConfig(Serializable):
                                            "tank_level_sensors": self.__tank_level_sensors}
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, SensorConfig):
+            raise TypeError("Can not compare 'SensorConfig' instance " +
+                            f"with '{type(other)}' instance")
+
         return self.__nodes == other.nodes and self.__links == other.links \
             and self.__valves == other.valves and self.__pumps == other.pumps \
             and self.__tanks == other.tanks \

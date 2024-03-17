@@ -201,6 +201,10 @@ class ModelUncertainty(Serializable):
                                            "parameters_uncertainty": self.__parameters}
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, ModelUncertainty):
+            raise TypeError("Can not compare 'ModelUncertainty' instance " +
+                            f"with '{type(other)}' instance")
+
         return self.__pipe_length == other.pipe_length \
             and self.__pipe_roughness == other.pipe_roughness \
             and self.__pipe_diameter == other.pipe_diameter \

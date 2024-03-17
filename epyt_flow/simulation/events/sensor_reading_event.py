@@ -71,6 +71,10 @@ class SensorReadingEvent(Event):
         return {"sensor_id": self.__sensor_id, "sensor_type": self.__sensor_type}
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, SensorReadingEvent):
+            raise TypeError("Can not compare 'SensorReadingEvent' instance " +
+                            f"with '{type(other)}' instance")
+
         return super().__eq__(other) and self.__sensor_id == other.sensor_id \
             and self.__sensor_type == other.sensor_type
 

@@ -138,6 +138,9 @@ class Leakage(SystemEvent, Serializable):
                                            if self.link_id is None else None}
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, Leakage):
+            raise TypeError(f"Can not compare 'Leakage' instance with '{type(other)}' instance")
+
         return super().__eq__(other) and self.__link_id == other.link_id \
             and self.__diameter == other.diameter and self.__profile == other.profile \
             and self.__node_id == other.node_id

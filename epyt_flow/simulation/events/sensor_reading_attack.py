@@ -60,6 +60,10 @@ class SensorOverrideAttack(SensorReadingAttack, Serializable):
         return super().get_attributes() | {"new_sensor_values": self.__new_sensor_values}
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, SensorOverrideAttack):
+            raise TypeError("Can not compare 'SensorOverrideAttack' instance " +
+                            f"with '{type(other)}' instance")
+
         return super().__eq__(other) and self.__new_sensor_values == other.new_sensor_values
 
     def __str__(self) -> str:
@@ -155,6 +159,10 @@ class SensorReplayAttack(SensorReadingAttack, Serializable):
                                            self.__sensor_data_time_window_end}
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, SensorReplayAttack):
+            raise TypeError("Can not compare 'SensorReplayAttack' instance " +
+                            f"with '{type(other)}' instance")
+
         return super().__eq__(other) and self.__new_sensor_values == other.new_sensor_values
 
     def __str__(self) -> str:

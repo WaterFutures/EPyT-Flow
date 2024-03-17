@@ -402,6 +402,9 @@ class ScadaData(Serializable):
                                            "tanks_level_data_raw": self.__tanks_level_data_raw}
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, ScadaData):
+            raise TypeError(f"Can not compare 'ScadaData' instance to '{type(other)}' instance")
+
         try:
             return self.__sensor_config == other.sensor_config \
                 and self.__sensor_noise == other.sensor_noise \
