@@ -607,7 +607,7 @@ class ScenarioSimulator():
     def set_link_quality_sensors(self, sensor_locations: list[str]) -> None:
         """
         Sets the link quality sensors -- i.e. measuring the water quality
-         (e.g. age, chlorine concentration, etc.) at some links/pipes in the network.
+        (e.g. age, chlorine concentration, etc.) at some links/pipes in the network.
 
         Parameters
         ----------
@@ -757,8 +757,8 @@ class ScenarioSimulator():
 
         self.epanet_api.openHydraulicAnalysis()
         self.epanet_api.openQualityAnalysis()
-        self.epanet_api.initializeHydraulicAnalysis(self.epanet_api.ToolkitConstants.EN_SAVE)
-        self.epanet_api.initializeQualityAnalysis(self.epanet_api.ToolkitConstants.EN_SAVE)
+        self.epanet_api.initializeHydraulicAnalysis(ToolkitConstants.EN_SAVE)
+        self.epanet_api.initializeQualityAnalysis(ToolkitConstants.EN_SAVE)
 
         tmp_file = self.__find_temporary_file()
 
@@ -1049,7 +1049,7 @@ class ScenarioSimulator():
     def enable_waterage_analysis(self) -> None:
         """
         Sets water age analysis -- i.e. estimates the water age (in hours) at
-         all places in the network.
+        all places in the network.
         """
         self.__warn_if_quality_set()
         self.set_general_parameters(quality_model={"type": "age"})
@@ -1089,7 +1089,8 @@ class ScenarioSimulator():
         pattern : `numpy.ndarray`
             1d source pattern.
         source_type : `int`,
-            Types of the external water quality source -- must be of the following:
+            Types of the external water quality source -- must be of the following
+            EPANET toolkit constants:
 
                 - EN_CONCEN     = 0
                 - EN_MASS       = 1
@@ -1138,7 +1139,7 @@ class ScenarioSimulator():
         self.epanet_api.setNodeSourceQuality(node_idx, source_strength)
         self.epanet_api.setNodeSourcePatternIndex(node_idx, pattern_idx)
 
-    def enable_sourcetracing_analysis(self, trace_node_id: str):
+    def enable_sourcetracing_analysis(self, trace_node_id: str) -> None:
         """
         Set source tracing analysis -- i.e. tracks the percentage of flow from a given node
         reaching all other nodes over time.
