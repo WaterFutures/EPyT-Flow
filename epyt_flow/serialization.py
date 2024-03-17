@@ -40,6 +40,7 @@ INCIPIENT_LEAKAGE_ID                    = 22
 SCADA_DATA_ID                           = 23
 SENSOR_ATTACK_OVERRIDE_ID               = 24
 SENSOR_ATTACK_REPLAY_ID                 = 25
+NETWORK_TOPOLOGY_ID                     = 26
 
 
 def my_packb(data: Any) -> bytes:

@@ -12,7 +12,22 @@ if __name__ == "__main__":
     # Create scenario
     with ScenarioSimulator(scenario_config=network_config) as sim:
         # Get network topology
-        graph = sim.get_topology()
+        topo = sim.get_topology()
 
         # Show edges
-        print(graph.edges)
+        print(topo.edges)
+
+        # Show nodes
+        print(topo.nodes)
+
+        # Shortest path between node "2" and node "22"
+        print(topo.get_shortest_path("2", "22"))
+
+        # Adjacency matrix of the graph
+        print(topo.get_adj_matrix().todense())
+
+        # Show information associated with node "2"
+        print(topo.get_node_info("2"))
+
+        # Show information associated with link "10"
+        print(topo.get_link_info("10"))

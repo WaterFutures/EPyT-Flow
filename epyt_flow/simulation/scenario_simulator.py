@@ -21,6 +21,7 @@ from ..uncertainty import ModelUncertainty, SensorNoise
 from .events import SystemEvent, Leakage, ActuatorEvent, SensorFault, SensorReadingAttack, \
     SensorReadingEvent
 from .scada import ScadaData, AdvancedControlModule
+from ..topology import NetworkTopology
 
 
 class ScenarioSimulator():
@@ -324,34 +325,36 @@ class ScenarioSimulator():
 
         return n_time_steps * n_quantities * n_bytes_per_quantity * .000001
 
-    def get_topology(self) -> networkx.Graph:
+    def get_topology(self) -> NetworkTopology:
         """
         Gets the topology (incl. information such as eleveations, pipe diameters, etc.) of this WDN.
 
         Returns
         -------
-        `networkx.Graph`
+        `epyt_flow.topology.NetworkTopology`
             Topology of this WDN as a graph.
         """
         # Collect information about the topology of the water distribution network
-        nodes_id = self.epanet_api.getNodeIndex()
+        nodes_id = self.epanet_api.getNodeNameID()
         nodes_elevation = self.epanet_api.getNodeElevations()
         nodes_type = [self.epanet_api.TYPENODE[i] for i in self.epanet_api.getNodeTypeIndex()]
 
+        links_id = self.epanet_api.getLinkNameID()
         links_data = self.epanet_api.getNodesConnectingLinksID()
         links_diameter = self.epanet_api.getLinkDiameter()
         links_length = self.epanet_api.getLinkLength()
 
         # Build graph describing the topology
-        g = networkx.Graph(name=f"{self.f_inp_in}")
-
+        nodes = []
         for node, node_elevation, node_type in zip(nodes_id, nodes_elevation, nodes_type):
-            g.add_node(node, info={"elevation": node_elevation, "type": node_type})
+            nodes.append((node, {"elevation": node_elevation, "type": node_type}))
 
-        for link, diameter, length in zip(links_data, links_diameter, links_length):
-            g.add_edge(link[0], link[1], info={"diameter": diameter, "length": length})
+        links = []
+        for link_id, link, diameter, length in zip(links_id, links_data, links_diameter,
+                                                   links_length):
+            links.append((link_id, link, {"diameter": diameter, "length": length}))
 
-        return g
+        return NetworkTopology(f_inp=self.f_inp_in, nodes=nodes, links=links)
 
     def randomize_demands(self) -> None:
         """

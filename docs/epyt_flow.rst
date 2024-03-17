@@ -17,6 +17,14 @@ epyt_flow.serialization
    :show-inheritance:
 
 
+epyt_flow.topology
+------------------
+
+.. automodule:: epyt_flow.topology
+   :members:
+   :show-inheritance:
+
+
 epyt_flow.utils
 ---------------
 
