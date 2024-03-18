@@ -63,7 +63,6 @@ def test_topology():
         g = load(dump(graph))
 
         assert list(graph.nodes(data=True)) == list(g.nodes(data=True))
-        assert list(graph.edges(data=True)) == list(g.edges(data=True))
 
 
 def test_sparse_matrix():

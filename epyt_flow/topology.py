@@ -35,10 +35,12 @@ class NetworkTopology(nx.Graph, Serializable):
             node_type = node_info["type"]
             self.add_node(node_id, info={"elevation": node_elevation, "type": node_type})
 
-        for _, link, link_info in links:
+        for link_id, link, link_info in links:
             link_diameter = link_info["diameter"]
             link_length = link_info["length"]
-            self.add_edge(link[0], link[1], info={"diameter": link_diameter, "length": link_length})
+            self.add_edge(link[0], link[1], length=link_length,
+                          info={"id": link_id, "nodes": link, "diameter": link_diameter,
+                                "length": link_length})
 
     def get_all_nodes(self) -> list[str]:
         """
@@ -96,9 +98,9 @@ class NetworkTopology(nx.Graph, Serializable):
         `dict`
             Information associated with the given link/pipe.
         """
-        for link_id_, _, link_info in self.__links:
+        for link_id_, link_nodes, link_info in self.__links:
             if link_id_ == link_id:
-                return link_info
+                return {"nodes": link_nodes} | link_info
 
         raise ValueError(f"Unknown link '{link_id}'")
 
@@ -194,7 +196,8 @@ class NetworkTopology(nx.Graph, Serializable):
 
         return links
 
-    def get_shortest_path(self, start_node_id: str, end_node_id: str) -> list[str]:
+    def get_shortest_path(self, start_node_id: str, end_node_id: str,
+                          use_pipe_length_as_weight: bool = True) -> list[str]:
         """
         Computes the shortest path between two nodes in this graph.
 
@@ -204,17 +207,31 @@ class NetworkTopology(nx.Graph, Serializable):
             ID of start node.
         end_node_id : `str`
             ID of end node.
+        use_pipe_length_as_weight : `bool`, optional
+            If True, pipe lengths are used for the edge weights -- otherwise,
+            each edge weight is set to one.
+
+            The default is True.
         """
         if start_node_id not in self.get_all_nodes():
             raise ValueError(f"Unknown node '{start_node_id}'")
         if end_node_id not in self.get_all_nodes():
             raise ValueError(f"Unknown node '{end_node_id}'")
 
-        return nx.shortest_path(self, source=start_node_id, target=end_node_id)
+        weight = "length" if use_pipe_length_as_weight is True else None
+        return nx.shortest_path(self, source=start_node_id, target=end_node_id, weight=weight)
 
-    def get_all_pairs_shortest_path(self) -> dict:
+    def get_all_pairs_shortest_path(self, use_pipe_length_as_weight: bool = True) -> dict:
         """
         Computes the shortest path between all pairs of nodes in this graph.
+
+        Parameters
+        ----------
+        use_pipe_length_as_weight : `bool`, optional
+            If True, pipe lengths are used for the edge weights -- otherwise,
+            each edge weight is set to one.
+
+            The default is True.
 
         Returns
         -------
@@ -222,4 +239,52 @@ class NetworkTopology(nx.Graph, Serializable):
             Shortest paths between all pairs of nodes as nested dictionaries --
             first key is the start node, second key is the end node.
         """
-        return nx.shortest_path(self)
+        weight = "length" if use_pipe_length_as_weight is True else None
+        return nx.shortest_path(self, weight=weight)
+
+    def get_shortest_path_length(self, start_node_id: str, end_node_id: str,
+                                 use_pipe_length_as_weight: bool = True) -> list[str]:
+        """
+        Computes the shortest path length between two nodes in this graph.
+
+        Parameters
+        ----------
+        start_node_id : `str`
+            ID of start node.
+        end_node_id : `str`
+            ID of end node.
+        use_pipe_length_as_weight : `bool`, optional
+            If True, pipe lengths are used for the edge weights -- otherwise,
+            each edge weight is set to one.
+
+            The default is True.
+        """
+        if start_node_id not in self.get_all_nodes():
+            raise ValueError(f"Unknown node '{start_node_id}'")
+        if end_node_id not in self.get_all_nodes():
+            raise ValueError(f"Unknown node '{end_node_id}'")
+
+        weight = "length" if use_pipe_length_as_weight is True else None
+        return nx.shortest_path_length(self, source=start_node_id, target=end_node_id,
+                                       weight=weight)
+
+    def get_all_pairs_shortest_path_length(self, use_pipe_length_as_weight: bool = True) -> dict:
+        """
+        Computes the shortest path length between all pairs of nodes in this graph.
+
+        Parameters
+        ----------
+        use_pipe_length_as_weight : `bool`, optional
+            If True, pipe lengths are used for the edge weights -- otherwise,
+            each edge weight is set to one.
+
+            The default is True.
+
+        Returns
+        -------
+        `dict`
+            Shortest paths between all pairs of nodes as nested dictionaries --
+            first key is the start node, second key is the end node.
+        """
+        weight = "length" if use_pipe_length_as_weight is True else None
+        return dict(nx.shortest_path_length(self, weight=weight))
