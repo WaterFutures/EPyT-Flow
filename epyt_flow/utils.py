@@ -109,6 +109,8 @@ def download_if_necessary(download_path: str, url: str, verbose: bool = True) ->
     """
     Downloads a file from a given URL if it does not already exist in a given path.
 
+    Note that if the path (folder) does not already exist, it will be created.
+
     Parameters
     ----------
     download_path : `str`
@@ -121,6 +123,9 @@ def download_if_necessary(download_path: str, url: str, verbose: bool = True) ->
 
         The default is True.
     """
+    folder_path = str(Path(download_path).parent.absolute())
+    create_path_if_not_exist(folder_path)
+
     if not os.path.isfile(download_path):
         response = requests.get(url, stream=verbose, allow_redirects=True, timeout=1000)
 
