@@ -15,7 +15,7 @@ class SensorNoise(Serializable):
 
     Parameters
     ----------
-    uncertainty : `Uncerainty`
+    uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
         Sensor uncertainty.
     """
     def __init__(self, uncertainty: Uncertainty, **kwds):
@@ -43,6 +43,10 @@ class SensorNoise(Serializable):
         return super().get_attributes() | {"uncertainty": self.__uncertainty}
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, SensorNoise):
+            raise TypeError("Can not compare 'SensorNoise' instance " +
+                            f"with '{type(other)}' instance")
+
         return self.__uncertainty == other.uncertainty
 
     def __str__(self) -> str:

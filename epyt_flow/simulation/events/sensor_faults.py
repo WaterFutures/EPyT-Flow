@@ -13,11 +13,10 @@ from ...serialization import serializable, Serializable, SENSOR_FAULT_CONSTANT_I
 class SensorFault(SensorReadingEvent):
     """
     Base class for a sensor fault
-
-    Acknowledgement: This Python implementation is based on
-    https://github.com/eldemet/sensorfaultmodels/blob/main/sensorfaultmodels.m
-    and https://github.com/Mariosmsk/sensorfaultmodels/blob/main/sensorfaultmodels.py
     """
+    # Acknowledgement: This Python implementation is based on
+    # https://github.com/eldemet/sensorfaultmodels/blob/main/sensorfaultmodels.m
+    # and https://github.com/Mariosmsk/sensorfaultmodels/blob/main/sensorfaultmodels.py
 
     def compute_multiplier(self, cur_time: int) -> float:
         """

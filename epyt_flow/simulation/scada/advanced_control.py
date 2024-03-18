@@ -94,7 +94,7 @@ class AdvancedControlModule(ABC):
                                       qual_value: float) -> None:
         """
         Sets the quality source at a particular node to a specific value -- e.g.
-         setting the chlorine concentration injection to a specified value.
+        setting the chlorine concentration injection to a specified value.
 
         Parameters
         ----------
