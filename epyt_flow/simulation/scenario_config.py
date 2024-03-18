@@ -266,6 +266,24 @@ class ScenarioConfig(Serializable):
             f"sensor_reading_events: {','.join(map(str, self.sensor_reading_events))}"
 
     @staticmethod
+    def load_from_json_file(f_json_in: str) -> Any:
+        """
+        Loads a scenario configuration from a given JSON file.
+
+        Parameters
+        ----------
+        f_json_in : `str`
+            Path to JSON configuration file.
+
+        Returns
+        -------
+        :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
+            Loaded scenario configuration.
+        """
+        with open(f_json_in, "r", encoding="utf-8") as f:
+            return ScenarioConfig.load_from_json(f.read())
+
+    @staticmethod
     def load_from_json(config_data: str) -> Any:
         """
         Loads a scenario configuration from a given JSON string.
