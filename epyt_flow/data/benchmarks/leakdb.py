@@ -37,17 +37,17 @@ from ...simulation.scada import ScadaData
 from ...uncertainty import ModelUncertainty, UniformUncertainty
 
 
-def __leak_time_to_idx(t: int, round_up: bool = False):
+def __leak_time_to_idx(t: int, round_up: bool = False, hydraulic_time_step: int = 1800):
     if round_up is False:
-        return math.floor(t / 1800)
+        return math.floor(t / hydraulic_time_step)
     else:
-        return math.ceil(t / 1800)
+        return math.ceil(t / hydraulic_time_step)
 
 
-def __get_leak_time_windows(s_id: int, leaks_info: dict) -> list[tuple[int, int]]:
+def __get_leak_time_windows(s_id: int, leaks_info: dict,
+                            hydraulic_time_step: int = 1800) -> list[tuple[int, int]]:
     time_windows = []
     if str(s_id) in leaks_info:
-        hydraulic_time_step = 1800
         for leak in leaks_info[str(s_id)]:
             t_idx_start = __leak_time_to_idx(leak["leak_start_time"] * hydraulic_time_step)
             t_idx_end = __leak_time_to_idx(leak["leak_end_time"] * hydraulic_time_step,
@@ -59,13 +59,13 @@ def __get_leak_time_windows(s_id: int, leaks_info: dict) -> list[tuple[int, int]
 
 
 def __create_labels(s_id: int, n_time_steps: int, nodes: list[str],
-                    leaks_info: dict) -> tuple[np.ndarray, scipy.sparse.bsr_array]:
+                    leaks_info: dict,
+                    hydraulic_time_step: int = 1800) -> tuple[np.ndarray, scipy.sparse.bsr_array]:
     y = np.zeros(n_time_steps)
 
     leak_locations_row = []
     leak_locations_col = []
     if str(s_id) in leaks_info:
-        hydraulic_time_step = 1800
         for leak in leaks_info[str(s_id)]:
             t_idx_start = __leak_time_to_idx(leak["leak_start_time"] * hydraulic_time_step)
             t_idx_end = __leak_time_to_idx(leak["leak_end_time"] * hydraulic_time_step,
@@ -407,9 +407,9 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
     network_config = load_network(download_dir)
 
     # Set simulation duration
-    hydraulic_time_step = 1800
+    hydraulic_time_step = to_seconds(minutes=30)    # 30min time steps
     general_params = {"simulation_duration": to_seconds(days=365),   # One year
-                      "hydraulic_time_step": hydraulic_time_step}  # 30min time steps
+                      "hydraulic_time_step": hydraulic_time_step}
 
     # Add demand patterns
     def gen_dem(download_dir, use_net1):
