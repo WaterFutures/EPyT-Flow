@@ -5,8 +5,7 @@ instance from text data.
 import os
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import ScenarioConfig, ScenarioSimulator
-
-from .utils import get_temp_folder
+from epyt_flow.utils import get_temp_folder
 
 
 def test_configparser():
@@ -21,7 +20,7 @@ def test_configparser():
             },
             "uncertainties": {
                 "pipe_length": {"type": "absolute_gaussian", "mean": 0, "scale": 1},
-                "pipe_roughness": {"type": "absolute_uniform", "low": 0, "hight": 1},
+                "pipe_roughness": {"type": "absolute_uniform", "low": 0, "high": 1},
                 "sensor_noise": {"type": "relative_gaussian", "scale": 0.01}
             },
             "sensors": {
@@ -40,8 +39,8 @@ def test_configparser():
             ]
         }"""
     # Use OS dependend path
-    config_as_json = config_as_json.replace("/tmp/Hanoi.inp", os.path.join(get_temp_folder(),
-                                                                           "Hanoi.inp"))
+    config_as_json = config_as_json.replace("/tmp/Hanoi.inp", f"{os.path.join(get_temp_folder(), 'Hanoi.inp')}").\
+        replace("\\", "\\\\")
 
     # Make sure Hanoi network is available
     load_hanoi(download_dir=get_temp_folder())
