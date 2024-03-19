@@ -12,8 +12,13 @@ This module provides functions for loading the original BattLeDIM data set
 :func:`~epyt_flow.data.benchmarks.battledim.load_data`, as well as methods for loading the scenarios
 :func:`~epyt_flow.data.benchmarks.battledim.load_scenario` and pre-generated SCADA data
 :func:`~epyt_flow.data.benchmarks.battledim.load_scada_data`.
+The official scoring/evaluation is implemented in
+:func:`~epyt_flow.data.benchmarks.battledim.compute_evaluation_score` -- i.e. those results can be
+directly compared to the official leaderboard results.
+Besides this, the user can choose to evaluate predictions using any other metric from
+:mod:`~epyt_flow.metrics`.
 """
-from typing import Any
+from typing import Any, Union
 import os
 import math
 from datetime import datetime
@@ -28,6 +33,7 @@ from .battledim_data import START_TIME_TEST, START_TIME_TRAIN, LEAKS_CONFIG_TEST
 from ..networks import load_ltown
 from ...simulation.events import AbruptLeakage, IncipientLeakage, Leakage
 from ...simulation import ScenarioConfig
+from ...topology import NetworkTopology
 from ...simulation.scada import ScadaData
 from ...utils import get_temp_folder, to_seconds, create_path_if_not_exist, download_if_necessary
 
@@ -94,8 +100,148 @@ def __create_labels(n_time_steps: int, return_test_scenario: bool,
     return y, y_leak_locations
 
 
+def compute_evaluation_score(y_leak_locations_pred: list[tuple[str, int]],
+                             test_scenario: bool) -> dict:
+    """
+    Evaluates the predictions (i.e. start time and location of leakages) as it was done in the
+    BattLeDIM competition -- i.e. the output of this functions can be directly compared
+    to the official leaderboard results.
+
+    Parameters
+    ----------
+    y_leak_locations_pred : `list[tuple[str, int]]`
+        Predictions of location (link/pipe ID) and start time
+        (in seconds since simulation start) of leakages.
+    test_scenario : `bool`
+        True if the given predictions are made for the test scenario, False otherwise.
+
+    Returns
+    -------
+    `dict`
+        Dictionary containing the true positive rate, true positives, false positives,
+        false negatives, and total monetary (Euro) savings (only available if `test_scenario`
+        is True).
+    """
+    # Original MATLAB implementation: https://github.com/KIOS-Research/BattLeDIM/blob/master/Scoring%20Algorithm/Scoring_Algorithm.m
+    # Scoring parameters
+    dist_max = 300      # Max pipe distance for leakage detection (meters)
+    cost_water = .8     # Cost of water per m3 (Euro)
+    cost_crew = 500     # Max repair crew cost per assignment (Euro)
+
+    hydraulic_time_step = to_seconds(minutes=5)
+
+    # Get WDN topology and find minimum topological distance (using the pipe lengths)
+    # between all nodes
+    f_topology_in = os.path.join(get_temp_folder(), "BattLeDIM", "ltown.epytflow_topology")
+    url_topology = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/BattLeDIM/" +\
+        "ltown.epytflow_topology"
+
+    download_if_necessary(f_topology_in, url_topology)
+    topology = NetworkTopology.load_from_file(f_topology_in)
+
+    all_pairs_shortest_path_length = topology.get_all_pairs_shortest_path_length()
+
+    # Load ground truth
+    sim_start_time = START_TIME_TEST if test_scenario is True else START_TIME_TRAIN
+    leaks_config = LEAKS_CONFIG_TEST if test_scenario is True else LEAKS_CONFIG_TRAIN
+    leakages = __parse_leak_config(sim_start_time, leaks_config)
+    n_leakages = len(leakages)
+
+    leak_demands = {}
+    if test_scenario is True:
+        # Download leak demands
+        for leak in leakages:
+            f_in = f"Leak_{leak.link_id}.xlsx"
+            url = "https://raw.githubusercontent.com/KIOS-Research/BattLeDIM/master/" + \
+                f"Scoring%20Algorithm/competition_leakages/{f_in}"
+
+            f_local_in = os.path.join(get_temp_folder(), "BattLeDIM", f_in)
+            download_if_necessary(f_local_in, url)
+
+            df_leak_demand = pd.read_excel(f_local_in, sheet_name="Demand (m3_h)")
+            leak_demand = df_leak_demand[leak.link_id].to_numpy()
+            leak_demands[leak.link_id] = leak_demand
+
+    # Evaluate given predictions/alarms
+    total_savings = 0
+    true_positives = 0
+    false_positives = 0
+    detected_leaks = []
+
+    leak_data = []
+    for leak in leakages:
+        leak_data.append((leak.link_id, leak.start_time, leak.end_time))
+
+    def __find_closest_leaky_pipe(link_id) -> tuple[str, float, int]:
+        closest_leaky_pipe_id = None
+        closest_dist = float("inf")
+        closest_start_time = None
+        closest_end_time = None
+
+        node_a, node_b = topology.get_link_info(link_id)["nodes"]
+
+        for leak_pipe_id, start_time_leak, end_time_leak in leak_data:
+            link_info = topology.get_link_info(leak_pipe_id)
+            end_node_a, end_node_b = link_info["nodes"]
+            link_length = link_info["length"]
+
+            dists = []
+            dists.append(all_pairs_shortest_path_length[node_a][end_node_a] + .5 * link_length)
+            dists.append(all_pairs_shortest_path_length[node_a][end_node_b] + .5 * link_length)
+            dists.append(all_pairs_shortest_path_length[node_b][end_node_a] + .5 * link_length)
+            dists.append(all_pairs_shortest_path_length[node_b][end_node_b] + .5 * link_length)
+            if min(dists) < closest_dist:
+                closest_dist = min(dists)
+                closest_leaky_pipe_id = leak_pipe_id
+                closest_start_time = start_time_leak
+                closest_end_time = end_time_leak
+
+        return closest_leaky_pipe_id, closest_dist, closest_start_time, closest_end_time
+
+    for pipe_id, start_time in y_leak_locations_pred:
+        # Check if leakages was found and if so, how far away it is from the ground truth
+        leaky_pipe_dist = None
+        leaky_pipe = None
+        if any(pipe_id == leaky_pipe_id and start_time >= start_time_leak and
+               start_time <= end_time_leak and
+               pipe_id not in detected_leaks
+               for leaky_pipe_id, start_time_leak, end_time_leak in leak_data):
+            leaky_pipe_dist = 0
+            leaky_pipe = pipe_id
+        else:
+            closest_leaky_pipe_id, dist, start_time_leak, end_time_leak = \
+                __find_closest_leaky_pipe(pipe_id)
+            if start_time >= start_time_leak and start_time <= end_time_leak:
+                leaky_pipe_dist = dist
+                leaky_pipe = closest_leaky_pipe_id
+
+        # Compute score of current alarm
+        if leaky_pipe is not None:
+            detected_leaks.append(leaky_pipe)
+            true_positives += 1
+
+            water_saved = 0
+            if leaky_pipe in leak_demands:
+                leak_demand = leak_demands[leaky_pipe]
+                start_time_idx = math.ceil(start_time / hydraulic_time_step)
+                water_saved = np.sum(leak_demand[start_time_idx:])
+            total_savings += water_saved * cost_water - (leaky_pipe_dist / dist_max) * cost_crew
+        else:
+            false_positives += 1
+            total_savings += -1. * cost_crew
+
+    # Compute final scores
+    false_negatives = n_leakages - true_positives
+    true_positive_rate = true_positives / (true_positives + false_negatives)
+
+    return {"true_positive_rate": true_positive_rate, "true_positives": true_positives,
+            "false_positives": false_positives, "false_negatives": false_negatives,
+            "total_savings": total_savings if test_scenario is True else None}
+
+
 def load_data(return_test_scenario: bool, download_dir: str = None, return_X_y: bool = False,
-              return_features_desc: bool = False, return_leak_locations: bool = False) -> Any:
+              return_features_desc: bool = False, return_leak_locations: bool = False
+              ) -> Union[pd.DataFrame, Any]:
     """
     Laods the original BattLeDIM benchmark data set.
     Note that the data set exists in two different version --
@@ -190,7 +336,8 @@ def load_data(return_test_scenario: bool, download_dir: str = None, return_X_y: 
 
 
 def load_scada_data(return_test_scenario: bool, download_dir: str = None,
-                    return_X_y: bool = False, return_leak_locations: bool = False) -> list[Any]:
+                    return_X_y: bool = False, return_leak_locations: bool = False
+                    ) -> list[Union[ScadaData, Any]]:
     """
     Loads the SCADA data of the simulated BattLeDIM benchmark scenario -- note that due to
     randomness, these differ from the original data set which can be loaded by calling
@@ -292,8 +439,8 @@ def load_scenario(return_test_scenario: bool, download_dir: str = None) -> Scena
         ltown_config = load_ltown(use_realistic_demands=True, include_default_sensor_placement=True)
 
     # Set simulation duration
-    general_params = {"simulation_duration": to_seconds(days=365),   # One year
-                      "hydraulic_time_step": 300}   # 5min time steps
+    general_params = {"simulation_duration": to_seconds(days=365),    # One year
+                      "hydraulic_time_step": to_seconds(minutes=5)}   # 5min time steps
 
     # Add events
     start_time = START_TIME_TEST if return_test_scenario is True else START_TIME_TRAIN

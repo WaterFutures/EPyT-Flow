@@ -1,5 +1,6 @@
 from .battledim import load_scenario as load_battledim_scenario, \
-    load_scada_data as load_battledim_scada_data, load_data as load_battledim_data
+    load_scada_data as load_battledim_scada_data, load_data as load_battledim_data, \
+    compute_evaluation_score as compute_battledim_evaluation_score
 from .leakdb import load_scenarios as load_leakdb_scenarios, \
     load_scada_data as load_leakdb_scada_data, load_data as load_leakdb_data, \
     compute_evaluation_score as compute_leakdb_evaluation_score
