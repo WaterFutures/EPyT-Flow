@@ -72,6 +72,45 @@ In the latter case, the result is provided as a generator.
 
 More details on :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` are given :ref:`here <tut.scada>`.
 
+
+Network Topology
+++++++++++++++++
+
+The topology (a graph) of the WDN is represented by a :class:`~epyt_flow.topology.NetworkTopology`
+instance and can be obtained by calling
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.get_topology` of a
+:class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
+
+The topology :class:`~epyt_flow.topology.NetworkTopology` not only contains the WDN as a graph
+but also includes node and link/pipe attributes such as elevation, diameter, length, etc.
+Furthermore, :class:`~epyt_flow.topology.NetworkTopology` also comes with some helper functions
+such as those for computing the adjacency matrix
+(:func:`~epyt_flow.topology.NetworkTopology.get_adj_matrix`) or the shortest path between two nodes
+(:func:`~epyt_flow.topology.NetworkTopology.get_shortest_path`).
+
+Example of working with :class:`~epyt_flow.topology.NetworkTopology`:
+
+.. code-block:: python
+
+    # Create scenario based in Net1
+    with ScenarioSimulator(scenario_config=load_net1()) as sim:
+        # Get network topology
+        topo = sim.get_topology()
+
+        # Show all edges
+        print(topo.edges)
+
+        # Show all nodes
+        print(topo.nodes)
+
+        # Shortest path between node "2" and node "22"
+        print(topo.get_shortest_path("2", "22"))
+
+        # Adjacency matrix of the graph
+        # A sparse matrix is returned, which we convert it to a dense matrix
+        print(topo.get_adj_matrix().todense())
+
+
 Scenario Configurations
 +++++++++++++++++++++++
 
