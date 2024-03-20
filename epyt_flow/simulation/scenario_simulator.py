@@ -10,7 +10,6 @@ import math
 import numpy as np
 from epyt import epanet
 from epyt.epanet import ToolkitConstants
-import networkx
 from tqdm import tqdm
 
 from .scenario_config import ScenarioConfig
@@ -258,7 +257,6 @@ class ScenarioSimulator():
         # Sort files by time to find the temporary file created by EPANET
         files = list(filter(lambda f: os.path.isfile(f) and "." not in f, os.listdir()))
         files.sort(key=os.path.getmtime)
-        files = [self.f_inp_in]
 
         return files[::-1][0]
 
@@ -687,7 +685,8 @@ class ScenarioSimulator():
             Simulation results as SCADA data (i.e. sensor readings).
         """
         # Step by step simulation is required in some cases
-        if len(self.__controls) != 0 or len(self.__system_events) != 0 or hyd_export is not None:
+        if len(self.__controls) != 0 or len(self.__system_events) != 0 or hyd_export is not None or \
+                len(self.sensor_config.tank_level_sensors) != 0:
             result = None
 
             for scada_data in self.run_simulation_as_generator(hyd_export=hyd_export,
