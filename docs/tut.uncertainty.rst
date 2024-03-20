@@ -8,9 +8,9 @@ Because WDNs are subject to many different types of uncertainties, EPyT-Flow com
 of pre-defined and implemented uncertainties that allows the user to introduce uncertainties and
 noise in the scenario generation.
 
-Most types of uncertainty exist in two versions: absolute and relative.
-While absolute uncertainty usually refers to the addition of noise that follows some distribution,
-relative uncertainty usually refers to some kind of multiplication.
+Most types of uncertainty exist in two versions: *absolute* and *relative*.
+While absolute uncertainties usually refer to the addition of noise that follows some distribution,
+relative uncertainties usually refer to some kind of multiplication.
 A complete list of pre-defined and implemented uncertainties are given in the following table:
 
 +------------------------------------------------------------------------------------+----------------------------------------------------------------------+
@@ -79,10 +79,11 @@ corresponds to a uniform deviation of up to 10%:
 Sensor Uncertainty
 ++++++++++++++++++
 
-Sensor uncertainty (also refered to as sensor noise) referes to uncertainty that affects **all**
+Sensor uncertainty (also refered to as sensor noise) referes to uncertainty that affects **ALL**
 sensor readings -- i.e. all sensor readings are perturbed by the given uncertainty.
-In EPyT-Flow, sensor uncertainties have to be :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
-instances wrapped inside a :class:`~epyt_flow.uncertainty.sensor_noise.SensorNoise` instance.
+In EPyT-Flow, sensor uncertainties have to be
+:class:`~epyt_flow.uncertainty.uncertainties.Uncertainty` instances wrapped inside a
+:class:`~epyt_flow.uncertainty.sensor_noise.SensorNoise` instance.
 
 Sensor uncertainty/noise can be added BEFORE the simulation is run by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_sensor_noise` of a

@@ -11,13 +11,15 @@ Topology
 ++++++++
 
 The structure/topology of a WDN is modeled as a graph, where edges model links/pipes 
-and nodes model junctions.
+and nodes model junctions -- see the following Figure for an illustration.
+
+.. image:: _static/net1_plot.png
 
 Edges
 -----
 
-Edges (e.g. links/pipes) have certain parameters such as length, diameter, roughness coefficient, etc.
-There exist different types of links:
+Edges (e.g. links/pipes) have certain parameters such as length, diameter,
+roughness coefficient, etc. There exist different types of links:
 
 +-----------+--------------------------------------------------------------------------------------------------+
 | Type      | Description                                                                                      |
@@ -33,11 +35,11 @@ There exist different types of links:
 Nodes
 -----
 
-The nodes in the graph do not only model junctions but also consumers -- i.e. locations where water is taken (i.e. consumed) from the WDN. 
-Consequently, different nodes might have different elevations which make the use of pumps necessary.
-Water consumption if modeled by demand patterns that describe how much water is consumed over time -- 
-each node in the graph can have its own demand pattern.
-Furthermore, there exit different types of nodes:
+The nodes in the graph do not only model junctions but also consumers -- i.e. locations where
+water is taken (i.e. consumed) from the WDN.  Consequently, different nodes might have different
+elevations which make the use of pumps necessary. Water consumption is modeled by demand patterns
+that describe how much water is consumed over time -- each node in the graph can have its
+own demand pattern. Furthermore, there exit different types of nodes:
 
 +-------------+-------------------------------------------------------------------------------------------+
 | Type        | Description                                                                               |
@@ -55,13 +57,16 @@ Simulation
 
 There are two types of dynamics that are relevant in a WDN: 1) hydraulics and 2) quality.
 
-Hydraulics refer to quantities such as flow rates, pressures, etc., while quality refers to chemical concentrations.
-Hydraulics depend not only on the topology of the WDN but also on demands (i.e. water consumption) as well as pump and valve operations.
-Building on the hydraulics, quality dynamics depend not only on the hydraulics (in particular flow rates) 
-but also on chemical reactions (e.g. pipe wall reactions) and injections (e.g. chlorine injection or contamination events).
+Hydraulics refer to quantities such as flow rates, pressures, etc., while quality refers to
+chemical concentrations. Hydraulics depend not only on the topology of the WDN but also on demands
+(i.e. water consumption) as well as pump and valve operations. Building on the hydraulics,
+quality dynamics depend not only on the hydraulics (in particular flow rates)  but also on
+chemical reactions (e.g. pipe wall reactions) and injections
+(e.g. chlorine injection or contamination events).
 
-Also, there exist two different types of demand models that can be used for simulating the hydraulics:
-Demand driven analysis (DDA) and a pressure driven analysis (PDA).
+Also, there exist two different types of demand models that can be used for simulating
+the hydraulics: Demand driven analysis (DDA) and a pressure driven analysis (PDA).
 
-EPyT-Flow is based on EPANET and therefore uses a steady-state simulation of the hydraulics, on which the quality dynamics are computed.
-Details can be found in the `EPANET documentation <https://epanet22.readthedocs.io/en/latest/12_analysis_algorithms.html>`_.
+EPyT-Flow is based on EPANET and therefore uses a steady-state simulation of the hydraulics,
+on which the quality dynamics are computed. Details can be found in the
+`EPANET documentation <https://epanet22.readthedocs.io/en/latest/12_analysis_algorithms.html>`_.

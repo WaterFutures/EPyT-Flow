@@ -4,7 +4,9 @@
 Quality
 *******
 
-EPyT-Flow supports basic and advanced quality analysis.
+EPyT-Flow supports basic and advanced quality analysis -- the former is realized
+through `EPANET <https://github.com/OpenWaterAnalytics/epanet>`_ and the latter one
+through the usage of `EPANET-MSX <https://github.com/OpenWaterAnalytics/epanet-msx>`_.
 
 Basic Quality Analysis
 ++++++++++++++++++++++
@@ -91,7 +93,8 @@ Different types of source patterns are supported:
 Furthermore, reaction options such as bulk and wall coefficients might be set as well by 
 either setting the options in the .inp file or by calling the corresponding EPANET functions.
 
-Example for running a chemical analysis where the concentration at the reservoir is fixed over time.
+Example for running a chemical analysis where the concentration at the reservoir
+is fixed over time.
 
 .. code-block:: python
 

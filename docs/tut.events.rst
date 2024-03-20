@@ -4,6 +4,15 @@
 Events
 ******
 
+EPyT-Flow comes with a comprehensive set of pre-defined WDN events such as
+:ref:`leakages <leakages>`, :ref:`actuator events <actuators>`,
+:ref:`sensor faults <sensors_faults>`, and :ref:`sensor reading attacks <sensors_attacks>`.
+It is also possible to define and implement :ref:`custom events <custom_events>` while
+keeping the effort to do so to a minimum.
+
+
+.. _leakages:
+
 Leakages
 ++++++++
 
@@ -25,7 +34,8 @@ at the peak time where it stays until the leakage is over.
 
 .. note::
     Which leak diameter refers to small or large leak depends mainly on the link/pipe diameter, 
-    which might be different for different links/pipes and is also likely to differ between different water distribution networks.
+    which might be different for different links/pipes and is also likely to differ between
+    different water distribution networks.
 
 Example for adding an abrupt and an incipient leakage:
 
@@ -51,6 +61,8 @@ Example for adding an abrupt and an incipient leakage:
         scada_data = sim.run_simulation()
 
 
+.. _actuators:
+
 Actuator Events
 +++++++++++++++
 
@@ -71,6 +83,8 @@ Such actuator events can be added to the scenario simulation by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_actuator_event`  
 of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
 
+
+.. _sensors_faults:
 
 Sensor Faults
 +++++++++++++
@@ -140,6 +154,8 @@ of a given :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
         
         # ...
 
+
+.. _sensors_attacks:
 
 Sensor Reading Attacks
 ++++++++++++++++++++++
@@ -216,6 +232,8 @@ Example of a sensor override attack on a flow sensor -- the flow readings are se
         print(flow_readings)
 
 
+.. _custom_events:
+
 Custom Events
 +++++++++++++
 
@@ -237,7 +255,7 @@ Optionally, the :func:`~epyt_flow.simulation.events.system_event.SystemEvent.ini
 be override for running some initialization logic -- make sure to call the parent's 
 :func:`~epyt_flow.simulation.events.system_event.SystemEvent.init` first.
 Also, if some "clean-up" logic is needed (i.e. some code that must run after the end of the event),
-the method :func:`~epyt_flow.simulation.events.system_event.SystemEvent.init` can be overriden --
+the method :func:`~epyt_flow.simulation.events.system_event.SystemEvent.exit` can be overriden --
 this method is called ONCE after the end of the event.
 
 Example of a system event that activates a pump:

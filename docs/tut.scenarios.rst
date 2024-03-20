@@ -4,11 +4,10 @@
 Scenarios
 *********
 
-In EPyT-Flow, a scenario refers to a water distribution network that is to be simulated -- 
+In EPyT-Flow, a *scenario* refers to a water distribution network (WDN) that is to be simulated -- 
 i.e. performing a hydraulic and quality analysis.
 Besides the network itself, a scenario usually contains a sensor configuration and 
-might also contain some events such as leakages, sensor faults, contamination events, 
-and actuator events.
+might also contain some events such as leakages, sensor faults, actuator events, etc.
 Furthermore, a scenario might also include some control modules.
 
 Basics
@@ -20,16 +19,19 @@ describing the scenario, and the class
 :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
 for simulating the scenario.
 
-For creating new instance of :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
-either an .inp file (together with an optional .msx file) are needed, or an instance of 
-:class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` describing and precisely specifying the scenario to be simulated.
+For creating new instance of :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`,
+either an `.inp file <http://wateranalytics.org/EPANET/_inp_file.html>`_
+(together with an optional
+`.msx file <https://raw.githubusercontent.com/USEPA/EPANETMSX/master/Doc/EPANETMSX.pdf>`_)
+is needed, or an instance of  :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
+describing and precisely specifying the scenario to be simulated.
 
 .. note::
     When using the :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` class, 
-    it is important to close it so that EPANET is unloaded correctly.
+    it is important to close it afterwards so that EPANET is unloaded correctly.
 
 Closing a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` 
-instance can done in automatically by using a ``with`` statement:
+instance can done automatically by using a ``with`` statement:
 
 .. code-block:: python
 
@@ -70,14 +72,15 @@ In the latter case, the result is provided as a generator.
         # Run simulation
         scada_data = sim.run_simulation()
 
-More details on :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` are given :ref:`here <tut.scada>`.
+More details on :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` are given
+:ref:`here <tut.scada>`.
 
 
 Network Topology
 ++++++++++++++++
 
-The topology (a graph) of the WDN is represented by a :class:`~epyt_flow.topology.NetworkTopology`
-instance and can be obtained by calling
+The topology (i.e. a graph) of the WDN is represented by a
+:class:`~epyt_flow.topology.NetworkTopology` instance and can be obtained by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.get_topology` of a
 :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
 
@@ -176,12 +179,15 @@ and uncertanties with respect to pipe length and roughtness, as well as sensor n
         ]
     }
 
-Note that the individual entries in the JSON file correspond to the classes at implemented in EPyT-Flow.
+Note that the individual entries in the JSON file correspond to the classes as implemented
+in EPyT-Flow.
 
-At every time, a complete :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` can be obtained by calling 
+At every time, a complete :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` can be
+obtained by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.get_scenario_config`.
-This scenario configuration could be than, for instance, be stored in a file so that it can be reloaded in the future 
-without having to make all the manual specifications again -- see :ref:`Serialization <tut.serialization>` for details.
+This scenario configuration could be than, for instance, be stored in a file so that it can be
+reloaded in the future  without having to make all the manual specifications again -- see
+:ref:`Serialization <tut.serialization>` for details.
 
 Example of obtaining and storing the current scenario configuration:
 
@@ -209,10 +215,12 @@ Predefined networks
 -------------------
 
 EPyT-Flow comes with set of popular benchmark water distribution networks already included.
-These networks are, if necessary, downloaded and wrapped inside a :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` 
-instance, so that they can directly be passed to :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
+These networks are, if necessary, downloaded and wrapped inside a
+:class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` instance, so that they can be
+directly passed to :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
 
-Also note that in some cases (i.e. Hanoi and L-TOWN) a predefined sensor placement can be included as well.
+Also note that in some cases (i.e. Hanoi and L-TOWN) a predefined sensor placement
+can be included as well.
 
 +------------+-------------------------------------------------+
 | Network    | Function for loading                            |
@@ -269,15 +277,15 @@ Benchmarks scenarios
 EPyT-Flow comes with a set of benchmarks scenarios. Usually, those are pre-defined scenarios for 
 different tasks such as leakage detection and localization.
 
-+------------+----------------------------------------------+
-| Benchmark  | Module                                       |
-+============+==============================================+
-| LeakDB     | :mod:`~epyt_flow.data.benchmarks.leakdb`     |
-+------------+----------------------------------------------+
-| BattLeDIM  | :mod:`~epyt_flow.data.benchmarks.battledim`  |
-+------------+----------------------------------------------+
-| BATADAL    | :mod:`~epyt_flow.data.benchmarks.batadal`    |
-+------------+----------------------------------------------+
++----------------+----------------------------------------------+
+| Benchmark      | Module                                       |
++================+==============================================+
+| LeakDB [1]_    | :mod:`~epyt_flow.data.benchmarks.leakdb`     |
++----------------+----------------------------------------------+
+| BattLeDIM [2]_ | :mod:`~epyt_flow.data.benchmarks.battledim`  |
++----------------+----------------------------------------------+
+| BATADAL [3]_   | :mod:`~epyt_flow.data.benchmarks.batadal`    |
++----------------+----------------------------------------------+
 
 
 Benchmark data sets
@@ -286,14 +294,23 @@ Benchmark data sets
 In addition to benchmark scenarios (see previous section), EPyT-Flow also includes
 several (WDN related) benchmark data sets from the literature:
 
-+------------------------------+---------------------------------------------------------------------------------------------+
-| Benchmark                    | Function for loading                                                                        |
-+==============================+=============================================================================================+
-| GECCO Water Quality 2017     | :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2017_water_quality_data`    |
-+------------------------------+---------------------------------------------------------------------------------------------+
-| GECCO Water Quality 2018     | :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2018_water_quality_data`    |
-+------------------------------+---------------------------------------------------------------------------------------------+
-| GECCO Water Quality 2019     | :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2019_water_quality_data`    |
-+------------------------------+---------------------------------------------------------------------------------------------+
-| Water Usage                  | :func:`~epyt_flow.data.benchmarks.water_usage.load_water_usage`                             |
-+------------------------------+---------------------------------------------------------------------------------------------+
++--------------------------------+---------------------------------------------------------------------------------------------+
+| Benchmark                      | Function for loading                                                                        |
++================================+=============================================================================================+
+| GECCO Water Quality 2017 [4]_  | :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2017_water_quality_data`    |
++--------------------------------+---------------------------------------------------------------------------------------------+
+| GECCO Water Quality 2018 [5]_  | :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2018_water_quality_data`    |
++--------------------------------+---------------------------------------------------------------------------------------------+
+| GECCO Water Quality 2019 [6]_  | :func:`~epyt_flow.data.benchmarks.gecco_water_quality.load_gecco2019_water_quality_data`    |
++--------------------------------+---------------------------------------------------------------------------------------------+
+| Water Usage [7]_               | :func:`~epyt_flow.data.benchmarks.water_usage.load_water_usage`                             |
++--------------------------------+---------------------------------------------------------------------------------------------+
+
+
+.. [1] Vrachimis et al. (2018) -- see https://github.com/KIOS-Research/LeakDB/
+.. [2] Vrachmimis et al. (2020) -- see https://github.com/KIOS-Research/BattLeDIM
+.. [3] Taormina et al. (2017) -- see https://www.batadal.net/
+.. [4] Friese et al. (2017) -- see http://www.spotseven.de/gecco-challenge/gecco-challenge-2017/
+.. [5] Rehbach et al. (2018) -- see http://www.spotseven.de/gecco/gecco-challenge/gecco-challenge-2018/
+.. [6] Rehbach et al. (2019) -- see https://www.th-koeln.de/informatik-und-ingenieurwissenschaften/gecco-challenge-2019_63244.php
+.. [7] Pavlou et al. (2018) -- see https://github.com/KIOS-Research/Water-Usage-Dataset/

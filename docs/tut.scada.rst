@@ -14,9 +14,10 @@ A sensor placement is necessary for getting actual sensor readings from a
 Such a sensor placement can be set before the simulation is run by calling 
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_sensors`
 of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance, 
-or after when post-processing the results a :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances -- 
-this becomes handy in cases where multiple sensor configurations have to be evaluated without 
-having to re-run the simulation every time.
+or after when post-processing the results a
+:class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances --  this becomes handy in cases
+where multiple sensor configurations have to be evaluated without  having to re-run the
+simulation every time.
 
 EPyT-Flow supports different types of sensors:
 
@@ -152,27 +153,28 @@ of a given :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
 
 
 Alternatively, one can use sensor type specific function for retrieving the readings of all 
-or some sensors of that type:
+or some sensors of that type - note that the ordering of the columns (i.e. sensors) in the
+returned array depends on the ordering of the specified sensors:
 
-+-------------------+----------------------------------------------------------------------------------------------------------------------------+
-| Sensor type       | Function for getting sensors readings                                                                                      |
-+===================+============================================================================================================================+
-| Pressure          | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pressures`                                                |
-+-------------------+----------------------------------------------------------------------------------------------------------------------------+
-| Flow              | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_flows`                                                    |
-+-------------------+----------------------------------------------------------------------------------------------------------------------------+
-| Demand            | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_demands`                                                  |
-+-------------------+----------------------------------------------------------------------------------------------------------------------------+
-| Node quality      | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_nodes_quality`                                            |
-+-------------------+----------------------------------------------------------------------------------------------------------------------------+
-| Link quality      | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_links_quality`                                            |
-+-------------------+----------------------------------------------------------------------------------------------------------------------------+
-| Valve state       | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_valves_state`                                             |
-+-------------------+----------------------------------------------------------------------------------------------------------------------------+
-| Pump state        | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pumps_state`                                              |
-+-------------------+----------------------------------------------------------------------------------------------------------------------------+
-| Tank water level  | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_tanks_water_level`                                        |
-+-------------------+----------------------------------------------------------------------------------------------------------------------------+
++-------------------+------------------------------------------------------------------------------------+
+| Sensor type       | Function for getting sensors readings                                              |
++===================+====================================================================================+
+| Pressure          | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pressures`        |
++-------------------+------------------------------------------------------------------------------------+
+| Flow              | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_flows`            |
++-------------------+------------------------------------------------------------------------------------+
+| Demand            | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_demands`          |
++-------------------+------------------------------------------------------------------------------------+
+| Node quality      | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_nodes_quality`    |
++-------------------+------------------------------------------------------------------------------------+
+| Link quality      | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_links_quality`    |
++-------------------+------------------------------------------------------------------------------------+
+| Valve state       | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_valves_state`     |
++-------------------+------------------------------------------------------------------------------------+
+| Pump state        | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pumps_state`      |
++-------------------+------------------------------------------------------------------------------------+
+| Tank water level  | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_tanks_water_level`|
++-------------------+------------------------------------------------------------------------------------+
 
 Example for getting the pressure readings at node "5":
 
@@ -194,7 +196,8 @@ Importing and Exporting
 SCADA data can be exported and also imported if stored in a custom binary file -- 
 see :ref:`Serialization <tut.serialization>` for details.
 
-Example for exporting and important :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances:
+Example for exporting and important :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
+instances:
 
 .. code-block:: python
 
@@ -228,7 +231,8 @@ see :ref:`here <epyt_flow.simulation.scada.scada_data_export>`.
 .. note::
     In these cases, the exported SCADA data CANNOT be imported again!
 
-Example for exporting a :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance to numpy:
+Example for exporting a :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
+instance to numpy:
 
 .. code-block:: python
 
