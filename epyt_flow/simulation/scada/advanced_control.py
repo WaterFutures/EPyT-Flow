@@ -2,6 +2,7 @@
 Module provides a classes for control modules.
 """
 from abc import abstractmethod, ABC
+import warnings
 import numpy as np
 import epyt
 
@@ -46,14 +47,16 @@ class AdvancedControlModule(ABC):
         pump_id : `str`
             ID of the pump for which the status is set.
         status : `int`
-            New status of the pump -- either open or closed.
-            One of the following:
+            New status of the pump -- either active (i.e. open) or inactive (i.e. closed).
 
-                - EN_PUMP_CLOSED  = 2
-                - EN_PUMP_OPEN    = 3
+            Must be one of the following constants defined in
+            :class:`~epyt_flow.simulation.events.actuator_events.ActuatorConstants`:
+
+                - EN_CLOSED  = 0
+                - EN_OPEN    = 1
         """
         pump_idx = self._epanet_api.getLinkPumpNameID().index(pump_id)
-        pump_link_idx = self._epanet_api.getLinkPumpIndex()[pump_idx]
+        pump_link_idx = self._epanet_api.getLinkPumpIndex(pump_idx + 1)
         self._epanet_api.setLinkStatus(pump_link_idx, status)
 
     def set_pump_speed(self, pump_id: str, speed: float) -> None:
@@ -69,6 +72,12 @@ class AdvancedControlModule(ABC):
         """
         pump_idx = self._epanet_api.getLinkPumpNameID().index(pump_id)
         pattern_idx = self._epanet_api.getLinkPumpPatternIndex(pump_idx + 1)
+
+        if pattern_idx == 0:
+            warnings.warn(f"No pattern for pump '{pump_id}' found -- a new pattern is created")
+            pattern_idx = self._epanet_api.addPattern(f"pump_speed_{pump_id}")
+            self._epanet_api.setLinkPumpPatternIndex(pattern_idx)
+
         self._epanet_api.setPattern(pattern_idx, np.array([speed]))
 
     def set_valve_status(self, valve_id: str, status: int) -> None:
@@ -81,13 +90,15 @@ class AdvancedControlModule(ABC):
             ID of the valve for which the status is set.
         status : `int`
             New status of the valve -- either open or closed.
-            Must be one of the following:
 
-                - EN_CLOSED       = 0
-                - EN_OPEN         = 1
+            Must be one of the following constants defined in
+            :class:`~epyt_flow.simulation.events.actuator_events.ActuatorConstants`:
+
+                - EN_CLOSED  = 0
+                - EN_OPEN    = 1
         """
         valve_idx = self._epanet_api.getLinkValveNameID().index(valve_id)
-        valve_link_idx = self._epanet_api.getLinkValveIndex()[valve_idx]
+        valve_link_idx = self._epanet_api.getLinkValveIndex(valve_idx + 1)
         self._epanet_api.setLinkStatus(valve_link_idx, status)
 
     def set_node_quality_source_value(self, node_id: str, pattern_id: str,

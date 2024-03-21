@@ -1,16 +1,43 @@
 """
 Module provides implementations of different types of actuator events.
 """
+import warnings
 from epyt.epanet import epanet
 import numpy as np
 
 from .system_event import SystemEvent
 
 
+class ActuatorConstants:
+    """
+    Class defining some constants related to actuator events.
+
+    Attributes
+    ----------
+    EN_CLOSED
+        Valve or pump is closed.
+    EN_OPEN
+        Valave or pump is open -- i.e. active.
+    """
+    EN_CLOSED       = 0
+    EN_OPEN         = 1
+
+
 class ActuatorEvent(SystemEvent):
     """
     Base class of an actuator event.
+
+    .. note::
+        Note that actuator events are one-time events -- i.e.
+        they are executed only once at a given point in time.
+
+    Parameters
+    ----------
+    time : int
+        Time (in seconds since simulation start) at which this event is executed.
     """
+    def __init__(self, time: int, **kwds):
+        super().__init__(start_time=time, end_time=time+1, **kwds)
 
 
 class PumpEvent(ActuatorEvent):
@@ -56,18 +83,19 @@ class PumpStateEvent(PumpEvent):
         New state of the pump -- i.e. the state of the pump is set to this value
         while the event is active.
 
-        Must be one of the following:
+        Must be one of the following constants defined in
+        :class:`~epyt_flow.simulation.events.actuator_events.ActuatorConstants`:
 
-            - EN_PUMP_CLOSED  = 2
-            - EN_PUMP_OPEN    = 3
+            - EN_CLOSED  = 0
+            - EN_OPEN    = 1
     """
     def __init__(self, pump_state: int, **kwds):
         if not isinstance(pump_state, int):
             raise TypeError("'pump_state' must be an instace of 'int' " +
                             f"but not of {type(pump_state)}")
-        if not 2 <= pump_state <= 3:
+        if not 0 <= pump_state <= 1:
             raise ValueError(f"Invalid pump state '{pump_state}' -- " +
-                             "must be either EN_PUMP_CLOSED (2) or EN_PUMP_OPEN (3)")
+                             "must be either EN_CLOSED (0) or EN_OPEN (1)")
 
         self.__pump_state = pump_state
 
@@ -82,16 +110,18 @@ class PumpStateEvent(PumpEvent):
         -------
         `int`
             New pump state.
-            One of the following:
 
-                - EN_PUMP_CLOSED  = 2
-                - EN_PUMP_OPEN    = 3
+            One of the following constants defined in
+            :class:`~epyt_flow.simulation.events.actuator_events.ActuatorConstants`:
+
+                - EN_CLOSED  = 0
+                - EN_OPEN    = 1
         """
         return self.__pump_state
 
     def apply(self, cur_time: int) -> None:
-        pump_idx = self._epanet_api.getLinkPumpNameID().index(self.pump_id)
-        pump_link_idx = self._epanet_api.getLinkPumpIndex()[pump_idx]
+        pump_idx = self._epanet_api.getLinkPumpNameID().index(self.pump_id) + 1
+        pump_link_idx = self._epanet_api.getLinkPumpIndex(pump_idx)
         self._epanet_api.setLinkStatus(pump_link_idx, self.__pump_state)
 
 
@@ -113,7 +143,7 @@ class PumpSpeedEvent(PumpEvent):
 
         self.__pump_speed = pump_speed
 
-        super().__init__(self, **kwds)
+        super().__init__(**kwds)
 
     @property
     def pump_speed(self) -> float:
@@ -128,8 +158,14 @@ class PumpSpeedEvent(PumpEvent):
         return self.__pump_speed
 
     def apply(self, cur_time: int) -> None:
-        pump_idx = self._epanet_api.getLinkPumpNameID().index(self.pump_id)
-        pattern_idx = self._epanet_api.getLinkPumpPatternIndex(pump_idx + 1)
+        pump_idx = self._epanet_api.getLinkPumpNameID().index(self.pump_id) + 1
+        pattern_idx = self._epanet_api.getLinkPumpPatternIndex(pump_idx)
+
+        if pattern_idx == 0:
+            warnings.warn(f"No pattern for pump '{self.pump_id}' found -- a new pattern is created")
+            pattern_idx = self._epanet_api.addPattern(f"pump_speed_{self.pump_id}")
+            self._epanet_api.setLinkPumpPatternIndex(pattern_idx)
+
         self._epanet_api.setPattern(pattern_idx, np.array([self.__pump_speed]))
 
 
@@ -142,8 +178,10 @@ class ValveStateEvent(ActuatorEvent):
     valve_id : `str`
         ID of the valve that is affected by this event.
     valve_state : `str`
-        New state of the valve -- the valve state is set to this value while this event is active.
-        Must be one of the following:
+        New state of the valve -- i.e. the valve state is set to this value this event is executed.
+
+        Must be one of the following constants defined in
+        :class:`~epyt_flow.simulation.events.actuator_events.ActuatorConstants`:
 
             - EN_CLOSED       = 0
             - EN_OPEN         = 1
@@ -188,10 +226,13 @@ class ValveStateEvent(ActuatorEvent):
         -------
         `int`
             New valve state.
+
+            One of the following constants defined in
+            :class:`~epyt_flow.simulation.events.actuator_events.ActuatorConstants`:
         """
         return self.__valve_state
 
     def apply(self, cur_time: int) -> None:
-        valve_idx = self._epanet_api.getLinkValveNameID().index(self.__valve_id)
-        valve_link_idx = self._epanet_api.getLinkValveIndex()[valve_idx]
+        valve_idx = self._epanet_api.getLinkValveNameID().index(self.__valve_id) + 1
+        valve_link_idx = self._epanet_api.getLinkValveIndex(valve_idx)
         self._epanet_api.setLinkStatus(valve_link_idx, self.__valve_state)

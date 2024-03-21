@@ -79,9 +79,39 @@ actuators such as pumps and valves:
 | :class:`~epyt_flow.simulation.events.actuator_events.ValveStateEvent`   | Opens or closes a valve. |
 +-------------------------------------------------------------------------+--------------------------+
 
+.. note::
+
+    Note that actuator events are one-time events -- i.e. they are executed only
+    once at a given point in time.
+
 Such actuator events can be added to the scenario simulation by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_actuator_event`  
 of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
+
+Example of manually deactivating and re-activating a pump:
+
+.. code-block:: python
+
+    # Create new scenario based on Net1
+    with ScenarioSimulator(scenario_config=load_net1()) as sim:
+        # Set simulation duration to two days
+        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
+
+        # Remove existing control rules
+        # ...
+
+        # Deactivate pump "9" at 14h after simulation start
+        sim.add_actuator_event(PumpStateEvent(pump_id="9",
+                                              pump_state=ActuatorConstants.EN_CLOSED,
+                                              time=to_seconds(hours=14)))
+
+        # Re-activate pump "9" at 45h after simulation start
+        sim.add_actuator_event(PumpStateEvent(pump_id="9",
+                                              pump_state=ActuatorConstants.EN_OPEN,
+                                              time=to_seconds(hours=45)))
+        
+        # Run simulation
+        # ...
 
 
 .. _sensors_faults:

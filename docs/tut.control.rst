@@ -6,22 +6,24 @@ Control
 
 EPyT-Flow supports the implementation of custom control modules & algorithms in Python code.
 
-All controls must be derived from :class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule` 
-and implement the :func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.step` method. 
-This functions implements the control logic and is called in every simulation steps. 
-It gets the current sensor readings as an :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` 
+All controls must be derived from
+:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule` 
+and implement the
+:func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.step` method.
+This functions implements the control logic and is called in every simulation steps.
+It gets the current sensor readings as an :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
 instance as an argument and is supposed to apply the control logic.
 
 .. note::
-    Be aware that the obtained sensor readings from the 
-    :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` 
+    Be aware that the obtained sensor readings from the
+    :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
     instance might be subject to sensor faults and noise.
 
-Optionally, the :func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.init` method 
-can be overriden for running some initialization logic -- make sure to call the parent's 
+Optionally, the :func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.init`
+method can be overriden for running some initialization logic -- make sure to call the parent's
 :func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.init` first.
 
-Besides implementing the control strategy by means of EPANET and EPANET-MSX functions, 
+Besides implementing the control strategy by means of EPANET and EPANET-MSX functions,
 EPyT-Flow also provides some pre-defined helper functions:
 
 +------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------+
@@ -36,43 +38,62 @@ EPyT-Flow also provides some pre-defined helper functions:
 | :func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.set_node_quality_source_value`   | Sets the quality source (e.g. chemical injection amount) at a particular node to a specific value.      |
 +------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------+
 
-Example of implementing a custom control module:
+Example of implementing a simple pump control strategy where pump "9" is activated or deactivated
+based on the water level in tank "2":
 
 .. code-block:: python
 
     class MyControl(AdvancedControlModule):
         def __init__(self, **kwds):
+            # Tank and pump ID
+            self.__tank_id = "2"
+            self.__pump_id = "9"
+
+            # Tank diameter could be also obtained by calling epanet.getNodeTankData
+            self.__tank_diameter = 50.5
+
+            # Lower and upper threshold on tank level
+            self.__lower_level_threshold = 110
+            self.__upper_level_threshold = 140
+
             super().__init__(**kwds)
-        
-        def init(self, epanet_api:epyt.epanet) -> None:
-            super().init(epanet_api)
 
-            # Any custom initialization logic if needed ...
-        
-        def step(self, scada_data:ScadaData) -> None:
-            # Simple rule for pump "9": Operate pump based on the water level in tank "2"
-            sensor_idx = scada_data.sensor_config.get_index_of_reading(tank_level_sensor="2")
-            if scada_data.get_data()[sensor_idx] <= 240000:
-                self.set_pump_status("9", "3")  # Activate pump
-            elif scada_data.get_data()[sensor_idx] >= 280000:
-                self.set_pump_status("9", "2")  # Deactivate pump
+        def __volume_to_level(self, vol: float) -> float:
+            return (4. / (math.pow(self.__tank_diameter, 2) * math.pi)) * vol
+
+        def step(self, scada_data: ScadaData) -> None:
+            # Retrieve current water level in the tank
+            tank_volume = scada_data.get_data_tanks_water_volume([self.__tank_id])
+            tank_level = self.__volume_to_level(tank_volume)
+
+            # Decide if pump has to be deactivated or re-activated
+            if tank_level <= self.__lower_level_threshold:
+                self.set_pump_status(self.__pump_id, ActuatorConstants.EN_OPEN)
+            elif tank_level >= self.__upper_level_threshold:
+                self.set_pump_status(self.__pump_id, ActuatorConstants.EN_CLOSED)
 
 
-Custom control modules & algorithms can be added to a scenario by calling 
-:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_control`  
-of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` 
+
+Custom control modules & algorithms can be added to a scenario by calling
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_control`
+of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
 instance BEFORE running the simulation:
 
 .. code-block:: python
 
-    # Open/Create a new scenario based on the Net1 network
-    config = load_net1()
-    with ScenarioSimulator(scenario_config=config) as sim:
-        # Setup scenario settings
+    # Create new scenario based on Net1
+    with ScenarioSimulator(scenario_config=load_net1()) as sim:
+        # Set simulation duration to two days
+        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
+
+        # Monitor water volume in tank "2"
+        sim.set_tank_sensors(sensor_locations=["2"])
+
+        # Remove all controls that might exist
         # ...
 
-        # Add custom control implemented in the "MyControl" class
+        # Add custom controls
         sim.add_control(MyControl())
 
         # Run simulation
-        # ...
+        # ....
