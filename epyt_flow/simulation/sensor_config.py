@@ -14,7 +14,7 @@ SENSOR_TYPE_LINK_FLOW       = 4
 SENSOR_TYPE_LINK_QUALITY    = 5
 SENSOR_TYPE_VALVE_STATE     = 6
 SENSOR_TYPE_PUMP_STATE      = 7
-SENSOR_TYPE_TANK_LEVEL      = 8
+SENSOR_TYPE_TANK_VOLUME     = 8
 
 
 @serializable(SENSOR_CONFIG_ID, ".epytflow_sensor_config")
@@ -62,8 +62,8 @@ class SensorConfig(Serializable):
         List of all pumps (i.e. IDs) at which a pump state sensor is placed.
 
         The default is an empty list.
-    tank_level_sensors : `list[str]`, optional
-        List of all tanks (i.e. IDs) at which a tank level sensor is placed.
+    tank_volume_sensors : `list[str]`, optional
+        List of all tanks (i.e. IDs) at which a tank volume sensor is placed.
 
         The default is an empty list.
     """
@@ -72,7 +72,7 @@ class SensorConfig(Serializable):
                  flow_sensors: list[str] = [], demand_sensors: list[str] = [],
                  quality_node_sensors: list[str] = [], quality_link_sensors: list[str] = [],
                  valve_state_sensors: list[str] = [], pump_state_sensors: list[str] = [],
-                 tank_level_sensors: list[str] = [], **kwds):
+                 tank_volume_sensors: list[str] = [], **kwds):
         if not isinstance(nodes, list):
             raise TypeError("'nodes' must be an instance of 'list(str)' " +
                             f"but not of '{type(nodes)}'")
@@ -150,11 +150,11 @@ class SensorConfig(Serializable):
         if any(link not in pumps for link in pump_state_sensors):
             raise ValueError("Each item in 'pump_state_sensors' must be in 'pumps' -- cannot " +
                              "place a sensor at a non-existing pump.")
-        if not isinstance(tank_level_sensors, list):
-            raise TypeError("'tank_level_sensors' must be an instance of 'list[str]' " +
-                            f"but not of '{type(tank_level_sensors)}'")
-        if any(n not in tanks for n in tank_level_sensors):
-            raise ValueError("Each item in 'tank_level_sensors' must be in 'tanks' -- cannot " +
+        if not isinstance(tank_volume_sensors, list):
+            raise TypeError("'tank_volume_sensors' must be an instance of 'list[str]' " +
+                            f"but not of '{type(tank_volume_sensors)}'")
+        if any(n not in tanks for n in tank_volume_sensors):
+            raise ValueError("Each item in 'tank_volume_sensors' must be in 'tanks' -- cannot " +
                              "place a sensor at a non-existing tanks.")
 
         self.__nodes = nodes
@@ -169,7 +169,7 @@ class SensorConfig(Serializable):
         self.__quality_link_sensors = quality_link_sensors
         self.__valve_state_sensors = valve_state_sensors
         self.__pump_state_sensors = pump_state_sensors
-        self.__tank_level_sensors = tank_level_sensors
+        self.__tank_volume_sensors = tank_volume_sensors
 
         self.__compute_indices()    # Compute indices
 
@@ -191,8 +191,8 @@ class SensorConfig(Serializable):
                                            for v in self.__valve_state_sensors], dtype=np.int32)
         self.__pump_state_idx = np.array([self.__pumps.index(p)
                                           for p in self.__pump_state_sensors], dtype=np.int32)
-        self.__tank_level_idx = np.array([self.__tanks.index(t)
-                                          for t in self.__tank_level_sensors], dtype=np.int32)
+        self.__tank_volume_idx = np.array([self.__tanks.index(t)
+                                           for t in self.__tank_volume_sensors], dtype=np.int32)
 
         n_pressure_sensors = len(self.__pressure_sensors)
         n_flow_sensors = len(self.__flow_sensors)
@@ -201,7 +201,7 @@ class SensorConfig(Serializable):
         n_link_quality_sensors = len(self.__quality_link_sensors)
         n_valve_state_sensors = len(self.__valve_state_sensors)
         n_pump_state_sensors = len(self.__pump_state_sensors)
-        n_tank_level_sensors = len(self.__tank_level_sensors)
+        n_tank_volume_sensors = len(self.__tank_volume_idx)
 
         pressure_idx_shift = 0
         flow_idx_shift = pressure_idx_shift + n_pressure_sensors
@@ -210,7 +210,7 @@ class SensorConfig(Serializable):
         link_quality_idx_shift = node_quality_idx_shift + n_node_quality_sensors
         valve_state_idx_shift = link_quality_idx_shift + n_link_quality_sensors
         pump_state_idx_shift = valve_state_idx_shift + n_valve_state_sensors
-        tank_level_idx_shift = pump_state_idx_shift + n_pump_state_sensors
+        tank_volume_idx_shift = pump_state_idx_shift + n_pump_state_sensors
 
         self.__sensors_id_to_idx = {"pressure": {n: i + pressure_idx_shift for n, i in
                                                  zip(self.__pressure_sensors,
@@ -231,9 +231,9 @@ class SensorConfig(Serializable):
                                     "pump_state": {p: i + pump_state_idx_shift
                                                    for p, i in zip(self.__pump_state_sensors,
                                                                    range(n_pump_state_sensors))},
-                                    "tank_level": {t: i + tank_level_idx_shift
-                                                   for t, i in zip(self.__tank_level_sensors,
-                                                                   range(n_tank_level_sensors))}}
+                                    "tank_volume": {t: i + tank_volume_idx_shift
+                                                    for t, i in zip(self.__tank_volume_sensors,
+                                                                    range(n_tank_volume_sensors))}}
 
     @property
     def nodes(self) -> list[str]:
@@ -471,27 +471,27 @@ class SensorConfig(Serializable):
         self.__compute_indices()
 
     @property
-    def tank_level_sensors(self) -> list[str]:
+    def tank_volume_sensors(self) -> list[str]:
         """
-        Gets all tank level sensors (i.e. IDs of tanks at which a tank level sensor is placed).
+        Gets all tank volume sensors (i.e. IDs of tanks at which a tank volume sensor is placed).
 
         Returns
         -------
         `list[str]`
             All tank IDs with a tank level sensor.
         """
-        return self.__tank_level_sensors.copy()
+        return self.__tank_volume_sensors.copy()
 
-    @tank_level_sensors.setter
-    def tank_level_sensors(self, tank_level_sensors: list[str]) -> None:
-        if not isinstance(tank_level_sensors, list):
-            raise TypeError("'tank_level_sensors' must be an instance of 'list[str]' " +
-                            f"but not of '{type(tank_level_sensors)}'")
-        if any(n not in self.__tanks for n in tank_level_sensors):
-            raise ValueError("Each item in 'tank_level_sensors' must be in 'tanks' -- cannot " +
+    @tank_volume_sensors.setter
+    def tank_volume_sensors(self, tank_volume_sensors: list[str]) -> None:
+        if not isinstance(tank_volume_sensors, list):
+            raise TypeError("'tank_volume_sensors' must be an instance of 'list[str]' " +
+                            f"but not of '{type(tank_volume_sensors)}'")
+        if any(n not in self.__tanks for n in tank_volume_sensors):
+            raise ValueError("Each item in 'tank_volume_sensors' must be in 'tanks' -- cannot " +
                              "place a sensor at a non-existing tanks.")
 
-        self.__tank_level_sensors = tank_level_sensors
+        self.__tank_volume_sensors = tank_volume_sensors
 
         self.__compute_indices()
 
@@ -518,7 +518,7 @@ class SensorConfig(Serializable):
                                            "quality_link_sensors": self.__quality_link_sensors,
                                            "valve_state_sensors": self.__valve_state_sensors,
                                            "pump_state_sensors": self.__pump_state_sensors,
-                                           "tank_level_sensors": self.__tank_level_sensors}
+                                           "tank_volume_sensors": self.__tank_volume_sensors}
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, SensorConfig):
@@ -535,7 +535,7 @@ class SensorConfig(Serializable):
             and self.__quality_link_sensors == other.quality_link_sensors \
             and self.__valve_state_sensors == other.valve_state_sensors \
             and self.__pump_state_sensors == other.pump_state_sensors \
-            and self.__tank_level_sensors == other.tank_level_sensors
+            and self.__tank_volume_sensors == other.tank_volume_sensors
 
     def __str__(self) -> str:
         return f"nodes: {self.__nodes} links: {self.__links} valves: {self.__valves} " +\
@@ -546,12 +546,12 @@ class SensorConfig(Serializable):
             f"quality_link_sensors: {self.__quality_link_sensors} " +\
             f"valve_state_sensors: {self.__valve_state_sensors} " +\
             f"pump_state_sensors: {self.__pump_state_sensors} " +\
-            f"tank_level_sensors: {self.__tank_level_sensors}"
+            f"tank_volume_sensors: {self.__tank_volume_sensors}"
 
     def compute_readings(self, pressures: np.ndarray, flows: np.ndarray, demands: np.ndarray,
                          nodes_quality: np.ndarray, links_quality: np.ndarray,
                          pumps_state: np.ndarray, valves_state: np.ndarray,
-                         tanks_level: np.ndarray) -> np.ndarray:
+                         tanks_volume: np.ndarray) -> np.ndarray:
         """
         Applies the sensor configuration to a set of raw simulation results --
          i.e. computes the sensor readings as an array.
@@ -572,8 +572,8 @@ class SensorConfig(Serializable):
             States of all pumps.
         valves_state : `numpy.ndarray`
             States of all valves.
-        tanks_level : `numpy.ndarray`
-            Water levels of all tanks.
+        tanks_volume : `numpy.ndarray`
+            Water volume in all tanks.
 
         Returns
         -------
@@ -588,14 +588,14 @@ class SensorConfig(Serializable):
         data.append(links_quality[:, self.__quality_link_idx])
         data.append(valves_state[:, self.__valve_state_idx])
         data.append(pumps_state[:, self.__pump_state_idx])
-        data.append(tanks_level[:, self.__tank_level_idx])
+        data.append(tanks_volume[:, self.__tank_volume_idx])
 
         return np.concatenate(data, axis=1)
 
     def get_index_of_reading(self, pressure_sensor: str = None, flow_sensor: str = None,
                              demand_sensor: str = None, node_quality_sensor: str = None,
                              link_quality_sensor: str = None, valve_state_sensor: str = None,
-                             pump_state_sensor: str = None, tank_level_sensor: str = None) -> int:
+                             pump_state_sensor: str = None, tank_volume_sensor: str = None) -> int:
         """
         Gets the index of a particular sensor in the final sensor readings array.
 
@@ -618,8 +618,8 @@ class SensorConfig(Serializable):
             ID of the state sensor (at a valve)
         pump_state_sensor : `str`
             ID of the state sensor (at a pump)
-        tank_level_sensor : `str`
-            ID of the water level sensor (at a tank)
+        tank_volume_sensor : `str`
+            ID of the water volume sensor (at a tank)
         """
         if pressure_sensor is not None:
             return self.__sensors_id_to_idx["pressure"][pressure_sensor]
@@ -635,7 +635,7 @@ class SensorConfig(Serializable):
             return self.__sensors_id_to_idx["valve_state"][valve_state_sensor]
         elif pump_state_sensor is not None:
             return self.__sensors_id_to_idx["pump_state"][pump_state_sensor]
-        elif tank_level_sensor is not None:
-            return self.__sensors_id_to_idx["tank_level"][tank_level_sensor]
+        elif tank_volume_sensor is not None:
+            return self.__sensors_id_to_idx["tank_volume"][tank_volume_sensor]
         else:
             raise ValueError("No sensor given")

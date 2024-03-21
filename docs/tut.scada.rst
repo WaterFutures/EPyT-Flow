@@ -38,7 +38,7 @@ EPyT-Flow supports different types of sensors:
 +---------------------------+--------------------------------------------------------------------------------+
 | SENSOR_TYPE_PUMP_STATE    | State of a pump.                                                               |
 +---------------------------+--------------------------------------------------------------------------------+
-| SENSOR_TYPE_TANK_LEVEL    | Water level in a tank.                                                         |
+| SENSOR_TYPE_TANK_VOLUME   | Water volume in a tank.                                                        |
 +---------------------------+--------------------------------------------------------------------------------+
 
 Example for specifying a sensor placement BEFORE the simulation is run:
@@ -77,7 +77,7 @@ BEFORE the simulation is run:
 +---------------------+--------------------------------------------------------------------------------------------------+
 | Pump state          | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_pump_sensors`              |
 +---------------------+--------------------------------------------------------------------------------------------------+
-| Tank water level    | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_tank_sensors`              |
+| Tank water volume   | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_tank_sensors`              |
 +---------------------+--------------------------------------------------------------------------------------------------+
 
 .. code-block:: python
@@ -156,25 +156,25 @@ Alternatively, one can use sensor type specific function for retrieving the read
 or some sensors of that type - note that the ordering of the columns (i.e. sensors) in the
 returned array depends on the ordering of the specified sensors:
 
-+-------------------+------------------------------------------------------------------------------------+
-| Sensor type       | Function for getting sensors readings                                              |
-+===================+====================================================================================+
-| Pressure          | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pressures`        |
-+-------------------+------------------------------------------------------------------------------------+
-| Flow              | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_flows`            |
-+-------------------+------------------------------------------------------------------------------------+
-| Demand            | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_demands`          |
-+-------------------+------------------------------------------------------------------------------------+
-| Node quality      | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_nodes_quality`    |
-+-------------------+------------------------------------------------------------------------------------+
-| Link quality      | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_links_quality`    |
-+-------------------+------------------------------------------------------------------------------------+
-| Valve state       | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_valves_state`     |
-+-------------------+------------------------------------------------------------------------------------+
-| Pump state        | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pumps_state`      |
-+-------------------+------------------------------------------------------------------------------------+
-| Tank water level  | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_tanks_water_level`|
-+-------------------+------------------------------------------------------------------------------------+
++-------------------+--------------------------------------------------------------------------------------+
+| Sensor type       | Function for getting sensors readings                                                |
++===================+======================================================================================+
+| Pressure          | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pressures`          |
++-------------------+--------------------------------------------------------------------------------------+
+| Flow              | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_flows`              |
++-------------------+--------------------------------------------------------------------------------------+
+| Demand            | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_demands`            |
++-------------------+--------------------------------------------------------------------------------------+
+| Node quality      | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_nodes_quality`      |
++-------------------+--------------------------------------------------------------------------------------+
+| Link quality      | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_links_quality`      |
++-------------------+--------------------------------------------------------------------------------------+
+| Valve state       | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_valves_state`       |
++-------------------+--------------------------------------------------------------------------------------+
+| Pump state        | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pumps_state`        |
++-------------------+--------------------------------------------------------------------------------------+
+| Tank water volume | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_tanks_water_volume` |
++-------------------+--------------------------------------------------------------------------------------+
 
 Example for getting the pressure readings at node "5":
 

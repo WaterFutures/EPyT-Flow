@@ -15,7 +15,7 @@ from tqdm import tqdm
 from .scenario_config import ScenarioConfig
 from .sensor_config import SensorConfig, SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY, \
     SENSOR_TYPE_NODE_DEMAND, SENSOR_TYPE_NODE_PRESSURE, SENSOR_TYPE_NODE_QUALITY, \
-    SENSOR_TYPE_PUMP_STATE, SENSOR_TYPE_TANK_LEVEL, SENSOR_TYPE_VALVE_STATE
+    SENSOR_TYPE_PUMP_STATE, SENSOR_TYPE_TANK_VOLUME, SENSOR_TYPE_VALVE_STATE
 from ..uncertainty import ModelUncertainty, SensorNoise
 from .events import SystemEvent, Leakage, ActuatorEvent, SensorFault, SensorReadingAttack, \
     SensorReadingEvent
@@ -537,7 +537,7 @@ class ScenarioSimulator():
                 - SENSOR_TYPE_LINK_QUALITY    = 5
                 - SENSOR_TYPE_VALVE_STATE     = 6
                 - SENSOR_TYPE_PUMP_STATE      = 7
-                - SENSOR_TYPE_TANK_LEVEL      = 8
+                - SENSOR_TYPE_TANK_VOLUME     = 8
         sensor_locations : `list[str]`
             Locations (IDs) of sensors.
         """
@@ -555,8 +555,8 @@ class ScenarioSimulator():
             self.__sensor_config.valve_state_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_PUMP_STATE:
             self.__sensor_config.pump_state_sensors = sensor_locations
-        elif sensor_type == SENSOR_TYPE_TANK_LEVEL:
-            self.__sensor_config.tank_level_sensors = sensor_locations
+        elif sensor_type == SENSOR_TYPE_TANK_VOLUME:
+            self.__sensor_config.tank_volume_sensors = sensor_locations
         else:
             raise ValueError(f"Unknown sensor type '{sensor_type}'")
 
@@ -641,14 +641,14 @@ class ScenarioSimulator():
 
     def set_tank_sensors(self, sensor_locations: list[str]) -> None:
         """
-        Sets the tank level sensors -- i.e. measuring water levels in some tanks in the network.
+        Sets the tank volume sensors -- i.e. measuring water volumes in some tanks in the network.
 
         Parameters
         ----------
         sensor_locations : `list[str]`
             Locations (IDs) of sensors.
         """
-        self.set_sensors(SENSOR_TYPE_TANK_LEVEL, sensor_locations)
+        self.set_sensors(SENSOR_TYPE_TANK_VOLUME, sensor_locations)
 
     def __prepare_simulation(self) -> None:
         if self.__model_uncertainty is not None:
@@ -686,7 +686,7 @@ class ScenarioSimulator():
         """
         # Step by step simulation is required in some cases
         if len(self.__controls) != 0 or len(self.__system_events) != 0 or hyd_export is not None or \
-                len(self.sensor_config.tank_level_sensors) != 0:
+                len(self.sensor_config.tank_volume_sensors) != 0:
             result = None
 
             for scada_data in self.run_simulation_as_generator(hyd_export=hyd_export,
@@ -712,7 +712,7 @@ class ScenarioSimulator():
                 # TODO: Differs from the step-by-step simulation!
                 valves_state = np.array([[] for _ in range(res.Pressure.shape[0])])
 
-            tanks_level = np.array([[] for _ in range(res.Pressure.shape[0])])  # TODO: No tanks level data available?
+            tanks_volume = np.array([[] for _ in range(res.Pressure.shape[0])])  # TODO: No tanks volume data available?
 
             return ScadaData(sensor_config=self.sensor_config, pressure_data_raw=res.Pressure[:, :],
                              flow_data_raw=res.Flow[:, :],
@@ -720,7 +720,7 @@ class ScenarioSimulator():
                              node_quality_data_raw=res.NodeQuality[:, :],
                              link_quality_data_raw=res.LinkQuality[:, :],
                              pumps_state_data_raw=pumps_state, valves_state_data_raw=valves_state,
-                             tanks_level_data_raw=tanks_level, sensor_readings_time=res.Time[:],
+                             tanks_volume_data_raw=tanks_volume, sensor_readings_time=res.Time[:],
                              sensor_reading_events=self.__sensor_reading_events,
                              sensor_noise=self.__sensor_noise)
 
@@ -818,7 +818,7 @@ class ScenarioSimulator():
                 quality_node_data = self.epanet_api.getNodeActualQuality().reshape(1, -1)
                 quality_link_data = self.epanet_api.getLinkActualQuality().reshape(1, -1)
                 pumps_state_data = self.epanet_api.getLinkPumpState().reshape(1, -1)
-                tanks_level_data = self.epanet_api.getNodeTankVolume().reshape(1, -1)
+                tanks_volume_data = self.epanet_api.getNodeTankVolume().reshape(1, -1)
 
                 link_valve_idx = self.epanet_api.getLinkValveIndex()
                 valves_state_data = self.epanet_api.getLinkStatus(link_valve_idx).reshape(1, -1)
@@ -830,7 +830,7 @@ class ScenarioSimulator():
                                        link_quality_data_raw=quality_link_data,
                                        pumps_state_data_raw=pumps_state_data,
                                        valves_state_data_raw=valves_state_data,
-                                       tanks_level_data_raw=tanks_level_data,
+                                       tanks_volume_data_raw=tanks_volume_data,
                                        sensor_readings_time=np.array([total_time]),
                                        sensor_reading_events=self.__sensor_reading_events,
                                        sensor_noise=self.__sensor_noise)
