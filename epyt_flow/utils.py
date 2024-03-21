@@ -2,6 +2,7 @@
 Module provides helper functions.
 """
 import os
+import math
 import tempfile
 import zipfile
 from pathlib import Path
@@ -9,6 +10,36 @@ import requests
 from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
+
+
+def volume_to_level(tank_volume: float, tank_diameter: float) -> float:
+    """
+    Computes the water level in a tank containing a given volume of water.
+
+    Parameters
+    ----------
+    tank_volume : `float`
+        Water volume in the tank.
+    tank_diameter : `float`
+        Diameter of the tank.
+
+    Returns
+    -------
+    `float`
+        Water level in tank.
+    """
+    if not isinstance(tank_volume, float):
+        raise TypeError("'tank_volume' must be an instace of 'float' " +
+                        f"but not of '{type(tank_volume)}'")
+    if tank_volume < 0:
+        raise ValueError("'tank_volume' can not be negative")
+    if not isinstance(tank_diameter, float):
+        raise TypeError("'tank_diameter' must be an instace of 'float' " +
+                        f"but not of '{type(tank_diameter)}'")
+    if tank_diameter <= 0:
+        raise ValueError("'tank_diameter' must be greater than zero")
+
+    return (4. / (math.pow(tank_diameter, 2) * math.pi)) * tank_volume
 
 
 def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, show: bool = True) -> None:
