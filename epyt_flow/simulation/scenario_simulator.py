@@ -242,7 +242,10 @@ class ScenarioSimulator():
         return deepcopy(self.__sensor_reading_events)
 
     def __init(self, general_params: dict) -> None:
-        self.epanet_api = epanet(self.f_inp_in)
+        self.epanet_api = epanet(self.f_inp_in, msx=self.__f_msx_in is not None)
+
+        if self.__f_msx_in is not None:
+            self.epanet_api.loadMSXfile(self.__f_msx_in)
 
         if self.sensor_config is None:
             self.sensor_config = SensorConfig(nodes=self.epanet_api.getNodeNameID(),
@@ -266,6 +269,9 @@ class ScenarioSimulator():
 
         Call this function after the simulation is done -- do not call this function before!
         """
+        if self.__f_msx_in is not None:
+            self.epanet_api.unloadMSX()
+
         self.epanet_api.unload()
 
     def __enter__(self):
