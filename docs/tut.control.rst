@@ -58,13 +58,10 @@ based on the water level in tank "2":
 
             super().__init__(**kwds)
 
-        def __volume_to_level(self, vol: float) -> float:
-            return (4. / (math.pow(self.__tank_diameter, 2) * math.pi)) * vol
-
         def step(self, scada_data: ScadaData) -> None:
             # Retrieve current water level in the tank
             tank_volume = scada_data.get_data_tanks_water_volume([self.__tank_id])
-            tank_level = self.__volume_to_level(tank_volume)
+            tank_level = volume_to_level(float(tank_volume), self.__tank_diameter)
 
             # Decide if pump has to be deactivated or re-activated
             if tank_level <= self.__lower_level_threshold:
