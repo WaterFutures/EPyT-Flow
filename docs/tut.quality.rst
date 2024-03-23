@@ -4,9 +4,12 @@
 Quality
 *******
 
-EPyT-Flow supports basic and advanced quality analysis -- the former is realized
+EPyT-Flow supports :ref:`basic <basic_quality>` and :ref:`advanced <advanced_quality>` quality analysis -- the former is realized
 through `EPANET <https://github.com/OpenWaterAnalytics/epanet>`_ and the latter one
 through the usage of `EPANET-MSX <https://github.com/OpenWaterAnalytics/epanet-msx>`_.
+
+
+.. _basic_quality:
 
 Basic Quality Analysis
 ++++++++++++++++++++++
@@ -121,7 +124,20 @@ is fixed over time.
         nodes_quality = scada_data.get_data_nodes_quality()
 
 
+.. _advanced_quality:
+
 Advanced Quality Analysis
 +++++++++++++++++++++++++
 
-TODO
+EPyT-Flow provides advanced quality analysis through
+`EPANET-MSX <https://github.com/OpenWaterAnalytics/epanet-msx>`_.
+
+The central concept in advanced quality analysis is the concept of a *species*.
+A species can be living matter such as bacteria or chemicals such as chlorine, arsenit, etc.
+In EPANET-MSX, we distinguish between two types of species:
+*bulk species*, which are species "living" in the water,
+and *surface/wall species*, which are species "living" on link/pipe walls.
+The interaction of different species are modeled by *reaction equations*.
+
+More details about species and their reaction equations can be found in the
+`EPANET-MSX user manual <https://cfpub.epa.gov/si/si_public_file_download.cfm?p_download_id=547058&Lab=CESER>`_.
