@@ -5,12 +5,12 @@ from copy import deepcopy
 import epyt
 import numpy as np
 
-from ..serialization import serializable, Serializable, MODEL_UNCERTAINTY_ID
+from ..serialization import serializable, JsonSerializable, MODEL_UNCERTAINTY_ID
 from .uncertainties import Uncertainty
 
 
 @serializable(MODEL_UNCERTAINTY_ID, ".epytflow_uncertainty_model_uncertainty")
-class ModelUncertainty(Serializable):
+class ModelUncertainty(JsonSerializable):
     """
     Class implementing model uncertainty -- i.e. uncertainties in pipe length, pipe roughness,
     base demand, etc.

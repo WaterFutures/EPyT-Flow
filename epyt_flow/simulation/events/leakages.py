@@ -7,12 +7,12 @@ import numpy as np
 import epyt
 
 from .system_event import SystemEvent
-from ...serialization import serializable, Serializable, \
+from ...serialization import serializable, JsonSerializable, \
     LEAKAGE_ID, ABRUPT_LEAKAGE_ID, INCIPIENT_LEAKAGE_ID
 
 
 @serializable(LEAKAGE_ID, ".epytflow_leakage")
-class Leakage(SystemEvent, Serializable):
+class Leakage(SystemEvent, JsonSerializable):
     """
     Base class for a leakage.
 
@@ -252,7 +252,10 @@ class AbruptLeakage(Leakage):
         growing over time until peak time is reached.
     """
     def __init__(self, link_id: str, diameter: float, **kwds):
-        super().__init__(link_id=link_id, diameter=diameter, profile=None, **kwds)
+        if "profile" not in kwds:
+            super().__init__(link_id=link_id, diameter=diameter, profile=None, **kwds)
+        else:
+            super().__init__(link_id=link_id, diameter=diameter, **kwds)
 
     def init(self, epanet_api: epyt.epanet) -> None:
         super().init(epanet_api)
@@ -293,7 +296,10 @@ class IncipientLeakage(Leakage):
 
         self.__peak_time = peak_time
 
-        super().__init__(link_id=link_id, diameter=diameter, profile=None, **kwds)
+        if "profile" not in kwds:
+            super().__init__(link_id=link_id, diameter=diameter, profile=None, **kwds)
+        else:
+            super().__init__(link_id=link_id, diameter=diameter, **kwds)
 
     @property
     def peak_time(self) -> int:

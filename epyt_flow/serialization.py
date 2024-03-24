@@ -4,6 +4,8 @@ Module provides functions and classes for serialization.
 from typing import Any, Union
 from abc import abstractmethod, ABC
 from io import BufferedIOBase
+import importlib
+import json
 import gzip
 import umsgpack
 import numpy as np
@@ -209,6 +211,63 @@ class Serializable(ABC):
             f_out += self.file_ext()
 
         return save_to_file(f_out, self, use_zip)
+
+
+class JsonSerializable(Serializable):
+    """
+    Base class for JSON serializable classes.
+    Inherits from :class:`~epyt_flow.serialization.Serializable`.
+    """
+
+    def to_json(self) -> str:
+        """
+        Serializes this instance to JSON.
+
+        Returns
+        -------
+        `str`
+            JSON data.
+        """
+        def __json_serialize(obj: Any) -> dict:
+            if isinstance(obj, JsonSerializable):
+                my_class_name = (obj.__module__, obj.__class__.__name__)
+                return obj.get_attributes() | {"__type__": my_class_name}
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            else:
+                return obj
+
+        return json.dumps(self, default=__json_serialize)
+
+    @staticmethod
+    def load_from_json(data: str) -> Any:
+        """
+        Loads (i.e. deserializes) an instance of this class from given JSON data.
+
+        Parameters
+        ----------
+        data : `str`
+            JSON data.
+
+        Returns
+        -------
+        `Any`
+            Deserialized instance of this class.
+        """
+        def __object_hook(obj: dict) -> dict:
+            if "__type__" in obj:
+                module_name, class_name = obj["__type__"]
+                cls = getattr(importlib.import_module(module_name), class_name)
+                del obj["__type__"]
+
+                for attr in obj:
+                    if isinstance(attr, dict):
+                        obj[attr] = __object_hook(obj[attr])
+
+                return cls(**obj)
+            return obj
+
+        return json.loads(data, object_hook=__object_hook)
 
 
 def load(data: Union[bytes, BufferedIOBase]) -> Any:

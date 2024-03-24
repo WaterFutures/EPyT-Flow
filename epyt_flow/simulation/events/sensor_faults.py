@@ -5,7 +5,7 @@ from abc import abstractmethod
 import numpy as np
 
 from .sensor_reading_event import SensorReadingEvent
-from ...serialization import serializable, Serializable, SENSOR_FAULT_CONSTANT_ID, \
+from ...serialization import serializable, JsonSerializable, SENSOR_FAULT_CONSTANT_ID, \
     SENSOR_FAULT_DRIFT_ID, SENSOR_FAULT_GAUSSIAN_ID, SENSOR_FAULT_PERCENTAGE_ID, \
     SENSOR_FAULT_STUCKATZERO_ID
 
@@ -79,7 +79,7 @@ class SensorFault(SensorReadingEvent):
 
 
 @serializable(SENSOR_FAULT_CONSTANT_ID, ".epytflow_sensorfault_constant")
-class SensorFaultConstant(SensorFault, Serializable):
+class SensorFaultConstant(SensorFault, JsonSerializable):
     """
     Class implementing a constant shift sensor fault.
 
@@ -124,7 +124,7 @@ class SensorFaultConstant(SensorFault, Serializable):
 
 
 @serializable(SENSOR_FAULT_DRIFT_ID, ".epytflow_sensorfault_drift")
-class SensorFaultDrift(SensorFault, Serializable):
+class SensorFaultDrift(SensorFault, JsonSerializable):
     """
     Class implementing a drift sensor fault.
 
@@ -165,7 +165,7 @@ class SensorFaultDrift(SensorFault, Serializable):
 
 
 @serializable(SENSOR_FAULT_GAUSSIAN_ID, ".epytflow_sensorfault_gaussian")
-class SensorFaultGaussian(SensorFault, Serializable):
+class SensorFaultGaussian(SensorFault, JsonSerializable):
     """
     Class implementing a Gaussian shift sensor fault -- i.e.
      adding Gaussian noise (centered at zero) to the sensor reading.
@@ -210,7 +210,7 @@ class SensorFaultGaussian(SensorFault, Serializable):
 
 
 @serializable(SENSOR_FAULT_PERCENTAGE_ID, ".epytflow_sensorfault_percentage",)
-class SensorFaultPercentage(SensorFault, Serializable):
+class SensorFaultPercentage(SensorFault, JsonSerializable):
     """
     Class implementing a percentage shift sensor fault.
 
@@ -254,7 +254,7 @@ class SensorFaultPercentage(SensorFault, Serializable):
 
 
 @serializable(SENSOR_FAULT_STUCKATZERO_ID, ".epytflow_sensorfault_zero")
-class SensorFaultStuckZero(SensorFault, Serializable):
+class SensorFaultStuckZero(SensorFault, JsonSerializable):
     """
     Class implementing a stuck-at-zero sensor fault -- i.e. sensor reading is set to zero.
     """

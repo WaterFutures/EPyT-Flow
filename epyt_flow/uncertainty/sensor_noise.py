@@ -5,11 +5,11 @@ from copy import deepcopy
 import numpy
 
 from .uncertainties import Uncertainty
-from ..serialization import serializable, Serializable, SENSOR_NOISE_ID
+from ..serialization import serializable, JsonSerializable, SENSOR_NOISE_ID
 
 
 @serializable(SENSOR_NOISE_ID, ".epytflow_sensor_noise")
-class SensorNoise(Serializable):
+class SensorNoise(JsonSerializable):
     """
     Class implementing sensor noise/uncertainty.
 

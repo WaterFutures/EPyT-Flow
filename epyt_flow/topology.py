@@ -5,11 +5,11 @@ import numpy as np
 import networkx as nx
 from scipy.sparse import bsr_array
 
-from .serialization import serializable, Serializable, NETWORK_TOPOLOGY_ID
+from .serialization import serializable, JsonSerializable, NETWORK_TOPOLOGY_ID
 
 
 @serializable(NETWORK_TOPOLOGY_ID, ".epytflow_topology")
-class NetworkTopology(nx.Graph, Serializable):
+class NetworkTopology(nx.Graph, JsonSerializable):
     """
     Class representing the topology of a WDN.
 

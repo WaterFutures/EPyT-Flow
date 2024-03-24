@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from .utils import generate_deep_random_gaussian_noise, create_deep_random_pattern
-from ..serialization import serializable, Serializable, ABSOLUTE_GAUSSIAN_UNCERTAINTY_ID, \
+from ..serialization import serializable, JsonSerializable, ABSOLUTE_GAUSSIAN_UNCERTAINTY_ID, \
     RELATIVE_GAUSSIAN_UNCERTAINTY_ID, ABSOLUTE_UNIFORM_UNCERTAINTY_ID, \
     RELATIVE_UNIFORM_UNCERTAINTY_ID, ABSOLUTE_DEEP_UNIFORM_UNCERTAINTY_ID, \
     RELATIVE_DEEP_UNIFORM_UNCERTAINTY_ID, ABSOLUTE_DEEP_GAUSSIAN_UNCERTAINTY_ID, \
@@ -201,7 +201,7 @@ class GaussianUncertainty(Uncertainty):
 
 
 @serializable(ABSOLUTE_GAUSSIAN_UNCERTAINTY_ID, ".epytflow_uncertainty_absolute_gaussian")
-class AbsoluteGaussianUncertainty(GaussianUncertainty, Serializable):
+class AbsoluteGaussianUncertainty(GaussianUncertainty, JsonSerializable):
     """
     Class implementing absolute Gaussian uncertainty -- i.e. Gaussian noise is added to the data.
     """
@@ -212,7 +212,7 @@ class AbsoluteGaussianUncertainty(GaussianUncertainty, Serializable):
 
 
 @serializable(RELATIVE_GAUSSIAN_UNCERTAINTY_ID, ".epytflow_uncertainty_relative_gaussian")
-class RelativeGaussianUncertainty(GaussianUncertainty, Serializable):
+class RelativeGaussianUncertainty(GaussianUncertainty, JsonSerializable):
     """
     Class implementing relative Gaussian uncertainty -- i.e. data is perturbed by Gaussian noise
     centered at zero.
@@ -295,7 +295,7 @@ class UniformUncertainty(Uncertainty):
 
 
 @serializable(ABSOLUTE_UNIFORM_UNCERTAINTY_ID, ".epytflow_uncertainty_absolute_uniform")
-class AbsoluteUniformUncertainty(UniformUncertainty, Serializable):
+class AbsoluteUniformUncertainty(UniformUncertainty, JsonSerializable):
     """
     Class implementing absolute uniform uncertainty -- i.e. uniform noise is added to the data.
     """
@@ -306,7 +306,7 @@ class AbsoluteUniformUncertainty(UniformUncertainty, Serializable):
 
 
 @serializable(RELATIVE_UNIFORM_UNCERTAINTY_ID, ".epytflow_uncertainty_relative_uniform")
-class RelativeUniformUncertainty(UniformUncertainty, Serializable):
+class RelativeUniformUncertainty(UniformUncertainty, JsonSerializable):
     """
     Class implementing relative uniform uncertainty -- i.e. data is multiplied by uniform noise.
     """
@@ -317,7 +317,7 @@ class RelativeUniformUncertainty(UniformUncertainty, Serializable):
 
 
 @serializable(PERCENTAGE_DEVIATON_UNCERTAINTY_ID, ".epytflow_uncertainty_percentage_deviation")
-class PercentageDeviationUncertainty(UniformUncertainty, Serializable):
+class PercentageDeviationUncertainty(UniformUncertainty, JsonSerializable):
     """
     Class implementing a uniform data deviation -- i.e. the data can deviate up to some percentage
     from its original value.
@@ -370,7 +370,7 @@ class DeepUniformUncertainty(Uncertainty):
 
 
 @serializable(ABSOLUTE_DEEP_UNIFORM_UNCERTAINTY_ID, ".epytflow_uncertainty_absolute_deep_uniform")
-class AbsoluteDeepUniformUncertainty(DeepUniformUncertainty, Serializable):
+class AbsoluteDeepUniformUncertainty(DeepUniformUncertainty, JsonSerializable):
     """
     Class implementing absolute deep uniform uncertainty -- i.e. random uniform noise
     (shape of the noise is changing over time) is added to the data.
@@ -382,7 +382,7 @@ class AbsoluteDeepUniformUncertainty(DeepUniformUncertainty, Serializable):
 
 
 @serializable(RELATIVE_DEEP_UNIFORM_UNCERTAINTY_ID, ".epytflow_uncertainty_relative_deep_uniform")
-class RelativeDeepUniformUncertainty(DeepUniformUncertainty, Serializable):
+class RelativeDeepUniformUncertainty(DeepUniformUncertainty, JsonSerializable):
     """
     Class implementing relative deep uniform uncertainty -- i.e. data is multplied by
     random uniform noise (shape of the noise is changing over time).
@@ -393,7 +393,7 @@ class RelativeDeepUniformUncertainty(DeepUniformUncertainty, Serializable):
         return super().apply(data)
 
 
-class DeepGaussianUncertainty(Uncertainty, Serializable):
+class DeepGaussianUncertainty(Uncertainty, JsonSerializable):
     """
     Base class implementing deep Gaussian uncertainty.
 
@@ -426,7 +426,7 @@ class DeepGaussianUncertainty(Uncertainty, Serializable):
 
 
 @serializable(ABSOLUTE_DEEP_GAUSSIAN_UNCERTAINTY_ID, ".epytflow_uncertainty_absolute_deep_gaussian")
-class AbsoluteDeepGaussianUncertainty(DeepGaussianUncertainty, Serializable):
+class AbsoluteDeepGaussianUncertainty(DeepGaussianUncertainty, JsonSerializable):
     """
     Class implementing absolute deep Gaussian uncertainty -- i.e. random Gaussian noise
     (mean and variance are changing over time) is added to the data.
@@ -438,7 +438,7 @@ class AbsoluteDeepGaussianUncertainty(DeepGaussianUncertainty, Serializable):
 
 
 @serializable(RELATIVE_DEEP_GAUSSIAN_UNCERTAINTY_ID, ".epytflow_uncertainty_relative_deep_gaussian")
-class RelativeDeepGaussianUncertainty(DeepGaussianUncertainty, Serializable):
+class RelativeDeepGaussianUncertainty(DeepGaussianUncertainty, JsonSerializable):
     """
     Class implementing realtive deep Gaussian uncertainty -- i.e. data is multiplied by
     random Gaussian noise (mean and variance are changing over time).
@@ -532,7 +532,7 @@ class DeepUncertainty(Uncertainty):
 
 
 @serializable(ABSOLUTE_DEEP_UNCERTAINTY_ID, ".epytflow_uncertainty_absolute_deep")
-class AbsoluteDeepUncertainty(DeepUncertainty, Serializable):
+class AbsoluteDeepUncertainty(DeepUncertainty, JsonSerializable):
     """
     Class implementing absolute deep uncertainty -- i.e. completly random noise
     is added to the data.
@@ -544,7 +544,7 @@ class AbsoluteDeepUncertainty(DeepUncertainty, Serializable):
 
 
 @serializable(RELATIVE_DEEP_UNCERTAINTY_ID, ".epytflow_uncertainty_relative_deep")
-class RelativeDeepUncertainty(DeepUncertainty, Serializable):
+class RelativeDeepUncertainty(DeepUncertainty, JsonSerializable):
     """
     Class implementing realtive deep uncertainty -- i.e. data is multiplied by
     completly random noise.
