@@ -6,6 +6,8 @@ from epyt.epanet import epanet
 import numpy as np
 
 from .system_event import SystemEvent
+from ...serialization import serializable, JsonSerializable, PUMP_STATE_EVENT_ID, \
+    PUMP_SPEED_EVENT_ID, VALVE_STATE_EVENT_ID
 
 
 class ActuatorConstants:
@@ -39,6 +41,9 @@ class ActuatorEvent(SystemEvent):
     def __init__(self, time: int, **kwds):
         super().__init__(start_time=time, end_time=time+1, **kwds)
 
+    def get_attributes(self) -> dict:
+        return {"time": self.start_time}
+
 
 class PumpEvent(ActuatorEvent):
     """
@@ -60,6 +65,9 @@ class PumpEvent(ActuatorEvent):
 
         super().init(epanet_api)
 
+    def get_attributes(self) -> dict:
+        return super().get_attributes() | {"pump_id": self.__pump_id}
+
     @property
     def pump_id(self) -> str:
         """
@@ -73,7 +81,8 @@ class PumpEvent(ActuatorEvent):
         return self.__pump_id
 
 
-class PumpStateEvent(PumpEvent):
+@serializable(PUMP_STATE_EVENT_ID, ".epytflow_pump_state_event")
+class PumpStateEvent(PumpEvent, JsonSerializable):
     """
     Class implementing a pump state event.
 
@@ -101,6 +110,9 @@ class PumpStateEvent(PumpEvent):
 
         super().__init__(**kwds)
 
+    def get_attributes(self) -> dict:
+        return super().get_attributes() | {"pump_state": self.__pump_state}
+
     @property
     def pump_state(self) -> int:
         """
@@ -125,7 +137,8 @@ class PumpStateEvent(PumpEvent):
         self._epanet_api.setLinkStatus(pump_link_idx, self.__pump_state)
 
 
-class PumpSpeedEvent(PumpEvent):
+@serializable(PUMP_SPEED_EVENT_ID, ".epytflow_pump_speed_event")
+class PumpSpeedEvent(PumpEvent, JsonSerializable):
     """
     Class implementing a pump speed event.
 
@@ -144,6 +157,9 @@ class PumpSpeedEvent(PumpEvent):
         self.__pump_speed = pump_speed
 
         super().__init__(**kwds)
+
+    def get_attributes(self) -> dict:
+        return super().get_attributes() | {"pump_speed": self.__pump_speed}
 
     @property
     def pump_speed(self) -> float:
@@ -169,7 +185,8 @@ class PumpSpeedEvent(PumpEvent):
         self._epanet_api.setPattern(pattern_idx, np.array([self.__pump_speed]))
 
 
-class ValveStateEvent(ActuatorEvent):
+@serializable(VALVE_STATE_EVENT_ID, ".epytflow_valve_state_event")
+class ValveStateEvent(ActuatorEvent, JsonSerializable):
     """
     Class implementing a valve state event.
 
@@ -204,6 +221,10 @@ class ValveStateEvent(ActuatorEvent):
             raise ValueError(f"Invalid valve ID '{self.__valve_id}'")
 
         super().init(epanet_api)
+
+    def get_attributes(self) -> dict:
+        return super().get_attributes() | {"valve_id": self.__valve_id,
+                                           "valve_state": self.__valve_state}
 
     @property
     def valve_id(self) -> str:
