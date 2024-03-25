@@ -19,13 +19,13 @@ Every serializable EPyT-Flow class supports the following functions:
 +--------------------------------------------------------------+-----------------------------------------+
 | Function                                                     | Description                             |
 +==============================================================+=========================================+
-| :func:`~epyt_flow.serialization.Serializable.dump`           | Exports object to byte array            |
+| :func:`~epyt_flow.serialization.Serializable.dump`           | Exports instance to byte array          |
 +--------------------------------------------------------------+-----------------------------------------+
-| :func:`~epyt_flow.serialization.Serializable.load`           | Imports/Creates object from byte array  |
+| :func:`~epyt_flow.serialization.Serializable.load`           | Creates instance from byte array        |
 +--------------------------------------------------------------+-----------------------------------------+
-| :func:`~epyt_flow.serialization.Serializable.save_to_file`   | Exports object into a file              |
+| :func:`~epyt_flow.serialization.Serializable.save_to_file`   | Exports instance into a file            |
 +--------------------------------------------------------------+-----------------------------------------+
-| :func:`~epyt_flow.serialization.Serializable.load_from_file` | Imports/Creates object from file        |
+| :func:`~epyt_flow.serialization.Serializable.load_from_file` | Creates instance from file              |
 +--------------------------------------------------------------+-----------------------------------------+
 
 Example for exporting and importing a sensor configuration to/from a byte array:
@@ -61,6 +61,25 @@ Example for storing and loading a scenario configuration to/from a file:
 
     # Load scenario configuration from file
     my_config = ScenarioConfig.load_from_file("myHanoiConfig.epytflow_config")
+
+
+JSON
+++++
+
+Besides the custom binary serialization, many EPyT-Flow classes also support a JSON serialization
+-- i.e. instances of such classes can be loaded/stored from/to JSON.
+Such classes are derived from :class:`~epyt_flow.serialization.JsonSerializable` which itself is a
+sub-clas of :class:`~epyt_flow.serialization.Serializable`.
+
+Classes supporting JSON serialization provide the following additional methods:
+
++-------------------------------------------------------------------+-----------------------------------------+
+| Function                                                          | Description                             |
++===================================================================+=========================================+
+| :func:`~epyt_flow.serialization.JsonSerializable.to_json`         | Exports this instance to JSON           |
++-------------------------------------------------------------------+-----------------------------------------+
+| :func:`~epyt_flow.serialization.JsonSerializable.load_from_json`  | Creates instance from JSON              |
++-------------------------------------------------------------------+-----------------------------------------+
 
 
 Advanced
