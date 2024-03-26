@@ -4,7 +4,7 @@ Module provides a class for implementing sensor configurations.
 from copy import deepcopy
 import numpy as np
 
-from ..serialization import SENSOR_CONFIG_ID, Serializable, serializable
+from ..serialization import SENSOR_CONFIG_ID, JsonSerializable, serializable
 
 
 SENSOR_TYPE_NODE_PRESSURE   = 1
@@ -20,7 +20,7 @@ SENSOR_TYPE_SURFACE_SPECIES = 10
 
 
 @serializable(SENSOR_CONFIG_ID, ".epytflow_sensor_config")
-class SensorConfig(Serializable):
+class SensorConfig(JsonSerializable):
     """
     Class for storing a sensor configuration.
 

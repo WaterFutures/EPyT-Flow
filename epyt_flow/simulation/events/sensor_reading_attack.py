@@ -5,7 +5,7 @@ from copy import deepcopy
 import numpy as np
 
 from .sensor_reading_event import SensorReadingEvent
-from ...serialization import serializable, Serializable, SENSOR_ATTACK_OVERRIDE_ID, \
+from ...serialization import serializable, JsonSerializable, SENSOR_ATTACK_OVERRIDE_ID, \
     SENSOR_ATTACK_REPLAY_ID
 
 
@@ -16,7 +16,7 @@ class SensorReadingAttack(SensorReadingEvent):
 
 
 @serializable(SENSOR_ATTACK_OVERRIDE_ID, ".epytflow_sensorattack_override")
-class SensorOverrideAttack(SensorReadingAttack, Serializable):
+class SensorOverrideAttack(SensorReadingAttack, JsonSerializable):
     """
     Class implementing a sensor override attack -- i.e. sensor reading values are overwritten
     by pre-defined values.
@@ -83,7 +83,7 @@ class SensorOverrideAttack(SensorReadingAttack, Serializable):
 
 
 @serializable(SENSOR_ATTACK_REPLAY_ID, ".epytflow_sensorattack_replay")
-class SensorReplayAttack(SensorReadingAttack, Serializable):
+class SensorReplayAttack(SensorReadingAttack, JsonSerializable):
     """
     Class implementing a sensor replay attack -- i.e. sensor readings are replaced by
     historical recordings.
