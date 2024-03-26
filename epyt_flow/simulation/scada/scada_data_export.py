@@ -77,7 +77,9 @@ class ScadaDataExport():
                                      links=old_sensor_config.links,
                                      valves=old_sensor_config.valves,
                                      pumps=old_sensor_config.pumps,
-                                     tanks=old_sensor_config.tanks)
+                                     tanks=old_sensor_config.tanks,
+                                     bulk_species=old_sensor_config.bulk_species,
+                                     surface_species=old_sensor_config.surface_species)
         sensor_config.pressure_sensors = sensor_config.nodes
         sensor_config.flow_sensors = sensor_config.links
         sensor_config.demand_sensors = sensor_config.nodes
@@ -86,6 +88,8 @@ class ScadaDataExport():
         sensor_config.valve_state_sensors = sensor_config.valves
         sensor_config.tank_level_sensors = sensor_config.tanks
         sensor_config.pump_state_sensors = sensor_config.pumps
+        sensor_config.bulk_species_sensors = sensor_config.bulk_species_sensors
+        sensor_config.surface_species_sensors = sensor_config.surface_species_sensors
 
         return sensor_config
 

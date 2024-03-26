@@ -252,7 +252,9 @@ class ScenarioSimulator():
                                               links=self.epanet_api.getLinkNameID(),
                                               valves=self.epanet_api.getLinkValveNameID(),
                                               pumps=self.epanet_api.getLinkPumpNameID(),
-                                              tanks=self.epanet_api.getNodeTankNameID())
+                                              tanks=self.epanet_api.getNodeTankNameID(),
+                                              bulk_species=[],
+                                              surface_species=[])
         if general_params is not None:
             self.set_general_parameters(**general_params)
 
@@ -700,7 +702,7 @@ class ScenarioSimulator():
                 if result is None:
                     result = scada_data
                 else:
-                    result.join(scada_data)
+                    result.concatenate(scada_data)
 
             return result
         else:
@@ -710,15 +712,15 @@ class ScenarioSimulator():
             if len(self.epanet_api.getLinkPumpIndex()) != 0:
                 pumps_state = res.Status[:, self.epanet_api.getLinkPumpIndex() - 1]
             else:
-                pumps_state = np.array([[] for _ in range(res.Pressure.shape[0])])
+                pumps_state = None
 
             if len(self.epanet_api.getLinkValveIndex()) != 0:
                 valves_state = res.Status[:, self.epanet_api.getLinkValveIndex() - 1]
             else:
                 # TODO: Differs from the step-by-step simulation!
-                valves_state = np.array([[] for _ in range(res.Pressure.shape[0])])
+                valves_state = None
 
-            tanks_volume = np.array([[] for _ in range(res.Pressure.shape[0])])  # TODO: No tanks volume data available?
+            tanks_volume = None  # TODO: No tanks volume data available?
 
             return ScadaData(sensor_config=self.sensor_config, pressure_data_raw=res.Pressure[:, :],
                              flow_data_raw=res.Flow[:, :],
@@ -830,7 +832,8 @@ class ScenarioSimulator():
                 valves_state_data = self.epanet_api.getLinkStatus(link_valve_idx).reshape(1, -1)
 
                 scada_data = ScadaData(sensor_config=self.__sensor_config,
-                                       pressure_data_raw=pressure_data, flow_data_raw=flow_data,
+                                       pressure_data_raw=pressure_data,
+                                       flow_data_raw=flow_data,
                                        demand_data_raw=demand_data,
                                        node_quality_data_raw=quality_node_data,
                                        link_quality_data_raw=quality_link_data,

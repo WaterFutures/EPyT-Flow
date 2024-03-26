@@ -320,38 +320,56 @@ class ScenarioConfig(Serializable):
             general_params["flow_units"] = general_settings["flow_units"]
 
         sensor_config = data["sensors"]
+
         if "pressure_sensors" in sensor_config.keys():
             pressure_sensors = sensor_config["pressure_sensors"]
         else:
             pressure_sensors = []
+
         if "flow_sensors" in sensor_config.keys():
             flow_sensors = sensor_config["flow_sensors"]
         else:
             flow_sensors = []
+
         if "demand_sensors" in sensor_config.keys():
             demand_sensors = sensor_config["demand_sensors"]
         else:
             demand_sensors = []
+
         if "node_quality_sensors" in sensor_config.keys():
             node_quality_sensors = sensor_config["node_quality_sensors"]
         else:
             node_quality_sensors = []
+
         if "link_quality_sensors" in sensor_config.keys():
             link_quality_sensors = sensor_config["link_quality_sensors"]
         else:
             link_quality_sensors = []
-        if "tank_level_sensors" in sensor_config.keys():
-            tank_level_sensors = sensor_config["tank_level_sensor"]
+
+        if "tank_volume_sensors" in sensor_config.keys():
+            tank_volume_sensors = sensor_config["tank_volume_sensors"]
         else:
-            tank_level_sensors = []
+            tank_volume_sensors = []
+
         if "valve_state_sensors" in sensor_config.keys():
             valve_state_sensors = sensor_config["valve_state_sensors"]
         else:
             valve_state_sensors = []
+
         if "pump_state_sensors" in sensor_config.keys():
             pump_state_sensors = sensor_config["pump_state_sensors"]
         else:
             pump_state_sensors = []
+
+        if "bulk_species_sensors" in sensor_config.keys():
+            bulk_species_sensors = sensor_config["bulk_species_sensors"]
+        else:
+            bulk_species_sensors = {}
+
+        if "surface_species_sensors" in sensor_config.keys():
+            surface_species_sensors = sensor_config["surface_species_sensors"]
+        else:
+            surface_species_sensors = {}
 
         # Uncertainties
         if "uncertainties" in data.keys():
@@ -460,14 +478,23 @@ class ScenarioConfig(Serializable):
         sensor_config = None
         from .scenario_simulator import ScenarioSimulator
         with ScenarioSimulator(f_inp_in) as scenario:
-            sensor_config = SensorConfig(scenario.sensor_config.nodes,
-                                         scenario.sensor_config.links,
-                                         scenario.sensor_config.valves,
-                                         scenario.sensor_config.pumps,
-                                         scenario.sensor_config.tanks, pressure_sensors,
-                                         flow_sensors, demand_sensors, node_quality_sensors,
-                                         link_quality_sensors, valve_state_sensors,
-                                         pump_state_sensors, tank_level_sensors)
+            sensor_config = SensorConfig(nodes=scenario.sensor_config.nodes,
+                                         links=scenario.sensor_config.links,
+                                         valves=scenario.sensor_config.valves,
+                                         pumps=scenario.sensor_config.pumps,
+                                         tanks=scenario.sensor_config.tanks,
+                                         bulk_species=scenario.sensor_config.bulk_species,
+                                         surface_species=scenario.sensor_config.surface_species,
+                                         pressure_sensors=pressure_sensors,
+                                         flow_sensors=flow_sensors,
+                                         demand_sensors=demand_sensors,
+                                         quality_node_sensors=node_quality_sensors,
+                                         quality_link_sensors=link_quality_sensors,
+                                         valve_state_sensors=valve_state_sensors,
+                                         pump_state_sensors=pump_state_sensors,
+                                         tank_volume_sensors=tank_volume_sensors,
+                                         bulk_species_sensors=bulk_species_sensors,
+                                         surface_species_sensors=surface_species_sensors)
 
         # Create final scenario configuration
         return ScenarioConfig(f_inp_in, f_msx_in, general_params, sensor_config, [], sensor_noise,

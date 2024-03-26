@@ -12,7 +12,6 @@ def test_configparser():
     config_as_json = """{
             "general": {
                 "file_inp": "/tmp/Hanoi.inp",
-                "file_msx": "",
                 "simulation_duration": 864000,
                 "demand_model": {"type": "PDA", "pressure_min": 0, "pressure_required": 0.1, "pressure_exponent": 0.5},
                 "hydraulic_time_step": 1800,
