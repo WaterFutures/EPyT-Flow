@@ -56,6 +56,11 @@ class SystemEvent(Event):
                 self.exit(cur_time)
                 self.__exit_called = True
 
+    def reset(self) -> None:
+        """
+        Resets this event -- i.e. make it ready for another simulation run.
+        """
+
     def exit(self, cur_time) -> None:
         """
         Is called ONCE after the event is over -- i.e. next time step after `end_time`.

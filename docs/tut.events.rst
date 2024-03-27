@@ -287,6 +287,9 @@ be override for running some initialization logic -- make sure to call the paren
 Also, if some "clean-up" logic is needed (i.e. some code that must run after the end of the event),
 the method :func:`~epyt_flow.simulation.events.system_event.SystemEvent.exit` can be overriden --
 this method is called ONCE after the end of the event.
+In order to support multiple simulation runs of the same scenario, the method
+:func:`~epyt_flow.simulation.events.system_event.SystemEvent.reset` can be overriden to reset the
+event (e.g. resetting time index of a leak profile).
 
 Example of a system event that activates a pump:
 

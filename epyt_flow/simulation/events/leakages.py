@@ -228,6 +228,9 @@ class Leakage(SystemEvent, JsonSerializable):
         self.__leak_emitter_coef = self.compute_leak_emitter_coefficient(
             self.compute_leak_area(self.__diameter))
 
+    def reset(self) -> None:
+        self.__time_pattern_idx = 0
+
     def exit(self, cur_time) -> None:
         self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_id, 0.)
 

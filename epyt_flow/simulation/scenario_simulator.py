@@ -69,9 +69,8 @@ class ScenarioSimulator():
                                 "'epyt_flow.simulation.ScenarioConfig' but not of " +
                                 f"'{type(scenario_config)}'")
 
-        self.epanet_api = None
-        self.__f_inp_in = f_inp_in
-        self.__f_msx_in = f_msx_in
+        self.__f_inp_in = f_inp_in if scenario_config is None else scenario_config.f_inp_in
+        self.__f_msx_in = f_msx_in if scenario_config is None else scenario_config.f_msx_in
         self.__model_uncertainty = None
         self.__sensor_noise = None
         self.__sensor_config = None
@@ -79,19 +78,31 @@ class ScenarioSimulator():
         self.__system_events = []
         self.__sensor_reading_events = []
 
-        general_params = None
+        self.epanet_api = epanet(self.__f_inp_in, msx=self.__f_msx_in is not None)
+        if self.__f_msx_in is not None:
+            self.epanet_api.loadMSXfile(self.__f_msx_in)
+
+        self.__sensor_config = SensorConfig(nodes=self.epanet_api.getNodeNameID(),
+                                            links=self.epanet_api.getLinkNameID(),
+                                            valves=self.epanet_api.getLinkValveNameID(),
+                                            pumps=self.epanet_api.getLinkPumpNameID(),
+                                            tanks=self.epanet_api.getNodeTankNameID(),
+                                            bulk_species=[],
+                                            surface_species=[])
         if scenario_config is not None:
-            general_params = scenario_config.general_params
-            self.__f_inp_in = scenario_config.f_inp_in
-            self.__f_msx_in = scenario_config.f_msx_in
+            if scenario_config.general_params is not None:
+                self.set_general_parameters(**scenario_config.general_params)
+
             self.__model_uncertainty = scenario_config.model_uncertainty
             self.__sensor_noise = scenario_config.sensor_noise
             self.__sensor_config = scenario_config.sensor_config
-            self.__controls = scenario_config.controls
-            self.__system_events = scenario_config.system_events
-            self.__sensor_reading_events = scenario_config.sensor_reading_events
 
-        self.__init(general_params)
+            for control in scenario_config.controls:
+                self.add_control(control)
+            for event in scenario_config.system_events:
+                self.add_system_event(event)
+            for event in scenario_config.sensor_reading_events:
+                self.add_sensor_reading_event(event)
 
     @property
     def f_inp_in(self) -> str:
@@ -267,23 +278,6 @@ class ScenarioSimulator():
 
         return deepcopy(self.__sensor_reading_events)
 
-    def __init(self, general_params: dict) -> None:
-        self.epanet_api = epanet(self.__f_inp_in, msx=self.__f_msx_in is not None)
-
-        if self.__f_msx_in is not None:
-            self.epanet_api.loadMSXfile(self.__f_msx_in)
-
-        if self.__sensor_config is None:
-            self.__sensor_config = SensorConfig(nodes=self.epanet_api.getNodeNameID(),
-                                                links=self.epanet_api.getLinkNameID(),
-                                                valves=self.epanet_api.getLinkValveNameID(),
-                                                pumps=self.epanet_api.getLinkPumpNameID(),
-                                                tanks=self.epanet_api.getNodeTankNameID(),
-                                                bulk_species=[],
-                                                surface_species=[])
-        if general_params is not None:
-            self.set_general_parameters(**general_params)
-
     def __adapt_to_network_changes(self):
         nodes = self.epanet_api.getNodeNameID()
         links = self.epanet_api.getLinkNameID()
@@ -320,7 +314,10 @@ class ScenarioSimulator():
         files = list(filter(lambda f: os.path.isfile(f) and "." not in f, os.listdir()))
         files.sort(key=os.path.getmtime)
 
-        return files[::-1][0]
+        if len(files) == 0:
+            return None
+        else:
+            return files[::-1][0]
 
     def close(self):
         """
@@ -520,7 +517,7 @@ class ScenarioSimulator():
                             "'epyt_flow.simulation.events.Leakage' not of " +
                             f"'{type(leakage_event)}'")
 
-        self.__system_events.append(leakage_event)
+        self.add_system_event(leakage_event)
 
     def add_actuator_event(self, event: ActuatorEvent) -> None:
         """
@@ -537,7 +534,7 @@ class ScenarioSimulator():
             raise TypeError("'event' must be an instance of " +
                             f"'epyt_flow.simulation.events.ActuatorEvent' not of '{type(event)}'")
 
-        self.__system_events.append(event)
+        self.add_system_event(event)
 
     def add_system_event(self, event: SystemEvent) -> None:
         """
@@ -554,6 +551,8 @@ class ScenarioSimulator():
         if not isinstance(event, SystemEvent):
             raise TypeError("'event' must be an instance of " +
                             f"'epyt_flow.simulation.events.SystemEvent' not of '{type(event)}'")
+
+        event.init(self.epanet_api)
 
         self.__system_events.append(event)
 
@@ -747,8 +746,8 @@ class ScenarioSimulator():
         if self.__model_uncertainty is not None:
             self.__model_uncertainty.apply(self.epanet_api)
 
-        for e in self.__system_events:
-            e.init(self.epanet_api)
+        for event in self.__system_events:
+            event.reset()
 
         if self.__controls is not None:
             for c in self.__controls:
@@ -951,10 +950,12 @@ class ScenarioSimulator():
             if hyd_export is not None:
                 self.epanet_api.saveHydraulicFile(hyd_export)
         except Exception as ex:
-            os.remove(tmp_file)  # Close temporary files before raising any exceptions
+            if tmp_file is not None:
+                os.remove(tmp_file)  # Close temporary files before raising any exceptions
             raise ex
 
-        os.remove(tmp_file)  # Close temporary files
+        if tmp_file is not None:
+            os.remove(tmp_file)  # Close temporary files
 
     def set_model_uncertainty(self, model_uncertainty: ModelUncertainty) -> None:
         """
