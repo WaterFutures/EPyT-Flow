@@ -103,6 +103,8 @@ class ScenarioSimulator():
         `str`
             Path to the .inp file.
         """
+        self.__adapt_to_network_changes()
+
         return self.__f_inp_in
 
     @property
@@ -115,6 +117,8 @@ class ScenarioSimulator():
         `str`
             Path to the .msx file.
         """
+        self.__adapt_to_network_changes()
+
         return self.__f_msx_in
 
     @property
@@ -127,10 +131,14 @@ class ScenarioSimulator():
         :class:`~epyt_flow.uncertainty.model_uncertainty.ModelUncertainty`
             Model uncertainty.
         """
+        self.__adapt_to_network_changes()
+
         return deepcopy(self.__model_uncertainty)
 
     @model_uncertainty.setter
     def model_uncertainty(self, model_uncertainty: ModelUncertainty) -> None:
+        self.__adapt_to_network_changes()
+
         self.set_model_uncertainty(model_uncertainty)
 
     @property
@@ -143,10 +151,14 @@ class ScenarioSimulator():
         :class:`~epyt_flow.uncertainty.sensor_noise.SensorNoise`
             Sensor noise.
         """
+        self.__adapt_to_network_changes()
+
         return deepcopy(self.__sensor_noise)
 
     @sensor_noise.setter
     def sensor_noise(self, sensor_noise: SensorNoise) -> None:
+        self.__adapt_to_network_changes()
+
         self.set_sensor_noise(sensor_noise)
 
     @property
@@ -159,6 +171,8 @@ class ScenarioSimulator():
         :class:`~epyt_flow.simulation.sensor_config.SensorConfig`
             Sensor configuration.
         """
+        self.__adapt_to_network_changes()
+
         return deepcopy(self.__sensor_config)
 
     @sensor_config.setter
@@ -180,6 +194,8 @@ class ScenarioSimulator():
         `list[`:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule` `]`
             All control modules.
         """
+        self.__adapt_to_network_changes()
+
         return deepcopy(self.__controls)
 
     @property
@@ -192,6 +208,8 @@ class ScenarioSimulator():
         `list[`:class:`~epyt_flow.simulation.events.leakages.Leakage` `]`
             All leakages.
         """
+        self.__adapt_to_network_changes()
+
         return deepcopy(filter(lambda e: isinstance(e, Leakage), self.__system_events))
 
     def actuator_events(self) -> list[ActuatorEvent]:
@@ -203,6 +221,8 @@ class ScenarioSimulator():
         `list[`:class:`~epyt_flow.simulation.events.actuator_event.ActuatorEvent` `]`
             All actuator events.
         """
+        self.__adapt_to_network_changes()
+
         return deepcopy(filter(lambda e: isinstance(e, ActuatorEvent), self.__system_events))
 
     @property
@@ -215,6 +235,8 @@ class ScenarioSimulator():
         `list[`:class:`~epyt_flow.simulation.events.system_event.SystemEvent` `]`
             All system events.
         """
+        self.__adapt_to_network_changes()
+
         return deepcopy(self.__system_events)
 
     @property
@@ -227,6 +249,8 @@ class ScenarioSimulator():
         `list[`:class:`~epyt_flow.simulation.events.sensor_faults.SensorFault` `]`
             All sensor faults.
         """
+        self.__adapt_to_network_changes()
+
         return deepcopy(filter(lambda e: isinstance(e, SensorFault), self.__sensor_reading_events))
 
     @property
@@ -239,24 +263,57 @@ class ScenarioSimulator():
         `list[`:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent` `]`
             All sensor reading events.
         """
+        self.__adapt_to_network_changes()
+
         return deepcopy(self.__sensor_reading_events)
 
     def __init(self, general_params: dict) -> None:
-        self.epanet_api = epanet(self.f_inp_in, msx=self.__f_msx_in is not None)
+        self.epanet_api = epanet(self.__f_inp_in, msx=self.__f_msx_in is not None)
 
         if self.__f_msx_in is not None:
             self.epanet_api.loadMSXfile(self.__f_msx_in)
 
-        if self.sensor_config is None:
-            self.sensor_config = SensorConfig(nodes=self.epanet_api.getNodeNameID(),
-                                              links=self.epanet_api.getLinkNameID(),
-                                              valves=self.epanet_api.getLinkValveNameID(),
-                                              pumps=self.epanet_api.getLinkPumpNameID(),
-                                              tanks=self.epanet_api.getNodeTankNameID(),
-                                              bulk_species=[],
-                                              surface_species=[])
+        if self.__sensor_config is None:
+            self.__sensor_config = SensorConfig(nodes=self.epanet_api.getNodeNameID(),
+                                                links=self.epanet_api.getLinkNameID(),
+                                                valves=self.epanet_api.getLinkValveNameID(),
+                                                pumps=self.epanet_api.getLinkPumpNameID(),
+                                                tanks=self.epanet_api.getNodeTankNameID(),
+                                                bulk_species=[],
+                                                surface_species=[])
         if general_params is not None:
             self.set_general_parameters(**general_params)
+
+    def __adapt_to_network_changes(self):
+        nodes = self.epanet_api.getNodeNameID()
+        links = self.epanet_api.getLinkNameID()
+        valves = self.epanet_api.getLinkValveNameID()
+        pumps = self.epanet_api.getLinkPumpNameID()
+        tanks = self.epanet_api.getNodeTankNameID()
+        bulk_species = []
+        surface_species = []
+
+        if nodes != self.__sensor_config.nodes or links != self.__sensor_config.links or \
+            valves != self.__sensor_config.valves or pumps != self.__sensor_config.pumps or \
+            tanks != self.__sensor_config.tanks or \
+            bulk_species != self.__sensor_config.bulk_species or \
+                surface_species != self.__sensor_config.surface_species:
+            # Adapt sensor configuration if anything in the network topology changed
+            new_sensor_config = SensorConfig(nodes=nodes, links=links, valves=valves, pumps=pumps,
+                                             tanks=tanks, bulk_species=bulk_species,
+                                             surface_species=surface_species)
+            new_sensor_config.pressure_sensors = self.__sensor_config.pressure_sensors
+            new_sensor_config.flow_sensors = self.__sensor_config.flow_sensors
+            new_sensor_config.demand_sensors = self.__sensor_config.demand_sensors
+            new_sensor_config.quality_node_sensors = self.__sensor_config.quality_node_sensors
+            new_sensor_config.quality_link_sensors = self.__sensor_config.quality_link_sensors
+            new_sensor_config.pump_state_sensors = self.__sensor_config.pump_state_sensors
+            new_sensor_config.valve_state_sensors = self.__sensor_config.valve_state_sensors
+            new_sensor_config.tank_volume_sensors = self.__sensor_config.tank_volume_sensors
+            new_sensor_config.bulk_species_sensors = self.__sensor_config.bulk_species_sensors
+            new_sensor_config.surface_species_sensors = self.__sensor_config.surface_species_sensors
+
+            self.__sensor_config = new_sensor_config
 
     def __find_temporary_file(self) -> str:
         # Sort files by time to find the temporary file created by EPANET
@@ -292,6 +349,8 @@ class ScenarioSimulator():
         :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
             Complete scenario specification.
         """
+        self.__adapt_to_network_changes()
+
         qual_info = self.epanet_api.getQualityInfo()
         demand_info = self.epanet_api.getDemandModel()
         general_params = {"hydraulic_time_step": self.epanet_api.getTimeHydraulicStep(),
@@ -322,6 +381,8 @@ class ScenarioSimulator():
         `float`
             Estimated memory consumption in MB.
         """
+        self.__adapt_to_network_changes()
+
         n_time_steps = int(self.epanet_api.getTimeSimulationDuration() /
                            self.epanet_api.getTimeReportingStep())
         n_quantities = self.epanet_api.getNodeCount() * 3 + self.epanet_api.getNodeTankCount() + \
@@ -340,6 +401,8 @@ class ScenarioSimulator():
         `epyt_flow.topology.NetworkTopology`
             Topology of this WDN as a graph.
         """
+        self.__adapt_to_network_changes()
+
         # Collect information about the topology of the water distribution network
         nodes_id = self.epanet_api.getNodeNameID()
         nodes_elevation = self.epanet_api.getNodeElevations()
@@ -366,6 +429,8 @@ class ScenarioSimulator():
         """
         Randomizes all demand patterns.
         """
+        self.__adapt_to_network_changes()
+
         # Get all demand patterns
         demand_patterns_idx = self.epanet_api.getNodeDemandPatternIndex()
         demand_patterns_id = np.unique([idx for _, idx in demand_patterns_idx.items()])
@@ -401,6 +466,8 @@ class ScenarioSimulator():
         demand_pattern : `numpy.ndarray`
             Demand pattern over time. Final demand over time = base_demand * demand_pattern
         """
+        self.__adapt_to_network_changes()
+
         if not isinstance(base_demand, float):
             raise TypeError("'base_demand' must be an instance of 'float' " +
                             f"but not if '{type(base_demand)}'")
@@ -428,6 +495,8 @@ class ScenarioSimulator():
         control : :class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`
             Control module.
         """
+        self.__adapt_to_network_changes()
+
         if not isinstance(control, AdvancedControlModule):
             raise TypeError("'control' must be an instance of " +
                             "'epyt_flow.simulation.scada.AdvancedControlModule' not of " +
@@ -444,6 +513,8 @@ class ScenarioSimulator():
         event : :class:`~epyt_flow.simulation.events.leakages.Leakage`
             Leakage.
         """
+        self.__adapt_to_network_changes()
+
         if not isinstance(leakage_event, Leakage):
             raise TypeError("'leakage_event' must be an instance of " +
                             "'epyt_flow.simulation.events.Leakage' not of " +
@@ -460,6 +531,8 @@ class ScenarioSimulator():
         event : :class:`~epyt_flow.simulation.events.actuator_events.ActuatorEvent`
             Actuator event.
         """
+        self.__adapt_to_network_changes()
+
         if not isinstance(event, ActuatorEvent):
             raise TypeError("'event' must be an instance of " +
                             f"'epyt_flow.simulation.events.ActuatorEvent' not of '{type(event)}'")
@@ -476,6 +549,8 @@ class ScenarioSimulator():
         event : :class:`~epyt_flow.simulation.events.system_event.SystemEvent`
             System event.
         """
+        self.__adapt_to_network_changes()
+
         if not isinstance(event, SystemEvent):
             raise TypeError("'event' must be an instance of " +
                             f"'epyt_flow.simulation.events.SystemEvent' not of '{type(event)}'")
@@ -491,6 +566,8 @@ class ScenarioSimulator():
         sensor_fault_event : :class:`~epyt_flow.simulation.events.sensor_faults.SensorFault`
             Sensor fault specifications.
         """
+        self.__adapt_to_network_changes()
+
         if not isinstance(sensor_fault_event, SensorFault):
             raise TypeError("'sensor_fault_event' must be an instance of " +
                             "'epyt_flow.simulation.events.SensorFault' not of " +
@@ -507,6 +584,8 @@ class ScenarioSimulator():
         sensor_reading_attack : :class:`~epyt_flow.simulation.events.sensor_reading_attack.SensorReadingAttack`
             Sensor fault specifications.
         """
+        self.__adapt_to_network_changes()
+
         if not isinstance(sensor_reading_attack, SensorReadingAttack):
             raise TypeError("'sensor_reading_attack' must be an instance of " +
                             "'epyt_flow.simulation.events.SensorReadingAttack' not of " +
@@ -523,6 +602,8 @@ class ScenarioSimulator():
         event : :class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent`
             Sensor reading event.
         """
+        self.__adapt_to_network_changes()
+
         if not isinstance(event, SensorReadingEvent):
             raise TypeError("'event' must be an instance of " +
                             "'epyt_flow.simulation.events.SensorReadingEvent' not of " +
@@ -549,6 +630,8 @@ class ScenarioSimulator():
         sensor_locations : `list[str]`
             Locations (IDs) of sensors.
         """
+        self.__adapt_to_network_changes()
+
         if sensor_type == SENSOR_TYPE_NODE_PRESSURE:
             self.__sensor_config.pressure_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_LINK_FLOW:
@@ -659,6 +742,8 @@ class ScenarioSimulator():
         self.set_sensors(SENSOR_TYPE_TANK_VOLUME, sensor_locations)
 
     def __prepare_simulation(self) -> None:
+        self.__adapt_to_network_changes()
+
         if self.__model_uncertainty is not None:
             self.__model_uncertainty.apply(self.epanet_api)
 
@@ -692,6 +777,8 @@ class ScenarioSimulator():
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             Simulation results as SCADA data (i.e. sensor readings).
         """
+        self.__adapt_to_network_changes()
+
         # Step by step simulation is required in some cases
         if len(self.__controls) != 0 or len(self.__system_events) != 0 or hyd_export is not None or \
                 len(self.sensor_config.tank_volume_sensors) != 0:
@@ -763,6 +850,8 @@ class ScenarioSimulator():
             Generator with the current simulation results/states as SCADA data
             (i.e. sensor readings).
         """
+        self.__adapt_to_network_changes()
+
         self.__prepare_simulation()
 
         self.epanet_api.openHydraulicAnalysis()
@@ -876,6 +965,8 @@ class ScenarioSimulator():
         model_uncertainty : :class:`~epyt_flow.uncertainties.model_uncertainty.ModelUncertainty`
             Model uncertainty specifications.
         """
+        self.__adapt_to_network_changes()
+
         if not isinstance(model_uncertainty, ModelUncertainty):
             raise TypeError("'model_uncertainty' must be an instance of " +
                             "'epyt_flow.uncertainties.ModelUncertainty' but not of " +
@@ -892,6 +983,8 @@ class ScenarioSimulator():
         sensor_noise : :class:`~epyt_flow.uncertainties.sensor_noise.SensorNoise`
             Sensor noise specification.
         """
+        self.__adapt_to_network_changes()
+
         if not isinstance(sensor_noise, SensorNoise):
             raise TypeError("'sensor_noise' must be an instance of " +
                             "'epyt_flow.uncertainties.SensorNoise' but not of " +
@@ -972,6 +1065,8 @@ class ScenarioSimulator():
 
             The default is None.
         """
+        self.__adapt_to_network_changes()
+
         if demand_model is not None:
             self.epanet_api.setDemandModel(demand_model["type"], demand_model["pressure_min"],
                                            demand_model["pressure_required"],
@@ -1062,6 +1157,8 @@ class ScenarioSimulator():
         Sets water age analysis -- i.e. estimates the water age (in hours) at
         all places in the network.
         """
+        self.__adapt_to_network_changes()
+
         self.__warn_if_quality_set()
         self.set_general_parameters(quality_model={"type": "age"})
 
@@ -1084,6 +1181,8 @@ class ScenarioSimulator():
 
             The default is "mg/L".
         """
+        self.__adapt_to_network_changes()
+
         self.__warn_if_quality_set()
         self.set_general_parameters(quality_model={"type": "chem", "chemical_name": chemical_name,
                                                    "chemical_units": chemical_units})
@@ -1126,6 +1225,8 @@ class ScenarioSimulator():
 
             The default is 1.
         """
+        self.__adapt_to_network_changes()
+
         if self.epanet_api.getQualityInfo().QualityCode != ToolkitConstants.EN_CHEM:
             raise RuntimeError("Chemical analysis is not enabled -- " +
                                "call 'enable_chemical_analysis()' before calling this function.")
@@ -1160,6 +1261,8 @@ class ScenarioSimulator():
         trace_node_id : `str`
             ID of the node traced in the source tracing analysis.
         """
+        self.__adapt_to_network_changes()
+
         if trace_node_id not in self.sensor_config.nodes:
             raise ValueError(f"Invalid node ID '{trace_node_id}'")
 
