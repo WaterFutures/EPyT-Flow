@@ -9,6 +9,8 @@ and [EPANET-MSX](https://github.com/OpenWaterAnalytics/epanet-msx).
 EPyT-Flow provides easy access to popular benchmark data sets for event detection and localization.
 Furthermore, it also provides an environment for developing and testing control algorithms.
 
+![Alt text](docs/_static/net1_plot.png)
+
 ## Installation
 
 EPyT-Flow supports Python 3.9 - 3.12
