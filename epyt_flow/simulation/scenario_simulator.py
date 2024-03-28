@@ -193,6 +193,8 @@ class ScenarioSimulator():
                             "'epyt_flow.simulation.SensorConfig' but not of " +
                             f"'{type(sensor_config)}'")
 
+        sensor_config.validate(self.epanet_api)
+
         self.__sensor_config = sensor_config
 
     @property
@@ -465,6 +467,8 @@ class ScenarioSimulator():
         """
         self.__adapt_to_network_changes()
 
+        if node_id not in self.__sensor_config.nodes:
+            raise ValueError(f"Unknown node '{node_id}'")
         if not isinstance(base_demand, float):
             raise TypeError("'base_demand' must be an instance of 'float' " +
                             f"but not if '{type(base_demand)}'")
@@ -567,6 +571,8 @@ class ScenarioSimulator():
         """
         self.__adapt_to_network_changes()
 
+        sensor_fault_event.validate(self.__sensor_config)
+
         if not isinstance(sensor_fault_event, SensorFault):
             raise TypeError("'sensor_fault_event' must be an instance of " +
                             "'epyt_flow.simulation.events.SensorFault' not of " +
@@ -585,6 +591,8 @@ class ScenarioSimulator():
         """
         self.__adapt_to_network_changes()
 
+        sensor_reading_attack.validate(self.__sensor_config)
+
         if not isinstance(sensor_reading_attack, SensorReadingAttack):
             raise TypeError("'sensor_reading_attack' must be an instance of " +
                             "'epyt_flow.simulation.events.SensorReadingAttack' not of " +
@@ -602,6 +610,8 @@ class ScenarioSimulator():
             Sensor reading event.
         """
         self.__adapt_to_network_changes()
+
+        event.validate(self.__sensor_config)
 
         if not isinstance(event, SensorReadingEvent):
             raise TypeError("'event' must be an instance of " +
@@ -649,6 +659,8 @@ class ScenarioSimulator():
             self.__sensor_config.tank_volume_sensors = sensor_locations
         else:
             raise ValueError(f"Unknown sensor type '{sensor_type}'")
+
+        self.__sensor_config.validate(self.epanet_api)
 
     def set_pressure_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1231,7 +1243,7 @@ class ScenarioSimulator():
         if self.epanet_api.getQualityInfo().QualityCode != ToolkitConstants.EN_CHEM:
             raise RuntimeError("Chemical analysis is not enabled -- " +
                                "call 'enable_chemical_analysis()' before calling this function.")
-        if node_id not in self.sensor_config.nodes:
+        if node_id not in self.__sensor_config.nodes:
             raise ValueError(f"Unknown node '{node_id}'")
         if not isinstance(pattern, np.ndarray):
             raise TypeError("'pattern' must be an instance of 'numpy.ndarray' " +
@@ -1264,7 +1276,7 @@ class ScenarioSimulator():
         """
         self.__adapt_to_network_changes()
 
-        if trace_node_id not in self.sensor_config.nodes:
+        if trace_node_id not in self.__sensor_config.nodes:
             raise ValueError(f"Invalid node ID '{trace_node_id}'")
 
         self.__warn_if_quality_set()

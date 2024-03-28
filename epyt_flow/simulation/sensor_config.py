@@ -3,6 +3,7 @@ Module provides a class for implementing sensor configurations.
 """
 from copy import deepcopy
 import numpy as np
+import epyt
 
 from ..serialization import SENSOR_CONFIG_ID, JsonSerializable, serializable
 
@@ -315,6 +316,42 @@ class SensorConfig(JsonSerializable):
                                     "surface_species":
                                     __build_species_sensors_id_to_idx(self.__surface_species_sensors,
                                                                       surface_species_idx_shift)}
+
+    def validate(self, epanet_api: epyt.epanet) -> None:
+        """
+        Validates this sensor configuration --
+        i.e. checks whether all nodes, etc. exist in the .inp file.
+
+        Parameters
+        ----------
+        epanet_api : `epyt.epanet`
+            EPANET and EPANET-MSX API.
+        """
+        if not isinstance(epanet_api, epyt.epanet):
+            raise TypeError("'epanet_api' must be an instance of 'epyt.epanet' " +
+                            f"but not of '{type(epanet_api)}'")
+
+        nodes = epanet_api.getNodeNameID()
+        links = epanet_api.getLinkNameID()
+        valves = epanet_api.getLinkValveNameID()
+        pumps = epanet_api.getLinkPumpNameID()
+        tanks = epanet_api.getNodeTankNameID()
+
+        if any(node_id not in nodes for node_id in self.__nodes):
+            raise ValueError("Invalid node ID detected -- " +
+                             "all given node IDs must exist in the .inp file")
+        if any(link_id not in links for link_id in self.links):
+            raise ValueError("Invalid link/pipe ID detected -- all given link/pipe IDs " +
+                             "must exist in the .inp file")
+        if any(valve_id not in valves for valve_id in self.__valves):
+            raise ValueError("Invalid valve ID detected -- all given valve IDs must exist " +
+                             "in the .inp file")
+        if any(pump_id not in pumps for pump_id in self.__pumps):
+            raise ValueError("Invalid pump ID detected -- all given pump IDs must exist " +
+                             "in the .inp file")
+        if any(tank_id not in tanks for tank_id in self.__tanks):
+            raise ValueError("Invalid tank ID detected -- all given tank IDs must exist " +
+                             "in the .inp file")
 
     @property
     def nodes(self) -> list[str]:
