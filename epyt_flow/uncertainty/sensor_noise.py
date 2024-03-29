@@ -57,6 +57,10 @@ class SensorNoise(JsonSerializable):
         Applies the sensor uncertainty to given sensor readings -- i.e. sensor readings
         are perturbed according to the specified uncertainty.
 
+        .. note::
+            Note that state sensor readings such as valve states, pump states, etc.
+            are NOT affected by sensor noise!
+
         Parameters
         ----------
         sensor_readings : `numpy.ndarray`

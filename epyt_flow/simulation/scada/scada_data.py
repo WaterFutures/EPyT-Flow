@@ -819,7 +819,18 @@ class ScadaData(Serializable):
                              surface_species_concentrations=self.__surface_species_concentration_raw)
 
         # Apply sensor uncertainties
-        sensor_readings = self.__apply_sensor_noise(sensor_readings)
+        state_sensors_idx = []   # Pump states and valve states are NOT affected!
+        for link_id in self.sensor_config.pump_state_sensors:
+            state_sensors_idx.append(
+                self.__sensor_config.get_index_of_reading(pump_state_sensor=link_id))
+        for link_id in self.sensor_config.valve_state_sensors:
+            state_sensors_idx.append(
+                self.__sensor_config.get_index_of_reading(valve_state_sensor=link_id))
+
+        mask = np.ones(sensor_readings.shape[1], dtype=bool)
+        mask[state_sensors_idx] = False
+
+        sensor_readings[:, mask] = self.__apply_sensor_noise(sensor_readings[:, mask])
 
         # Apply sensor faults
         for idx, f in self.__apply_sensor_reading_events:
