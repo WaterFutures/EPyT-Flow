@@ -289,7 +289,8 @@ class ScadaData(Serializable):
         `list[` :class:`~epyt_flow.simulation.events.sensor_faults.SensorFault` `]`
             All sensor faults.
         """
-        return deepcopy(filter(lambda e: isinstance(e, SensorFault), self.__sensor_reading_events))
+        return deepcopy(list(filter(lambda e: isinstance(e, SensorFault),
+                                    self.__sensor_reading_events)))
 
     @sensor_faults.setter
     def sensor_faults(self, sensor_faults: list[SensorFault]) -> None:
@@ -305,8 +306,8 @@ class ScadaData(Serializable):
         `list[` :class:`~epyt_flow.simulation.events.sensor_reading_attack.SensorReadingAttack` `]`
             All sensor reading attacks.
         """
-        return deepcopy(filter(lambda e: isinstance(e, SensorReadingAttack),
-                               self.__sensor_reading_events))
+        return deepcopy(list(filter(lambda e: isinstance(e, SensorReadingAttack),
+                                    self.__sensor_reading_events)))
 
     @sensor_reading_attacks.setter
     def sensor_reading_attacks(self, sensor_reading_attacks: list[SensorReadingAttack]) -> None:
@@ -1044,7 +1045,8 @@ class ScadaData(Serializable):
             if not isinstance(sensor_locations, list):
                 raise TypeError("'sensor_locations' must be an instance of 'list[str]' " +
                                 f"but not of '{type(sensor_locations)}'")
-            if any(s_id not in self.__sensor_config.pump_state_sensors for s_id in sensor_locations):
+            if any(s_id not in self.__sensor_config.pump_state_sensors
+                   for s_id in sensor_locations):
                 raise ValueError("Invalid sensor ID in 'sensor_locations' -- note that all " +
                                  "sensors in 'sensor_locations' must be set in the current " +
                                  "pump state sensor configuration")
@@ -1082,7 +1084,8 @@ class ScadaData(Serializable):
             if not isinstance(sensor_locations, list):
                 raise TypeError("'sensor_locations' must be an instance of 'list[str]' " +
                                 f"but not of '{type(sensor_locations)}'")
-            if any(s_id not in self.__sensor_config.valve_state_sensors for s_id in sensor_locations):
+            if any(s_id not in self.__sensor_config.valve_state_sensors
+                   for s_id in sensor_locations):
                 raise ValueError("Invalid sensor ID in 'sensor_locations' -- note that all " +
                                  "sensors in 'sensor_locations' must be set in the current " +
                                  "valve state sensor configuration")

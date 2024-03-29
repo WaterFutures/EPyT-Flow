@@ -223,7 +223,7 @@ class ScenarioSimulator():
         """
         self.__adapt_to_network_changes()
 
-        return deepcopy(filter(lambda e: isinstance(e, Leakage), self.__system_events))
+        return deepcopy(list(filter(lambda e: isinstance(e, Leakage), self.__system_events)))
 
     def actuator_events(self) -> list[ActuatorEvent]:
         """
@@ -236,7 +236,7 @@ class ScenarioSimulator():
         """
         self.__adapt_to_network_changes()
 
-        return deepcopy(filter(lambda e: isinstance(e, ActuatorEvent), self.__system_events))
+        return deepcopy(list(filter(lambda e: isinstance(e, ActuatorEvent), self.__system_events)))
 
     @property
     def system_events(self) -> list[SystemEvent]:
@@ -264,7 +264,7 @@ class ScenarioSimulator():
         """
         self.__adapt_to_network_changes()
 
-        return deepcopy(filter(lambda e: isinstance(e, SensorFault), self.__sensor_reading_events))
+        return deepcopy(list(filter(lambda e: isinstance(e, SensorFault), self.__sensor_reading_events)))
 
     @property
     def sensor_reading_events(self) -> list[SensorReadingEvent]:
