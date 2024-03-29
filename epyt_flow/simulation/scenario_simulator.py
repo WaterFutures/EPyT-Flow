@@ -71,7 +71,7 @@ class ScenarioSimulator():
 
         self.__f_inp_in = f_inp_in if scenario_config is None else scenario_config.f_inp_in
         self.__f_msx_in = f_msx_in if scenario_config is None else scenario_config.f_msx_in
-        self.__model_uncertainty = None
+        self.__model_uncertainty = ModelUncertainty()
         self.__sensor_noise = None
         self.__sensor_config = None
         self.__controls = []
