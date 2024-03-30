@@ -114,6 +114,34 @@ Example of working with :class:`~epyt_flow.topology.NetworkTopology`:
         print(topo.get_adj_matrix().todense())
 
 
+Low-level EPANET and EPANET-MSX Functions
++++++++++++++++++++++++++++++++++++++++++
+
+Besides providing high-level functions for working with scenarios, EPyT-Flow also provides access
+to lower-level functions as provided by EPyT, EPANET, and EPANET-MSX.
+EPyT functions can be access through the attribute `epanet_api` of a
+:class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
+Note that EPyT also provides access to all EPANET and EPANET-MSX functions.
+
+.. warning::
+
+    Caution must be used when calling EPANET or EPANET-MSX functions as those might cause
+    side-effects in EPyT-Flow.
+
+    Whenever possible, EPyT-Flow functions should be used!
+
+Example of manually setting the emitter coefficient of a node by calling an EPANET function:
+
+.. code-block:: python
+
+    # Create scenario based in Net1
+    with ScenarioSimulator(scenario_config=load_net1()) as sim:
+        # Calling an EPANET function for setting the emitter coefficient of the first node to zero
+        sim.epanet_api.setNodeEmitterCoeff(1, 0.)
+
+        # ....
+
+
 Scenario Configurations
 +++++++++++++++++++++++
 
