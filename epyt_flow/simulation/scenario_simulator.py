@@ -264,7 +264,8 @@ class ScenarioSimulator():
         """
         self.__adapt_to_network_changes()
 
-        return deepcopy(list(filter(lambda e: isinstance(e, SensorFault), self.__sensor_reading_events)))
+        return deepcopy(list(filter(lambda e: isinstance(e, SensorFault),
+                                    self.__sensor_reading_events)))
 
     @property
     def sensor_reading_events(self) -> list[SensorReadingEvent]:
@@ -791,8 +792,8 @@ class ScenarioSimulator():
         self.__adapt_to_network_changes()
 
         # Step by step simulation is required in some cases
-        if len(self.__controls) != 0 or len(self.__system_events) != 0 or hyd_export is not None or \
-                len(self.sensor_config.tank_volume_sensors) != 0:
+        if len(self.__controls) != 0 or len(self.__system_events) != 0 or hyd_export is not None \
+                or len(self.sensor_config.tank_volume_sensors) != 0:
             result = None
 
             for scada_data in self.run_simulation_as_generator(hyd_export=hyd_export,
@@ -1096,6 +1097,9 @@ class ScenarioSimulator():
             if not isinstance(hydraulic_time_step, int) or hydraulic_time_step <= 0:
                 raise ValueError("'hydraulic_time_step' must be a positive integer specifying " +
                                  "the time steps of the hydraulic simulation")
+            if len(self.__system_events) != 0:
+                raise RuntimeError("Hydraulic time step cannot be changed after system events " +
+                                   "such as leakages have been added to the scenario")
             self.epanet_api.setTimeHydraulicStep(hydraulic_time_step)
             if reporting_time_step is None:
                 warnings.warn("No report time steps specified -- using 'hydraulic_time_step'")
