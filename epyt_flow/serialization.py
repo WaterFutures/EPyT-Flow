@@ -216,6 +216,62 @@ class Serializable(ABC):
         return save_to_file(f_out, self, use_zip)
 
 
+def my_to_json(obj: Any) -> str:
+    """
+    Serializes a given object to JSON.
+
+    Parameters
+    ----------
+    obj : `Any`
+        Object to be serialized.
+
+    Returns
+    -------
+    `str`
+        JSON data.
+    """
+    def __json_serialize(obj_: Any) -> dict:
+        if isinstance(obj_, JsonSerializable):
+            my_class_name = (obj_.__module__, obj_.__class__.__name__)
+            return obj_.get_attributes() | {"__type__": my_class_name}
+        elif isinstance(obj_, np.ndarray):
+            return obj_.tolist()
+        else:
+            return obj_
+
+    return json.dumps(obj, default=__json_serialize)
+
+
+def my_load_from_json(data: str) -> Any:
+    """
+    Loads (i.e. deserializes) an object from given JSON data.
+
+    Parameters
+    ----------
+    data : `str`
+        JSON data.
+
+    Returns
+    -------
+    `Any`
+        Deserialized object.
+    """
+    def __object_hook(obj: dict) -> dict:
+        if "__type__" in obj:
+            module_name, class_name = obj["__type__"]
+            cls = getattr(importlib.import_module(module_name), class_name)
+            del obj["__type__"]
+
+            for attr in obj:
+                if isinstance(attr, dict):
+                    obj[attr] = __object_hook(obj[attr])
+
+            return cls(**obj)
+        return obj
+
+    return json.loads(data, object_hook=__object_hook)
+
+
 class JsonSerializable(Serializable):
     """
     Base class for JSON serializable classes.
@@ -231,16 +287,7 @@ class JsonSerializable(Serializable):
         `str`
             JSON data.
         """
-        def __json_serialize(obj: Any) -> dict:
-            if isinstance(obj, JsonSerializable):
-                my_class_name = (obj.__module__, obj.__class__.__name__)
-                return obj.get_attributes() | {"__type__": my_class_name}
-            elif isinstance(obj, np.ndarray):
-                return obj.tolist()
-            else:
-                return obj
-
-        return json.dumps(self, default=__json_serialize)
+        return my_to_json(self)
 
     @staticmethod
     def load_from_json(data: str) -> Any:
@@ -257,20 +304,7 @@ class JsonSerializable(Serializable):
         `Any`
             Deserialized instance of this class.
         """
-        def __object_hook(obj: dict) -> dict:
-            if "__type__" in obj:
-                module_name, class_name = obj["__type__"]
-                cls = getattr(importlib.import_module(module_name), class_name)
-                del obj["__type__"]
-
-                for attr in obj:
-                    if isinstance(attr, dict):
-                        obj[attr] = __object_hook(obj[attr])
-
-                return cls(**obj)
-            return obj
-
-        return json.loads(data, object_hook=__object_hook)
+        return my_load_from_json(data)
 
 
 def load(data: Union[bytes, BufferedIOBase]) -> Any:

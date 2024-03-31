@@ -24,7 +24,7 @@ author = 'André Artelt, Marios S. Kyriakou, Stelios G. Vrachimis'
 
 # -- General configuration ---------------------------------------------------
 
-autodoc_mock_imports = ["epyt", "pandas", "numpy", "scipy", "matplotlib", "sklearn"]
+autodoc_mock_imports = ["epyt", "pandas", "numpy", "scipy", "matplotlib", "sklearn", "falcon"]
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom

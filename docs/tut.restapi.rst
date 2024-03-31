@@ -1,0 +1,56 @@
+.. _tut.rest_api:
+
+********
+REST API
+********
+
+EPyT-Flow comes with a REST API for supporting the integration into other projects
+such as web applications. The REST server is based on `Falcon <https://falconframework.org/>`_
+and is implemented in the class :class:`~epyt_flow.rest_api.server.RestApiService` -- it runs on port
+*8080* as a default. It provides the following methods:
+
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| Method    | URL                                         | Implementation                                                                | Description                                                                                          |
++===========+=============================================+===============================================================================+======================================================================================================+
+| POST      | /scenario/new                               | :class:`~epyt_flow.rest_api.scenario_handler.ScenarioNewHandler`              | Creates a new scenario (based on a given .inp and .msx file, or on a given scenario configuration).  |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| DELETE    | /scenario/{scenario_id}                     | :class:`~epyt_flow.rest_api.scenario_handler.ScenarioRemoveHandler`           | Deletes a scenario.                                                                                  |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET       | /scenario/{scenario_id}/topology            | :class:`~epyt_flow.rest_api.scenario_handler.ScenarioTopologyHandler`         | Gets the topology of a given scenario.                                                               |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET       | /scenario/{scenario_id}/scenario_config     | :class:`~epyt_flow.rest_api.scenario_handler.ScenarioConfigHandler`           | Gets the entire configuration/specification of a given scenario.                                     |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET, POST | /scenario/{scenario_id}/general_params      | :class:`~epyt_flow.rest_api.scenario_handler.ScenarioGeneralParamsHandler`    | Gets the general parameters (e.g. simulation duration, etc.) of a given scenario.                    |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET, POST | /scenario/{scenario_id}/sensor_config       | :class:`~epyt_flow.rest_api.scenario_handler.ScenarioSensorConfigHandler`     | Gets or sets the sensor configuration of a given scenario.                                           |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET, POST | /scenario/{scenario_id}/leakages            | :class:`~epyt_flow.rest_api.scenario_handler.ScenarioLeakageHandler`          | Gets or adds a leakage to a given scenario.                                                          |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET       | /scenario/{scenario_id}/simulation          | :class:`~epyt_flow.rest_api.scenario_handler.ScenarioSimulationHandler`       | Runs the simulation of a given scenario.                                                             |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| DELETE    | /scada_data/{data_id}                       | :class:`~epyt_flow.rest_api.scada_data_handler.ScadaDataRemoveHandler`        | Deletes a given SCADA data instance.                                                                 |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET, POST | /scada_data/{data_id}/sensor_config         | :class:`~epyt_flow.rest_api.scada_data_handler.ScadaDataSensorConfigHandler`  | Gets or sets the sensor configuration of a given SCADA data instance.                                |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET, POST | /scada_data/{data_id}/sensor_faults         | :class:`~epyt_flow.rest_api.scada_data_handler.ScadaDataSensorFaultsHandler`  | Gets or sets the sensor faults of a given SCADA data instance.                                       |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET       | /scada_data/{data_id}/pressures             | :class:`~epyt_flow.rest_api.scada_data_handler.ScadaDataPressuresHandler`     | Gets all pressure sensor readings of a given SCADA data instance.                                    |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET       | /scada_data/{data_id}/flows                 | :class:`~epyt_flow.rest_api.scada_data_handler.ScadaDataFlowsHandler`         | Gets all flow sensor readings of a given SCADA data instance.                                        |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET       | /scada_data/{data_id}/demands               | :class:`~epyt_flow.rest_api.scada_data_handler.ScadaDataDemandsHandler`       | Gets all demand sensor readings of a given SCADA data instance.                                      |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET       | /scada_data/{data_id}/pump_states           | :class:`~epyt_flow.rest_api.scada_data_handler.ScadaDataPumpStatesHandler`    | Gets all demand sensor readings of a given SCADA data instance.                                      |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET       | /scada_data/{data_id}/valve_states          | :class:`~epyt_flow.rest_api.scada_data_handler.ScadaDataValveStatesHandler`   | Gets all demand sensor readings of a given SCADA data instance.                                      |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET       | /scada_data/{data_id}/tank_volumes          | :class:`~epyt_flow.rest_api.scada_data_handler.ScadaDataTankVolumesHandler`   | Gets all demand sensor readings of a given SCADA data instance.                                      |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET       | /scada_data/{data_id}/node_qualities        | :class:`~epyt_flow.rest_api.scada_data_handler.ScadaDataNodesQualityHandler`  | Gets all node quality sensor readings of a given SCADA data instance.                                |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET       | /scada_data/{data_id}/link_qualities        | :class:`~epyt_flow.rest_api.scada_data_handler.ScadaDataLinksQualityHandler`  | Gets all link quality sensor readings of a given SCADA data instance.                                |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET       | /scada_data/{data_id}/bulk_species          | :class:`~epyt_flow.rest_api.scada_data_handler.ScadaDataBulkSpeciesHandler`   | Gets all demand sensor readings of a given SCADA data instance.                                      |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| GET       | /scada_data/{data_id}/surface_species       | :class:`~epyt_flow.rest_api.scada_data_handler.ScadaDataSurfaceSpeciesHandler`| Gets all demand sensor readings of a given SCADA data instance.                                      |
++-----------+---------------------------------------------+-------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+

@@ -12,3 +12,4 @@ In-depth Tutorial
     tut.events
     tut.uncertainty
     tut.serialization
+    tut.restapi
