@@ -363,7 +363,7 @@ def load_scada_data(scenarios_id: list[int], use_net1: bool = True, download_dir
                 r.append((X, y))
         else:
             if return_leak_locations is True:
-                r.append(data, y_leak_locations)
+                r.append((data, y_leak_locations))
             else:
                 r.append(data)
 
