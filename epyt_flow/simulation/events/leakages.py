@@ -149,28 +149,24 @@ class Leakage(SystemEvent, JsonSerializable):
         return f"{super().__str__()} link_id: {self.link_id} diameter: {self.diameter} " +\
             f"profile: {self.profile} node_id: {self.__node_id}"
 
-    def compute_leak_area(self, diameter: float, factor_units: float = 100.) -> float:
+    def compute_leak_area(self, diameter: float) -> float:
         """
         Computes the leak area given the diameter.
 
         Parameters
         ----------
         diameter : `float`
-            Diameter of the leak.
-        factor_units : `float`, optional
-            Factor for converting units.
-
-            The default is 100 to change the units to EPANET default units.
+            Diameter (m) of the leak.
 
         Returns
         -------
         `float`
-            Leak area.
+            Leak area in mm^2.
         """
-        return (np.pi * (diameter / 2) ** 2) * factor_units
+        return (np.pi * (diameter / 2) ** 2) * 10000.
 
     def compute_leak_emitter_coefficient(self, area: float, discharg_coef: float = .75,
-                                         g: float = 9.8) -> float:
+                                         g: float = 9.80665) -> float:
         """
         Computes the leak emitter coefficient.
 
@@ -181,7 +177,7 @@ class Leakage(SystemEvent, JsonSerializable):
         Parameters
         ----------
         area : `float`
-            Leak area as computed in
+            Leak area (mm^2) as computed in
             :func:`epyt_flow.simulation.events.leakages.Leakage.compute_leak_area`.
         discharg_coef : `float`, optional
             Discharg coefficient.
