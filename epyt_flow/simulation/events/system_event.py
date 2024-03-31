@@ -51,7 +51,7 @@ class SystemEvent(Event):
         """
         if self.start_time <= cur_time < self.end_time:
             self.apply(cur_time)
-        else:
+        elif cur_time > self.end_time:
             if self.__exit_called is False:
                 self.exit(cur_time)
                 self.__exit_called = True
