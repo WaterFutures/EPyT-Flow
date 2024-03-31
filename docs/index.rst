@@ -11,7 +11,7 @@ However, it also provides access to low-level functions by `EPANET <https://gith
 and `EPANET-MSX <https://github.com/OpenWaterAnalytics/epanet-msx>`_.
 
 EPyT-Flow provides easy access to popular benchmark data sets for event detection and localization.
-Furthermore, it also provides an evironment for developing and testing control algorithms.
+Furthermore, it also provides an environment for developing and testing control algorithms.
 
 .. toctree::
     :maxdepth: 2

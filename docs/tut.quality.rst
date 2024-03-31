@@ -18,8 +18,8 @@ The basic quality analysis supports water age analysis, simple chemical analysis
 and source tracing analysis.
 
 .. note::
-    Note that only one of these analysis be performed at a time -- i.e. multiple simulation runs 
-    are necessary if different quality analysis are requested.
+    Note that only one of these analyses can be performed at a time -- i.e. multiple simulation runs 
+    are necessary if different quality analyses are requested.
 
 The requested quality analysis must be set (i.e. activated) before the simulation is run:
 
@@ -63,9 +63,9 @@ In the case of a chemical analysis, it is also necessary to set at least one sou
 if not already set in the .inp file. This can be done by calling 
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_quality_source` 
 of the :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
-Besides the location (i.e. node ID), the source pattern together with is type and (name, optional)
+Besides the location (i.e. node ID), the source pattern together with its type and (name, optional)
 must be specified as well.
-Note that the pattern repeats automatically when the simulation duration is exceeding the
+Note that the pattern repeats automatically when the simulation duration exceeds the
 pattern length.
 
 .. code-block:: python
@@ -96,7 +96,7 @@ Different types of source patterns are supported:
 Furthermore, reaction options such as bulk and wall coefficients might be set as well by 
 either setting the options in the .inp file or by calling the corresponding EPANET functions.
 
-Example for running a chemical analysis where the concentration at the reservoir
+Example of running a chemical analysis where the concentration at the reservoir
 is fixed over time.
 
 .. code-block:: python
@@ -133,11 +133,11 @@ EPyT-Flow provides advanced quality analysis through
 `EPANET-MSX <https://github.com/OpenWaterAnalytics/epanet-msx>`_.
 
 The central concept in advanced quality analysis is the concept of a *species*.
-A species can be living matter such as bacteria or chemicals such as chlorine, arsenit, etc.
+A species can be living matter such as bacteria or chemicals such as chlorine, arsenite, etc.
 In EPANET-MSX, we distinguish between two types of species:
 *bulk species*, which are species "living" in the water,
 and *surface/wall species*, which are species "living" on link/pipe walls.
-The interaction of different species are modeled by *reaction equations*.
+The interaction of different species is modeled by *reaction equations*.
 
 More details about species and their reaction equations can be found in the
 `EPANET-MSX user manual <https://cfpub.epa.gov/si/si_public_file_download.cfm?p_download_id=547058&Lab=CESER>`_.

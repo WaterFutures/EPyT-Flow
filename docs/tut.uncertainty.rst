@@ -5,13 +5,13 @@ Uncertainties
 *************
 
 Because WDNs are subject to many different types of uncertainties, EPyT-Flow comes with a set
-of pre-defined and implemented uncertainties that allows the user to introduce uncertainties and
+of pre-defined and implemented uncertainties that allow the user to introduce uncertainties and
 noise in the scenario generation.
 
 Most types of uncertainty exist in two versions: *absolute* and *relative*.
 While absolute uncertainties usually refer to the addition of noise that follows some distribution,
 relative uncertainties usually refer to some kind of multiplication.
-A complete list of pre-defined and implemented uncertainties are given in the following table:
+A complete list of pre-defined and implemented uncertainties is given in the following table:
 
 +------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | Implementation                                                                     |  Description                                                         |
@@ -48,7 +48,7 @@ A complete list of pre-defined and implemented uncertainties are given in the fo
 Model Uncertainty
 +++++++++++++++++
 
-Model uncertainty referes to uncertainty in the WDN model -- i.e. uncertainty in pipe lengths,
+Model uncertainty refers to uncertainty in the WDN model -- i.e. uncertainty in pipe lengths,
 pipe diameters, base demands, demand patterns, etc.
 
 EPyT-Flow allows the user to specify model uncertainties by instantiating
@@ -79,7 +79,7 @@ corresponds to a uniform deviation of up to 10%:
 Sensor Uncertainty
 ++++++++++++++++++
 
-Sensor uncertainty (also refered to as sensor noise) referes to uncertainty that affects **ALL**
+Sensor uncertainty (also referred to as sensor noise) refers to uncertainty that affects **ALL**
 sensor readings -- i.e. all sensor readings are perturbed by the given uncertainty.
 In EPyT-Flow, sensor uncertainties have to be
 :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty` instances wrapped inside a

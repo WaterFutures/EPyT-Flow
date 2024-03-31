@@ -37,9 +37,9 @@ Nodes
 
 The nodes in the graph do not only model junctions but also consumers -- i.e. locations where
 water is taken (i.e. consumed) from the WDN.  Consequently, different nodes might have different
-elevations which make the use of pumps necessary. Water consumption is modeled by demand patterns
+elevations which makes the use of pumps necessary. Water consumption is modeled by demand patterns
 that describe how much water is consumed over time -- each node in the graph can have its
-own demand pattern. Furthermore, there exit different types of nodes:
+own demand pattern. Furthermore, there exist different types of nodes:
 
 +-------------+-------------------------------------------------------------------------------------------+
 | Type        | Description                                                                               |
@@ -57,7 +57,7 @@ Simulation
 
 There are two types of dynamics that are relevant in a WDN: 1) hydraulics and 2) quality.
 
-Hydraulics refer to quantities such as flow rates, pressures, etc., while quality refers to
+Hydraulics refers to quantities such as flow rates, pressures, etc., while quality refers to
 chemical concentrations. Hydraulics depend not only on the topology of the WDN but also on demands
 (i.e. water consumption) as well as pump and valve operations. Building on the hydraulics,
 quality dynamics depend not only on the hydraulics (in particular flow rates)  but also on
@@ -65,7 +65,7 @@ chemical reactions (e.g. pipe wall reactions) and injections
 (e.g. chlorine injection or contamination events).
 
 Also, there exist two different types of demand models that can be used for simulating
-the hydraulics: Demand driven analysis (DDA) and a pressure driven analysis (PDA).
+the hydraulics: Demand-driven analysis (DDA) and a pressure-driven analysis (PDA).
 
 EPyT-Flow is based on EPANET and therefore uses a steady-state simulation of the hydraulics,
 on which the quality dynamics are computed. Details can be found in the

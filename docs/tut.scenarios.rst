@@ -28,7 +28,7 @@ describing and precisely specifying the scenario to be simulated.
 
 .. note::
     When using the :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` class, 
-    it is important to close it afterwards so that EPANET is unloaded correctly.
+    it is important to close it afterward so that EPANET is unloaded correctly.
 
 Closing a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` 
 instance can done automatically by using a ``with`` statement:
@@ -119,7 +119,7 @@ Low-level EPANET and EPANET-MSX Functions
 
 Besides providing high-level functions for working with scenarios, EPyT-Flow also provides access
 to lower-level functions as provided by EPyT, EPANET, and EPANET-MSX.
-EPyT functions can be access through the attribute `epanet_api` of a
+EPyT functions can be accessed through the attribute `epanet_api` of a
 :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
 Note that EPyT also provides access to all EPANET and EPANET-MSX functions.
 
@@ -145,8 +145,10 @@ Example of manually setting the emitter coefficient of a node by calling an EPAN
 Scenario Configurations
 +++++++++++++++++++++++
 
-An alternative to passing the path to an .inp file (and .msx file) to :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`, 
-is to use a :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` instance which completly describes/specifies a scenario.
+An alternative to passing the path to an .inp file (and .msx file) to
+:class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`, is to use a
+:class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` instance which completely
+describes/specifies a scenario.
 
 Because :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` instances are immutable, 
 there are usually not explicitly constructed by the user but loaded/parsed from a file 
@@ -168,7 +170,7 @@ Example of loading a scenario from a JSON configuration file called `myScenarioC
 
 where `myScenarioConfig.json` contains a sensor placement (4 pressure and one flow sensor), 
 two leakages (one abrupt and one incipient), one sensor fault, 
-and uncertanties with respect to pipe length and roughtness, as well as sensor noise:
+and uncertainties with respect to pipe length and roughness, as well as sensor noise:
 
 .. code-block:: json
 
@@ -213,7 +215,7 @@ in EPyT-Flow.
 At every time, a complete :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` can be
 obtained by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.get_scenario_config`.
-This scenario configuration could be than, for instance, be stored in a file so that it can be
+This scenario configuration could be then, for instance, stored in a file so that it can be
 reloaded in the future  without having to make all the manual specifications again -- see
 :ref:`Serialization <tut.serialization>` for details.
 
@@ -242,12 +244,12 @@ Example of obtaining and storing the current scenario configuration:
 Predefined networks
 -------------------
 
-EPyT-Flow comes with set of popular benchmark water distribution networks already included.
+EPyT-Flow comes with a set of popular benchmark water distribution networks already included.
 These networks are, if necessary, downloaded and wrapped inside a
 :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` instance, so that they can be
 directly passed to :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
 
-Also note that in some cases (i.e. Hanoi and L-TOWN) a predefined sensor placement
+Also, note that in some cases (i.e. Hanoi and L-TOWN) a predefined sensor placement
 can be included as well.
 
 +------------+-------------------------------------------------+
@@ -302,7 +304,7 @@ Example of loading the Hanoi network:
 Benchmarks scenarios
 --------------------
 
-EPyT-Flow comes with a set of benchmarks scenarios. Usually, those are pre-defined scenarios for 
+EPyT-Flow comes with a set of benchmark scenarios. Usually, those are pre-defined scenarios for 
 different tasks such as leakage detection and localization.
 
 +----------------+----------------------------------------------+

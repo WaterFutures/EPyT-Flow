@@ -57,7 +57,7 @@ Example for specifying a sensor placement BEFORE the simulation is run:
         # Run simulation
         # ....
 
-Alternatively, one can use sensor type specific functions for specifying a sensor placement 
+Alternatively, one can use sensor type-specific functions to specify a sensor placement 
 BEFORE the simulation is run:
 
 +---------------------+--------------------------------------------------------------------------------------------------+
@@ -95,7 +95,7 @@ BEFORE the simulation is run:
         # ....
 
 
-Example for specifying a sensor placement AFTER the simulation is run by calling 
+Example of specifying a sensor placement AFTER the simulation is run by calling 
 :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.change_sensor_config` 
 of a :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
 
@@ -116,7 +116,7 @@ of a :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
     scada_data.change_sensor_config(cur_sensor_config)  # Set new sensor configuration
 
 
-If a sensor placement have been specified, the final sensor readings of all sensor (as a `numpy.array`) 
+If a sensor placement has been specified, the final sensor readings of all sensors (as a `numpy.array`) 
 can be obtained by calling :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data` 
 of a given :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
 
@@ -152,12 +152,12 @@ of a given :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
         pressures_at_node_5 = observed_sensor_readings[:, pressure_sensor_5_idx]
 
 
-Alternatively, one can use sensor type specific function for retrieving the readings of all 
+Alternatively, one can use sensor type-specific function for retrieving the readings of all 
 or some sensors of that type - note that the ordering of the columns (i.e. sensors) in the
 returned array depends on the ordering of the specified sensors:
 
 +-------------------+--------------------------------------------------------------------------------------+
-| Sensor type       | Function for getting sensors readings                                                |
+| Sensor type       | Function for getting sensor readings                                                 |
 +===================+======================================================================================+
 | Pressure          | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pressures`          |
 +-------------------+--------------------------------------------------------------------------------------+

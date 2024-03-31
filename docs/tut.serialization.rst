@@ -85,7 +85,7 @@ Classes supporting JSON serialization provide the following additional methods:
 Advanced
 ++++++++
 
-To  make any new class (e.g. custom events) serializable, the class must be derived from
+To make any new class (e.g. custom events) serializable, the class must be derived from
 :class:`~epyt_flow.serialization.Serializable` and be marked by the
 :func:`~epyt_flow.serialization.serializable` decorator.
 
@@ -96,7 +96,7 @@ describing the instance -- those will be passed to the constructor when deserial
 of this class.
 
 The :func:`~epyt_flow.serialization.serializable` decorator requires a **unique ID** of the class
-that is made serializeable -- i.e. every class (more general every data type) is assigned a
+that is made serializable -- i.e. every class (more generally every data type) is assigned a
 unique ID to make it recognizable by the parser. All reserved IDs (you CANNOT use those!) are
 listed in :mod:`epyt_flow.serialization.py` -- right now any number greater than 30 is free for use.
 Furthermore, a file extension is required which should allow the user to infer the type of content

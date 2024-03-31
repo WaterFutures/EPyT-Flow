@@ -26,14 +26,14 @@ The created leakage can be added to the scenario by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_leakage`  
 of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
 
-In both cases, the ID of the link/pipe, the leak diameter (i.e. size of the leak), 
-and start and end time in seconds (after simulation start) are needed.
+In both cases, the ID of the link/pipe, the leak diameter (i.e. the size of the leak), 
+and start and end times in seconds (after the simulation start) are needed.
 In the case of an incipient leakage, the peak time (in seconds) is also needed -- 
 the leak size is increasing linearly from the start time until it reaches its maximum 
 at the peak time where it stays until the leakage is over.
 
 .. note::
-    Which leak diameter refers to small or large leak depends mainly on the link/pipe diameter, 
+    Which leak diameter refers to a small or large leak depends mainly on the link/pipe diameter, 
     which might be different for different links/pipes and is also likely to differ between
     different water distribution networks.
 
@@ -130,7 +130,7 @@ EPyT-Flow comes with a set of pre-defined sensor faults:
 +-------------------------------------------------------------------------------+--------------------------------------------------------+
 | :class:`~epyt_flow.simulation.events.sensor_faults.SensorFaultGaussian`       | Adds Gaussian noise to the sensor reading.             |
 +-------------------------------------------------------------------------------+--------------------------------------------------------+
-| :class:`~epyt_flow.simulation.events.sensor_faults.SensorFaultPercentage`     | Adds a pecentage of the original sensor reading to it. |
+| :class:`~epyt_flow.simulation.events.sensor_faults.SensorFaultPercentage`     | Adds a percentage of the original sensor reading to it.|
 +-------------------------------------------------------------------------------+--------------------------------------------------------+
 | :class:`~epyt_flow.simulation.events.sensor_faults.SensorFaultStuckZero`      | Sets the sensor reading to zero.                       |
 +-------------------------------------------------------------------------------+--------------------------------------------------------+
@@ -214,11 +214,11 @@ Example of a sensor replay attack on a pressure sensor:
     # Load the first LeakDB Hanoi scenario
     config = load_leakdb(scenarios_id=["1"], use_net1=False)[0]
     with ScenarioSimulator(scenario_config=config) as sim:
-        # Set simulaton duration to two days
+        # Set simulation duration to two days
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
         # Add a sensor replay attack -- pressure readings at node "13" between 5hrs and 7hrs
-        # after simulation start (time steps 10 - 15) are replaced by the historical readings
+        # after the simulation start (time steps 10 - 15) are replaced by the historical readings
         # collected from the first 150min (i.e. first 5 time steps)
         sensor_replay_attack = SensorReplayAttack(replay_data_time_window_start=0,
                                                   replay_data_time_window_end=to_seconds(
@@ -229,7 +229,7 @@ Example of a sensor replay attack on a pressure sensor:
                                                   sensor_type=SENSOR_TYPE_NODE_PRESSURE)
         sim.add_sensor_reading_event(sensor_replay_attack)
 
-        # Run simulation and and retrieve pressure readings
+        # Run simulation and retrieve pressure readings
         res = sim.run_simulation()
 
         pressure_readings = res.get_data_pressures(sensor_locations=["13"])
@@ -282,13 +282,13 @@ This function is called at every simulation step, when the event is active, and 
 apply the event's logic by making use of the EPANET and EPANET-MSX interface.
 
 Optionally, the :func:`~epyt_flow.simulation.events.system_event.SystemEvent.init` method can also 
-be override for running some initialization logic -- make sure to call the parent's 
+be overridden for running some initialization logic -- make sure to call the parent's 
 :func:`~epyt_flow.simulation.events.system_event.SystemEvent.init` first.
 Also, if some "clean-up" logic is needed (i.e. some code that must run after the end of the event),
-the method :func:`~epyt_flow.simulation.events.system_event.SystemEvent.exit` can be overriden --
+the method :func:`~epyt_flow.simulation.events.system_event.SystemEvent.exit` can be overridden --
 this method is called ONCE after the end of the event.
 In order to support multiple simulation runs of the same scenario, the method
-:func:`~epyt_flow.simulation.events.system_event.SystemEvent.reset` can be overriden to reset the
+:func:`~epyt_flow.simulation.events.system_event.SystemEvent.reset` can be overridden to reset the
 event (e.g. resetting time index of a leak profile).
 
 Example of a system event that activates a pump:
@@ -347,7 +347,7 @@ returns the processed sensor readings.
 
 .. note::
     Note that :func:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent.apply` 
-    is called at each simulation time steps -- the method must respect the start and end time of the event 
+    is called at each simulation time step -- the method must respect the start and end time of the event 
     as stored in its parent class :class:`~epyt_flow.simulation.events.event.Event`.
 
 Example of a custom sensor reading event that adds Gaussian noise to the sensor readings:
@@ -377,4 +377,4 @@ instance BEFORE running the simulation:
     i.e. chaining of events is possible. In this case, the input to the 
     :func:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent.apply` is the 
     output of the previous method. The ordering of the sensor reading events is determined by 
-    the order they were added to the scenario.
+    the order in which they were added to the scenario.

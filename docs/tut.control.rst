@@ -10,7 +10,7 @@ All controls must be derived from
 :class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule` 
 and implement the
 :func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.step` method.
-This functions implements the control logic and is called in every simulation steps.
+This function implements the control logic and is called in every simulation step.
 It gets the current sensor readings as an :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
 instance as an argument and is supposed to apply the control logic.
 
@@ -20,10 +20,10 @@ instance as an argument and is supposed to apply the control logic.
     instance might be subject to sensor faults and noise.
 
 Optionally, the :func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.init`
-method can be overriden for running some initialization logic -- make sure to call the parent's
+method can be overridden for running some initialization logic -- make sure to call the parent's
 :func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.init` first.
 
-Besides implementing the control strategy by means of EPANET and EPANET-MSX functions,
+Besides implementing the control strategy through EPANET and EPANET-MSX functions,
 EPyT-Flow also provides some pre-defined helper functions:
 
 +------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------+
