@@ -20,13 +20,6 @@ epyt_flow.simulation.simulator
    :members:
    :show-inheritance:
 
-epyt_flow.simulation.scada
---------------------------
-
-.. automodule:: epyt_flow.simulation.scada
-   :members:
-   :show-inheritance:
-
 epyt_flow.simulation.visualizer
 -------------------------------
 
