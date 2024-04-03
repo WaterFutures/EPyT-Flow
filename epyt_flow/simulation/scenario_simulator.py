@@ -835,6 +835,8 @@ class ScenarioSimulator():
                 valves_state = None
 
             tanks_volume = None  # TODO: No tanks volume data available?
+            pump_energy_usage_data = None  # TODO: No Energy usage data available?
+            pump_efficiency_data = None   # TODO: No pump efficiency data available?
 
             return ScadaData(sensor_config=self.sensor_config, pressure_data_raw=res.Pressure[:, :],
                              flow_data_raw=res.Flow[:, :],
@@ -843,6 +845,8 @@ class ScenarioSimulator():
                              link_quality_data_raw=res.LinkQuality[:, :],
                              pumps_state_data_raw=pumps_state, valves_state_data_raw=valves_state,
                              tanks_volume_data_raw=tanks_volume, sensor_readings_time=res.Time[:],
+                             pump_energy_usage_data=pump_energy_usage_data,
+                             pump_efficiency_data=pump_efficiency_data,
                              sensor_reading_events=self.__sensor_reading_events,
                              sensor_noise=self.__sensor_noise)
 
@@ -944,6 +948,10 @@ class ScenarioSimulator():
                 pumps_state_data = self.epanet_api.getLinkPumpState().reshape(1, -1)
                 tanks_volume_data = self.epanet_api.getNodeTankVolume().reshape(1, -1)
 
+                pump_idx = self.epanet_api.getLinkPumpIndex()
+                pump_energy_usage_data = self.epanet_api.getLinkEnergy(pump_idx).reshape(1, -1)
+                pump_efficiency_data = self.epanet_api.getLinkPumpEfficiency().reshape(1, -1)
+
                 link_valve_idx = self.epanet_api.getLinkValveIndex()
                 valves_state_data = self.epanet_api.getLinkStatus(link_valve_idx).reshape(1, -1)
 
@@ -956,6 +964,8 @@ class ScenarioSimulator():
                                        pumps_state_data_raw=pumps_state_data,
                                        valves_state_data_raw=valves_state_data,
                                        tanks_volume_data_raw=tanks_volume_data,
+                                       pump_energy_usage_data=pump_energy_usage_data,
+                                       pump_efficiency_data=pump_efficiency_data,
                                        sensor_readings_time=np.array([total_time]),
                                        sensor_reading_events=self.__sensor_reading_events,
                                        sensor_noise=self.__sensor_noise)
