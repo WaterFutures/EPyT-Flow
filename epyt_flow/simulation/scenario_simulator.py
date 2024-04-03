@@ -290,6 +290,14 @@ class ScenarioSimulator():
         bulk_species = []
         surface_species = []
 
+        node_id_to_idx = {node_id: self.epanet_api.getNodeIndex(node_id) - 1 for node_id in nodes}
+        link_id_to_idx = {link_id: self.epanet_api.getLinkIndex(link_id) - 1 for link_id in links}
+        valve_id_to_idx = None  # {valve_id: self.epanet_api.getLinkValveIndex(valve_id) for valve_id in valves}
+        pump_id_to_idx = None # {pump_id: self.epanet_api.getLinkPumpIndex(pump_id) - 1 for pump_id in pumps}
+        tank_id_to_idx = None #{tank_id: self.epanet_api.getNodeTankIndex(tank_id) - 1 for tank_id in tanks}
+        bulkspecies_id_to_idx = None
+        surfacespecies_it_to_idx = None
+
         if nodes != self.__sensor_config.nodes or links != self.__sensor_config.links or \
             valves != self.__sensor_config.valves or pumps != self.__sensor_config.pumps or \
             tanks != self.__sensor_config.tanks or \
@@ -298,7 +306,14 @@ class ScenarioSimulator():
             # Adapt sensor configuration if anything in the network topology changed
             new_sensor_config = SensorConfig(nodes=nodes, links=links, valves=valves, pumps=pumps,
                                              tanks=tanks, bulk_species=bulk_species,
-                                             surface_species=surface_species)
+                                             surface_species=surface_species,
+                                             node_id_to_idx=node_id_to_idx,
+                                             link_id_to_idx=link_id_to_idx,
+                                             valve_id_to_idx=valve_id_to_idx,
+                                             pump_id_to_idx=pump_id_to_idx,
+                                             tank_id_to_idx=tank_id_to_idx,
+                                             bulkspecies_id_to_idx=bulkspecies_id_to_idx,
+                                             surfacespecies_it_to_idx=surfacespecies_it_to_idx)
             new_sensor_config.pressure_sensors = self.__sensor_config.pressure_sensors
             new_sensor_config.flow_sensors = self.__sensor_config.flow_sensors
             new_sensor_config.demand_sensors = self.__sensor_config.demand_sensors

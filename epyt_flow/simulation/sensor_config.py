@@ -81,6 +81,50 @@ class SensorConfig(JsonSerializable):
         and the sensor locations (link/pipe IDs) are the values.
 
         The default is an empty list.
+    node_id_to_idx : `dict`, optional
+        Mapping of a node ID to the EPANET index (i.e. position in the raw sensor reading data).
+
+        If None is given, it is assumed that the nodes (in 'nodes') are
+        sorted according to their EPANET index.
+
+        The default is None.
+    link_id_to_idx : `dict`, optional
+        Mapping of a link/pipe ID to the EPANET index
+        (i.e. position in the raw sensor reading data).
+
+        If None is given, it is assumed that the links/pipes (in 'links') are
+        sorted according to their EPANET index..
+
+        The default is None.
+    valve_id_to_idx : `dict`, optional
+        Mapping of a valve ID to the EPANET index (i.e. position in the raw sensor reading data).
+
+        If None is given, it is assumed that the valves (in 'valves') are
+        sorted according to their EPANET index.
+
+        The default is None.
+    pump_id_to_idx : `dict`, optional
+        Mapping of a pump ID to the EPANET index (i.e. position in the raw sensor reading data).
+
+        If None is given, it is assumed that the pumps (in 'pumps') are
+        sorted according to their EPANET index.
+
+        The default is None.
+    tank_id_to_idx : `dict`, optional
+        Mapping of a tank ID to the EPANET index (i.e. position in the raw sensor reading data).
+
+        If None is given, it is assumed that the tanks (in 'tanks') are
+        sorted according to their EPANET index.
+
+        The default is None.
+    bulkspecies_id_to_idx : `dict`, optional
+        Mapping of a surface species ID to the EPANET index
+        (i.e. position in the raw sensor reading data).
+
+        If None is given, it is assumed that the surface species (in 'surface_species') are
+        sorted according to their EPANET index.
+
+        The default is None.
     """
     def __init__(self, nodes: list[str], links: list[str], valves: list[str], pumps: list[str],
                  tanks: list[str], bulk_species: list[str], surface_species: list[str],
@@ -89,8 +133,11 @@ class SensorConfig(JsonSerializable):
                  quality_node_sensors: list[str] = [], quality_link_sensors: list[str] = [],
                  valve_state_sensors: list[str] = [], pump_state_sensors: list[str] = [],
                  tank_volume_sensors: list[str] = [],
-                 bulk_species_sensors: dict = {},
-                 surface_species_sensors: dict = {}, **kwds):
+                 bulk_species_sensors: dict = {}, surface_species_sensors: dict = {},
+                 node_id_to_idx: dict = None, link_id_to_idx: dict = None,
+                 valve_id_to_idx: dict = None, pump_id_to_idx: dict = None,
+                 tank_id_to_idx: dict = None, bulkspecies_id_to_idx: dict = None,
+                 surfacespecies_id_to_idx: dict = None, **kwds):
         if not isinstance(nodes, list):
             raise TypeError("'nodes' must be an instance of 'list[str]' " +
                             f"but not of '{type(nodes)}'")
@@ -99,6 +146,7 @@ class SensorConfig(JsonSerializable):
         if any(not isinstance(n, str) for n in nodes):
             raise TypeError("Each item in 'nodes' must be an instance of 'str' -- " +
                             "ID of a node in the network.")
+
         if not isinstance(links, list):
             raise TypeError("'links' must be an instance of 'list[str]' " +
                             f"but not of '{type(links)}'")
@@ -144,48 +192,56 @@ class SensorConfig(JsonSerializable):
         if any(n not in nodes for n in pressure_sensors):
             raise ValueError("Each item in 'pressure_sensors' must be in 'nodes' -- " +
                              "cannot place a sensor at a non-existing node.")
+
         if not isinstance(flow_sensors, list):
             raise TypeError("'flow_sensors' must be an instance of 'list[str]' " +
                             f"but not of '{type(flow_sensors)}'")
         if any(link not in links for link in flow_sensors):
             raise ValueError("Each item in 'flow_sensors' must be in 'links' -- cannot " +
                              "place a sensor at a non-existing link/pipe.")
+
         if not isinstance(demand_sensors, list):
             raise TypeError("'demand_sensors' must be an instance of 'list[str]' " +
                             f"but not of '{type(demand_sensors)}'")
         if any(n not in nodes for n in demand_sensors):
             raise ValueError("Each item in 'demand_sensors' must be in 'nodes' -- cannot " +
                              "place a sensor at a non-existing node.")
+
         if not isinstance(quality_node_sensors, list):
             raise TypeError("'quality_node_sensors' must be an instance of 'list[str]' " +
                             f"but not of '{type(quality_node_sensors)}'")
         if any(n not in nodes for n in quality_node_sensors):
             raise ValueError("Each item in 'quality_node_sensors' must be in 'nodes' -- cannot " +
                              "place a sensor at a non-existing node.")
+
         if not isinstance(quality_link_sensors, list):
             raise TypeError("'quality_link_sensors' must be an instance of 'list[str]' " +
                             f"but not of '{type(quality_link_sensors)}'")
         if any(link not in links for link in quality_link_sensors):
             raise ValueError("Each item in 'quality_link_sensors' must be in 'links' -- cannot " +
                              "place a sensor at a non-existing link/pipe.")
+
         if not isinstance(valve_state_sensors, list):
             raise TypeError("'valve_state_sensors' must be an instance of 'list[str]' " +
                             f"but not of '{type(valve_state_sensors)}'")
         if any(link not in valves for link in valve_state_sensors):
             raise ValueError("Each item in 'valve_state_sensors' must be in 'valves' -- cannot " +
                              "place a sensor at a non-existing valve.")
+
         if not isinstance(pump_state_sensors, list):
             raise TypeError("'pump_state_sensors' must be an instance of 'list[str]' " +
                             f"but not of '{type(pump_state_sensors)}'")
         if any(link not in pumps for link in pump_state_sensors):
             raise ValueError("Each item in 'pump_state_sensors' must be in 'pumps' -- cannot " +
                              "place a sensor at a non-existing pump.")
+
         if not isinstance(tank_volume_sensors, list):
             raise TypeError("'tank_volume_sensors' must be an instance of 'list[str]' " +
                             f"but not of '{type(tank_volume_sensors)}'")
         if any(n not in tanks for n in tank_volume_sensors):
             raise ValueError("Each item in 'tank_volume_sensors' must be in 'tanks' -- cannot " +
                              "place a sensor at a non-existing tanks.")
+
         if not isinstance(bulk_species_sensors, dict):
             raise TypeError("'bulk_species_sensors' must be an instance if 'dict' but not " +
                             f"of '{type(bulk_species_sensors)}'")
@@ -194,6 +250,7 @@ class SensorConfig(JsonSerializable):
             raise ValueError("Unknown bulk species ID in 'bulk_species_sensors'")
         if any(node_id not in nodes for node_id in bulk_species_sensors.values()):
             raise ValueError("Unknown node ID in 'bulk_species_sensors'")
+
         if not isinstance(surface_species_sensors, dict):
             raise TypeError("'surface_species_sensors' must be an instance of 'dict' but not " +
                             f"of '{type(surface_species_sensors)}'")
@@ -202,6 +259,55 @@ class SensorConfig(JsonSerializable):
             raise ValueError("Unknown surface species ID in 'surface_species_sensors'")
         if any(link_id not in links for link_id in surface_species_sensors.values()):
             raise ValueError("Unknown link ID in 'surface_species_sensors'")
+
+        if node_id_to_idx is not None:
+            if not isinstance(node_id_to_idx, dict):
+                raise TypeError("'node_id_to_idx' must be an instance of 'dict' " +
+                                f"but not of '{type(node_id_to_idx)}'")
+            if any(n not in nodes for n in node_id_to_idx.keys()):
+                raise ValueError("Unknown node ID in 'node_id_to_idx'")
+
+        if link_id_to_idx is not None:
+            if not isinstance(link_id_to_idx, dict):
+                raise TypeError("'link_id_to_idx' must be an instance of 'dict' " +
+                                f"but not of '{type(link_id_to_idx)}'")
+            if any(link_id not in links for link_id in link_id_to_idx.keys()):
+                raise ValueError("Unknown link/pipe ID in 'link_id_to_idx'")
+
+        if valve_id_to_idx is not None:
+            if not isinstance(valve_id_to_idx, dict):
+                raise TypeError("'valve_id_to_idx' must be an instance of 'dict' " +
+                                f"but not of '{type(valve_id_to_idx)}'")
+            if any(v not in valves for v in valve_id_to_idx.keys()):
+                raise ValueError("Unknown valve ID in 'valve_id_to_idx'")
+
+        if pump_id_to_idx is not None:
+            if not isinstance(pump_id_to_idx, dict):
+                raise TypeError("'pump_id_to_idx' must be an instance of 'dict' " +
+                                f"but not of '{type(pump_id_to_idx)}'")
+            if any(p not in valves for p in pump_id_to_idx.keys()):
+                raise ValueError("Unknown pump ID in 'pump_id_to_idx'")
+
+        if tank_id_to_idx is not None:
+            if not isinstance(tank_id_to_idx, dict):
+                raise TypeError("'tank_id_to_idx' must be an instance of 'dict' " +
+                                f"but not of '{type(tank_id_to_idx)}'")
+            if any(t not in tanks for t in tank_id_to_idx.keys()):
+                raise ValueError("Unknown tank ID in 'tank_id_to_idx'")
+
+        if bulkspecies_id_to_idx is not None:
+            if not isinstance(bulkspecies_id_to_idx, dict):
+                raise TypeError("'bulkspecies_id_to_idx' must be an instance of 'dict' " +
+                                f"but not of '{type(bulkspecies_id_to_idx)}'")
+            if any(s not in bulk_species for s in bulkspecies_id_to_idx.keys()):
+                raise ValueError("Unknown bulk species ID in 'bulkspecies_id_to_idx'")
+
+        if surfacespecies_id_to_idx is not None:
+            if not isinstance(surfacespecies_id_to_idx, dict):
+                raise TypeError("'surfacespecies_id_to_idx' must be an instance of 'dict' " +
+                                f"but not of '{type(surfacespecies_id_to_idx)}'")
+            if any(s not in surface_species for s in surfacespecies_id_to_idx.keys()):
+                raise ValueError("Unknown surface species ID in 'surfacespecies_id_to_idx'")
 
         self.__nodes = nodes
         self.__links = links
@@ -220,34 +326,174 @@ class SensorConfig(JsonSerializable):
         self.__tank_volume_sensors = tank_volume_sensors
         self.__bulk_species_sensors = bulk_species_sensors
         self.__surface_species_sensors = surface_species_sensors
+        self.__node_id_to_idx = node_id_to_idx
+        self.__link_id_to_idx = link_id_to_idx
+        self.__valve_id_to_idx = valve_id_to_idx
+        self.__pump_id_to_idx = pump_id_to_idx
+        self.__tank_id_to_idx = tank_id_to_idx
+        self.__bulkspecies_id_to_idx = bulkspecies_id_to_idx
+        self.__surfacespecies_id_to_idx = surfacespecies_id_to_idx
 
         self.__compute_indices()    # Compute indices
 
         super().__init__(**kwds)
 
+    def node_id_to_idx(self, node_id: str) -> int:
+        """
+        Gets the index of a given node ID.
+
+        Parameters
+        ----------
+        node_id : `str`
+            Node ID.
+
+        Returns
+        -------
+        `int`
+            Index of the given node.
+        """
+        if self.__node_id_to_idx is not None:
+            return self.__node_id_to_idx[node_id]
+        else:
+            return self.__nodes.index(node_id)
+
+    def link_id_to_idx(self, link_id: str) -> int:
+        """
+        Gets the index of a given link ID.
+
+        Parameters
+        ----------
+        link_id : `str`
+            Link ID.
+
+        Returns
+        -------
+        `int`
+            Index of the given link.
+        """
+        if self.__node_id_to_idx is not None:
+            return self.__link_id_to_idx[link_id]
+        else:
+            return self.__links.index(link_id)
+
+    def valve_id_to_idx(self, valve_id: str) -> int:
+        """
+        Gets the index of a given valve ID.
+
+        Parameters
+        ----------
+        valve_id : `str`
+            Valve ID.
+
+        Returns
+        -------
+        `int`
+            Index of the given valve.
+        """
+        if self.__valve_id_to_idx is not None:
+            return self.__valve_id_to_idx[valve_id]
+        else:
+            return self.__valves.index(valve_id)
+
+    def pump_id_to_idx(self, pump_id: str) -> int:
+        """
+        Gets the index of a given pump ID.
+
+        Parameters
+        ----------
+        pump_id : `str`
+            Pump ID.
+
+        Returns
+        -------
+        `int`
+            Index of the given pump.
+        """
+        if self.__pump_id_to_idx is not None:
+            return self.__pump_id_to_idx[pump_id]
+        else:
+            return self.__pumps.index(pump_id)
+
+    def tank_id_to_idx(self, tank_id: str) -> int:
+        """
+        Gets the index of a given tank ID.
+
+        Parameters
+        ----------
+        tank_id : `str`
+            Tank ID.
+
+        Returns
+        -------
+        `int`
+            Index of the given tank.
+        """
+        if self.__tank_id_to_idx is not None:
+            return self.__tank_id_to_idx[tank_id]
+        else:
+            return self.__tanks.index(tank_id)
+
+    def bulkspecies_id_to_idx(self, bulk_species_id: str) -> int:
+        """
+        Gets the index of a given bulk species ID.
+
+        Parameters
+        ----------
+        bulk_species_id : `str`
+            Bulk species ID.
+
+        Returns
+        -------
+        `int`
+            Index of the given bulk species.
+        """
+        if self.__bulkspecies_id_to_idx is not None:
+            return self.__bulkspecies_id_to_idx[bulk_species_id]
+        else:
+            return self.__bulk_species.index(bulk_species_id)
+
+    def surfacespecies_id_to_idx(self, surface_species_id: str) -> int:
+        """
+        Gets the index of a given surface species ID.
+
+        Parameters
+        ----------
+        surface_species_id : `str`
+            Surface species ID.
+
+        Returns
+        -------
+        `int`
+            Index of the given surface species.
+        """
+        if self.__surfacespecies_id_to_idx is not None:
+            return self.__surfacespecies_id_to_idx[surface_species_id]
+        else:
+            return self.__surface_species.index(surface_species_id)
+
     def __compute_indices(self):
-        self.__pressure_idx = np.array([self.__nodes.index(n)
+        self.__pressure_idx = np.array([self.node_id_to_idx(n)
                                         for n in self.__pressure_sensors], dtype=np.int32)
-        self.__flow_idx = np.array([self.__links.index(link)
+        self.__flow_idx = np.array([self.link_id_to_idx(link)
                                     for link in self.__flow_sensors], dtype=np.int32)
-        self.__demand_idx = np.array([self.__nodes.index(n)
+        self.__demand_idx = np.array([self.node_id_to_idx(n)
                                       for n in self.__demand_sensors], dtype=np.int32)
-        self.__quality_node_idx = np.array([self.__nodes.index(n)
+        self.__quality_node_idx = np.array([self.node_id_to_idx(n)
                                             for n in self.__quality_node_sensors], dtype=np.int32)
-        self.__quality_link_idx = np.array([self.__links.index(link)
+        self.__quality_link_idx = np.array([self.link_id_to_idx(link)
                                             for link in self.__quality_link_sensors],
                                            dtype=np.int32)
-        self.__valve_state_idx = np.array([self.__valves.index(v)
+        self.__valve_state_idx = np.array([self.valve_id_to_idx(v)
                                            for v in self.__valve_state_sensors], dtype=np.int32)
-        self.__pump_state_idx = np.array([self.__pumps.index(p)
+        self.__pump_state_idx = np.array([self.pump_id_to_idx(p)
                                           for p in self.__pump_state_sensors], dtype=np.int32)
-        self.__tank_volume_idx = np.array([self.__tanks.index(t)
+        self.__tank_volume_idx = np.array([self.tank_id_to_idx(t)
                                            for t in self.__tank_volume_sensors], dtype=np.int32)
-        self.__bulk_species_idx = np.array([(self.__bulk_species.index(s),
+        self.__bulk_species_idx = np.array([(self.bulkspecies_id_to_idx(s),
                                              self.__bulk_species_sensors[s])
                                             for s in self.__bulk_species_sensors.keys()],
                                            dtype=np.int32)
-        self.__surface_species_idx = np.array([(self.__surface_species.index(s),
+        self.__surface_species_idx = np.array([(self.surfacespecies_id_to_idx(s),
                                                 self.__surface_species_sensors[s])
                                                for s in self.__surface_species_sensors.keys()],
                                               dtype=np.int32)
@@ -720,7 +966,15 @@ class SensorConfig(JsonSerializable):
                                            "tank_volume_sensors": self.__tank_volume_sensors,
                                            "bulk_species_sensors": self.__bulk_species_sensors,
                                            "surface_species_sensors":
-                                           self.__surface_species_sensors}
+                                           self.__surface_species_sensors,
+                                           "node_id_to_idx": self.__node_id_to_idx,
+                                           "link_id_to_idx": self.__link_id_to_idx,
+                                           "valve_id_to_idx": self.__valve_id_to_idx,
+                                           "pump_id_to_idx": self.__pump_id_to_idx,
+                                           "tank_id_to_idx": self.__tank_id_to_idx,
+                                           "bulkspecies_id_to_idx": self.__bulkspecies_id_to_idx,
+                                           "surfacespecies_id_to_idx":
+                                           self.__surfacespecies_id_to_idx}
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, SensorConfig):
