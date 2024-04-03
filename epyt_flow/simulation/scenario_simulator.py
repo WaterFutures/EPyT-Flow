@@ -296,7 +296,7 @@ class ScenarioSimulator():
         pump_id_to_idx = None # {pump_id: self.epanet_api.getLinkPumpIndex(pump_id) - 1 for pump_id in pumps}
         tank_id_to_idx = None #{tank_id: self.epanet_api.getNodeTankIndex(tank_id) - 1 for tank_id in tanks}
         bulkspecies_id_to_idx = None
-        surfacespecies_it_to_idx = None
+        surfacespecies_id_to_idx = None
 
         if nodes != self.__sensor_config.nodes or links != self.__sensor_config.links or \
             valves != self.__sensor_config.valves or pumps != self.__sensor_config.pumps or \
@@ -313,7 +313,7 @@ class ScenarioSimulator():
                                              pump_id_to_idx=pump_id_to_idx,
                                              tank_id_to_idx=tank_id_to_idx,
                                              bulkspecies_id_to_idx=bulkspecies_id_to_idx,
-                                             surfacespecies_it_to_idx=surfacespecies_it_to_idx)
+                                             surfacespecies_id_to_idx=surfacespecies_id_to_idx)
             new_sensor_config.pressure_sensors = self.__sensor_config.pressure_sensors
             new_sensor_config.flow_sensors = self.__sensor_config.flow_sensors
             new_sensor_config.demand_sensors = self.__sensor_config.demand_sensors
