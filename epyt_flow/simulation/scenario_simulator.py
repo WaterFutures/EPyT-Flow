@@ -2,7 +2,7 @@
 Module provides a class for scenario simulations.
 """
 import os
-from typing import Generator
+from typing import Generator, Union
 from copy import deepcopy
 import warnings
 import random
@@ -15,7 +15,8 @@ from tqdm import tqdm
 from .scenario_config import ScenarioConfig
 from .sensor_config import SensorConfig, SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY, \
     SENSOR_TYPE_NODE_DEMAND, SENSOR_TYPE_NODE_PRESSURE, SENSOR_TYPE_NODE_QUALITY, \
-    SENSOR_TYPE_PUMP_STATE, SENSOR_TYPE_TANK_VOLUME, SENSOR_TYPE_VALVE_STATE
+    SENSOR_TYPE_PUMP_STATE, SENSOR_TYPE_TANK_VOLUME, SENSOR_TYPE_VALVE_STATE, \
+    SENSOR_TYPE_BULK_SPECIES, SENSOR_TYPE_SURFACE_SPECIES
 from ..uncertainty import ModelUncertainty, SensorNoise
 from .events import SystemEvent, Leakage, ActuatorEvent, SensorFault, SensorReadingAttack, \
     SensorReadingEvent
@@ -636,7 +637,7 @@ class ScenarioSimulator():
 
         self.__sensor_reading_events.append(event)
 
-    def set_sensors(self, sensor_type: int, sensor_locations: list[str]) -> None:
+    def set_sensors(self, sensor_type: int, sensor_locations: Union[list[str], dict]) -> None:
         """
         Specifies all sensors of a given type (e.g. pressure sensor, flow sensor, etc.)
 
@@ -652,8 +653,11 @@ class ScenarioSimulator():
                 - SENSOR_TYPE_VALVE_STATE     = 6
                 - SENSOR_TYPE_PUMP_STATE      = 7
                 - SENSOR_TYPE_TANK_VOLUME     = 8
-        sensor_locations : `list[str]`
-            Locations (IDs) of sensors.
+                - SENSOR_TYPE_BULK_SPECIES    = 9
+                - SENSOR_TYPE_SURFACE_SPECIES = 10
+        sensor_locations : `list[str]` or `dict`
+            Locations (IDs) of sensors either as a list or as a dict in the case of
+            bulk and surface species.
         """
         self.__adapt_to_network_changes()
 
@@ -673,6 +677,10 @@ class ScenarioSimulator():
             self.__sensor_config.pump_state_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_TANK_VOLUME:
             self.__sensor_config.tank_volume_sensors = sensor_locations
+        elif sensor_type == SENSOR_TYPE_BULK_SPECIES:
+            self.__sensor_config.bulk_species_sensors = sensor_locations
+        elif sensor_type == SENSOR_TYPE_SURFACE_SPECIES:
+            self.__sensor_config.surface_species_sensors = sensor_locations
         else:
             raise ValueError(f"Unknown sensor type '{sensor_type}'")
 
@@ -767,6 +775,30 @@ class ScenarioSimulator():
             Locations (IDs) of sensors.
         """
         self.set_sensors(SENSOR_TYPE_TANK_VOLUME, sensor_locations)
+
+    def set_bulk_species_sensors(self, sensor_info: dict) -> None:
+        """
+        Sets the bulk species sensors -- i.e. measuring bulk species concentrations
+        at nodes in the network.
+
+        Parameters
+        ----------
+        sensor_info : `dict`
+            Bulk species sensors -- keys: bulk species IDs, values: node IDs.
+        """
+        self.set_sensors(SENSOR_TYPE_BULK_SPECIES, sensor_info)
+
+    def set_surface_species_sensors(self, sensor_info: dict) -> None:
+        """
+        Sets the surface species sensors -- i.e. measuring surface species concentrations
+        at nodes in the network.
+
+        Parameters
+        ----------
+        sensor_info : `dict`
+            Surface species sensors -- keys: surface species IDs, values: link/pipe IDs.
+        """
+        self.set_sensors(SENSOR_TYPE_SURFACE_SPECIES, sensor_info)
 
     def __prepare_simulation(self) -> None:
         self.__adapt_to_network_changes()
