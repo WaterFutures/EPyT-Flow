@@ -95,7 +95,7 @@ class ScadaDataExport():
 
     def create_column_desc(self, scada_data: ScadaData) -> np.ndarray:
         """
-        Creates columns descriptions -- i.e. sensor type and location for each column
+        Creates column descriptions -- i.e. sensor type and location for each column
 
         Parameters
         ----------

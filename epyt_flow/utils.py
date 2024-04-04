@@ -216,7 +216,7 @@ def get_temp_folder() -> str:
 
 def to_seconds(days: int = None, hours: int = None, minutes: int = None) -> int:
     """
-    Converts a time stamp (i.e. days, hours, minutes) into seconds.
+    Converts a timestamp (i.e. days, hours, minutes) into seconds.
 
     Parameters
     ----------
@@ -230,7 +230,7 @@ def to_seconds(days: int = None, hours: int = None, minutes: int = None) -> int:
     Returns
     -------
     `int`
-        Time stamp in seconds.
+        Timestamp in seconds.
     """
     sec = 0
 

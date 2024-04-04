@@ -59,18 +59,18 @@ def load_water_usage(download_dir: str = None, return_X_y: bool = True) -> dict:
 
     .. note::
 
-        Note that altough this data set is synthetic, only the final data set is provided.
+        Note that although this data set is synthetic, only the final data set is provided.
 
     Parameters
     ----------
     download_dir : `str`, optional
         Path to the data files -- if None, the temp folder will be used.
-        If the path does not exist, the data files will be downloaded to the give path.
+        If the path does not exist, the data files will be downloaded to the given path.
 
         The default is None.
     return_X_y : `bool`, optional
         If True, the data is returned together with the multi-class labels as two Numpy arrays,
-        otherwise the data is returned as Pandas data frame.
+        otherwise, the data is returned as Pandas data frame.
 
         The default is True.
 

@@ -410,7 +410,7 @@ class ScenarioSimulator():
 
     def get_topology(self) -> NetworkTopology:
         """
-        Gets the topology (incl. information such as eleveations, pipe diameters, etc.) of this WDN.
+        Gets the topology (incl. information such as elevations, pipe diameters, etc.) of this WDN.
 
         Returns
         -------
@@ -823,7 +823,7 @@ class ScenarioSimulator():
             Path to an EPANET .hyd file for storing the simulated hydraulics -- these hydraulics
             can be used later for an advanced quality analysis using EPANET-MSX.
 
-            If None, the simulated hydraulics will NOT be exported to a EPANET .hyd file.
+            If None, the simulated hydraulics will NOT be exported to an EPANET .hyd file.
 
             The default is None.
         verbose : `bool`, optional
@@ -893,7 +893,7 @@ class ScenarioSimulator():
             Path to an EPANET .hyd file for storing the simulated hydraulics -- these hydraulics
             can be used later for an advanced quality analysis using EPANET-MSX.
 
-            If None, the simulated hydraulics will NOT be exported to a EPANET .hyd file.
+            If None, the simulated hydraulics will NOT be exported to an EPANET .hyd file.
 
             The default is None.
         verbose : `bool`, optional
@@ -1072,7 +1072,7 @@ class ScenarioSimulator():
 
         Note that all these parameters can be stated in the .inp file as well.
 
-        You only have to specify the parameters which you want to change -- all others
+        You only have to specify the parameters that are to be changed -- all others
         can be left as None and will not be changed.
 
         Parameters

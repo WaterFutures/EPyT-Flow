@@ -19,7 +19,7 @@ class ActuatorConstants:
     EN_CLOSED
         Valve or pump is closed.
     EN_OPEN
-        Valave or pump is open -- i.e. active.
+        Valve or pump is open -- i.e. active.
     """
     EN_CLOSED       = 0
     EN_OPEN         = 1

@@ -1,5 +1,5 @@
 """
-Module provides a base classes for events.
+Module provides a base class for events.
 """
 from abc import ABC
 import math
@@ -13,7 +13,7 @@ class Event(ABC):
     ----------
     start_time : `int`
         Starting time (seconds since the simulation start) of this event.
-    end_time : `int`, otpional
+    end_time : `int`, optional
         Time (seconds since the simulation start) when this event ends -- None if it never ends.
 
         The default is None.

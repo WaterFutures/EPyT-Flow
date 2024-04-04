@@ -1,5 +1,5 @@
 """
-Module provides a classes for control modules.
+Module provides a base class for control modules.
 """
 from abc import abstractmethod, ABC
 import warnings
@@ -61,7 +61,7 @@ class AdvancedControlModule(ABC):
 
     def set_pump_speed(self, pump_id: str, speed: float) -> None:
         """
-        Sets the speed of pump.
+        Sets the speed of a pump.
 
         Parameters
         ----------

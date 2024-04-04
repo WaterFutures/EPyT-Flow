@@ -114,7 +114,7 @@ class Uncertainty(ABC):
         Returns
         -------
         `float`
-            Uncerainty applied to 'data'.
+            Uncertainty applied to 'data'.
         """
         raise NotImplementedError()
 
@@ -384,7 +384,7 @@ class AbsoluteDeepUniformUncertainty(DeepUniformUncertainty, JsonSerializable):
 @serializable(RELATIVE_DEEP_UNIFORM_UNCERTAINTY_ID, ".epytflow_uncertainty_relative_deep_uniform")
 class RelativeDeepUniformUncertainty(DeepUniformUncertainty, JsonSerializable):
     """
-    Class implementing relative deep uniform uncertainty -- i.e. data is multplied by
+    Class implementing relative deep uniform uncertainty -- i.e. data is multiplied by
     random uniform noise (shape of the noise is changing over time).
     """
     def apply(self, data: float) -> float:
@@ -534,7 +534,7 @@ class DeepUncertainty(Uncertainty):
 @serializable(ABSOLUTE_DEEP_UNCERTAINTY_ID, ".epytflow_uncertainty_absolute_deep")
 class AbsoluteDeepUncertainty(DeepUncertainty, JsonSerializable):
     """
-    Class implementing absolute deep uncertainty -- i.e. completly random noise
+    Class implementing absolute deep uncertainty -- i.e. completely random noise
     is added to the data.
     """
     def apply(self, data: float) -> float:
@@ -546,8 +546,8 @@ class AbsoluteDeepUncertainty(DeepUncertainty, JsonSerializable):
 @serializable(RELATIVE_DEEP_UNCERTAINTY_ID, ".epytflow_uncertainty_relative_deep")
 class RelativeDeepUncertainty(DeepUncertainty, JsonSerializable):
     """
-    Class implementing realtive deep uncertainty -- i.e. data is multiplied by
-    completly random noise.
+    Class implementing relative deep uncertainty -- i.e. data is multiplied by
+    completely random noise.
     """
     def apply(self, data: float) -> float:
         data *= self._uncertainties[self._uncertainties_idx]

@@ -26,7 +26,7 @@ class SensorOverrideAttack(SensorReadingAttack, JsonSerializable):
 
     Parameters
     ----------
-    new_sensor_values : `np.ndarray`
+    new_sensor_values : `numpy.ndarray`
         New sensor reading values -- i.e. these values replace the true sensor reading values.
     """
     def __init__(self, new_sensor_values: np.ndarray, **kwds):
@@ -88,8 +88,8 @@ class SensorReplayAttack(SensorReadingAttack, JsonSerializable):
     Class implementing a sensor replay attack -- i.e. sensor readings are replaced by
     historical recordings.
 
-    If provided time window of historical recordings is smaller than the time window of the attack,
-    it repeats the historical values from the beginning onwards.
+    If the provided time window of historical recordings is smaller than the time window of the
+    attack, it repeats the historical values from the beginning onwards.
 
     Parameters
     ----------

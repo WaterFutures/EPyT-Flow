@@ -243,7 +243,7 @@ def load_data(return_test_scenario: bool, download_dir: str = None, return_X_y: 
               return_features_desc: bool = False, return_leak_locations: bool = False
               ) -> Union[pd.DataFrame, Any]:
     """
-    Laods the original BattLeDIM benchmark data set.
+    Loads the original BattLeDIM benchmark data set.
     Note that the data set exists in two different version --
     a training version and an evaluation/test version.
 
@@ -254,18 +254,18 @@ def load_data(return_test_scenario: bool, download_dir: str = None, return_X_y: 
         (i.e. training) data set is returned.
     download_dir : `str`, optional
         Path to the data files -- if None, the temp folder will be used.
-        If the path does not exist, the data files will be downloaded to the give path.
+        If the path does not exist, the data files will be downloaded to the given path.
 
         The default is None.
     return_X_y : `bool`, optional
         If True, the data is returned together with the labels (presence of a leakage) as
-        two Numpy arrays, otherwise the data is returned as a
+        two Numpy arrays, otherwise, the data is returned as a
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance.
 
         The default is False.
     return_features_desc : `bool`, optional
         If True and if `return_X_y` is True, the returned dictionary contains the
-        features' describtions (i.e. names) under the key "features_desc".
+        features' descriptions (i.e. names) under the key "features_desc".
 
         The default is False.
     return_leak_locations : `bool`
@@ -355,12 +355,12 @@ def load_scada_data(return_test_scenario: bool, download_dir: str = None,
         (i.e. training) scenario is returned.
     download_dir : `str`, optional
         Path to the data files -- if None, the temp folder will be used.
-        If the path does not exist, the data files will be downloaded to the give path.
+        If the path does not exist, the data files will be downloaded to the given path.
 
         The default is None.
     return_X_y : `bool`, optional
         If True, the data is returned together with the labels (presence of a leakage) as
-        two Numpy arrays, otherwise the data is returned as a
+        two Numpy arrays, otherwise, the data is returned as a
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance.
 
         The default is False.
@@ -421,7 +421,7 @@ def load_scenario(return_test_scenario: bool, download_dir: str = None) -> Scena
         (i.e. training) scenario is returned.
     download_dir : `str`, optional
         Path to the L-TOWN.inp file -- if None, the temp folder will be used.
-        If the path does not exist, the .inp will be downloaded to the give path.
+        If the path does not exist, the .inp will be downloaded to the given path.
 
         The default is None.
 

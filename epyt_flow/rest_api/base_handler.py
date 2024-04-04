@@ -15,7 +15,7 @@ class BaseHandler():
         """
         Sends an error that th given resource ID (e.g. scenario ID, or SCADA data ID) is invalid.
 
-        Paramaters
+        Parameters
         ----------
         resp : `falcon.Response`
             Response instance.
@@ -27,7 +27,7 @@ class BaseHandler():
         """
         Sends an error that the JSON parsing failed.
 
-        Paramaters
+        Parameters
         ----------
         resp : `falcon.Response`
             Response instance.
@@ -58,7 +58,7 @@ class BaseHandler():
         """
         Sends a JSON response.
 
-        Paramaters
+        Parameters
         ----------
         resp : `falcon.Response`
             Response instance.

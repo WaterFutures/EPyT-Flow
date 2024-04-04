@@ -57,7 +57,7 @@ def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool
     data set, 9 numeric water quality features are given at a sampling rate of 1 min over approx.
     3 month. The goal is to predict the presence of an anomaly -- i.e. binary classification.
 
-    More information can be found in https://zenodo.org/records/3884465 and
+    More information can be found at https://zenodo.org/records/3884465 and
     http://www.spotseven.de/gecco-challenge/gecco-challenge-2017/
 
     .. note::
@@ -69,7 +69,7 @@ def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool
     ----------
     download_dir : `str`, optional
         Path to the data files -- if None, the temp folder will be used.
-        If the path does not exist, the data files will be downloaded to the give path.
+        If the path does not exist, the data files will be downloaded to the given path.
 
         The default is None.
     return_X_y : `bool`, optional
@@ -121,7 +121,7 @@ def load_gecco2018_water_quality_data(download_dir: str = None, return_X_y: bool
     data set, 9 numeric water quality features are given at a sampling rate of 1 min over approx.
     3 month. The goal is to predict the presence of an anomaly -- i.e. binary classification.
 
-    More information can be found in https://zenodo.org/records/3884398 and
+    More information can be found at https://zenodo.org/records/3884398 and
     http://www.spotseven.de/gecco/gecco-challenge/gecco-challenge-2018/
 
     .. note::
@@ -133,7 +133,7 @@ def load_gecco2018_water_quality_data(download_dir: str = None, return_X_y: bool
     ----------
     download_dir : `str`, optional
         Path to the data files -- if None, the temp folder will be used.
-        If the path does not exist, the data files will be downloaded to the give path.
+        If the path does not exist, the data files will be downloaded to the given path.
 
         The default is None.
     return_X_y : `bool`, optional
@@ -186,7 +186,7 @@ def load_gecco2019_water_quality_data(download_dir: str = None, return_X_y: bool
     3 month. The goal is to predict the presence of an anomaly -- i.e. binary classification.
     The data set itself comes in three splits: A train set, a validation set, and a test set.
 
-    More information can be found in https://zenodo.org/records/4304080 and
+    More information can be found at https://zenodo.org/records/4304080 and
     https://www.th-koeln.de/informatik-und-ingenieurwissenschaften/gecco-challenge-2019_63244.php
 
     .. note::
@@ -198,7 +198,7 @@ def load_gecco2019_water_quality_data(download_dir: str = None, return_X_y: bool
     ----------
     download_dir : `str`, optional
         Path to the data files -- if None, the temp folder will be used.
-        If the path does not exist, the data files will be downloaded to the give path.
+        If the path does not exist, the data files will be downloaded to the given path.
 
         The default is None.
     return_X_y : `bool`, optional

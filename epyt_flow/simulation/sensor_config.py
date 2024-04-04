@@ -48,7 +48,7 @@ class SensorConfig(JsonSerializable):
 
         The default is an empty list.
     demand_sensors : `list[str]`, optional
-        List of all nodes (i.e. IDs) at which a demand sensor is placed..
+        List of all nodes (i.e. IDs) at which a demand sensor is placed.
 
         The default is an empty list.
     quality_node_sensors : `list[str]`, optional
@@ -866,7 +866,7 @@ class SensorConfig(JsonSerializable):
         Returns
         -------
         `list[str]`
-            All tank IDs with a tank level sensor.
+            All tank IDs with a tank volume sensor.
         """
         return self.__tank_volume_sensors.copy()
 
@@ -1040,13 +1040,13 @@ class SensorConfig(JsonSerializable):
         bulk_species_concentrations : `numpy.ndarray`
             Bulk species concentrations at all nodes.
 
-            Expect a three dimensional array: Frist dimension denotes time,
+            Expect a three-dimensional array: First dimension denotes time,
             second dimension corresponds to species ID,
             and third dimension contains the concentration.
         surface_species_concentrations : `numpy.ndarray`
             Surface species concentrations at all links/pipes.
 
-            Expect a three dimensional array: Frist dimension denotes time,
+            Expect a three-dimensional array: First dimension denotes time,
             second dimension corresponds to species ID,
             and third dimension contains the concentration.
 

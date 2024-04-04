@@ -30,7 +30,7 @@ class ScadaData(Serializable):
         This parameter is expected to be a 1d array with the same size as
         the number of rows in `sensor_readings_data_raw`.
     pressure_data_raw : `numpy.ndarray`, optional
-        Raw pressure values of all nodes as a two dimension array --
+        Raw pressure values of all nodes as a two-dimensional array --
         first dimension encodes time, second dimension pressure at nodes.
 
         The default is None,
@@ -801,7 +801,7 @@ class ScadaData(Serializable):
     def concatenate(self, other) -> None:
         """
         Concatenates two :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData` instances
-        -- i.e. add scada data from another given
+        -- i.e. add SCADA data from another given
         :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData` instance to this one.
 
         Note that the two :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData` instances

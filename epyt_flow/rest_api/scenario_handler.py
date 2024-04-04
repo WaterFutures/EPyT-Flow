@@ -71,7 +71,7 @@ class ScenarioRemoveHandler(ScenarioBaseHandler):
 
 class ScenarioConfigHandler(ScenarioBaseHandler):
     """
-    Class for handling a GET request for getting the scenario configuration of given scenario.
+    Class for handling a GET request for getting the scenario configuration of a given scenario.
     """
     def on_get(self, _, resp: falcon.Response, scenario_id: str) -> None:
         """
@@ -124,11 +124,11 @@ class ScenarioNewHandler(ScenarioBaseHandler):
 
 class ScenarioLeakageHandler(ScenarioBaseHandler):
     """
-    Class for handling GET an POST requests concerning leakages.
+    Class for handling GET and POST requests concerning leakages.
     """
     def on_get(self, _, resp: falcon.Response, scenario_id: str) -> None:
         """
-        Gets all leakages of given scenario.
+        Gets all leakages of a given scenario.
 
         Parameters
         ----------

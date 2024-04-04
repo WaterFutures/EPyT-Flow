@@ -205,7 +205,7 @@ class Serializable(ABC):
         f_in : `str`
             Path to the file where this serialized object will be stored.
         use_zip : `bool`, optional
-            If True, the file `f_in` is will be zip compressed -- False,
+            If True, the file `f_in` will be zip compressed -- False,
             if no compression is wanted.
 
             The default is True.
@@ -393,7 +393,7 @@ def save_to_file(f_out: str, data: Any, use_compression: bool = True) -> None:
     f_in : `str`
         Path to the file where the serialized data will be stored.
     use_compression : `bool`, optional
-        If True, the file `f_in` is will be gzip compressed -- False, if no compression is wanted.
+        If True, the file `f_in` will be gzip compressed -- False, if no compression is wanted.
 
         The default is True.
     """

@@ -165,12 +165,12 @@ class Leakage(SystemEvent, JsonSerializable):
         """
         return (np.pi * (diameter / 2) ** 2) * 10000.
 
-    def compute_leak_emitter_coefficient(self, area: float, discharg_coef: float = .75,
+    def compute_leak_emitter_coefficient(self, area: float, discharge_coef: float = .75,
                                          g: float = 9.80665) -> float:
         """
         Computes the leak emitter coefficient.
 
-        emitter_coef = discharg_coef * area * sqrt(2*g)   where g = 9.8, discharg_coef = .75
+        emitter_coef = discharge_coef * area * sqrt(2*g)   where g = 9.8, discharge_coef = .75
 
         leak_demand = emitter_coef * pressure^alpha       where alpha = .5
 
@@ -179,8 +179,8 @@ class Leakage(SystemEvent, JsonSerializable):
         area : `float`
             Leak area (mm^2) as computed in
             :func:`epyt_flow.simulation.events.leakages.Leakage.compute_leak_area`.
-        discharg_coef : `float`, optional
-            Discharg coefficient.
+        discharge_coef : `float`, optional
+            Discharge coefficient.
 
             The default is set to 0.75
         g : `float`, optional
@@ -193,7 +193,7 @@ class Leakage(SystemEvent, JsonSerializable):
         `float`
             Leak emitter coefficient.
         """
-        return discharg_coef * area * np.sqrt(2. * g)
+        return discharge_coef * area * np.sqrt(2. * g)
 
     def init(self, epanet_api: epyt.epanet) -> None:
         super().init(epanet_api)

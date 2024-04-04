@@ -25,6 +25,7 @@ scenarios :func:`~epyt_flow.data.benchmarks.batadal.load_scenario` and pre-gener
 SCADA data :func:`~epyt_flow.data.benchmarks.batadal.load_scada_data`.
 """
 import os
+from typing import Any
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -35,7 +36,7 @@ from ...utils import get_temp_folder, unpack_zip_archive, to_seconds, download_i
 from ...simulation import ScenarioConfig
 
 
-def parse_attacks_time(start_time: str, attacks_time):
+def __parse_attacks_time(start_time: str, attacks_time):
     events = []
     for event in attacks_time.splitlines():
         # Parse entry
@@ -60,12 +61,12 @@ def load_data(download_dir: str = None, return_X_y: bool = False,
     ----------
     download_dir : `str`, optional
         Path to the data files -- if None, the temp folder will be used.
-        If the path does not exist, the data files will be downloaded to the give path.
+        If the path does not exist, the data files will be downloaded to the given path.
 
         The default is None.
     return_X_y : `bool`, optional
         If True, the data together with the labels is returned as pairs of Numpy arrays.
-        Otherwise the data is returned as Pandas data frames.
+        Otherwise, the data is returned as Pandas data frames.
 
         The default is False.
     return_ground_truth : `bool`
@@ -73,7 +74,7 @@ def load_data(download_dir: str = None, return_X_y: bool = False,
         returned dictionary -- note that the labels provided in the benchmark constitute
         a partial labeling only.
 
-        Thed default is False.
+        The default is False.
     return_features_desc : `bool`
         If True and if `return_X_y` is True, feature names (i.e. descriptions) are included
         in the returned dictionary.
@@ -84,7 +85,7 @@ def load_data(download_dir: str = None, return_X_y: bool = False,
     `dict`
         Dictionary of the loaded benchmark data. The dictionary contains the two training
         data sets ("train_1" and "train_2"), as well as the test data set ("test").
-        If `return_X_y` is False, the each dictionary entry is a Pandas dataframe.
+        If `return_X_y` is False, each dictionary entry is a Pandas dataframe.
         Otherwise, it is a tuple of sensor readings and labels (except for the test set) --
         if `return_ground_truth` is True or `return_features_desc` is True, the corresponding
         data is appended to the tuple.
@@ -130,9 +131,9 @@ def load_data(download_dir: str = None, return_X_y: bool = False,
 
         # Create ground truth labels
         hydraulic_time_step = to_seconds(minutes=15)
-        training_data_2_events_time = parse_attacks_time(TRAINING_DATA_2_START_TIME,
-                                                         TRAINING_DATA_2_ATTACKS_TIME)
-        test_data_events_time = parse_attacks_time(TEST_DATA_START_TIME, TEST_DATA_ATTACKS_TIME)
+        training_data_2_events_time = __parse_attacks_time(TRAINING_DATA_2_START_TIME,
+                                                           TRAINING_DATA_2_ATTACKS_TIME)
+        test_data_events_time = __parse_attacks_time(TEST_DATA_START_TIME, TEST_DATA_ATTACKS_TIME)
 
         y_train_2_truth = np.zeros(X_train_2.shape[0])
         for event_start, event_end in training_data_2_events_time:
@@ -179,7 +180,7 @@ def load_data(download_dir: str = None, return_X_y: bool = False,
 
 
 def load_scada_data(download_dir: str = None, return_X_y: bool = False,
-                    return_ground_truth: bool = False, return_features_desc: bool = False):
+                    return_ground_truth: bool = False, return_features_desc: bool = False) -> Any:
     """
     Loads the SCADA data of the simulated BATADAL benchmark scenario -- note that due to
     randomness and undocumented aspects of the original BATADAL data set, these differ from
@@ -190,12 +191,12 @@ def load_scada_data(download_dir: str = None, return_X_y: bool = False,
     ----------
     download_dir : `str`, optional
         Path to the data files -- if None, the temp folder will be used.
-        If the path does not exist, the data files will be downloaded to the give path.
+        If the path does not exist, the data files will be downloaded to the given path.
 
         The default is None.
     return_X_y : `bool`, optional
         If True, the data together with the labels is returned as pairs of Numpy arrays.
-        Otherwise the data is returned as Pandas data frames.
+        Otherwisen the data is returned as Pandas data frames.
 
         The default is False.
     return_ground_truth : `bool`
@@ -203,7 +204,7 @@ def load_scada_data(download_dir: str = None, return_X_y: bool = False,
         returned dictionary -- note that the labels provided in the benchmark constitute
         a partial labeling only.
 
-        Thed default is False.
+        The default is False.
     return_features_desc : `bool`
         If True and if `return_X_y` is True, feature names (i.e. descriptions) are included
         in the returned dictionary.
@@ -221,14 +222,14 @@ def load_scenario(download_dir: str = None) -> ScenarioConfig:
     .. note::
 
         Note that due to randomness and undocumented aspects of the original BATADAL benchmark,
-        the simulation results differ from the original data set which can be loaded by calling
-        :func:`~epyt_flow.data.benchmarks.batadal.load_data`.
+        the scenario simulation results differ from the original data set which can be loaded by
+        calling :func:`~epyt_flow.data.benchmarks.batadal.load_data`.
 
     Parameters
     ----------
     download_dir : `str`, optional
         Path to the data files -- if None, the temp folder will be used.
-        If the path does not exist, the data files will be downloaded to the give path.
+        If the path does not exist, the data files will be downloaded to the given path.
 
         The default is None.
 

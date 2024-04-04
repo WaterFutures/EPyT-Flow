@@ -29,11 +29,11 @@ class ScenarioVisualizer():
 
         Parameters
         ----------
-        show_sensor_config : `bool`, otpional
+        show_sensor_config : `bool`, optional
             Indicates whether the sensor configuration should be shown as well.
 
             The default is False.
-        export_to_file : `str`, otpional
+        export_to_file : `str`, optional
             Path to the file where the visualization will be stored.
             If None, visualization will be just shown but NOT be stored anywhere.
 

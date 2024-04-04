@@ -1,5 +1,5 @@
 """
-LeakDB (Leakage Diagnosis Benchmark) by Vrachimis, S. G., Kyriakou, M. S., Eliades, D. G.
+LeakDB (Leakage Diagnosis Benchmark) by Vrachimis, S. G., Kyriakou, M. S., Eliades, D. G.,
 and Polycarpou, M. M. (2018), is a realistic leakage dataset for water distribution networks.
 The dataset is comprised of 1000 artificially created but realistic leakage
 scenarios, on different water distribution networks, under varying conditions.
@@ -176,7 +176,7 @@ def load_data(scenarios_id: list[int], use_net1: bool, download_dir: str = None,
 
         All scenarios together are a huge data set -- approx. 8GB for Net1 and 25GB for Hanoi.
         Downloading and loading might take some time! Also, a sufficient amount of hard disk
-        memory as required.
+        memory is required.
 
     Parameters
     ----------
@@ -186,17 +186,17 @@ def load_data(scenarios_id: list[int], use_net1: bool, download_dir: str = None,
         If True, Net1 LeakDB will be loaded, otherwise the Hanoi LeakDB will be loaded.
     download_dir : `str`, optional
         Path to the data files -- if None, the temp folder will be used.
-        If the path does not exist, the data files will be downloaded to the give path.
+        If the path does not exist, the data files will be downloaded to the given path.
 
         The default is None.
     return_X_y : `bool`, optional
         If True, the data is returned together with the labels (presence of a leakage) as
-        two Numpy arrays, otherwise the data is returned as Pandas data frames.
+        two Numpy arrays, otherwise, the data is returned as Pandas data frames.
 
         The default is False.
     return_features_desc : `bool`, optional
         If True and if `return_X_y` is True, the returned dictionary contains the
-        features' describtions (i.e. names) under the key "features_desc".
+        features' descriptions (i.e. names) under the key "features_desc".
 
         The default is False.
     return_leak_locations : `bool`
@@ -299,7 +299,7 @@ def load_scada_data(scenarios_id: list[int], use_net1: bool = True, download_dir
         Note that due to the randomness in the demand creation as well as in the model
         uncertainties, the SCADA data differs from the original data set
         which can be loaded by calling :func:`~epyt_flow.data.benchmarks.leakdb.load_data`.
-        However, the leakages (i.e. location and profile) are consisten with the original data set.
+        However, the leakages (i.e. location and profile) are consistent with the original data set.
 
     Parameters
     ----------
@@ -311,12 +311,12 @@ def load_scada_data(scenarios_id: list[int], use_net1: bool = True, download_dir
         The default is True.
     download_dir : `str`, optional
         Path to the data files -- if None, the temp folder will be used.
-        If the path does not exist, the data files will be downloaded to the give path.
+        If the path does not exist, the data files will be downloaded to the given path.
 
         The default is None.
     return_X_y : `bool`, optional
         If True, the data is returned together with the labels (presence of a leakage) as
-        two Numpy arrays, otherwise the data is returned as
+        two Numpy arrays, otherwise, the data is returned as
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances.
 
         The default is False.

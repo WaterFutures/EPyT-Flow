@@ -83,7 +83,7 @@ class ScadaDataSensorConfigHandler(ScadaDataBaseHandler):
 
     def on_post(self, req: falcon.Request, resp: falcon.Response, data_id: str) -> None:
         """
-        Sets the sensor configuration of a a given SCADA data instance.
+        Sets the sensor configuration of a given SCADA data instance.
 
         Parameters
         ----------
