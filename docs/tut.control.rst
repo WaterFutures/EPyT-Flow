@@ -60,7 +60,7 @@ based on the water level in tank "2":
 
         def step(self, scada_data: ScadaData) -> None:
             # Retrieve current water level in the tank
-            tank_volume = scada_data.get_data_tanks_water_volume([self.__tank_id])
+            tank_volume = scada_data.get_data_tanks_water_volume([self.__tank_id]).flatten()[0]
             tank_level = volume_to_level(float(tank_volume), self.__tank_diameter)
 
             # Decide if pump has to be deactivated or re-activated
