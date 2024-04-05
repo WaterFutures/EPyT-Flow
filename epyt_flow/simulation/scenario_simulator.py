@@ -428,6 +428,10 @@ class ScenarioSimulator():
         links_data = self.epanet_api.getNodesConnectingLinksID()
         links_diameter = self.epanet_api.getLinkDiameter()
         links_length = self.epanet_api.getLinkLength()
+        links_roughness_coeff = self.epanet_api.getLinkRoughnessCoeff()
+        links_bulk_coeff = self.epanet_api.getLinkBulkReactionCoeff()
+        links_wall_coeff = self.epanet_api.getLinkWallReactionCoeff()
+        links_loss_coeff = self.epanet_api.getLinkMinorLossCoeff()
 
         # Build graph describing the topology
         nodes = []
@@ -435,9 +439,13 @@ class ScenarioSimulator():
             nodes.append((node, {"elevation": node_elevation, "type": node_type}))
 
         links = []
-        for link_id, link, diameter, length in zip(links_id, links_data, links_diameter,
-                                                   links_length):
-            links.append((link_id, link, {"diameter": diameter, "length": length}))
+        for link_id, link, diameter, length, roughness_coeff, bulk_coeff, wall_coeff, loss_coeff \
+                in zip(links_id, links_data, links_diameter, links_length, links_roughness_coeff,
+                       links_bulk_coeff, links_wall_coeff, links_loss_coeff):
+            links.append((link_id, link, {"diameter": diameter, "length": length,
+                                          "roughness_coeff": roughness_coeff,
+                                          "bulk_coeff": bulk_coeff, "wall_coeff": wall_coeff,
+                                          "loss_coeff": loss_coeff}))
 
         return NetworkTopology(f_inp=self.f_inp_in, nodes=nodes, links=links)
 
