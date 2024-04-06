@@ -479,7 +479,7 @@ def load_ltown(download_dir: str = get_temp_folder(), use_realistic_demands: boo
     f_inp = "L-TOWN_v2_Model.inp" if use_realistic_demands is False else "L-TOWN_v2_Real.inp"
 
     f_in = os.path.join(download_dir, f_inp)
-    if use_realistic_demands:
+    if not use_realistic_demands:
         url = "https://zenodo.org/records/4017659/files/L-TOWN.inp?download=1"
     else:
         url = "https://zenodo.org/records/4017659/files/L-TOWN_Real.inp?download=1"
