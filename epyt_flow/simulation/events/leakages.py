@@ -22,8 +22,20 @@ class Leakage(SystemEvent, JsonSerializable):
         ID of the link at which the leak is placed.
         Note that if the leak is placed at a node, then 'link_id' must be None and the
         ID of the node must be set in 'node_id'
-    diameter : `float`
+    diameter : `float`, optional
         Diameter of this leak.
+
+        Alternatively, 'area' can be used for specifying the size of this leakage --
+        in this case, 'diameter' must be set to 'None'.
+
+        The default is None.
+    area : `float`, optional
+        Area of this leak.
+
+        Alternatively, 'diameter' can be used for specifying the size of this leakage --
+        in this case, 'area' must be set to 'None'.
+
+        The default is None.
     profile : `numpy.ndarray`
         Pattern of this leak.
     node_id : `str`, optional
@@ -33,8 +45,8 @@ class Leakage(SystemEvent, JsonSerializable):
 
         The default is None.
     """
-    def __init__(self, link_id: str, diameter: float, profile: np.ndarray, node_id: str = None,
-                 **kwds):
+    def __init__(self, link_id: str, profile: np.ndarray, diameter: float = None,
+                 area: float = None, node_id: str = None, **kwds):
         if link_id is not None and node_id is not None:
             raise ValueError("Leak can not be placed at a link and node at the same time")
         if link_id is None and node_id is None:
@@ -44,11 +56,23 @@ class Leakage(SystemEvent, JsonSerializable):
             if not isinstance(link_id, str):
                 raise TypeError("'link_id' must be an instance of 'str' " +
                                 f"but not of '{type(link_id)}'")
-        if not isinstance(diameter, float):
-            raise TypeError("'diameter must be an instance of 'float' but " +
-                            f"not of '{type(diameter)}'")
-        if diameter <= 0:
-            raise ValueError("'diameter' must be greater than zero")
+        if area is None and diameter is None:
+            raise ValueError("Either 'diameter' or 'area' must be given")
+        if area is not None and diameter is not None:
+                raise ValueError("Either 'diameter' or 'area' must be given, " +
+                                 "but not both at the same time")
+        if diameter is not None:
+            if not isinstance(diameter, float):
+                raise TypeError("'diameter must be an instance of 'float' but " +
+                                f"not of '{type(diameter)}'")
+            if diameter <= 0:
+                raise ValueError("'diameter' must be greater than zero")
+        if area is not None:
+            if not isinstance(area, float):
+                raise TypeError("'area must be an instance of 'float' but " +
+                                f"not of '{type(area)}'")
+            if area <= 0:
+                raise ValueError("'area' must be greater than zero")
         if profile is not None:
             if not isinstance(profile, np.ndarray):
                 raise TypeError("'profile' must be an instance of 'numpy.ndarray' but " +
@@ -64,6 +88,7 @@ class Leakage(SystemEvent, JsonSerializable):
         self.__link_id = link_id
         self.__node_id = node_id
         self.__diameter = diameter
+        self.__area = area
         self.__profile = profile
 
         self.__leaky_node_id = None
@@ -109,6 +134,18 @@ class Leakage(SystemEvent, JsonSerializable):
         return self.__diameter
 
     @property
+    def area(self) -> float:
+        """
+        Gets the area of the leak.
+
+        Returns
+        -------
+        `float`
+            Area of the leak.
+        """
+        return self.__area if self.__area is not None else self.compute_leak_area(self.__diameter)
+
+    @property
     def profile(self) -> np.ndarray:
         """
         Gets the pattern of the leak.
@@ -132,10 +169,10 @@ class Leakage(SystemEvent, JsonSerializable):
         self.__profile = pattern
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"link_id": self.link_id, "diameter": self.diameter,
-                                           "profile": self.profile,
+        return super().get_attributes() | {"link_id": self.__link_id, "diameter": self.__diameter,
+                                           "area": self.__area, "profile": self.__profile,
                                            "node_id": self.__leaky_node_id
-                                           if self.link_id is None else None}
+                                           if self.__link_id is None else None}
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Leakage):
@@ -143,11 +180,11 @@ class Leakage(SystemEvent, JsonSerializable):
 
         return super().__eq__(other) and self.__link_id == other.link_id \
             and self.__diameter == other.diameter and self.__profile == other.profile \
-            and self.__node_id == other.node_id
+            and self.__node_id == other.node_id and self.area == other.area
 
     def __str__(self) -> str:
-        return f"{super().__str__()} link_id: {self.link_id} diameter: {self.diameter} " +\
-            f"profile: {self.profile} node_id: {self.__node_id}"
+        return f"{super().__str__()} link_id: {self.__link_id} diameter: {self.__diameter} " +\
+            f"area: {self.__area} profile: {self.__profile} node_id: {self.__node_id}"
 
     def compute_leak_area(self, diameter: float) -> float:
         """
@@ -222,7 +259,7 @@ class Leakage(SystemEvent, JsonSerializable):
 
         # Compute leak emitter coefficient
         self.__leak_emitter_coef = self.compute_leak_emitter_coefficient(
-            self.compute_leak_area(self.__diameter))
+            self.compute_leak_area(self.area))
 
     def reset(self) -> None:
         self.__time_pattern_idx = 0
@@ -246,15 +283,26 @@ class AbruptLeakage(Leakage):
     ----------
     link_id : `str`
         ID of the link at which the leak is placed.
-    diameter : `float`
-        Maximum diameter of the leak -- i.e. small leak diameter in the beginning,
-        growing over time until peak time is reached.
+    diameter : `float`, optional
+        Diameter of the leak.
+
+        Alternatively, 'area' can be used to specify the size of this leak --
+        in this case, 'diameter' must be set to None.
+
+        The default is None.
+    area : `float`, optional
+        Area of the leakd.
+
+        Alternatively, 'diameter' can be used to specify the size of this leak --
+        in this case, 'area' must be set to None.
+
+        The default is None.
     """
-    def __init__(self, link_id: str, diameter: float, **kwds):
+    def __init__(self, link_id: str, diameter: float = None, area: float = None, **kwds):
         if "profile" not in kwds:
-            super().__init__(link_id=link_id, diameter=diameter, profile=None, **kwds)
+            super().__init__(link_id=link_id, diameter=diameter, area=area, profile=None, **kwds)
         else:
-            super().__init__(link_id=link_id, diameter=diameter, **kwds)
+            super().__init__(link_id=link_id, diameter=diameter, area=area, **kwds)
 
     def init(self, epanet_api: epyt.epanet) -> None:
         super().init(epanet_api)
@@ -280,14 +328,27 @@ class IncipientLeakage(Leakage):
     ----------
     link_id : `str`
         ID of the link at which the leak is placed.
-    diameter : `float`
+    diameter : `float`, optional
         Maximum diameter of the leak -- i.e. small leak diameter in the beginning,
         growing over time until peak time is reached.
+
+        Alternatively, 'area' can be used to specify the size of this leak --
+        in this case, 'diameter' must be set to None.
+
+        The default is None.
+    area : `float`, optional
+        Maximum area of the leak -- i.e. small leak area in the beginning,
+        growing over time until peak time is reached.
+
+        Alternatively, 'diameter' can be used to specify the size of this leak --
+        in this case, 'area' must be set to None.
+
+        The default is None.
     peak_time : `int`
         Time (seconds since the simulation start) when this leak reaches
         its larges size (leak diameter).
     """
-    def __init__(self, link_id: str, diameter: float, peak_time: int, **kwds):
+    def __init__(self, link_id: str, peak_time: int, diameter: float = None, area: float = None, **kwds):
         if peak_time < kwds["start_time"] or (kwds["end_time"] is not None and
                                               peak_time > kwds["end_time"]):
             raise ValueError("'peak_time' must be greater than 'start_time' and " +
@@ -296,9 +357,9 @@ class IncipientLeakage(Leakage):
         self.__peak_time = peak_time
 
         if "profile" not in kwds:
-            super().__init__(link_id=link_id, diameter=diameter, profile=None, **kwds)
+            super().__init__(link_id=link_id, diameter=diameter, area=area, profile=None, **kwds)
         else:
-            super().__init__(link_id=link_id, diameter=diameter, **kwds)
+            super().__init__(link_id=link_id, diameter=diameter, area=area, **kwds)
 
     @property
     def peak_time(self) -> int:

@@ -26,14 +26,14 @@ The created leakage can be added to the scenario by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_leakage`  
 of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
 
-In both cases, the ID of the link/pipe, the leak diameter (i.e. the size of the leak), 
+In both cases, the ID of the link/pipe, the leak diameter or area (i.e. the size of the leak), 
 and start and end times in seconds (after the simulation start) are needed.
 In the case of an incipient leakage, the peak time (in seconds) is also needed -- 
 the leak size is increasing linearly from the start time until it reaches its maximum 
 at the peak time where it stays until the leakage is over.
 
 .. note::
-    Which leak diameter refers to a small or large leak depends mainly on the link/pipe diameter, 
+    Which leak diameter/area refers to a small or large leak depends mainly on the link/pipe diameter, 
     which might be different for different links/pipes and is also likely to differ between
     different water distribution networks.
 
