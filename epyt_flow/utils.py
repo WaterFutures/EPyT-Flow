@@ -42,7 +42,8 @@ def volume_to_level(tank_volume: float, tank_diameter: float) -> float:
     return (4. / (math.pow(tank_diameter, 2) * math.pi)) * tank_volume
 
 
-def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, show: bool = True) -> None:
+def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, x_axis_label: str = None,
+                         y_axis_label: str = None, show: bool = True) -> None:
     """
     Plots a single or multiple time series.
 
@@ -53,6 +54,14 @@ def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, show: bool 
     labels : `list[str]`, optional
         Labels for each time series in `data`.
         If None, no labels are shown.
+
+        The default is None.
+    x_axis_label : `str`, optional
+        X axis label.
+
+        The default is None.
+    y_axis_label : `str`, optional
+        Y axis label.
 
         The default is None.
     show : `bool`, optional
@@ -67,6 +76,14 @@ def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, show: bool 
     if labels is not None:
         if not isinstance(labels, list) or not all(isinstance(label, str) for label in labels):
             raise TypeError("'labels' must be a instance of 'list[str]'")
+    if x_axis_label is not None:
+        if not isinstance(x_axis_label, str):
+            raise TypeError("'x_axis_label' must be an instance of 'str' " +
+                            f"but not of '{type(x_axis_label)}'")
+    if y_axis_label is not None:
+        if not isinstance(y_axis_label, str):
+            raise TypeError("'y_axis_label' must be an instance of 'str' " +
+                            f"but not of '{type(y_axis_label)}'")
     if not isinstance(show, bool):
         raise TypeError(f"'show' must be an instance of 'bool' but not of '{type(show)}'")
 
@@ -79,6 +96,11 @@ def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, show: bool 
 
     if not any(label is None for label in labels):
         plt.legend()
+
+    if x_axis_label is not None:
+        plt.xlabel(x_axis_label)
+    if y_axis_label is not None:
+        plt.ylabel(y_axis_label)
 
     if show is True:
         plt.show()
