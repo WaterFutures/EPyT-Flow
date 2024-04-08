@@ -2,7 +2,7 @@
 
 ## Design Paradigma
 
-Objects should be immutable whenever possible -- this allows us to avoid unintended side effects. Never trust user's input -- check all passed arguments carefully.
+Objects should be immutable whenever possible -- this allows us to avoid unintended side effects. Never trust the user's input -- check all passed arguments carefully.
 
 Code must work with all current Python versions from 3.9 to 3.12. Also, code must work on all major platforms: Windows, Linux, and Mac OSX.
 
@@ -14,7 +14,7 @@ Code must work with all current Python versions from 3.9 to 3.12. Also, code mus
 
 - Naming convention for variables and methods is to use ```lower_case_with_underscores``` and ```CapitalizedWords``` for class names.
 
-- Use typehints.
+- Use type hints.
 
 ## Tests
 
