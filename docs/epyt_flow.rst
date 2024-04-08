@@ -7,7 +7,7 @@ epyt_flow
    epyt_flow.simulation
    epyt_flow.uncertainty
    epyt_flow.rest_api
-   epyt_flow.detectors
+   epyt_flow.models
 
 
 epyt_flow.serialization

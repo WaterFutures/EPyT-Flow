@@ -1,14 +1,14 @@
 """
-Module provides a base class anomaly detectors.
+Module provides a base class for event detectors.
 """
 from abc import abstractmethod, ABC
 
 from ..simulation.scada import ScadaData
 
 
-class AnomalyDetector(ABC):
+class EventDetector(ABC):
     """
-    Base class for anomaly detectors.
+    Base class for event detectors.
     """
     def __init__(self, **kwds):
         super().__init__(**kwds)
@@ -16,12 +16,12 @@ class AnomalyDetector(ABC):
     @abstractmethod
     def apply(self, scada_data: ScadaData) -> list[int]:
         """
-        Applies this detector to given SCADA data  and returns suspicious time points.
+        Applies this detector to given SCADA data and returns suspicious time points.
 
         Parameters
         ----------
         scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
-            SCADA data in which to look for anomalies.
+            SCADA data in which to look for events (i.e. anomalies).
 
         Returns
         -------
