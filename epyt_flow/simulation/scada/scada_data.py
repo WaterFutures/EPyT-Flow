@@ -749,6 +749,8 @@ class ScadaData(Serializable):
         if self.__sensor_config.surface_species != other.sensor_config.surface_species:
             raise ValueError("Inconsistency in surface species found")
 
+        self.__sensor_readings = None
+
         if self.__pressure_data_raw is None and other.pressure_data_raw is not None:
             self.__pressure_data_raw = other.pressure_data_raw
             self.__sensor_config.pressure_sensors = other.sensor_config.pressure_sensors
