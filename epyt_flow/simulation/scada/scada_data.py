@@ -822,6 +822,8 @@ class ScadaData(Serializable):
                                           other.sensor_reading_events)):
             raise ValueError("'other' must have the same sensor reading events as this instance!")
 
+        self.__sensor_readings = None
+
         self.__sensor_readings_time = np.concatenate(
             (self.__sensor_readings_time, other.sensor_readings_time), axis=0)
 
