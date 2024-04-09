@@ -9,10 +9,10 @@ from epyt_flow.utils import to_seconds
 
 
 if __name__ == "__main__":
-    # Load the first LeakDB Hanoi scenario
+    # Create a new scenario simulation based on the first LeakDB Hanoi scenario
     config = load_leakdb_scenarios(scenarios_id=["1"], use_net1=False)[0]
     with ScenarioSimulator(scenario_config=config) as sim:
-        # Set simulaton duration to two days
+        # Set simulation duration to two days
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
         # Override the sensor readings of the flow sensor at link "1" with the value "42" for
@@ -25,7 +25,7 @@ if __name__ == "__main__":
                                                           sensor_type=SENSOR_TYPE_LINK_FLOW))
 
         # Run simulation and and retrieve flow readings
-        res = sim.run_simulation()
+        scada_data = sim.run_simulation()
 
-        flow_readings = res.get_data_flows(sensor_locations=["1"])
+        flow_readings = scada_data.get_data_flows(sensor_locations=["1"])
         print(flow_readings)

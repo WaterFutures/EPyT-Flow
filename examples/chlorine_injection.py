@@ -13,8 +13,8 @@ if __name__ == "__main__":
 
     # Create scenario
     with ScenarioSimulator(scenario_config=network_config) as sim:
-        # Set simulation duration to two days hours
-        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
+        # Set simulation duration to 12 hours
+        sim.set_general_parameters(simulation_duration=to_seconds(hours=12))
 
         # Enable chemical analysis
         sim.enable_chemical_analysis()
@@ -31,6 +31,6 @@ if __name__ == "__main__":
         # Run simulation
         scada_data = sim.run_simulation()
 
-        # Retrieve simulated chemical concentrations at all nodes
+        # Retrieve and show the simulated chemical concentrations at all nodes
         nodes_quality = scada_data.get_data_nodes_quality()
         print(nodes_quality)

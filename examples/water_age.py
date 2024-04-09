@@ -7,7 +7,7 @@ from epyt_flow.utils import to_seconds
 
 
 if __name__ == "__main__":
-    # Open/Create a new scenario based on the Richmond network
+    # Create a new scenario simulation based on the Richmond network
     network_config = load_richmond()
     with ScenarioSimulator(scenario_config=network_config) as sim:
         # Set simulation duration to two days

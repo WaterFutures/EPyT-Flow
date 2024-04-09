@@ -10,7 +10,7 @@ from epyt_flow.simulation.events import ActuatorConstants
 
 class MyControl(AdvancedControlModule):
     """
-    Mimic the control rules stated in Net1.inp
+    Mimics the control rules stated in Net1.inp
     """
     def __init__(self, **kwds):
         # Tank and pump ID
@@ -48,12 +48,12 @@ if __name__ == "__main__":
         sim.set_tank_sensors(sensor_locations=["2"])
         sim.set_pump_sensors(sensor_locations=["9"])
 
-        # Remove all controls that might exist
+        # Remove all existing controls
         sim.epanet_api.deleteControls()
 
         # Add custom controls
         sim.add_control(MyControl())
 
         # Run simulation and show sensor readings over time
-        res = sim.run_simulation()
-        print(res.get_data())
+        scada_data_res = sim.run_simulation()
+        print(scada_data_res.get_data())

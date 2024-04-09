@@ -25,7 +25,7 @@ if __name__ == "__main__":
                                  end_time=to_seconds(minutes=240)))
 
         # Run entire simulation
-        res = sim.run_simulation()
+        scada_data = sim.run_simulation()
 
         # Retrieve pressure readings at node "16"
-        print(res.get_data_pressures(sensor_locations=["16"]))
+        print(scada_data.get_data_pressures(sensor_locations=["16"]))

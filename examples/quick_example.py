@@ -1,14 +1,14 @@
 """
 Minimalistic usage example of EPyt-Flow.
 """
-from epyt_flow.data.networks import load_hanoi
+from epyt_flow.data.benchmarks import load_leakdb_scenarios
 from epyt_flow.simulation import ScenarioSimulator
 from epyt_flow.utils import to_seconds
 
 
 if __name__ == "__main__":
-    # Load Hanoi network
-    network_config = load_hanoi()
+    # Load first Hanoi scenario from LeakDB
+    network_config, = load_leakdb_scenarios(scenarios_id=["1"], use_net1=False)
 
     # Create scenario
     with ScenarioSimulator(scenario_config=network_config) as sim:
@@ -22,8 +22,8 @@ if __name__ == "__main__":
         sim.set_flow_sensors(sensor_locations=["1"])
 
         # Run entire simulation
-        res = sim.run_simulation()
+        scada_data = sim.run_simulation()
 
         # Show sensor readings over the entire simulation
-        print(f"Pressure readings: {res.get_data_pressures()}")
-        print(f"Flow readings: {res.get_data_flows()}")
+        print(f"Pressure readings: {scada_data.get_data_pressures()}")
+        print(f"Flow readings: {scada_data.get_data_flows()}")

@@ -8,7 +8,7 @@ from epyt_flow.utils import to_seconds
 
 
 if __name__ == "__main__":
-    # Load the first LeakDB Hanoi scenario
+    # Create a new scenario simulation based on the first LeakDB Hanoi scenario
     config = load_leakdb_scenarios(scenarios_id=["1"], use_net1=False)[0]
     with ScenarioSimulator(scenario_config=config) as sim:
         # Set simulation duration to two days
@@ -26,9 +26,9 @@ if __name__ == "__main__":
                                                         sensor_type=SENSOR_TYPE_NODE_PRESSURE))
 
         # Run simulation and and retrieve pressure readings
-        res = sim.run_simulation()
+        scada_data = sim.run_simulation()
 
-        pressure_readings = res.get_data_pressures(sensor_locations=["13"])
+        pressure_readings = scada_data.get_data_pressures(sensor_locations=["13"])
         print(pressure_readings[:5])
         print(pressure_readings[10:15])     # The same as the first 5 readings!
         print(pressure_readings[16:])
