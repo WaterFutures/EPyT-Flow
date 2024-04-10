@@ -22,6 +22,8 @@ Furthermore, it also provides an environment for developing and testing control 
 
     tutorial
 
+.. _tut.examples:
+
 Examples
 ========
 .. toctree::
@@ -29,6 +31,17 @@ Examples
    :caption: Jupyter notebooks
 
    examples/basic_usage
+   examples/plot_network
+   examples/network_topology
+   examples/uncertainties
+   examples/abrupt_leakage
+   examples/sensor_fault
+   examples/sensor_override_attack
+   examples/sensor_replay_attack
+   examples/pump_states
+   examples/control_example
+   examples/water_age
+   examples/chlorine_injection
 
 
 API Reference
