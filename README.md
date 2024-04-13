@@ -40,6 +40,10 @@ pip install .
 
 ## Quick Example
 
+<a target="_blank" href="https://colab.research.google.com/github/https://raw.githubusercontent.com/KIOS-Research/EPyT-Flow-Dev/main/docs/examples/basic_usage.ipynb">
+<img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
+
 ```python
 from epyt_flow.data.benchmarks import load_leakdb_scenarios
 from epyt_flow.simulation import ScenarioSimulator
