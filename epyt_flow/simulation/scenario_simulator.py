@@ -378,7 +378,7 @@ class ScenarioSimulator():
                                             "chemical_name": qual_info.QualityChemName,
                                             "units": qual_info.QualityChemUnits,
                                             "trace_node_id": qual_info.TraceNode},
-                          "demand_model": {"type": demand_info.DemandModelCode,
+                          "demand_model": {"type": "PDA" if demand_info.DemandModelCode == 1 else "DDA",
                                            "pressure_min": demand_info.DemandModelPmin,
                                            "pressure_required": demand_info.DemandModelPreq,
                                            "pressure_exponent": demand_info.DemandModelPexp}}
