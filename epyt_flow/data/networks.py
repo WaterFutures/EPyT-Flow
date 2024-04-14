@@ -3,7 +3,7 @@ Module provides functions for loading different water distribution networks.
 """
 import os
 
-from ..simulation import ScenarioConfig, ScenarioSimulator, SensorConfig
+from ..simulation import ScenarioConfig, ScenarioSimulator, SensorConfig, ToolkitConstants
 from ..utils import get_temp_folder, download_if_necessary
 
 
@@ -23,6 +23,20 @@ def create_empty_sensor_config(f_inp: str) -> SensorConfig:
     """
     with ScenarioSimulator(f_inp_in=f_inp) as sim:
         return sim.sensor_config
+
+
+def get_default_hydraulic_options() -> dict:
+    """
+    Gets standard hydraulic default options -- i.e. switch to pressure-driven analysis.
+
+    Returns
+    -------
+    `dict`
+        Dictionary with default hydraulics options that can be passed to
+        :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_general_parameters`.
+    """
+    return {"demand_model": {"type": "PDA", "pressure_min": 0, "pressure_required": 0.1,
+                             "pressure_exponent": 0.5}}
 
 
 def load_inp(f_in: str, include_empty_sensor_config: bool = True) -> ScenarioConfig:
@@ -48,9 +62,10 @@ def load_inp(f_in: str, include_empty_sensor_config: bool = True) -> ScenarioCon
         raise ValueError("Can not find 'f_in'")
 
     if include_empty_sensor_config is True:
-        return ScenarioConfig(f_inp_in=f_in, sensor_config=create_empty_sensor_config(f_inp=f_in))
+        return ScenarioConfig(f_inp_in=f_in, sensor_config=create_empty_sensor_config(f_inp=f_in),
+                              general_params=get_default_hydraulic_options())
     else:
-        return ScenarioConfig(f_inp_in=f_in)
+        return ScenarioConfig(f_inp_in=f_in, general_params=get_default_hydraulic_options())
 
 
 def load_net1(download_dir: str = get_temp_folder()) -> ScenarioConfig:
@@ -443,7 +458,8 @@ def load_hanoi(download_dir: str = get_temp_folder(),
         sensor_config.pressure_sensors = ["13", "16", "22", "30"]
         sensor_config.flow_sensors = ["1"]
 
-        config = ScenarioConfig(f_inp_in=config.f_inp_in, sensor_config=sensor_config)
+        config = ScenarioConfig(f_inp_in=config.f_inp_in, sensor_config=sensor_config,
+                                general_params=get_default_hydraulic_options())
 
     return config
 
@@ -495,7 +511,7 @@ def load_ltown(download_dir: str = get_temp_folder(), use_realistic_demands: boo
                                           "n636", "n644", "n679", "n722", "n726", "n740", "n752",
                                           "n769"]
         sensor_config.flow_sensors = ["p227", "p235"]
-        sensor_config.tank_level_sensors = ["T1"]
+        sensor_config.tank_volume_sensors = ["T1"]
         sensor_config.demand_sensors = ["n1", "n2",	"n3", "n4", "n6", "n7",	"n8", "n9",	"n10",
                                         "n11", "n13", "n16", "n17", "n18", "n19", "n20", "n21",
                                         "n22",	"n23", "n24", "n25", "n26", "n27", "n28", "n29",
@@ -508,7 +524,8 @@ def load_ltown(download_dir: str = get_temp_folder(), use_realistic_demands: boo
                                         "n376",	"n377",	"n378", "n379",	"n381",	"n382",	"n383",
                                         "n384",	"n385",	"n386", "n387",	"n388",	"n389"]
 
-        config = ScenarioConfig(f_inp_in=config.f_inp_in, sensor_config=sensor_config)
+        config = ScenarioConfig(f_inp_in=config.f_inp_in, sensor_config=sensor_config,
+                                general_params=get_default_hydraulic_options())
 
     return config
 
@@ -558,6 +575,7 @@ def load_ltown_a(download_dir: str = get_temp_folder(), use_realistic_demands: b
                                           "n769"]
         sensor_config.flow_sensors = ["p227", "p235"]
 
-        config = ScenarioConfig(f_inp_in=config.f_inp_in, sensor_config=sensor_config)
+        config = ScenarioConfig(f_inp_in=config.f_inp_in, sensor_config=sensor_config,
+                                general_params=get_default_hydraulic_options())
 
     return config

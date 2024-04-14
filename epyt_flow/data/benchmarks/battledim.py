@@ -441,7 +441,7 @@ def load_scenario(return_test_scenario: bool, download_dir: str = None) -> Scena
     # Set simulation duration
     general_params = {"simulation_duration": to_seconds(days=365),    # One year
                       "hydraulic_time_step": to_seconds(minutes=5),   # 5min time steps
-                      "reporting_time_step": to_seconds(minutes=5)}
+                      "reporting_time_step": to_seconds(minutes=5)} | ltown_config.general_params
 
     # Add events
     start_time = START_TIME_TEST if return_test_scenario is True else START_TIME_TRAIN

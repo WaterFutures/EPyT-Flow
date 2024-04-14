@@ -410,7 +410,7 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
     hydraulic_time_step = to_seconds(minutes=30)    # 30min time steps
     general_params = {"simulation_duration": to_seconds(days=365),   # One year
                       "hydraulic_time_step": hydraulic_time_step,
-                      "reporting_time_step": hydraulic_time_step}
+                      "reporting_time_step": hydraulic_time_step} | network_config.general_params
 
     # Add demand patterns
     def gen_dem(download_dir, use_net1):
