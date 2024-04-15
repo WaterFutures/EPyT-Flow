@@ -355,6 +355,99 @@ class ScenarioSimulator():
     def __exit__(self, *args):
         self.close()
 
+    def get_flow_units(self) -> int:
+        """
+        Gets the flow units.
+
+        Will be one of the following EPANET toolkit constants:
+
+            - EN_CFS = 0
+            - EN_GPM = 1
+            - EN_MGD = 2
+            - EN_IMGD = 3
+            - EN_AFD = 4
+            - EN_LPS = 5
+            - EN_LPM = 6
+            - EN_MLD = 7
+            - EN_CMH = 8
+            - EN_CMD = 9
+
+        Returns
+        -------
+        `int`
+            Flow units.
+        """
+        return self.epanet_api.api.ENgetflowunits()
+
+    def get_hydraulic_time_step(self) -> int:
+        """
+        Gets the hydraulic time step -- i.e. time step in the hydraulic simulation.
+
+        Returns
+        -------
+        `int`
+            Hydraulic time step in seconds.
+        """
+        return self.epanet_api.getTimeHydraulicStep()
+
+    def get_quality_time_step(self) -> int:
+        """
+        Gets the quality time step -- i.e. time step in the simple quality simulation.
+
+        Returns
+        -------
+        `int`
+            Quality time step in seconds.
+        """
+        return self.epanet_api.getTimeQualityStep()
+
+    def get_simulation_duration(self) -> int:
+        """
+        Gets the simulation duration -- i.e. time length to be simulated.
+
+        Returns
+        -------
+        `int`
+            Simulation duration in seconds.
+        """
+        return self.epanet_api.getTimeSimulationDuration()
+
+    def get_demand_model(self) -> dict:
+        """
+        Gets the demand model and its parameters.
+
+        Returns
+        -------
+        `dict`
+            Demand model.
+        """
+        demand_info = self.epanet_api.getDemandModel()
+
+        return {"type": "PDA" if demand_info.DemandModelCode == 1 else "DDA",
+                "pressure_min": demand_info.DemandModelPmin,
+                "pressure_required": demand_info.DemandModelPreq,
+                "pressure_exponent": demand_info.DemandModelPexp}
+
+    def get_quality_model(self) -> dict:
+        """
+        Gets the quality model and its parameters.
+
+        Note that this quality model refers to the simple quality analysis
+        as implemented in EPANET.
+
+        Returns
+        -------
+        `dict`
+            Quality model.
+        """
+        qual_info = self.epanet_api.getQualityInfo()
+
+        return {"code": qual_info.QualityCode,
+                "type": qual_info.QualityType,
+                "chemical_name": qual_info.QualityChemName,
+                "units": qual_info.QualityChemUnits,
+                "trace_node_id": qual_info.TraceNode}
+
     def get_scenario_config(self) -> ScenarioConfig:
         """
         Gets the configuration of this scenario -- i.e. all information & elements
@@ -367,21 +460,12 @@ class ScenarioSimulator():
         """
         self.__adapt_to_network_changes()
 
-        qual_info = self.epanet_api.getQualityInfo()
-        demand_info = self.epanet_api.getDemandModel()
-        general_params = {"hydraulic_time_step": self.epanet_api.getTimeHydraulicStep(),
-                          "quality_time_step": self.epanet_api.getTimeQualityStep(),
-                          "simulation_duration": self.epanet_api.getTimeSimulationDuration(),
-                          "flow_units": self.epanet_api.api.ENgetflowunits(),
-                          "quality_model": {"code": qual_info.QualityCode,
-                                            "type": qual_info.QualityType,
-                                            "chemical_name": qual_info.QualityChemName,
-                                            "units": qual_info.QualityChemUnits,
-                                            "trace_node_id": qual_info.TraceNode},
-                          "demand_model": {"type": "PDA" if demand_info.DemandModelCode == 1 else "DDA",
-                                           "pressure_min": demand_info.DemandModelPmin,
-                                           "pressure_required": demand_info.DemandModelPreq,
-                                           "pressure_exponent": demand_info.DemandModelPexp}}
+        general_params = {"hydraulic_time_step": self.get_hydraulic_time_step(),
+                          "quality_time_step": self.get_quality_time_step(),
+                          "simulation_duration": self.get_simulation_duration(),
+                          "flow_units": self.get_flow_units(),
+                          "quality_model": self.get_quality_model(),
+                          "demand_model": self.get_demand_model()}
 
         return ScenarioConfig(self.__f_inp_in, self.__f_msx_in, general_params, self.sensor_config,
                               self.controls, self.sensor_noise, self.model_uncertainty,
