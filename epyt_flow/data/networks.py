@@ -458,8 +458,7 @@ def load_hanoi(download_dir: str = get_temp_folder(),
         sensor_config.pressure_sensors = ["13", "16", "22", "30"]
         sensor_config.flow_sensors = ["1"]
 
-        config = ScenarioConfig(f_inp_in=config.f_inp_in, sensor_config=sensor_config,
-                                general_params=get_default_hydraulic_options())
+        config = ScenarioConfig(scenario_config=config, sensor_config=sensor_config)
 
     return config
 
@@ -524,8 +523,7 @@ def load_ltown(download_dir: str = get_temp_folder(), use_realistic_demands: boo
                                         "n376",	"n377",	"n378", "n379",	"n381",	"n382",	"n383",
                                         "n384",	"n385",	"n386", "n387",	"n388",	"n389"]
 
-        config = ScenarioConfig(f_inp_in=config.f_inp_in, sensor_config=sensor_config,
-                                general_params=get_default_hydraulic_options())
+        config = ScenarioConfig(scenario_config=config, sensor_config=sensor_config)
 
     return config
 
@@ -575,7 +573,6 @@ def load_ltown_a(download_dir: str = get_temp_folder(), use_realistic_demands: b
                                           "n769"]
         sensor_config.flow_sensors = ["p227", "p235"]
 
-        config = ScenarioConfig(f_inp_in=config.f_inp_in, sensor_config=sensor_config,
-                                general_params=get_default_hydraulic_options())
+        config = ScenarioConfig(scenario_config=config, sensor_config=sensor_config)
 
     return config

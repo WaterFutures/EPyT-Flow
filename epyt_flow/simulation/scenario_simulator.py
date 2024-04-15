@@ -432,7 +432,7 @@ class ScenarioSimulator():
         """
         Gets the quality model and its parameters.
 
-        Note that this quality model refers to the simple quality analysis
+        Note that this quality model refers to the basic quality analysis
         as implemented in EPANET.
 
         Returns
@@ -467,9 +467,12 @@ class ScenarioSimulator():
                           "quality_model": self.get_quality_model(),
                           "demand_model": self.get_demand_model()}
 
-        return ScenarioConfig(self.__f_inp_in, self.__f_msx_in, general_params, self.sensor_config,
-                              self.controls, self.sensor_noise, self.model_uncertainty,
-                              self.system_events, self.sensor_reading_events)
+        return ScenarioConfig(f_inp_in=self.__f_inp_in, f_msx_in=self.__f_msx_in,
+                              general_params=general_params, sensor_config=self.sensor_config,
+                              controls=self.controls, sensor_noise=self.sensor_noise,
+                              model_uncertainty=self.model_uncertainty,
+                              system_events=self.system_events,
+                              sensor_reading_events=self.sensor_reading_events)
 
     def estimate_memory_consumption(self) -> float:
         """

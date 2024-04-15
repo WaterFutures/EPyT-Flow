@@ -24,8 +24,21 @@ class ScenarioConfig(Serializable):
 
     Parameters
     ----------
-    f_inp_in : `str`
+    scenario_config : :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`, optional
+        Uses the given scenario configuration to create this instance --
+        other attributes passed to this constructor override the attributes in 'scenario_config'.
+
+        Note that if 'scenario_config' is None then 'f_inp_in' can not be None --
+        i.e. either 'scenario_config' or 'f_inp_in' must be given.
+
+        The default is None.
+    f_inp_in : `str`, optional
         Path to the .inp file.
+
+        Note that if 'f_inp_in' is None then 'scenario_config' can not be None --
+        i.e. either 'scenario_config' or 'f_inp_in' must be given.
+
+        The default is None.
     f_msx_in : `str`, optional
         Path to the .msx file -- optional, only necessary if EPANET-MSX is used.
 
@@ -58,16 +71,24 @@ class ScenarioConfig(Serializable):
         The default is an empty list.
     """
 
-    def __init__(self, f_inp_in: str, f_msx_in: str = None, general_params: dict = None,
-                 sensor_config: SensorConfig = None,
+    def __init__(self, scenario_config: Any = None, f_inp_in: str = None, f_msx_in: str = None,
+                 general_params: dict = None, sensor_config: SensorConfig = None,
                  controls: list[AdvancedControlModule] = [],
                  sensor_noise: SensorNoise = None,
-                 model_uncertainty: ModelUncertainty = ModelUncertainty(),
+                 model_uncertainty: ModelUncertainty = None,
                  system_events: list[SystemEvent] = [],
                  sensor_reading_events: list[SensorReadingEvent] = [], **kwds):
-        if not isinstance(f_inp_in, str):
-            raise TypeError("'f_inp_in' must be an instance of 'str' " +
-                            f"but no of '{type(f_inp_in)}'")
+        if f_inp_in is None and scenario_config is None:
+            raise ValueError("Either 'f_inp_in' or 'scenario_config' must be given")
+        if scenario_config is not None:
+            if not isinstance(scenario_config, ScenarioConfig):
+                raise TypeError("'scenario_config' must be an instance of " +
+                                "'epyt_flow.simulation.ScenarioConfig' but not of " +
+                                f"'{type(scenario_config)}'")
+        if f_inp_in is not None:
+            if not isinstance(f_inp_in, str):
+                raise TypeError("'f_inp_in' must be an instance of 'str' " +
+                                f"but no of '{type(f_inp_in)}'")
         if f_msx_in is not None:
             if not isinstance(f_msx_in, str):
                 raise TypeError("'f_msx_in' must be an instance of 'str' " +
@@ -94,10 +115,11 @@ class ScenarioConfig(Serializable):
                 raise TypeError("'sensor_noise' must be an instance of " +
                                 "'epyt_flow.uncertainty.SensorNoise' but not of " +
                                 f"'{type(sensor_noise)}'")
-        if not isinstance(model_uncertainty, ModelUncertainty):
-            raise TypeError("'model_uncertainty' must be an instance of " +
-                            "'epyt_flow.uncertainty.ModelUncertainty' but not of " +
-                            f"'{type(model_uncertainty)}'")
+        if model_uncertainty is not None:
+            if not isinstance(model_uncertainty, ModelUncertainty):
+                raise TypeError("'model_uncertainty' must be an instance of " +
+                                "'epyt_flow.uncertainty.ModelUncertainty' but not of " +
+                                f"'{type(model_uncertainty)}'")
         if not isinstance(system_events, list):
             raise TypeError("'system_events' must be an instance of " +
                             "'list[epyt_flow.simulation.events.SystemEvent]' but no of " +
@@ -115,15 +137,58 @@ class ScenarioConfig(Serializable):
                 raise TypeError("Each item in 'sensor_reading_events' must be an instance of " +
                                 "'epyt_flow.simulation.events.SensorReadingEvent'")
 
-        self.__f_inp_in = f_inp_in
-        self.__f_msx_in = f_msx_in
-        self.__general_params = general_params
-        self.__sensor_config = sensor_config
-        self.__controls = controls
-        self.__sensor_noise = sensor_noise
-        self.__model_uncertainty = model_uncertainty
-        self.__system_events = system_events
-        self.__sensor_reading_events = sensor_reading_events
+        if scenario_config is not None:
+            self.__f_inp_in = scenario_config.f_inp_in
+            self.__f_msx_in = scenario_config.f_msx_in if f_msx_in is None else f_msx_in
+
+            if general_params is None:
+                self.__general_params = scenario_config.general_params
+            else:
+                self.__general_params = general_params
+
+            if sensor_config is None:
+                self.__sensor_config = scenario_config.sensor_config
+            else:
+                self.__sensor_config = sensor_config
+
+            if len(controls) == 0:
+                self.__controls = scenario_config.controls
+            else:
+                self.__controls = controls
+
+            if sensor_noise is None:
+                self.__sensor_noise = scenario_config.sensor_noise
+            else:
+                self.__sensor_noise = sensor_noise
+
+            if model_uncertainty is None:
+                self.__model_uncertainty = scenario_config.model_uncertainty
+            else:
+                self.__model_uncertainty = model_uncertainty
+
+            if len(system_events) == 0:
+                self.__system_events = scenario_config.system_events
+            else:
+                self.__system_events = system_events
+
+            if len(sensor_reading_events) == 0:
+                self.__sensor_reading_events = scenario_config.sensor_reading_events
+            else:
+                self.__sensor_reading_events = sensor_reading_events
+        else:
+            self.__f_inp_in = f_inp_in
+            self.__f_msx_in = f_msx_in
+            self.__general_params = general_params
+            self.__sensor_config = sensor_config
+            self.__controls = controls
+            self.__sensor_noise = sensor_noise
+            self.__system_events = system_events
+            self.__sensor_reading_events = sensor_reading_events
+
+            if model_uncertainty is not None:
+                self.__model_uncertainty = model_uncertainty
+            else:
+                self.__model_uncertainty = ModelUncertainty()
 
         super().__init__(**kwds)
 
@@ -497,5 +562,7 @@ class ScenarioConfig(Serializable):
                                          surface_species_sensors=surface_species_sensors)
 
         # Create final scenario configuration
-        return ScenarioConfig(f_inp_in, f_msx_in, general_params, sensor_config, [], sensor_noise,
-                              model_uncertainty, leakages, sensor_faults)
+        return ScenarioConfig(f_inp_in=f_inp_in, f_msx_in=f_msx_in, general_params=general_params,
+                              sensor_config=sensor_config, controls=[], sensor_noise=sensor_noise,
+                              model_uncertainty=model_uncertainty, system_events=leakages,
+                              sensor_reading_events=sensor_faults)
