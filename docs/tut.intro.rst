@@ -65,7 +65,12 @@ chemical reactions (e.g. pipe wall reactions) and injections
 (e.g. chlorine injection or contamination events).
 
 Also, there exist two different types of demand models that can be used for simulating
-the hydraulics: Demand-driven analysis (DDA) and a pressure-driven analysis (PDA).
+the hydraulics: Demand-driven analysis (DDA) and a pressure-driven analysis (PDA) --
+note that EPyT-Flow uses pressure-driven analysis (PDA) as a default.
+
+The units of measurement are set globally and are either in *US customary* or *SI metric*.
+The units are set by settings the flow units -- more details can be found in the
+`EPANET documents on units <https://epanet22.readthedocs.io/en/latest/back_matter.html#units-of-measurement>`_.
 
 EPyT-Flow is based on EPANET and therefore uses a steady-state simulation of the hydraulics,
 on which the quality dynamics are computed. Details can be found in the
