@@ -86,16 +86,16 @@ class ScenarioControlEnv(ABC):
     @abstractmethod
     def step(self) -> tuple[ScadaData, float, bool]:
         """
-        Performs the next step by applying an action and observing 
+        Performs the next step by applying an action and observing
         the consequences (SCADA data, reward, terminated).
 
-        Note that `terminated` is only returned if `autoreset=False` otherwise 
+        Note that `terminated` is only returned if `autoreset=False` otherwise
         only SCADA data and reward are returned.
 
         Returns
         -------
         `(ScadaData, float, bool)`
-            Triple of observations (:class:`~epyt_flow.simuation.scada.scada_data.ScadaData`), 
+            Triple of observations (:class:`~epyt_flow.simuation.scada.scada_data.ScadaData`),
             reward (`float`), and terminated (`bool`).
         """
         raise NotImplementedError()
