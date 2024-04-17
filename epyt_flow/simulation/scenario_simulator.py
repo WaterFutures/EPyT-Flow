@@ -328,16 +328,6 @@ class ScenarioSimulator():
 
             self.__sensor_config = new_sensor_config
 
-    def __find_temporary_file(self) -> str:
-        # Sort files by time to find the temporary file created by EPANET
-        files = list(filter(lambda f: os.path.isfile(f) and "." not in f, os.listdir()))
-        files.sort(key=os.path.getmtime)
-
-        if len(files) == 0:
-            return None
-        else:
-            return files[::-1][0]
-
     def close(self):
         """
         Closes & unloads all resources and libraries.
@@ -1017,8 +1007,6 @@ class ScenarioSimulator():
         self.epanet_api.initializeHydraulicAnalysis(ToolkitConstants.EN_SAVE)
         self.epanet_api.initializeQualityAnalysis(ToolkitConstants.EN_SAVE)
 
-        tmp_file = self.__find_temporary_file()
-
         requested_time_step = self.epanet_api.getTimeHydraulicStep()
         reporting_time_start = self.epanet_api.getTimeReportingStart()
         reporting_time_step = self.epanet_api.getTimeReportingStep()
@@ -1115,12 +1103,7 @@ class ScenarioSimulator():
             if hyd_export is not None:
                 self.epanet_api.saveHydraulicFile(hyd_export)
         except Exception as ex:
-            if tmp_file is not None:
-                os.remove(tmp_file)  # Close temporary files before raising any exceptions
             raise ex
-
-        if tmp_file is not None:
-            os.remove(tmp_file)  # Close temporary files
 
     def set_model_uncertainty(self, model_uncertainty: ModelUncertainty) -> None:
         """
