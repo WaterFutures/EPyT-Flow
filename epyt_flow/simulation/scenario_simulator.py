@@ -81,7 +81,7 @@ class ScenarioSimulator():
 
         self.epanet_api = epanet(self.__f_inp_in, msx=self.__f_msx_in is not None)
         if self.__f_msx_in is not None:
-            self.epanet_api.loadMSXfile(self.__f_msx_in)
+            self.epanet_api.loadMSXFile(self.__f_msx_in)
 
         self.__sensor_config = SensorConfig(nodes=self.epanet_api.getNodeNameID(),
                                             links=self.epanet_api.getLinkNameID(),
