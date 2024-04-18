@@ -1,2 +1,2 @@
 include epyt_flow/VERSION
-recursive-include EPANET *
+recursive-include epyt_flow/EPANET *
