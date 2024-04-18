@@ -1,0 +1,51 @@
+MSX 2.0.0
+07/05/2023
+
+1. Improved water quality mass balance and mass balance reporting as in EPANET 2.2.
+
+2. Dispersion modeling as an option to be included in water quality simulation.
+
+3. OPENMP parallelization for both reaction and dispersion simulation codes.
+
+4. A batch fle (runvc.bat) is provided to automatically launch the Visual Studio C/C++ compiler and compile the reaction equations.
+
+
+MSX 1.1.00
+02/08/2011
+
+1. A new compilation option for the user's chemistry functions
+was added that makes the program run anywhere from 2 to ten
+times faster. Details are in the Users Manual.
+
+2. Problems related to the exponentiation operator (^) used
+in math expressions were fixed.
+
+3. A new error message (number 524) was added that detects if
+an expression tries to perform an illegal math operation.
+
+4. Several bugs in the routines that implement the MSXsavemsxfile
+toolkit function were fixed.
+
+5. A memory leak occurring when the MSXclose toolkit function is
+called was fixed.
+
+6. A possible unterminated string copy was fixed in the MSXgetID
+toolkit function.
+
+7. Temporary files are now created in the user's current working
+directory.
+
+MSX 1.00.01
+05/05/2008
+
+The following bugs are fixed.
+
+1. Report file specified in the [REPORT] section of the msx configuration file is not generated. Instead the multispecies modeling results are written to the EPANET report file.
+
+2. Memory violation error may occur when toolkit function MSXsavemsxfile is called.
+
+3. A source node which is defined as “setpoint” source behaves like “flowpaced” source and vice versa.
+
+4. MSXsetpattern did not set the current patternvalue index to be the first.
+
+5. Pipe roughness is added as a reserved hydraulic variable. The keyword is Kc. 
