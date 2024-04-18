@@ -1,6 +1,7 @@
 """
 Minimalistic usage example of EPyt-Flow.
 """
+from epyt_flow.simulation.scada.scada_data_export import ScadaDataXlsxExport
 from epyt_flow.data.benchmarks import load_leakdb_scenarios
 from epyt_flow.simulation import ScenarioSimulator
 from epyt_flow.utils import to_seconds
@@ -23,6 +24,9 @@ if __name__ == "__main__":
 
         # Run entire simulation
         scada_data = sim.run_simulation()
+
+        # Export data in excel
+        ScadaDataXlsxExport(f_out="myHanoiResults.xlsx").export(scada_data)
 
         # Show sensor readings over the entire simulation
         print(f"Pressure readings: {scada_data.get_data_pressures()}")

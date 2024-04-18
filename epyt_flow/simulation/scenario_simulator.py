@@ -81,7 +81,7 @@ class ScenarioSimulator():
 
         self.epanet_api = epanet(self.__f_inp_in, msx=self.__f_msx_in is not None)
         if self.__f_msx_in is not None:
-            self.epanet_api.loadMSXfile(self.__f_msx_in)
+            self.epanet_api.loadMSXFile(self.__f_msx_in)
 
         self.__sensor_config = SensorConfig(nodes=self.epanet_api.getNodeNameID(),
                                             links=self.epanet_api.getLinkNameID(),
@@ -327,16 +327,6 @@ class ScenarioSimulator():
             new_sensor_config.surface_species_sensors = self.__sensor_config.surface_species_sensors
 
             self.__sensor_config = new_sensor_config
-
-    def __find_temporary_file(self) -> str:
-        # Sort files by time to find the temporary file created by EPANET
-        files = list(filter(lambda f: os.path.isfile(f) and "." not in f, os.listdir()))
-        files.sort(key=os.path.getmtime)
-
-        if len(files) == 0:
-            return None
-        else:
-            return files[::-1][0]
 
     def close(self):
         """
@@ -949,6 +939,8 @@ class ScenarioSimulator():
         else:
             self.__prepare_simulation()
             res = self.epanet_api.getComputedTimeSeries()
+            if res.WarnFlag:
+                raise TypeError(self.epanet_api.getError(res.ErrCode))
 
             if len(self.epanet_api.getLinkPumpIndex()) != 0:
                 pumps_state = res.Status[:, self.epanet_api.getLinkPumpIndex() - 1]
@@ -1016,8 +1008,6 @@ class ScenarioSimulator():
         self.epanet_api.openQualityAnalysis()
         self.epanet_api.initializeHydraulicAnalysis(ToolkitConstants.EN_SAVE)
         self.epanet_api.initializeQualityAnalysis(ToolkitConstants.EN_SAVE)
-
-        tmp_file = self.__find_temporary_file()
 
         requested_time_step = self.epanet_api.getTimeHydraulicStep()
         reporting_time_start = self.epanet_api.getTimeReportingStart()
@@ -1115,12 +1105,7 @@ class ScenarioSimulator():
             if hyd_export is not None:
                 self.epanet_api.saveHydraulicFile(hyd_export)
         except Exception as ex:
-            if tmp_file is not None:
-                os.remove(tmp_file)  # Close temporary files before raising any exceptions
             raise ex
-
-        if tmp_file is not None:
-            os.remove(tmp_file)  # Close temporary files
 
     def set_model_uncertainty(self, model_uncertainty: ModelUncertainty) -> None:
         """
