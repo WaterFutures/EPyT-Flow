@@ -1,7 +1,9 @@
 """
 Module provides a class for scenario simulations.
 """
+import sys
 import os
+import pathlib
 from typing import Generator, Union
 from copy import deepcopy
 import warnings
@@ -79,9 +81,21 @@ class ScenarioSimulator():
         self.__system_events = []
         self.__sensor_reading_events = []
 
-        self.epanet_api = epanet(self.__f_inp_in, msx=self.__f_msx_in is not None)
+        custom_epanet_lib = None
+        custom_epanetmsx_lib = None
+        if sys.platform.startswith("linux"):
+            path_to_custom_libs = os.path.join(pathlib.Path(__file__).parent.resolve(),
+                                               "..", "customlibs")
+
+            if os.path.isfile(os.path.join(path_to_custom_libs, "libepanet2_2.so")):
+                custom_epanet_lib = os.path.join(path_to_custom_libs, "libepanet2_2.so")
+            if os.path.isfile(os.path.join(path_to_custom_libs, "libepanetmsx2_2_0.so")):
+                custom_epanetmsx_lib = os.path.join(path_to_custom_libs, "libepanetmsx2_2_0.so")
+
+        self.epanet_api = epanet(self.__f_inp_in, msx=False,
+                                 customlib=custom_epanet_lib)
         if self.__f_msx_in is not None:
-            self.epanet_api.loadMSXFile(self.__f_msx_in)
+            self.epanet_api.loadMSXFile(self.__f_msx_in, customMSXlib=custom_epanetmsx_lib)
 
         self.__sensor_config = SensorConfig(nodes=self.epanet_api.getNodeNameID(),
                                             links=self.epanet_api.getLinkNameID(),
