@@ -954,7 +954,7 @@ class ScenarioSimulator():
             self.__prepare_simulation()
             res = self.epanet_api.getComputedTimeSeries()
             if res.WarnFlag:
-                raise TypeError(self.epanet_api.getError(res.ErrCode))
+                raise RuntimeError(self.epanet_api.getError(res.ErrCode))
 
             if len(self.epanet_api.getLinkPumpIndex()) != 0:
                 pumps_state = res.Status[:, self.epanet_api.getLinkPumpIndex() - 1]
