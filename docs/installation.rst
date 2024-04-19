@@ -6,6 +6,12 @@ Installation
 
 Note that EPyT-Flow supports Python 3.9 - 3.12
 
+.. note::
+
+    EPyT-Flow compiles EPANET and EPANET-MSX libraries (and uses those instead of the pre-compiled
+    libraries that are shipped with EPyT) if it is installed on a Linux system and if
+    build tools (i.e. *build-essentials* package) are available.
+
 PyPI
 ----
 
