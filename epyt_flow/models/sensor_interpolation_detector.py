@@ -1,7 +1,7 @@
 """
 Module provides a simple residual-based event detector that performs sensor interpolation.
 """
-from typing import Any
+from typing import Any, Union
 from copy import deepcopy
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -56,17 +56,20 @@ class SensorInterpolationDetector(EventDetector):
         return self.__regressor_type == other.regressor_type and \
             all(self.__regressors == other.regressors)
 
-    def fit(self, scada_data: ScadaData) -> None:
+    def fit(self, scada_data: Union[ScadaData, np.ndarray]) -> None:
         """
         Fit detector to given SCADA data -- assuming the given data represents
         the normal operating state.
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or `numpy.ndarray`
             SCADA data to fit this detector.
         """
-        data = scada_data.get_data()
+        if isinstance(scada_data, ScadaData):
+            data = scada_data.get_data()
+        else:
+            data = scada_data
 
         self.__regressors = []
         for output_idx in range(data.shape[1]):
@@ -80,17 +83,17 @@ class SensorInterpolationDetector(EventDetector):
             model.fit(X, y)
 
             y_pred = model.predict(X)
-            threshold = 1.2 * np.abs(y_pred - y)
+            threshold = 1.2 * np.max(np.abs(y_pred - y))
 
             self.__regressors.append((input_idx, output_idx, model, threshold))
 
-    def apply(self, scada_data: ScadaData) -> list[int]:
+    def apply(self, scada_data: Union[ScadaData, np.ndarray]) -> list[int]:
         """
         Applies this detector to given SCADA data and returns suspicious time points.
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or `numpy.ndarray`
             SCADA data in which to look for events/anomalies.
 
         Returns
@@ -100,7 +103,10 @@ class SensorInterpolationDetector(EventDetector):
         """
         suspicious_time_points = []
 
-        X = scada_data.get_data()
+        if isinstance(scada_data, ScadaData):
+            X = scada_data.get_data()
+        else:
+            X = scada_data
 
         for input_idx, output_idx, model, threshold in self.__regressors:
             y_pred = model.predict(X[:, input_idx])
@@ -109,4 +115,4 @@ class SensorInterpolationDetector(EventDetector):
             suspicious_time_points += list(np.argwhere(np.abs(y_pred - y) > threshold).
                                            flatten())
 
-        return suspicious_time_points
+        return list(set(suspicious_time_points))
