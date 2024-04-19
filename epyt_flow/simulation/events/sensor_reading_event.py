@@ -125,7 +125,8 @@ class SensorReadingEvent(Event):
         return self.__sensor_type
 
     def get_attributes(self) -> dict:
-        return {"sensor_id": self.__sensor_id, "sensor_type": self.__sensor_type}
+        return super().get_attributes() | {"sensor_id": self.__sensor_id,
+                                           "sensor_type": self.__sensor_type}
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, SensorReadingEvent):
