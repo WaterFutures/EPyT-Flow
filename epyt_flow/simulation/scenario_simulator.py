@@ -92,7 +92,7 @@ class ScenarioSimulator():
             if os.path.isfile(os.path.join(path_to_custom_libs, "libepanetmsx2_2_0.so")):
                 custom_epanetmsx_lib = os.path.join(path_to_custom_libs, "libepanetmsx2_2_0.so")
 
-        self.epanet_api = epanet(self.__f_inp_in, msx=False,
+        self.epanet_api = epanet(self.__f_inp_in,
                                  customlib=custom_epanet_lib)
         if self.__f_msx_in is not None:
             self.epanet_api.loadMSXFile(self.__f_msx_in, customMSXlib=custom_epanetmsx_lib)
