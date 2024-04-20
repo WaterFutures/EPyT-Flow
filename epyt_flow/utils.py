@@ -12,6 +12,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+def time_points_to_one_hot_encoding(time_points: list[int], total_length: int) -> list[int]:
+    """
+    Converts a list of time points into a one-hot-encoding.
+
+    Parameters
+    ----------
+    time_points : `list[int]`
+        Time points to be one-hot-encoded.
+    total_length : `int`
+        Length of final one-hot-encoding.
+
+    Returns
+    -------
+    `list[int]`
+        One-hot-encoded time points.
+    """
+    results = [0] * total_length
+
+    for t in time_points:
+        results[t] = 1
+
+    return results
+
+
 def volume_to_level(tank_volume: float, tank_diameter: float) -> float:
     """
     Computes the water level in a tank containing a given volume of water.
