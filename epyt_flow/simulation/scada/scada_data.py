@@ -69,7 +69,7 @@ class ScadaData(Serializable):
         first dimension encodes time, second dimension water volume in tanks.
 
         The default is None.
-    surface_species_concentrations_raw : `numpy.ndarray`, optional
+    surface_species_concentration_raw : `numpy.ndarray`, optional
         Raw concentrations of surface species as a tree dimensional array --
         first dimension encodes time, second dimension denotes the different surface species,
         third dimension denotes species concentrations at links/pipes.
