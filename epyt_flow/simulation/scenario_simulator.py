@@ -1314,6 +1314,34 @@ class ScenarioSimulator():
             else:
                 raise ValueError(f"Unknown quality type: {quality_model['type']}")
 
+    def get_events_active_time_points(self) -> list[int]:
+        """
+        Gets a list of time points (i.e. seconds since simulation start) at which
+        at least one event (system or sensor readinge event) is active.
+
+        Returns
+        -------
+        `list[int]`
+            List of time points at which at least one event is active.
+        """
+        events_times = []
+
+        hyd_time_step = self.epanet_api.getTimeHydraulicStep()
+
+        def __process_event(event) -> None:
+            cur_time = event.start_time
+            while cur_time < event.end_time:
+                events_times.append(cur_time)
+                cur_time += hyd_time_step
+
+        for event in self.__sensor_reading_events:
+            __process_event(event)
+
+        for event in self.__system_events:
+            __process_event(event)
+
+        return list(set(events_times))
+
     def __warn_if_quality_set(self):
         qual_info = self.epanet_api.getQualityInfo()
         if qual_info.QualityCode != ToolkitConstants.EN_NONE:
