@@ -94,16 +94,26 @@ class ScenarioSimulator():
 
         self.epanet_api = epanet(self.__f_inp_in,
                                  customlib=custom_epanet_lib)
+
+        bulk_species = []
+        surface_species = []
         if self.__f_msx_in is not None:
             self.epanet_api.loadMSXFile(self.__f_msx_in, customMSXlib=custom_epanetmsx_lib)
+
+            for species_id, species_type in zip(self.epanet_api.getMSXSpeciesNameID(),
+                                                self.epanet_api.getMSXSpeciesType()):
+                if species_type == "BULK":
+                    bulk_species.append(species_id)
+                elif species_type == "WALL":
+                    surface_species.append(species_id)
 
         self.__sensor_config = SensorConfig(nodes=self.epanet_api.getNodeNameID(),
                                             links=self.epanet_api.getLinkNameID(),
                                             valves=self.epanet_api.getLinkValveNameID(),
                                             pumps=self.epanet_api.getLinkPumpNameID(),
                                             tanks=self.epanet_api.getNodeTankNameID(),
-                                            bulk_species=[],
-                                            surface_species=[])
+                                            bulk_species=bulk_species,
+                                            surface_species=surface_species)
         if scenario_config is not None:
             if scenario_config.general_params is not None:
                 self.set_general_parameters(**scenario_config.general_params)
