@@ -9,6 +9,7 @@ from copy import deepcopy
 import warnings
 import random
 import math
+import time
 import numpy as np
 from epyt import epanet
 from epyt.epanet import ToolkitConstants
@@ -24,6 +25,7 @@ from .events import SystemEvent, Leakage, ActuatorEvent, SensorFault, SensorRead
     SensorReadingEvent
 from .scada import ScadaData, AdvancedControlModule
 from ..topology import NetworkTopology
+from ..utils import get_temp_folder
 
 
 class ScenarioSimulator():
@@ -314,6 +316,14 @@ class ScenarioSimulator():
         tanks = self.epanet_api.getNodeTankNameID()
         bulk_species = []
         surface_species = []
+
+        if self.__f_msx_in is not None:
+            for species_id, species_type in zip(self.epanet_api.getMSXSpeciesNameID(),
+                                                self.epanet_api.getMSXSpeciesType()):
+                if species_type == "BULK":
+                    bulk_species.append(species_id)
+                elif species_type == "WALL":
+                    surface_species.append(species_id)
 
         node_id_to_idx = {node_id: self.epanet_api.getNodeIndex(node_id) - 1 for node_id in nodes}
         link_id_to_idx = {link_id: self.epanet_api.getLinkIndex(link_id) - 1 for link_id in links}
@@ -922,6 +932,120 @@ class ScenarioSimulator():
             for c in self.__controls:
                 c.init(self.epanet_api)
 
+    def _solve_msx(self) -> ScadaData:
+        """
+        Runs the EPANET-MSX simulation -- assumes that hydraulics have been already computed
+        (either by calling EPANET or by loading an .hyd file).
+
+        Returns
+        -------
+        :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
+            EPANET-MSX simulation results as SCADA data (i.e. species concentrations).
+        """
+        self.epanet_api.initializeMSXQualityAnalysis(ToolkitConstants.EN_NOSAVE)
+
+        bulk_species_idx = self.epanet_api.getMSXSpeciesIndex(self.__sensor_config.bulk_species)
+        surface_species_idx = self.epanet_api.getMSXSpeciesIndex(
+            self.__sensor_config.surface_species)
+
+        n_nodes = self.epanet_api.getNodeCount()
+        n_links = self.epanet_api.getLinkCount()
+        hyd_time_step = self.epanet_api.getTimeHydraulicStep()
+
+        # Initial concentrations:
+        bulk_species_concentrations = []
+        for species_idx in bulk_species_idx:
+            cur_species_concentrations = []
+
+            for node_idx in range(1, n_nodes+1):
+                concen = self.epanet_api.msx.MSXgetinitqual(0, node_idx, species_idx)
+                cur_species_concentrations.append(concen)
+
+            bulk_species_concentrations.append(cur_species_concentrations)
+
+        if len(bulk_species_concentrations) == 0:
+            bulk_species_concentrations = None
+        else:
+            bulk_species_concentrations = np.array(bulk_species_concentrations).\
+                reshape((1, len(bulk_species_idx), n_nodes))
+
+        surface_species_concentrations = []
+        for species_idx in surface_species_idx:
+            cur_species_concentrations = []
+
+            for link_idx in range(1, n_links+1):
+                concen = self.epanet_api.msx.MSXgetinitqual(1, link_idx, species_idx)
+                cur_species_concentrations.append(concen)
+
+            surface_species_concentrations.append(cur_species_concentrations)
+
+        if len(surface_species_concentrations) == 0:
+            surface_species_concentrations = None
+        else:
+            surface_species_concentrations = np.array(surface_species_concentrations).\
+                reshape((1, len(surface_species_idx), n_links))
+
+        final_scada_data = ScadaData(sensor_config=self.__sensor_config,
+                                     bulk_species_concentration_raw=bulk_species_concentrations,
+                                     surface_species_concentration_raw=
+                                     surface_species_concentrations,
+                                     sensor_readings_time=np.array([0]),
+                                     sensor_reading_events=self.__sensor_reading_events,
+                                     sensor_noise=self.__sensor_noise)
+
+        # Run step-by-step simulation
+        tleft = 1
+        while tleft > 0:
+            total_time, tleft = self.epanet_api.stepMSXQualityAnalysisTimeLeft()
+
+            if total_time % hyd_time_step == 0:
+                bulk_species_concentrations = []
+                for species_idx in bulk_species_idx:
+                    cur_species_concentrations = []
+
+                    for node_idx in range(1, n_nodes+1):
+                        concen = self.epanet_api.getMSXSpeciesConcentration(0, node_idx,
+                                                                            species_idx)
+                        cur_species_concentrations.append(concen)
+
+                    bulk_species_concentrations.append(cur_species_concentrations)
+
+                if len(bulk_species_concentrations) == 0:
+                    bulk_species_concentrations = None
+                else:
+                    bulk_species_concentrations = np.array(bulk_species_concentrations).\
+                        reshape((1, len(bulk_species_idx), n_nodes))
+
+                surface_species_concentrations = []
+                for species_idx in surface_species_idx:
+                    cur_species_concentrations = []
+
+                    for link_idx in range(1, n_links+1):
+                        concen = self.epanet_api.getMSXSpeciesConcentration(1, link_idx,
+                                                                            species_idx)
+                        cur_species_concentrations.append(concen)
+
+                    surface_species_concentrations.append(cur_species_concentrations)
+
+                if len(surface_species_concentrations) == 0:
+                    surface_species_concentrations = None
+                else:
+                    surface_species_concentrations = np.array(surface_species_concentrations).\
+                        reshape((1, len(surface_species_idx), n_links))
+
+                scada_data = ScadaData(sensor_config=self.__sensor_config,
+                                       bulk_species_concentration_raw=
+                                       bulk_species_concentrations,
+                                       surface_species_concentration_raw=
+                                       surface_species_concentrations,
+                                       sensor_readings_time=np.array([total_time]),
+                                       sensor_reading_events=self.__sensor_reading_events,
+                                       sensor_noise=self.__sensor_noise)
+
+                final_scada_data.concatenate(scada_data)
+
+        return final_scada_data
+
     def run_simulation(self, hyd_export: str = None, verbose: bool = False) -> ScadaData:
         """
         Runs the simulation of this scenario.
@@ -949,8 +1073,11 @@ class ScenarioSimulator():
 
         # Step by step simulation is required in some cases
         if len(self.__controls) != 0 or len(self.__system_events) != 0 or hyd_export is not None \
-                or len(self.sensor_config.tank_volume_sensors) != 0:
+                or len(self.sensor_config.tank_volume_sensors) != 0 or self.__f_msx_in is not None:
             result = None
+
+            if self.__f_msx_in is not None:
+                hyd_export = os .path.join(get_temp_folder(), f"epytflow_MSX_{time.time()}.hyd")
 
             for scada_data in self.run_simulation_as_generator(hyd_export=hyd_export,
                                                                verbose=verbose):
@@ -958,6 +1085,14 @@ class ScenarioSimulator():
                     result = scada_data
                 else:
                     result.concatenate(scada_data)
+
+            if self.f_msx_in is not None:
+                self.epanet_api.useMSXHydraulicFile(hyd_export)
+
+                result_msx = self._solve_msx()
+                result.join(result_msx)
+
+                os.remove(hyd_export)
 
             return result
         else:
