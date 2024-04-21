@@ -932,10 +932,15 @@ class ScenarioSimulator():
             for c in self.__controls:
                 c.init(self.epanet_api)
 
-    def _solve_msx(self) -> ScadaData:
+    def _solve_msx(self, verbose: bool) -> ScadaData:
         """
         Runs the EPANET-MSX simulation -- assumes that hydraulics have been already computed
         (either by calling EPANET or by loading an .hyd file).
+
+        Parameters
+        ----------
+        verbose : `bool`
+            If True, method will be verbose (e.g. showing a progress bar).
 
         Returns
         -------
@@ -951,6 +956,12 @@ class ScenarioSimulator():
         n_nodes = self.epanet_api.getNodeCount()
         n_links = self.epanet_api.getLinkCount()
         hyd_time_step = self.epanet_api.getTimeHydraulicStep()
+
+        if verbose is True:
+            print("Running EPANET-MSX ...")
+            n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
+                                     self.epanet_api.getTimeHydraulicStep())
+            progress_bar = iter(tqdm(range(n_iterations + 1), desc="Time steps"))
 
         # Initial concentrations:
         bulk_species_concentrations = []
@@ -984,6 +995,9 @@ class ScenarioSimulator():
         else:
             surface_species_concentrations = np.array(surface_species_concentrations).\
                 reshape((1, len(surface_species_idx), n_links))
+
+        if verbose is True:
+            next(progress_bar)
 
         final_scada_data = ScadaData(sensor_config=self.__sensor_config,
                                      bulk_species_concentration_raw=bulk_species_concentrations,
@@ -1032,6 +1046,9 @@ class ScenarioSimulator():
                 else:
                     surface_species_concentrations = np.array(surface_species_concentrations).\
                         reshape((1, len(surface_species_idx), n_links))
+
+                if verbose is True:
+                    next(progress_bar)
 
                 scada_data = ScadaData(sensor_config=self.__sensor_config,
                                        bulk_species_concentration_raw=
@@ -1089,7 +1106,7 @@ class ScenarioSimulator():
             if self.f_msx_in is not None:
                 self.epanet_api.useMSXHydraulicFile(hyd_export)
 
-                result_msx = self._solve_msx()
+                result_msx = self._solve_msx(verbose)
                 result.join(result_msx)
 
                 os.remove(hyd_export)
@@ -1173,6 +1190,7 @@ class ScenarioSimulator():
         reporting_time_step = self.epanet_api.getTimeReportingStep()
 
         if verbose is True:
+            print("Running EPANET ...")
             n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
                                      requested_time_step)
             progress_bar = iter(tqdm(range(n_iterations + 1), desc="Time steps"))
