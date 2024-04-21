@@ -6,6 +6,7 @@ import os
 import pathlib
 from typing import Generator, Union
 from copy import deepcopy
+import shutil
 import warnings
 import random
 import math
@@ -1093,6 +1094,7 @@ class ScenarioSimulator():
                 or len(self.sensor_config.tank_volume_sensors) != 0 or self.__f_msx_in is not None:
             result = None
 
+            hyd_export_old = hyd_export
             if self.__f_msx_in is not None:
                 hyd_export = os .path.join(get_temp_folder(), f"epytflow_MSX_{time.time()}.hyd")
 
@@ -1108,6 +1110,9 @@ class ScenarioSimulator():
 
                 result_msx = self._solve_msx(verbose)
                 result.join(result_msx)
+
+                if hyd_export_old is not None:
+                    shutil.copyfile(hyd_export, hyd_export_old)
 
                 os.remove(hyd_export)
 
