@@ -42,6 +42,7 @@ Examples
    examples/control_example
    examples/water_age
    examples/chlorine_injection
+   examples/event_detection
 
 
 API Reference
