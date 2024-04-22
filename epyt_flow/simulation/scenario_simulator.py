@@ -956,13 +956,18 @@ class ScenarioSimulator():
 
         n_nodes = self.epanet_api.getNodeCount()
         n_links = self.epanet_api.getLinkCount()
+
+        reporting_time_start = self.epanet_api.getTimeReportingStart()
+        reporting_time_step = self.epanet_api.getTimeReportingStep()
         hyd_time_step = self.epanet_api.getTimeHydraulicStep()
 
         if verbose is True:
             print("Running EPANET-MSX ...")
             n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
-                                     self.epanet_api.getTimeHydraulicStep())
+                                     hyd_time_step)
             progress_bar = iter(tqdm(range(n_iterations + 1), desc="Time steps"))
+
+        final_scada_data = None
 
         # Initial concentrations:
         bulk_species_concentrations = []
@@ -1000,13 +1005,14 @@ class ScenarioSimulator():
         if verbose is True:
             next(progress_bar)
 
-        final_scada_data = ScadaData(sensor_config=self.__sensor_config,
-                                     bulk_species_concentration_raw=bulk_species_concentrations,
-                                     surface_species_concentration_raw=
-                                     surface_species_concentrations,
-                                     sensor_readings_time=np.array([0]),
-                                     sensor_reading_events=self.__sensor_reading_events,
-                                     sensor_noise=self.__sensor_noise)
+        if reporting_time_start == 0:
+            final_scada_data = ScadaData(sensor_config=self.__sensor_config,
+                                        bulk_species_concentration_raw=bulk_species_concentrations,
+                                        surface_species_concentration_raw=
+                                        surface_species_concentrations,
+                                        sensor_readings_time=np.array([0]),
+                                        sensor_reading_events=self.__sensor_reading_events,
+                                        sensor_noise=self.__sensor_noise)
 
         # Run step-by-step simulation
         tleft = 1
@@ -1060,7 +1066,11 @@ class ScenarioSimulator():
                                        sensor_reading_events=self.__sensor_reading_events,
                                        sensor_noise=self.__sensor_noise)
 
-                final_scada_data.concatenate(scada_data)
+                if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
+                    if final_scada_data is None:
+                        final_scada_data = scada_data
+                    else:
+                        final_scada_data.concatenate(scada_data)
 
         return final_scada_data
 
