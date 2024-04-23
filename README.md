@@ -87,7 +87,7 @@ If you use this software, please cite it as follows:
 
 ```
 @misc{github:epytflow,
-        author = {André Artelt, Marios S. Kyriakou, Stelios G. Vrachimis},
+        author = {André Artelt, Marios S. Kyriakou, Stelios G. Vrachimis, Demetrios G. Eliades, Barbara Hammer, Marios M. Polycarpou},
         title = {EPyT-Flow -- EPANET Python Toolkit - Flow},
         year = {2024},
         publisher = {GitHub},
