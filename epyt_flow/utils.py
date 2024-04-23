@@ -96,7 +96,8 @@ def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, x_axis_labe
     if not isinstance(data, np.ndarray):
         raise TypeError(f"'data' must be an instance of 'numpy.ndarray' but not of '{type(data)}'")
     if len(data.shape) != 2:
-        raise ValueError("'data' must be a 2d array where each row corresponds to a time series")
+        raise ValueError("'data' must be a 2d array where each row corresponds to a time series " +
+                         "-- use '.reshape(1, -1)' in case of single time series")
     if labels is not None:
         if not isinstance(labels, list) or not all(isinstance(label, str) for label in labels):
             raise TypeError("'labels' must be a instance of 'list[str]'")
