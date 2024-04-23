@@ -141,3 +141,48 @@ The interaction of different species is modeled by *reaction equations*.
 
 More details about species and their reaction equations can be found in the
 `EPANET-MSX user manual <https://cfpub.epa.gov/si/si_public_file_download.cfm?p_download_id=547058&Lab=CESER>`_.
+
+The adavanced quality analysis requires an additional .msx file (`f_msx_in`) when creating a new
+:class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance:
+
+.. code-block:: python
+
+    scenario = ScenarioSimulator(f_inp_in="net2-cl2.inp", f_msx_in="net2-cl2.msx") 
+
+The .msx file contains the specifications of different species as well as their reaction dynamics.
+By passing an .msx file to `f_msx_in`, EPANET-MSX is loaded and initialized automatically.
+
+When running the simulation by calling
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.run_simulation`, first the
+hydraulics for the entire duration are simulated, and then the quality dynamics
+for the entire duration.
+
+.. note::
+
+    Because EPANET and EPANET-MSX do NOT support the simultaneous step-wise simulation of
+    hydraulics and advanced quality, only
+    :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.run_simulation` can
+    be used when working with EPANET-MSX.
+
+
+Similar to all other quantities, species sensors must be specified in order to
+retrieve the concentrations of those species.
+
+Example of a scenario where we want to monitor chlorine in Net2:
+
+.. code-block:: python
+
+    # Load EPANET-MSX scenario "net2-cl2" -- note that an .inp file as well
+    # as an .msx file is required
+    with ScenarioSimulator(f_inp_in="net2-cl2.inp", f_msx_in="net2-cl2.msx") as sim:
+        # Set simulation duration to 5 days
+        sim.set_general_parameters(simulation_duration=to_seconds(days=5))
+
+        # Monitor bulk species "CL2" at every node
+        sim.set_bulk_species_sensors(sensor_info={"CL2": sim.sensor_config.nodes})
+
+        # Run entire simulation
+        res = sim.run_simulation(verbose=True)
+
+        # Show concentration of chlorine species at every node
+        print(res.get_data_bulk_species_concentration())
