@@ -1281,8 +1281,8 @@ class ScadaData(Serializable):
 
         idx = [self.__sensor_config.get_index_of_reading(
             surface_species_sensor=(species_id, link_id))
-               for link_id in surface_species_sensor_locations[species_id]
-               for species_id in surface_species_sensor_locations]
+                for species_id in surface_species_sensor_locations
+                for link_id in surface_species_sensor_locations[species_id]]
         return self.__sensor_readings[:, idx]
 
     def get_data_bulk_species_concentration(self,
@@ -1324,13 +1324,13 @@ class ScadaData(Serializable):
                         raise ValueError(f"Link '{sensor_id}' is not included in the " +
                                          f"sensor configuration for species '{species_id}'")
         else:
-            bulk_species_sensor_locations = self.__sensor_config.surface_species_sensors
+            bulk_species_sensor_locations = self.__sensor_config.bulk_species_sensors
 
         if self.__sensor_readings is None:
             self.get_data()
 
         idx = [self.__sensor_config.get_index_of_reading(
             bulk_species_sensor=(species_id, node_id))
-               for node_id in bulk_species_sensor_locations[species_id]
-               for species_id in bulk_species_sensor_locations]
+                for species_id in bulk_species_sensor_locations
+                for node_id in bulk_species_sensor_locations[species_id]]
         return self.__sensor_readings[:, idx]

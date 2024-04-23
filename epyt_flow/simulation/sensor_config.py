@@ -490,13 +490,13 @@ class SensorConfig(JsonSerializable):
         self.__tank_volume_idx = np.array([self.tank_id_to_idx(t)
                                            for t in self.__tank_volume_sensors], dtype=np.int32)
         self.__bulk_species_idx = np.array([(self.bulkspecies_id_to_idx(s),
-                                             self.__bulk_species_sensors[s])
+                                             [self.node_id_to_idx(node_id) for node_id in self.__bulk_species_sensors[s]])
                                             for s in self.__bulk_species_sensors.keys()],
-                                           dtype=np.int32)
+                                           dtype=object)
         self.__surface_species_idx = np.array([(self.surfacespecies_id_to_idx(s),
-                                                self.__surface_species_sensors[s])
+                                                [self.link_id_to_idx(link_id) for link_id in self.__surface_species_sensors[s]])
                                                for s in self.__surface_species_sensors.keys()],
-                                              dtype=np.int32)
+                                              dtype=object)
 
         n_pressure_sensors = len(self.__pressure_sensors)
         n_flow_sensors = len(self.__flow_sensors)
@@ -903,7 +903,7 @@ class SensorConfig(JsonSerializable):
                             f"but not of '{type(bulk_species_sensors)}'")
         if any(species_id not in self.__bulk_species for species_id in bulk_species_sensors.keys()):
             raise ValueError("Unknown bulk species ID in 'bulk_species_sensors'")
-        if any(node_id not in self.__nodes for node_id in bulk_species_sensors.values()):
+        if any(node_id not in self.__nodes for node_id in sum(bulk_species_sensors.values(), [])):
             raise ValueError("Unknown node ID in 'bulk_species_sensors'")
 
         self.__bulk_species_sensors = bulk_species_sensors
@@ -931,7 +931,8 @@ class SensorConfig(JsonSerializable):
         if any(species_id not in self.__surface_species
                for species_id in surface_species_sensors.keys()):
             raise ValueError("Unknown surface species ID in 'surface_species_sensors'")
-        if any(link_id not in self.__links for link_id in surface_species_sensors.values()):
+        if any(link_id not in self.__links
+               for link_id in sum(surface_species_sensors.values(), [])):
             raise ValueError("Unknown link/pipe ID in 'surface_species_sensors'")
 
         self.__surface_species_sensors = surface_species_sensors
