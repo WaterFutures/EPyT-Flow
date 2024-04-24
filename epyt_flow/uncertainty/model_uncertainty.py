@@ -184,10 +184,26 @@ class ModelUncertainty(JsonSerializable):
 
     @property
     def constants(self) -> Uncertainty:
+        """
+        Gets the MSX constant uncertainty.
+
+        Returns
+        -------
+        :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
+            MSX constant uncertainty.
+        """
         return deepcopy(self.__constants)
 
     @property
     def parameters(self) -> Uncertainty:
+        """
+        Gets the MSX parameter uncertainty.
+
+        Returns
+        -------
+        :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
+            MSX parameter uncertainty.
+        """
         return deepcopy(self.__parameters)
 
     def get_attributes(self) -> dict:
@@ -270,7 +286,17 @@ class ModelUncertainty(JsonSerializable):
             epanet_api.setNodeElevations(elevations)
 
         if self.__constants is not None:
-            raise NotImplementedError()
+            constants = epanet_api.getMSXConstantsValue()
+            constants = self.__constants.apply_batch(constants)
+            epanet_api.setMSXConstantsValue(constants)
 
         if self.__parameters is not None:
-            raise NotImplementedError()
+            parameters_pipes = epanet_api.getMSXParametersPipesValue()
+            for i, pipe_idx in enumerate(epanet_api.getLinkPipeIndex()):
+                parameters_pipes[i] = self.__parameters.apply_batch(parameters_pipes[i])
+                epanet_api.setMSXParametersPipesValue(pipe_idx, parameters_pipes[i])
+
+            parameters_tanks = epanet_api.getMSXParametersTanksValue()
+            for i, tank_idx in enumerate(epanet_api.getNodeTankIndex()):
+                parameters_tanks[i] = self.__parameters.apply_batch(parameters_tanks[i])
+                epanet_api.setMSXParametersTanksValue(tank_idx, parameters_tanks[i])
