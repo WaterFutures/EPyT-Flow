@@ -7,6 +7,9 @@
 **  LAST UPDATE:   04/14/2021
 ***********************************************************************/
 
+#ifndef ROS2_H
+#define ROS2_H
+
 typedef struct {
 
     double** A;                     // Jacobian matrix
@@ -28,3 +31,5 @@ void ros2_close(void);
 int  ros2_integrate(double y[], int n, double t, double tnext,
                     double* htry, double atol[], double rtol[],
                     void (*func)(double, double*, int, double*));
+
+#endif

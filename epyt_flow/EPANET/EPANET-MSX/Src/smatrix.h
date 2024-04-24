@@ -1,7 +1,13 @@
+
+#ifndef SMATRIX_H
+#define SMATRIX_H
+
+#include "msxtypes.h"
+
 /* ----------- SMATRIX.C ---------------*/
-int     createsparse(void);               /* Creates sparse matrix      */
+int     msx_createsparse(void);               /* Creates sparse matrix      */
 int     allocsparse(void);                /* Allocates matrix memory    */
-void    freesparse(void);                 /* Frees matrix memory        */
+void    msx_freesparse(void);                 /* Frees matrix memory        */
 int     buildlists(int);                  /* Builds adjacency lists     */
 int     paralink(int, int, int);          /* Checks for parallel links  */
 void    xparalinks(void);                 /* Removes parallel links     */
@@ -17,5 +23,7 @@ int     storesparse(int);                 /* Stores sparse matrix       */
 int     ordersparse(int);                 /* Orders matrix storage      */
 void    transpose(int, int*, int*,        /* Transposes sparse matrix   */
     int*, int*, int*, int*, int*);
-int     linsolve(int, double*, double*, /* Solution of linear eqns.   */
+int     msx_linsolve(int, double*, double*, /* Solution of linear eqns.   */
     double*);               /* via Cholesky factorization */
+
+#endif

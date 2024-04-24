@@ -21,8 +21,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <malloc.h>
 #include <float.h>
+#include <stdlib.h>
 
 #include "msxtypes.h"
 #include "msxutils.h"                                                          
@@ -51,6 +51,38 @@ int    MSXrpt_write(void);
 int    MSXfile_save(FILE *f);
 
 //=============================================================================
+
+int MSXDLLEXPORT   MSXENopen(const char *inpFile, const char *rptFile, const char *outFile)
+/*
+**  Purpose:
+**    pass-thru to open the EPANET toolkit system
+**
+**  Input:
+**    inpFile = name of the EPANET input file
+**    rptFile = name of the EPANET report file
+**    outFile = name of the EPANET binary file
+**
+**  Returns:
+**    an error code (or 0 for no error);
+*/
+{
+    int err = 0;
+    err = ENopen(inpFile, rptFile, outFile);
+    return err;
+}
+
+int MSXDLLEXPORT   MSXENclose(void)
+/*
+**  Purpose:
+**    pass-thru to open the EPANET toolkit system
+**
+*/
+{
+    int err = 0;
+    err = ENclose();
+    return err;
+}
+
 
 int  MSXDLLEXPORT  MSXopen(char *fname)
 /*

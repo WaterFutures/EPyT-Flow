@@ -10,6 +10,9 @@
 **  LAST UPDATE:   2/8/11
 *******************************************************************************/
 
+#ifndef MSXUTILS_H
+#define MSXUTILS_H
+
 // Gets the name of a temporary file                                           
 char * MSXutils_getTempName(char *s);
 
@@ -49,3 +52,5 @@ void solve(double **a, int n, int *indx, double b[]);
 // Computes the Jacobian matrix of a set of functions
 void jacobian(double *x, int n, double *f, double *w, double **a,
               void (*func)(double, double*, int, double*));
+
+#endif

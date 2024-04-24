@@ -7,6 +7,9 @@
 **  LAST UPDATE:   04/14/2021
 ***********************************************************************/
 
+#ifndef RK5_H
+#define RK5_H
+
 typedef struct
 {
     int      Nmax;          // max. number of equations
@@ -32,3 +35,5 @@ void rk5_close(void);
 int  rk5_integrate(double y[], int n, double t, double tnext,
                    double* htry, double atol[], double rtol[],
                    void (*func)(double, double*, int, double*));
+
+#endif

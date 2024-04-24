@@ -11,8 +11,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <malloc.h>
 #include <math.h>
+#include <stdlib.h>
 
 #include "msxtypes.h"
 //#include "mempool.h"
@@ -1457,7 +1457,8 @@ void  evalnodeinflow(int k, double tstep, double* volin, double* massin)
             MSX.FirstSeg[k] = seg->prev;
             MSX.Link[k].nsegs--;
             if (MSX.FirstSeg[k] == NULL) MSX.LastSeg[k] = NULL;
-
+            else MSX.FirstSeg[k]->next = NULL; //03/19/2024 added to break the linked segments 
+		    
             // ... recycle the used up segment
             seg->prev = MSX.FreeSeg;
             MSX.FreeSeg = seg;

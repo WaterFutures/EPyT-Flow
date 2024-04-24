@@ -10,9 +10,13 @@
 **  LAST UPDATE:   08/30/2022
 ***********************************************************************/
 
+#ifndef MSXTYPES_H
+#define MSXTYPES_H
+
+#include <stdint.h>
+
 #include "mathexpr.h"
 #include "mempool.h"
-#include <stdint.h>
 
 //-----------------------------------------------------------------------------
 //  Definition of 4-byte integers & reals
@@ -544,4 +548,4 @@ typedef struct                         // MSX PROJECT VARIABLES
 
 } MSXproject;
 
-
+#endif

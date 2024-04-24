@@ -14,8 +14,9 @@
 //      HTfree()   - frees a hash table
 //-----------------------------------------------------------------------------
 
-#include <malloc.h>
 #include <string.h>
+#include <stdlib.h>
+
 #include "hash.h"
 
 /* Use Fletcher's checksum to compute 2-byte hash of string */

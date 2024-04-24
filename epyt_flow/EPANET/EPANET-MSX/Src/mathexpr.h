@@ -9,6 +9,9 @@
 **  LAST UPDATE:   2/8/11
 ******************************************************************************/
 
+#ifndef MATHEXPR_H
+#define MATHEXPR_H
+
 //  Node in a tokenized math expression list
 struct ExprNode
 {
@@ -32,3 +35,5 @@ void  mathexpr_delete(MathExpr* expr);
 // Returns reconstructed string version of a tokenized expression              
 char * mathexpr_getStr(MathExpr* expr, char* exprStr,
                        char * (*getVariableStr) (int, char *));
+
+#endif

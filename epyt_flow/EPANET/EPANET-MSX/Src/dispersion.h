@@ -1,3 +1,6 @@
+#ifndef DISPERSION_H
+#define DISPERSION_H
+
 #define MAXSEGMENTS 5000
 
 typedef enum {
@@ -20,3 +23,5 @@ void	dispersion_pipe(int m, double tstep);			//effective dispersion coefficient 
 void    solve_nodequal(int m, double tstep);			//solve nodal concentration
 void    segqual_update(int m, double tstep);			//update pipe segment concentration
 void	tridiag(int n, double *a, double *b, double *c, double *r, double *y);
+
+#endif

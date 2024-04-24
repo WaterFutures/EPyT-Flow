@@ -18,12 +18,12 @@ typedef void (*MSXGETEQUIL)(double *, double *, double * , double *, double *);
 typedef void (*MSXGETFORMULAS)(double *, double *, double *, double *);
 
 // Declare each chemistry function
-MSXGETRATES    MSXgetPipeRates;
-MSXGETRATES    MSXgetTankRates;
-MSXGETEQUIL    MSXgetPipeEquil;
-MSXGETEQUIL    MSXgetTankEquil;
-MSXGETFORMULAS MSXgetPipeFormulas;
-MSXGETFORMULAS MSXgetTankFormulas;
+extern MSXGETRATES    MSXgetPipeRates;
+extern MSXGETRATES    MSXgetTankRates;
+extern MSXGETEQUIL    MSXgetPipeEquil;
+extern MSXGETEQUIL    MSXgetTankEquil;
+extern MSXGETFORMULAS MSXgetPipeFormulas;
+extern MSXGETFORMULAS MSXgetTankFormulas;
 
 // Functions that load and free the chemistry functions
 int  MSXfuncs_load(char *);

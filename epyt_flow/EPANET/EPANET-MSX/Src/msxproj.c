@@ -12,8 +12,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <malloc.h>
 #include <math.h>
+#include <stdlib.h>
 
 #include "msxtypes.h"
 #include "msxutils.h"
@@ -145,7 +145,7 @@ int  MSXproj_open(char *fname)
         ENgetoption(13, &relvis);
         MSX.Dispersion.viscosity = relvis * 1.1E-5;
 
-        createsparse();   //symmetric matrix
+        msx_createsparse();   //symmetric matrix
     }
 
     // Build nodal adjacency lists 

@@ -34,6 +34,16 @@ HMODULE hDLL;
 
 #include "msxfuncs.h"
 
+
+MSXGETRATES    MSXgetPipeRates = NULL;
+MSXGETRATES    MSXgetTankRates = NULL;
+MSXGETEQUIL    MSXgetPipeEquil = NULL;
+MSXGETEQUIL    MSXgetTankEquil = NULL;
+MSXGETFORMULAS MSXgetPipeFormulas = NULL;
+MSXGETFORMULAS MSXgetTankFormulas = NULL;
+
+
+
 //=============================================================================
 
 int MSXfuncs_load(char * libName)
@@ -53,7 +63,7 @@ int MSXfuncs_load(char * libName)
 	hDLL = LoadLibraryA(libName);
 	if (hDLL == NULL) return 1;
 
-	MSXgetPipeRates    = (MSXGETRATES)    GetProcAddress(hDLL, "MSXgetPipeRates");
+	  MSXgetPipeRates    = (MSXGETRATES)    GetProcAddress(hDLL, "MSXgetPipeRates");
     MSXgetTankRates    = (MSXGETRATES)    GetProcAddress(hDLL, "MSXgetTankRates");
     MSXgetPipeEquil    = (MSXGETEQUIL)    GetProcAddress(hDLL, "MSXgetPipeEquil");
     MSXgetTankEquil    = (MSXGETEQUIL)    GetProcAddress(hDLL, "MSXgetTankEquil");
@@ -72,9 +82,9 @@ int MSXfuncs_load(char * libName)
     MSXgetTankFormulas = (MSXGETFORMULAS) dlsym(hDLL, "MSXgetTankFormulas");
 #endif
 
-    if (NULL == MSXgetPipeRates || NULL == MSXgetTankRates ||
-        NULL == MSXgetPipeEquil || NULL == MSXgetTankEquil ||
-        NULL == MSXgetPipeFormulas || NULL == MSXgetTankFormulas)
+    if (MSXgetPipeRates == NULL || MSXgetTankRates == NULL ||
+        MSXgetPipeEquil == NULL || MSXgetTankEquil == NULL ||
+        MSXgetPipeFormulas == NULL || MSXgetTankFormulas == NULL)
     {
         MSXfuncs_free();
         hDLL = NULL;

@@ -12,9 +12,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
 #include "msxtypes.h"
-#include "msxfuncs.h"
 #include "msxutils.h"
+#include "msxfuncs.h"
 
 // --- define WINDOWS
 

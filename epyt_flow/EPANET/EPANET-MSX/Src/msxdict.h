@@ -10,6 +10,10 @@
 **  LAST UPDATE:   09/29/08
 ***********************************************************************/
 
+#ifndef MSXDICT_H
+#define MSXDICT_H
+
+
 // NOTE: the entries in MsxsectWords must match the entries in the enumeration
 //       variable SectionType defined in msxtypes.h.
 static char *MsxSectWords[] = {"[TITLE", "[SPECIE",  "[COEFF",  "[TERM",
@@ -34,3 +38,5 @@ static char YES[]  = "YES";
 static char NO[]   = "NO";
 static char ALL[]  = "ALL";
 static char NONE[] = "NONE";
+
+#endif

@@ -12,8 +12,11 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <malloc.h>
 #include <math.h>
+
+#if defined(macintosh) || defined(Macintosh) || defined(__APPLE__) && defined(__MACH__)
+#include <stdlib.h>
+#endif
 
 #include "msxtypes.h"
 

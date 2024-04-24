@@ -9,6 +9,8 @@
 **  LAST UPDATE:   11/01/10
 *******************************************************************************/
 
+#include "epanet2.h"                   // EPANET toolkit header file
+
 #ifndef EPANETMSX_H
 #define EPANETMSX_H
 
@@ -53,6 +55,8 @@ extern "C" {
 
 // --- declare MSX functions
 
+int  MSXDLLEXPORT MSXENopen(const char *inpFile, const char *rptFile,
+                 const char *outFile);
 int  MSXDLLEXPORT MSXopen(char *fname);
 int  MSXDLLEXPORT MSXsolveH(void);
 int  MSXDLLEXPORT MSXusehydfile(char *fname);
@@ -63,6 +67,7 @@ int  MSXDLLEXPORT MSXsaveoutfile(char *fname);
 int  MSXDLLEXPORT MSXsavemsxfile(char *fname);
 int  MSXDLLEXPORT MSXreport(void);
 int  MSXDLLEXPORT MSXclose(void);
+int  MSXDLLEXPORT MSXENclose(void);
 
 int  MSXDLLEXPORT MSXgetindex(int type, char *id, int *index);
 int  MSXDLLEXPORT MSXgetIDlen(int type, int index, int *len);
