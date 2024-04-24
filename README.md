@@ -15,6 +15,10 @@ Furthermore, it also provides an environment for developing and testing control 
 
 EPyT-Flow supports Python 3.9 - 3.12
 
+Note that [EPANET and EPANET-MSX sources](epyt_flow/EPANET/) are compiled and overrite the binaries
+shipped by EPyT if EPyT-Flow is installed on a Linux system. By this we not only aim to achieve
+a better performance of the simulations but also avoid any compatibility problems of pre-compiled binaries.
+
 ### PyPI
 
 ```
