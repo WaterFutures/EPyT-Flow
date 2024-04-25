@@ -22,7 +22,8 @@ if __name__ == "__main__":
     with ScenarioSimulator(scenario_config=config) as scenario:
         # Set simulation duration to 2 weeks (i.e. 14 days)
         params = {"simulation_duration": to_seconds(days=14),
-                  "hydraulic_time_step": to_seconds(minutes=5)}
+                  "hydraulic_time_step": to_seconds(minutes=5),
+                  "reporting_time_step": to_seconds(minutes=5)}
         scenario.set_general_parameters(**params)
 
         # The first week is fault free but in the second week,
