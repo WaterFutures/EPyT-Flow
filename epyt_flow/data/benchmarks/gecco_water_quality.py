@@ -44,7 +44,8 @@ def compute_evaluation_score(y_pred: np.ndarray, y: np.ndarray) -> float:
     return f1_score(y_pred, y)
 
 
-def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool = True
+def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool = True,
+                                      verbose: bool = True
                                       ) -> Union[pd.DataFrame, tuple[np.ndarray, np.ndarray]]:
     """
     GECCO Industrial Challenge 2017 Dataset: A water quality dataset for the
@@ -77,6 +78,10 @@ def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool
         otherwise the data is returned as Pandas data frame.
 
         The default is True.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading files.
+
+        The default is True.
 
     Returns
     -------
@@ -88,7 +93,7 @@ def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool
     download_dir = download_dir if download_dir is not None else get_temp_folder()
     f_in = os.path.join(download_dir, "gecco2017_water_quality.csv")
 
-    download_if_necessary(f_in, url_data)
+    download_if_necessary(f_in, url_data, verbose)
 
     # Load and return data
     df_data = pd.read_csv(f_in, index_col=0)
@@ -105,7 +110,8 @@ def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool
         return X, y
 
 
-def load_gecco2018_water_quality_data(download_dir: str = None, return_X_y: bool = True
+def load_gecco2018_water_quality_data(download_dir: str = None, return_X_y: bool = True,
+                                      verbose: bool = True
                                       ) -> Union[pd.DataFrame, tuple[np.ndarray, np.ndarray]]:
     """
     GECCO Industrial Challenge 2018 Dataset: A water quality dataset for the
@@ -141,6 +147,10 @@ def load_gecco2018_water_quality_data(download_dir: str = None, return_X_y: bool
         otherwise the data is returned as Pandas data frame.
 
         The default is True.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading files.
+
+        The default is True.
 
     Returns
     -------
@@ -153,7 +163,7 @@ def load_gecco2018_water_quality_data(download_dir: str = None, return_X_y: bool
     download_dir = download_dir if download_dir is not None else get_temp_folder()
     f_in = os.path.join(download_dir, "gecco2018_water_quality.csv")
 
-    download_if_necessary(f_in, url_data)
+    download_if_necessary(f_in, url_data, verbose)
 
     # Load and return data
     df_data = pd.read_csv(f_in, index_col=0)
@@ -170,7 +180,8 @@ def load_gecco2018_water_quality_data(download_dir: str = None, return_X_y: bool
         return X, y
 
 
-def load_gecco2019_water_quality_data(download_dir: str = None, return_X_y: bool = True) -> dict:
+def load_gecco2019_water_quality_data(download_dir: str = None, return_X_y: bool = True,
+                                      verbose: bool = True) -> dict:
     """
     GECCO Industrial Challenge 2019 Dataset: A water quality dataset for the "Internet of Things:
     Online Event Detection for Drinking Water Quality Control" competition organized by
@@ -206,6 +217,10 @@ def load_gecco2019_water_quality_data(download_dir: str = None, return_X_y: bool
         otherwise the data is returned as Pandas data frame.
 
         The default is True.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading files.
+
+        The default is True.
 
     Returns
     -------
@@ -225,9 +240,9 @@ def load_gecco2019_water_quality_data(download_dir: str = None, return_X_y: bool
     f_valid_in = os.path.join(download_dir, "gecco2019_valid_water_qulity.csv")
     f_test_in = os.path.join(download_dir, "gecco2019_test_water_quality.csv")
 
-    download_if_necessary(f_train_in, url_train_data)
-    download_if_necessary(f_valid_in, url_valid_data)
-    download_if_necessary(f_test_in, url_test_data)
+    download_if_necessary(f_train_in, url_train_data, verbose)
+    download_if_necessary(f_valid_in, url_valid_data, verbose)
+    download_if_necessary(f_test_in, url_test_data, verbose)
 
     # Load and return data
     df_data_train = pd.read_csv(f_train_in, index_col=0)

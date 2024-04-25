@@ -101,7 +101,7 @@ def __create_labels(n_time_steps: int, return_test_scenario: bool,
 
 
 def compute_evaluation_score(y_leak_locations_pred: list[tuple[str, int]],
-                             test_scenario: bool) -> dict:
+                             test_scenario: bool, verbose: bool = True) -> dict:
     """
     Evaluates the predictions (i.e. start time and location of leakages) as it was done in the
     BattLeDIM competition -- i.e. the output of this functions can be directly compared
@@ -114,6 +114,10 @@ def compute_evaluation_score(y_leak_locations_pred: list[tuple[str, int]],
         (in seconds since simulation start) of leakages.
     test_scenario : `bool`
         True if the given predictions are made for the test scenario, False otherwise.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading files.
+
+        The default is True.
 
     Returns
     -------
@@ -136,7 +140,7 @@ def compute_evaluation_score(y_leak_locations_pred: list[tuple[str, int]],
     url_topology = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/BattLeDIM/" +\
         "ltown.epytflow_topology"
 
-    download_if_necessary(f_topology_in, url_topology)
+    download_if_necessary(f_topology_in, url_topology, verbose)
     topology = NetworkTopology.load_from_file(f_topology_in)
 
     all_pairs_shortest_path_length = topology.get_all_pairs_shortest_path_length()
@@ -156,7 +160,7 @@ def compute_evaluation_score(y_leak_locations_pred: list[tuple[str, int]],
                 f"Scoring%20Algorithm/competition_leakages/{f_in}"
 
             f_local_in = os.path.join(get_temp_folder(), "BattLeDIM", f_in)
-            download_if_necessary(f_local_in, url)
+            download_if_necessary(f_local_in, url, verbose)
 
             df_leak_demand = pd.read_excel(f_local_in, sheet_name="Demand (m3_h)")
             leak_demand = df_leak_demand[leak.link_id].to_numpy()
@@ -240,8 +244,8 @@ def compute_evaluation_score(y_leak_locations_pred: list[tuple[str, int]],
 
 
 def load_data(return_test_scenario: bool, download_dir: str = None, return_X_y: bool = False,
-              return_features_desc: bool = False, return_leak_locations: bool = False
-              ) -> Union[pd.DataFrame, Any]:
+              return_features_desc: bool = False, return_leak_locations: bool = False,
+              verbose: bool = True) -> Union[pd.DataFrame, Any]:
     """
     Loads the original BattLeDIM benchmark data set.
     Note that the data set exists in two different version --
@@ -273,6 +277,10 @@ def load_data(return_test_scenario: bool, download_dir: str = None, return_X_y: 
         as an instance of `scipy.sparse.bsr_array`.
 
         The default is False.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading files.
+
+        The default is True.
 
     Returns
     -------
@@ -292,7 +300,7 @@ def load_data(return_test_scenario: bool, download_dir: str = None, return_X_y: 
     create_path_if_not_exist(download_dir)
     f_in = os.path.join(download_dir, f_in)
 
-    download_if_necessary(f_in, url_data)
+    download_if_necessary(f_in, url_data, verbose)
 
     # Load and parse data files
     df_pressures = pd.read_excel(f_in, sheet_name="Pressures (m)")
@@ -336,8 +344,8 @@ def load_data(return_test_scenario: bool, download_dir: str = None, return_X_y: 
 
 
 def load_scada_data(return_test_scenario: bool, download_dir: str = None,
-                    return_X_y: bool = False, return_leak_locations: bool = False
-                    ) -> list[Union[ScadaData, Any]]:
+                    return_X_y: bool = False, return_leak_locations: bool = False,
+                    verbose: bool = True) -> list[Union[ScadaData, Any]]:
     """
     Loads the SCADA data of the simulated BattLeDIM benchmark scenario -- note that due to
     randomness, these differ from the original data set which can be loaded by calling
@@ -369,6 +377,10 @@ def load_scada_data(return_test_scenario: bool, download_dir: str = None,
         as an instance of `scipy.sparse.bsr_array`.
 
         The default is False.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading files.
+
+        The default is True.
 
     Returns
     -------
@@ -383,7 +395,7 @@ def load_scada_data(return_test_scenario: bool, download_dir: str = None,
     url_data = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/BattLeDIM/"
 
     f_in = f"{'battledim_test' if return_test_scenario else 'battledim_train'}.epytflow_scada_data"
-    download_if_necessary(os.path.join(download_dir, f_in), url_data + f_in)
+    download_if_necessary(os.path.join(download_dir, f_in), url_data + f_in, verbose)
 
     data = ScadaData.load_from_file(os.path.join(download_dir, f_in))
 
@@ -403,7 +415,8 @@ def load_scada_data(return_test_scenario: bool, download_dir: str = None,
             return data
 
 
-def load_scenario(return_test_scenario: bool, download_dir: str = None) -> ScenarioConfig:
+def load_scenario(return_test_scenario: bool, download_dir: str = None,
+                  verbose: bool = True) -> ScenarioConfig:
     """
     Creates and returns the BattLeDIM scenario -- it can be either modified or
     passed directly to the simulator
@@ -424,6 +437,10 @@ def load_scenario(return_test_scenario: bool, download_dir: str = None) -> Scena
         If the path does not exist, the .inp will be downloaded to the given path.
 
         The default is None.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading files.
+
+        The default is True.
 
     Returns
     -------
@@ -434,9 +451,10 @@ def load_scenario(return_test_scenario: bool, download_dir: str = None) -> Scena
     # Load L-Town network including the sensor placement
     if download_dir is not None:
         ltown_config = load_ltown(download_dir=download_dir, use_realistic_demands=True,
-                                  include_default_sensor_placement=True)
+                                  include_default_sensor_placement=True, verbose=verbose)
     else:
-        ltown_config = load_ltown(use_realistic_demands=True, include_default_sensor_placement=True)
+        ltown_config = load_ltown(use_realistic_demands=True, include_default_sensor_placement=True,
+                                  verbose=verbose)
 
     # Set simulation duration
     general_params = {"simulation_duration": to_seconds(days=365),    # One year

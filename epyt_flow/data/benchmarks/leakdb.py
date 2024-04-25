@@ -168,7 +168,7 @@ def compute_evaluation_score(scenarios_id: list[int], use_net1: bool,
 
 def load_data(scenarios_id: list[int], use_net1: bool, download_dir: str = None,
               return_X_y: bool = False, return_features_desc: bool = False,
-              return_leak_locations: bool = False) -> dict:
+              return_leak_locations: bool = False, verbose: bool = True) -> dict:
     """
     Loads the original LeakDB benchmark data set.
 
@@ -204,6 +204,10 @@ def load_data(scenarios_id: list[int], use_net1: bool, download_dir: str = None,
         as an instance of `scipy.sparse.bsr_array`.
 
         The default is False.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading files.
+
+        The default is True.
 
     Returns
     -------
@@ -232,7 +236,7 @@ def load_data(scenarios_id: list[int], use_net1: bool, download_dir: str = None,
         scenario_data_file_in = os.path.join(download_dir, scenario_data)
         scenario_data_folder_in = os.path.join(download_dir, f"Scenario-{s_id}")
 
-        download_if_necessary(scenario_data_file_in, scenario_data_url)
+        download_if_necessary(scenario_data_file_in, scenario_data_url, verbose)
         create_path_if_not_exist(scenario_data_folder_in)
         unpack_zip_archive(scenario_data_file_in, scenario_data_folder_in)
 
@@ -289,7 +293,8 @@ def load_data(scenarios_id: list[int], use_net1: bool, download_dir: str = None,
 
 
 def load_scada_data(scenarios_id: list[int], use_net1: bool = True, download_dir: str = None,
-                    return_X_y: bool = False, return_leak_locations: bool = False
+                    return_X_y: bool = False, return_leak_locations: bool = False,
+                    verbose: bool = True
                     ) -> Union[list[ScadaData], list[tuple[np.ndarray, np.ndarray]]]:
     """
     Loads the SCADA data of the simulated LeakDB benchmark scenarios -- see
@@ -325,6 +330,10 @@ def load_scada_data(scenarios_id: list[int], use_net1: bool = True, download_dir
         as an instance of `scipy.sparse.bsr_array`.
 
         The default is False.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading files.
+
+        The default is True.
 
     Returns
     -------
@@ -348,7 +357,7 @@ def load_scada_data(scenarios_id: list[int], use_net1: bool = True, download_dir
 
     for s_id in scenarios_id:
         f_in = f"{'Net1_ID' if use_net1 is True else 'Hanoi_ID'}={s_id}.epytflow_scada_data"
-        download_if_necessary(os.path.join(download_dir, f_in), url_data + f_in)
+        download_if_necessary(os.path.join(download_dir, f_in), url_data + f_in, verbose)
 
         data = ScadaData.load_from_file(os.path.join(download_dir, f_in))
 
@@ -371,7 +380,7 @@ def load_scada_data(scenarios_id: list[int], use_net1: bool = True, download_dir
 
 
 def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
-                   download_dir: str = None) -> list[ScenarioConfig]:
+                   download_dir: str = None, verbose: bool = True) -> list[ScenarioConfig]:
     """
     Creates and returns the LeakDB scenarios -- they can be either modified or
     passed directly to the simulator
@@ -398,6 +407,15 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
         If the path does not exist, the .inp will be downloaded to the give path.
 
         The default is None.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading files.
+
+        The default is True.
+
+    Returns
+    -------
+    list[:class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`]
+        LeakDB scenarios.
     """
     scenarios_inp = []
 
@@ -475,8 +493,10 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
     year_offset_url = "https://github.com/KIOS-Research/LeakDB/raw/master/CCWI-WDSA2018/" +\
         "Dataset_Generator_Py3/yearOffset_30min.mat"
 
-    download_if_necessary(os.path.join(download_dir, "weekPat_30min.mat"), week_pattern_url)
-    download_if_necessary(os.path.join(download_dir, "yearOffset_30min.mat"), year_offset_url)
+    download_if_necessary(os.path.join(download_dir, "weekPat_30min.mat"),
+                          week_pattern_url, verbose)
+    download_if_necessary(os.path.join(download_dir, "yearOffset_30min.mat"),
+                          year_offset_url, verbose)
 
     for s_id in scenarios_id:   # Create new .inp files with demands if necessary
         f_inp_in = os.path.join(download_dir,

@@ -36,7 +36,7 @@ def compute_evaluation_score(y_pred: np.ndarray, y: np.ndarray) -> dict:
             "f1-micro": f1_micro_score(y_pred, y), "roc-auc": roc_auc_score(y_pred, y)}
 
 
-def load_water_usage(download_dir: str = None, return_X_y: bool = True) -> dict:
+def load_water_usage(download_dir: str = None, return_X_y: bool = True, verbose: bool = True) -> dict:
     """
     "Monitoring domestic water consumption: A comparative study of model-based and data-driven
     end-use disaggregation methods" by P. Pavlou, S. Filippou, S. Solonos, S. G. Vrachimis,
@@ -73,6 +73,10 @@ def load_water_usage(download_dir: str = None, return_X_y: bool = True) -> dict:
         otherwise, the data is returned as Pandas data frame.
 
         The default is True.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading files.
+
+        The default is True.
 
     Returns
     -------
@@ -92,9 +96,9 @@ def load_water_usage(download_dir: str = None, return_X_y: bool = True) -> dict:
     f_valid_in = os.path.join(download_dir, "valid_water_usage.csv")
     f_test_in = os.path.join(download_dir, "test_water_usage.csv")
 
-    download_if_necessary(f_train_in, url_train_data)
-    download_if_necessary(f_valid_in, url_valid_data)
-    download_if_necessary(f_test_in, url_test_data)
+    download_if_necessary(f_train_in, url_train_data, verbose)
+    download_if_necessary(f_valid_in, url_valid_data, verbose)
+    download_if_necessary(f_test_in, url_test_data, verbose)
 
     # Load and return data
     df_data_train = pd.read_csv(f_train_in)

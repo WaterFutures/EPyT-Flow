@@ -53,7 +53,8 @@ def __parse_attacks_time(start_time: str, attacks_time):
 
 
 def load_data(download_dir: str = None, return_X_y: bool = False,
-              return_ground_truth: bool = False, return_features_desc: bool = False) -> dict:
+              return_ground_truth: bool = False, return_features_desc: bool = False,
+              verbose: bool = True) -> dict:
     """
     Loads the original BATADAL competition data.
 
@@ -80,6 +81,11 @@ def load_data(download_dir: str = None, return_X_y: bool = False,
         in the returned dictionary.
 
         The default is False.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading files.
+
+        The default is True.
+
     Returns
     -------
     `dict`
@@ -100,10 +106,11 @@ def load_data(download_dir: str = None, return_X_y: bool = False,
     training_data_1_path = os.path.join(download_dir, "BATADAL_dataset03.csv")
     training_data_2_path = os.path.join(download_dir, "BATADAL_dataset04.csv")
 
-    download_if_necessary(training_data_1_path, training_data_1_url)
-    download_if_necessary(training_data_2_path, training_data_2_url)
+    download_if_necessary(training_data_1_path, training_data_1_url, verbose)
+    download_if_necessary(training_data_2_path, training_data_2_url, verbose)
 
-    download_if_necessary(os.path.join(download_dir, "BATADAL_test_dataset.zip"), test_data_url)
+    download_if_necessary(os.path.join(download_dir, "BATADAL_test_dataset.zip"),
+                          test_data_url, verbose)
     unpack_zip_archive(os.path.join(download_dir, "BATADAL_test_dataset.zip"), download_dir)
 
     # Load and return data
@@ -180,7 +187,8 @@ def load_data(download_dir: str = None, return_X_y: bool = False,
 
 
 def load_scada_data(download_dir: str = None, return_X_y: bool = False,
-                    return_ground_truth: bool = False, return_features_desc: bool = False) -> Any:
+                    return_ground_truth: bool = False, return_features_desc: bool = False,
+                    verbose: bool = True) -> Any:
     """
     Loads the SCADA data of the simulated BATADAL benchmark scenario -- note that due to
     randomness and undocumented aspects of the original BATADAL data set, these differ from
@@ -210,11 +218,15 @@ def load_scada_data(download_dir: str = None, return_X_y: bool = False,
         in the returned dictionary.
 
         The default is False.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading files.
+
+        The default is True.
     """
     raise NotImplementedError()
 
 
-def load_scenario(download_dir: str = None) -> ScenarioConfig:
+def load_scenario(download_dir: str = None, verbose: bool = True) -> ScenarioConfig:
     """
     Creates and returns the BATADAL scenario -- it can be either modified or directly passed
     to the simulator :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
@@ -232,6 +244,10 @@ def load_scenario(download_dir: str = None) -> ScenarioConfig:
         If the path does not exist, the data files will be downloaded to the given path.
 
         The default is None.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading files.
+
+        The default is True.
 
     Returns
     -------

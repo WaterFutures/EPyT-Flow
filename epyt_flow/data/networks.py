@@ -3,7 +3,7 @@ Module provides functions for loading different water distribution networks.
 """
 import os
 
-from ..simulation import ScenarioConfig, ScenarioSimulator, SensorConfig, ToolkitConstants
+from ..simulation import ScenarioConfig, ScenarioSimulator, SensorConfig
 from ..utils import get_temp_folder, download_if_necessary
 
 
@@ -68,7 +68,7 @@ def load_inp(f_in: str, include_empty_sensor_config: bool = True) -> ScenarioCon
         return ScenarioConfig(f_inp_in=f_in, general_params=get_default_hydraulic_options())
 
 
-def load_net1(download_dir: str = get_temp_folder()) -> ScenarioConfig:
+def load_net1(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Net1 network.
 
@@ -78,6 +78,10 @@ def load_net1(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         Path to the directory where the .inp file is stored.
 
         The default is the OS-specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -89,11 +93,11 @@ def load_net1(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
           "asce-tf-wdst/Net1.inp"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     return load_inp(f_in)
 
 
-def load_net2(download_dir: str = get_temp_folder()) -> ScenarioConfig:
+def load_net2(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Net2 network.
 
@@ -103,6 +107,10 @@ def load_net2(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         Path to the directory where the .inp file is stored.
 
         The default is the OS-specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -114,11 +122,11 @@ def load_net2(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
           "asce-tf-wdst/Net2.inp"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     return load_inp(f_in)
 
 
-def load_net3(download_dir: str = get_temp_folder()) -> ScenarioConfig:
+def load_net3(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Net3 network.
 
@@ -128,6 +136,10 @@ def load_net3(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         Path to the directory where the .inp file is stored.
 
         The default is the OS-specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -139,11 +151,11 @@ def load_net3(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
           "asce-tf-wdst/Net3.inp"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     return load_inp(f_in)
 
 
-def load_net6(download_dir: str = get_temp_folder()) -> ScenarioConfig:
+def load_net6(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Net6 network.
 
@@ -153,6 +165,10 @@ def load_net6(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         Path to the directory where the .inp file is stored.
 
         The default is the OS-specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -163,11 +179,11 @@ def load_net6(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     f_in = os.path.join(download_dir, "Net6.inp")
     url = "https://github.com/OpenWaterAnalytics/WNTR/raw/main/examples/networks/Net6.inp"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     return load_inp(f_in)
 
 
-def load_richmond(download_dir: str = get_temp_folder()) -> ScenarioConfig:
+def load_richmond(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Richmond network.
 
@@ -177,6 +193,10 @@ def load_richmond(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         Path to the directory where the .inp file is stored.
 
         The default is the OS-specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -188,11 +208,11 @@ def load_richmond(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
           "exeter-benchmarks/Richmond_standard.inp"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     return load_inp(f_in)
 
 
-def load_micropolis(download_dir: str = get_temp_folder()) -> ScenarioConfig:
+def load_micropolis(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the MICROPOLIS network.
 
@@ -202,6 +222,10 @@ def load_micropolis(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         Path to the directory where the .inp file is stored.
 
         The default is the OS-specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -213,11 +237,11 @@ def load_micropolis(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     url = "https://github.com/OpenWaterAnalytics/EPyT/raw/main/epyt/networks/asce-tf-wdst/" + \
           "MICROPOLIS_v1.inp"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     return load_inp(f_in)
 
 
-def load_balerma(download_dir: str = get_temp_folder()) -> ScenarioConfig:
+def load_balerma(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Balerma network.
 
@@ -227,7 +251,11 @@ def load_balerma(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         Path to the directory where the .inp file is stored.
 
         The default is the OS-specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
 
+        The default is True.
+ 
     Returns
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
@@ -238,11 +266,11 @@ def load_balerma(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     url = "https://github.com/OpenWaterAnalytics/EPyT/raw/main/epyt/networks/" + \
           "asce-tf-wdst/Balerma.inp"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     return load_inp(f_in)
 
 
-def load_rural(download_dir: str = get_temp_folder()) -> ScenarioConfig:
+def load_rural(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Rural network.
 
@@ -252,6 +280,10 @@ def load_rural(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         Path to the directory where the .inp file is stored.
 
         The default is the OS-specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -263,11 +295,11 @@ def load_rural(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     url = "https://github.com/OpenWaterAnalytics/EPyT/raw/main/epyt/networks/" + \
           "asce-tf-wdst/RuralNetwork.inp"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     return load_inp(f_in)
 
 
-def load_bwsn1(download_dir: str = get_temp_folder()) -> ScenarioConfig:
+def load_bwsn1(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the BWSN-1 network.
 
@@ -277,6 +309,10 @@ def load_bwsn1(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         Path to the directory where the .inp file is stored.
 
         The default is the OS-specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -288,11 +324,11 @@ def load_bwsn1(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     url = "https://github.com/OpenWaterAnalytics/EPyT/raw/main/epyt/networks/" + \
           "asce-tf-wdst/BWSN_Network_1.inp"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     return load_inp(f_in)
 
 
-def load_bwsn2(download_dir: str = get_temp_folder()) -> ScenarioConfig:
+def load_bwsn2(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the BWSN-2 network.
 
@@ -302,6 +338,10 @@ def load_bwsn2(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         Path to the directory where the .inp file is stored.
 
         The default is the OS-specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -313,11 +353,11 @@ def load_bwsn2(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     url = "https://github.com/OpenWaterAnalytics/EPyT/raw/main/epyt/networks/" + \
           "asce-tf-wdst/BWSN_Network_2.inp"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     return load_inp(f_in)
 
 
-def load_anytown(download_dir: str = get_temp_folder()) -> ScenarioConfig:
+def load_anytown(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Anytown network.
 
@@ -327,6 +367,10 @@ def load_anytown(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         Path to the directory where the .inp file is stored.
 
         The default is the OS-specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -338,11 +382,11 @@ def load_anytown(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
           "asce-tf-wdst/Anytown.inp"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     return load_inp(f_in)
 
 
-def load_dtown(download_dir: str = get_temp_folder()) -> ScenarioConfig:
+def load_dtown(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the D-Town network.
 
@@ -352,6 +396,10 @@ def load_dtown(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         Path to the directory where the .inp file is stored.
 
         The default is the OS-specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -362,11 +410,11 @@ def load_dtown(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     f_in = os.path.join(download_dir, "d-town.inp")
     url = "https://www.exeter.ac.uk/media/universityofexeter/emps/research/cws/downloads/d-town.inp"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     return load_inp(f_in)
 
 
-def load_ctown(download_dir: str = get_temp_folder()) -> ScenarioConfig:
+def load_ctown(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the C-Town network.
 
@@ -376,6 +424,10 @@ def load_ctown(download_dir: str = get_temp_folder()) -> ScenarioConfig:
         Path to the directory where the .inp file is stored.
 
         The default is the OS-specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -386,11 +438,12 @@ def load_ctown(download_dir: str = get_temp_folder()) -> ScenarioConfig:
     f_in = os.path.join(download_dir, "CTOWN.INP")
     url = "https://github.com/scy-phy/www.batadal.net/raw/master/data/CTOWN.INP"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     return load_inp(f_in)
 
 
-def load_kentucky(wdn_id: int = 1, download_dir: str = get_temp_folder()) -> ScenarioConfig:
+def load_kentucky(wdn_id: int = 1, download_dir: str = get_temp_folder(),
+                  verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the specified Kentucky network.
 
@@ -404,6 +457,10 @@ def load_kentucky(wdn_id: int = 1, download_dir: str = get_temp_folder()) -> Sce
         Path to the directory where the .inp file is stored.
 
         The default is the OS-specific temporary directory (e.g. "C:\\\\temp", "/tmp/", etc.)
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -420,12 +477,13 @@ def load_kentucky(wdn_id: int = 1, download_dir: str = get_temp_folder()) -> Sce
     url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
           f"asce-tf-wdst/ky{wdn_id}.inp"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     return load_inp(f_in)
 
 
 def load_hanoi(download_dir: str = get_temp_folder(),
-               include_default_sensor_placement: bool = False) -> ScenarioConfig:
+               include_default_sensor_placement: bool = False,
+               verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Hanoi network.
 
@@ -439,6 +497,10 @@ def load_hanoi(download_dir: str = get_temp_folder(),
         If True, a default sensor placement will be included in the returned scenario configuration.
 
         The default is False
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -450,7 +512,7 @@ def load_hanoi(download_dir: str = get_temp_folder(),
     url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
           "asce-tf-wdst/Hanoi.inp"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     config = load_inp(f_in)
 
     if include_default_sensor_placement is True:
@@ -464,7 +526,8 @@ def load_hanoi(download_dir: str = get_temp_folder(),
 
 
 def load_ltown(download_dir: str = get_temp_folder(), use_realistic_demands: bool = False,
-               include_default_sensor_placement: bool = False) -> ScenarioConfig:
+               include_default_sensor_placement: bool = False,
+               verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the L-TOWN_v2 network.
 
@@ -484,6 +547,10 @@ def load_ltown(download_dir: str = get_temp_folder(), use_realistic_demands: boo
         in the returned scenario configuration.
 
         The default is False
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -499,7 +566,7 @@ def load_ltown(download_dir: str = get_temp_folder(), use_realistic_demands: boo
     else:
         url = "https://zenodo.org/records/4017659/files/L-TOWN_Real.inp?download=1"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     config = load_inp(f_in)
 
     if include_default_sensor_placement is True:
@@ -529,7 +596,8 @@ def load_ltown(download_dir: str = get_temp_folder(), use_realistic_demands: boo
 
 
 def load_ltown_a(download_dir: str = get_temp_folder(), use_realistic_demands: bool = False,
-                 include_default_sensor_placement: bool = False) -> ScenarioConfig:
+                 include_default_sensor_placement: bool = False,
+                 verbose: bool = True) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the L-TOWN-A network (area "A" of the L-TOWN network).
 
@@ -549,6 +617,10 @@ def load_ltown_a(download_dir: str = get_temp_folder(), use_realistic_demands: b
         in the returned scenario configuration.
 
         The default is False
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
 
     Returns
     -------
@@ -561,7 +633,7 @@ def load_ltown_a(download_dir: str = get_temp_folder(), use_realistic_demands: b
     f_in = os.path.join(download_dir, f_inp)
     url = f"https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/{f_inp}"
 
-    download_if_necessary(f_in, url)
+    download_if_necessary(f_in, url, verbose)
     config = load_inp(f_in)
 
     if include_default_sensor_placement is True:
