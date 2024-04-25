@@ -51,7 +51,8 @@ if __name__ == "__main__":
         # Fit and apply classic residual-based sensor interpolation detector to sensor readings
         X = np.concatenate((scada_data.get_data_pressures(), scada_data.get_data_flows()), axis=1)
 
-        events_times = [int(t / params["hydraulic_time_step"]) for t in scenario.get_events_active_time_points()]
+        events_times = [int(t / params["hydraulic_time_step"])
+                        for t in scenario.get_events_active_time_points()]
         y = time_points_to_one_hot_encoding(events_times, total_length=X.shape[0])
 
         split_point = 2000
