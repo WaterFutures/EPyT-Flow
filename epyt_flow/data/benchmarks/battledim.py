@@ -126,7 +126,9 @@ def compute_evaluation_score(y_leak_locations_pred: list[tuple[str, int]],
         false negatives, and total monetary (Euro) savings (only available if `test_scenario`
         is True).
     """
-    # Original MATLAB implementation: https://github.com/KIOS-Research/BattLeDIM/blob/master/Scoring%20Algorithm/Scoring_Algorithm.m
+    # Original MATLAB implementation:
+    # https://github.com/KIOS-Research/BattLeDIM/blob/master/Scoring%20Algorithm/Scoring_Algorithm.m
+
     # Scoring parameters
     dist_max = 300      # Max pipe distance for leakage detection (meters)
     cost_water = .8     # Cost of water per m3 (Euro)

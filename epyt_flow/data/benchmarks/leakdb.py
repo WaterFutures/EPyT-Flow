@@ -337,7 +337,7 @@ def load_scada_data(scenarios_id: list[int], use_net1: bool = True, download_dir
 
     Returns
     -------
-    `list[`:class:`~epyt_flow.simulation.scada.scada_data.ScadaData` `]` or `list[tuple[numpy.ndarray, numpy.ndarray]]`
+    list[`:class:`~epyt_flow.simulation.scada.scada_data.ScadaData`] or `list[tuple[numpy.ndarray, numpy.ndarray]]`
         The simulated benchmark scenarios as either a list of
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances or as a list of
         (X, y) Numpy arrays. If 'return_leak_locations' is True, the leak locations are included

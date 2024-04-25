@@ -490,11 +490,13 @@ class SensorConfig(JsonSerializable):
         self.__tank_volume_idx = np.array([self.tank_id_to_idx(t)
                                            for t in self.__tank_volume_sensors], dtype=np.int32)
         self.__bulk_species_idx = np.array([(self.bulkspecies_id_to_idx(s),
-                                             [self.node_id_to_idx(node_id) for node_id in self.__bulk_species_sensors[s]])
+                                             [self.node_id_to_idx(node_id)
+                                              for node_id in self.__bulk_species_sensors[s]])
                                             for s in self.__bulk_species_sensors.keys()],
                                            dtype=object)
         self.__surface_species_idx = np.array([(self.surfacespecies_id_to_idx(s),
-                                                [self.link_id_to_idx(link_id) for link_id in self.__surface_species_sensors[s]])
+                                                [self.link_id_to_idx(link_id)
+                                                 for link_id in self.__surface_species_sensors[s]])
                                                for s in self.__surface_species_sensors.keys()],
                                               dtype=object)
 

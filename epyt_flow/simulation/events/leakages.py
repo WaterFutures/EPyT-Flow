@@ -348,7 +348,8 @@ class IncipientLeakage(Leakage):
         Time (seconds since the simulation start) when this leak reaches
         its larges size (leak diameter).
     """
-    def __init__(self, link_id: str, peak_time: int, diameter: float = None, area: float = None, **kwds):
+    def __init__(self, link_id: str, peak_time: int, diameter: float = None,
+                 area: float = None, **kwds):
         if peak_time < kwds["start_time"] or (kwds["end_time"] is not None and
                                               peak_time > kwds["end_time"]):
             raise ValueError("'peak_time' must be greater than 'start_time' and " +

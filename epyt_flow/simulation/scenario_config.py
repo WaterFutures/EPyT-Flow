@@ -55,17 +55,17 @@ class ScenarioConfig(Serializable):
         Speciation of sensor noise -- i.e. noise/uncertainty affecting the sensor readings.
 
         The default is None
-    controls : `list[`:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule` `]`, optional
+    controls : list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`], optional
         List of control modules that are active during the simulation.
 
         The default is an empty list.
     model_uncertainty : :class:`~epyt_flow.uncertainty.model_uncertainty.ModelUncertainty`, optional
         Specification of model uncertainty.
-    system_events : `list[`:class:`~epyt_flow.simulation.events.system_event.SystemEvent` `]`, optional
+    system_events : list[:class:`~epyt_flow.simulation.events.system_event.SystemEvent`], optional
         List of system events -- i.e. events that directly affect the simulation (e.g. leakages).
 
         The default is an empty list.
-    sensor_reading_events : `list[`:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent` `]`, optional
+    sensor_reading_events : list[:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent`], optional
         List of sensor reading events -- i.e. events that affect the readings of sensors.
 
         The default is an empty list.
@@ -247,7 +247,7 @@ class ScenarioConfig(Serializable):
 
         Returns
         -------
-        `list[`:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule` `]`
+        list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`]
             List of all control modules that are active during the simulation.
         """
         return deepcopy(self.__controls)
@@ -283,7 +283,7 @@ class ScenarioConfig(Serializable):
 
         Returns
         -------
-        `list[`:class:`~epyt_flow.simulation.events.system_event.SystemEvent` `]`
+        list[:class:`~epyt_flow.simulation.events.system_event.SystemEvent`]
             All system events.
         """
         return deepcopy(self.__system_events)
@@ -295,7 +295,7 @@ class ScenarioConfig(Serializable):
 
         Returns
         -------
-        `list[`:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent` `]`
+        list[:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent`]
             All sensor reading events.
         """
         return deepcopy(self.__sensor_reading_events)

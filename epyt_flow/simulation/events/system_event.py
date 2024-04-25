@@ -31,7 +31,7 @@ class SystemEvent(Event):
     def __getstate__(self):
         state = self.__dict__.copy()
         if "_epanet_api" in state:
-            # Do not pickle EPyT instance!
+            # Do not serialize EPyT instance!
             del state["_epanet_api"]
 
         return state

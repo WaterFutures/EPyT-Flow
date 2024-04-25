@@ -89,15 +89,15 @@ class ScadaData(Serializable):
         Pump efficiency data of each pump.
 
         The default is None.
-    sensor_faults : `list[`:class:`~epyt_flow.simulation.events.sensor_faults.SensorFault` `]`, optional
+    sensor_faults : list[:class:`~epyt_flow.simulation.events.sensor_faults.SensorFault`], optional
         List of sensor faults to be applied to the sensor readings.
 
         The default is an empty list.
-    sensor_reading_attacks : `list[`:class:`~epyt_flow.simulation.events.sensor_reading_attack.SensorReadingAttack` `]`, optional
+    sensor_reading_attacks : list[:class:`~epyt_flow.simulation.events.sensor_reading_attack.SensorReadingAttack`], optional
         List of sensor reading attacks to be applied to the sensor readings.
 
         The default is an empty list.
-    sensor_reading_events : `list[`:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent` `]`, optional
+    sensor_reading_events : list[`:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent`], optional
         List of additional sensor reading events that are to be applied to the sensor readings.
 
         The default is an empty list.
@@ -143,7 +143,7 @@ class ScadaData(Serializable):
             if not isinstance(node_quality_data_raw, np.ndarray):
                 raise TypeError("'node_quality_data_raw' must be an instance of 'numpy.ndarray'" +
                                 f" but not of '{type(node_quality_data_raw)}'")
-        if link_quality_data_raw is not None:    
+        if link_quality_data_raw is not None:
             if not isinstance(link_quality_data_raw, np.ndarray):
                 raise TypeError("'link_quality_data_raw' must be an instance of 'numpy.ndarray'" +
                                 f" but not of '{type(link_quality_data_raw)}'")
@@ -312,7 +312,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `list[` :class:`~epyt_flow.simulation.events.sensor_faults.SensorFault` `]`
+        list[:class:`~epyt_flow.simulation.events.sensor_faults.SensorFault`]
             All sensor faults.
         """
         return deepcopy(list(filter(lambda e: isinstance(e, SensorFault),
@@ -329,7 +329,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `list[` :class:`~epyt_flow.simulation.events.sensor_reading_attack.SensorReadingAttack` `]`
+        list[:class:`~epyt_flow.simulation.events.sensor_reading_attack.SensorReadingAttack`]
             All sensor reading attacks.
         """
         return deepcopy(list(filter(lambda e: isinstance(e, SensorReadingAttack),
@@ -346,7 +346,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `list[` :class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent` `]`
+        list[:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent`]
             All sensor faults.
         """
         return deepcopy(self.__sensor_reading_events)
@@ -664,7 +664,7 @@ class ScadaData(Serializable):
         """
         Changes the sensor faults -- overrides all previous sensor faults!
 
-        sensor_faults : `list[`:class:`~epyt_flow.simulation.events.sensor_faults.SensorFault` `]`
+        sensor_faults : list[:class:`~epyt_flow.simulation.events.sensor_faults.SensorFault`]
             List of new sensor faults.
         """
         if len(sensor_faults) != 0:
@@ -682,7 +682,7 @@ class ScadaData(Serializable):
         """
         Changes the sensor reading attacks -- overrides all previous sensor reading attacks!
 
-        sensor_reading_attacks : `list[`:class:`~epyt_flow.simulation.events.sensor_reading_attack.SensorReadingAttack` `]`
+        sensor_reading_attacks : list[:class:`~epyt_flow.simulation.events.sensor_reading_attack.SensorReadingAttack`]
             List of new sensor reading attacks.
         """
         if len(sensor_reading_attacks) != 0:
@@ -700,7 +700,7 @@ class ScadaData(Serializable):
         Changes the sensor reading events -- overrides all previous sensor reading events
         (incl. sensor faults)!
 
-        sensor_reading_events : `list[`:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent` `]`
+        sensor_reading_events : list[:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent`]
             List of new sensor reading events.
         """
         if len(sensor_reading_events) != 0:

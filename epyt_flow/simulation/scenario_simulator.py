@@ -232,7 +232,7 @@ class ScenarioSimulator():
 
         Returns
         -------
-        `list[`:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule` `]`
+        list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`]
             All control modules.
         """
         self.__adapt_to_network_changes()
@@ -246,7 +246,7 @@ class ScenarioSimulator():
 
         Returns
         -------
-        `list[`:class:`~epyt_flow.simulation.events.leakages.Leakage` `]`
+        list[:class:`~epyt_flow.simulation.events.leakages.Leakage`]
             All leakages.
         """
         self.__adapt_to_network_changes()
@@ -259,7 +259,7 @@ class ScenarioSimulator():
 
         Returns
         -------
-        `list[`:class:`~epyt_flow.simulation.events.actuator_event.ActuatorEvent` `]`
+        list[:class:`~epyt_flow.simulation.events.actuator_event.ActuatorEvent`]
             All actuator events.
         """
         self.__adapt_to_network_changes()
@@ -273,7 +273,7 @@ class ScenarioSimulator():
 
         Returns
         -------
-        `list[`:class:`~epyt_flow.simulation.events.system_event.SystemEvent` `]`
+        list[:class:`~epyt_flow.simulation.events.system_event.SystemEvent`]
             All system events.
         """
         self.__adapt_to_network_changes()
@@ -287,7 +287,7 @@ class ScenarioSimulator():
 
         Returns
         -------
-        `list[`:class:`~epyt_flow.simulation.events.sensor_faults.SensorFault` `]`
+        list[:class:`~epyt_flow.simulation.events.sensor_faults.SensorFault`]
             All sensor faults.
         """
         self.__adapt_to_network_changes()
@@ -302,7 +302,7 @@ class ScenarioSimulator():
 
         Returns
         -------
-        `list[`:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent` `]`
+        list[:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent`]
             All sensor reading events.
         """
         self.__adapt_to_network_changes()
@@ -1161,7 +1161,8 @@ class ScenarioSimulator():
                              sensor_noise=self.__sensor_noise)
 
     def run_simulation_as_generator(self, hyd_export: str = None, verbose: bool = False,
-                                    support_abort: bool = False) -> Generator[ScadaData, bool, None]:
+                                    support_abort: bool = False
+                                    ) -> Generator[ScadaData, bool, None]:
         """
         Runs the simulation of this scenario and provides the results as a generator.
 

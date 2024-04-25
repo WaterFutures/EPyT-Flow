@@ -255,7 +255,7 @@ def load_balerma(download_dir: str = get_temp_folder(), verbose: bool = True) ->
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
- 
+
     Returns
     -------
     :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`

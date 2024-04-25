@@ -50,7 +50,7 @@ def scale_to_range(pattern: np.ndarray, min_value: float, max_value: float) -> n
     min_pattern_val = np.min(pattern)
     max_pattern_val = np.max(pattern)
 
-    return [(x - min_pattern_val) / (max_pattern_val - min_pattern_val) * (max_value - min_value) \
+    return [(x - min_pattern_val) / (max_pattern_val - min_pattern_val) * (max_value - min_value)
             + min_value for x in pattern]
 
 
