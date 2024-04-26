@@ -5,8 +5,8 @@ Quality
 *******
 
 EPyT-Flow supports :ref:`basic <basic_quality>` and :ref:`advanced <advanced_quality>` quality analysis -- the former is realized
-through `EPANET <https://github.com/OpenWaterAnalytics/epanet>`_ and the latter one
-through the usage of `EPANET-MSX <https://github.com/OpenWaterAnalytics/epanet-msx>`_.
+through `EPANET <https://github.com/USEPA/EPANET2.2>`_ and the latter one
+through the usage of `EPANET-MSX <https://github.com/USEPA/EPANETMSX/>`_.
 
 
 .. _basic_quality:
