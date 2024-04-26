@@ -21,4 +21,4 @@ if sys.platform.startswith("linux"):
         if shutil.which("gcc") is not None:
             print("Compiling EPANET and EPANET-MSX...")
             path_to_epanet = os.path.join(os.path.dirname(__file__), "EPANET")
-            subprocess.check_call(f"cd {path_to_epanet}; bash compile.sh", shell=True)
+            subprocess.check_call(f"cd \"{path_to_epanet}\"; bash compile.sh", shell=True)
