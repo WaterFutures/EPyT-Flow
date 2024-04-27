@@ -71,5 +71,6 @@ if __name__ == "__main__":
         plt.bar(list(range(len(y_test_pred))), y_test_pred, label="Raised alarm")
         plt.legend()
         plt.ylabel("Event indicator")
-        plt.xlabel("Time")
+        plt.yticks([0, 1], ["Inactive", "Active"])
+        plt.xlabel("Time (5min steps)")
         plt.show()
