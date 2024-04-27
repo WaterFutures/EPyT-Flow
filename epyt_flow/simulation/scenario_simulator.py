@@ -1074,6 +1074,117 @@ class ScenarioSimulator():
 
         return final_scada_data
 
+    def run_basic_quality_simulation(self, hyd_file_in: str, verbose: bool = False) -> ScadaData:
+        """
+        Runs a basic quality analysis using EPANET.
+
+        Parameters
+        ----------
+        hyd_file_in : `str`
+            Path to an EPANET .hyd file for storing the simulated hydraulics --
+            the quality analysis is computed using those hydraulics.
+        verbose : `bool`, optional
+            If True, method will be verbose (e.g. showing a progress bar).
+
+            The default is False.
+
+        Returns
+        -------
+        :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
+            Quality simulation results as SCADA data.
+        """
+        result = None
+
+        for scada_data in self.run_basic_quality_simulation_as_generator(hyd_file_in=hyd_file_in,
+                                                                         verbose=verbose):
+            if result is None:
+                result = scada_data
+            else:
+                result.concatenate(scada_data)
+
+        return result
+
+    def run_basic_quality_simulation_as_generator(self, hyd_file_in: str, verbose: bool = False,
+                                                  support_abort: bool = False
+                                                  ) -> Generator[ScadaData, bool, None]:
+        """
+        Runs a basic quality analysis using EPANET.
+
+        Parameters
+        ----------
+        hyd_file_in : `str`
+            Path to an EPANET .hyd file for storing the simulated hydraulics --
+            the quality analysis is computed using those hydraulics.
+        verbose : `bool`, optional
+            If True, method will be verbose (e.g. showing a progress bar).
+
+            The default is False.
+
+        Returns
+        -------
+        :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
+            Generator with the current simulation results/states as SCADA data.
+        """
+        requested_time_step = self.epanet_api.getTimeHydraulicStep()
+        reporting_time_start = self.epanet_api.getTimeReportingStart()
+        reporting_time_step = self.epanet_api.getTimeReportingStep()
+
+        self.epanet_api.useHydraulicFile(hyd_file_in)
+
+        self.epanet_api.openQualityAnalysis()
+        self.epanet_api.initializeQualityAnalysis(ToolkitConstants.EN_NOSAVE)
+
+        if verbose is True:
+            print("Running basic quality analysis using EPANET ...")
+            n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
+                                     requested_time_step)
+            progress_bar = iter(tqdm(range(n_iterations + 1), desc="Time steps"))
+
+        # Run simulation step by step
+        total_time = 0
+        tstep = 1
+        first_itr = True
+        while tstep > 0:
+            if support_abort is True:  # Can the simulation be aborted? If so, handle it.
+                abort = yield
+                if abort is not False:
+                    break
+
+            if first_itr is True:  # Fix current time in the first iteration
+                tstep = 0
+                first_itr = False
+
+            if verbose is True:
+                if (total_time + tstep) % requested_time_step == 0:
+                    next(progress_bar)
+
+            # Compute current time step
+            t = self.epanet_api.runQualityAnalysis()
+            total_time = t
+
+            # Fetch data
+            quality_node_data = None
+            quality_link_data = None
+
+            quality_node_data = self.epanet_api.getNodeActualQuality().reshape(1, -1)
+            quality_link_data = self.epanet_api.getLinkActualQuality().reshape(1, -1)
+
+            scada_data = ScadaData(sensor_config=self.__sensor_config,
+                                   node_quality_data_raw=quality_node_data,
+                                   link_quality_data_raw=quality_link_data,
+                                   sensor_readings_time=np.array([total_time]),
+                                   sensor_reading_events=self.__sensor_reading_events,
+                                   sensor_noise=self.__sensor_noise)
+
+            # Yield results in a regular time interval only!
+            if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
+                yield scada_data
+
+            # Next
+            tstep = self.epanet_api.nextQualityAnalysisStep()
+
+        self.epanet_api.closeHydraulicAnalysis()
+
     def run_simulation(self, hyd_export: str = None, verbose: bool = False) -> ScadaData:
         """
         Runs the simulation of this scenario.
