@@ -933,27 +933,60 @@ class ScenarioSimulator():
             for c in self.__controls:
                 c.init(self.epanet_api)
 
-    def _solve_msx(self, verbose: bool) -> ScadaData:
+    def run_advanced_quality_simulation(self, hyd_file_in: str, verbose: bool = False) -> ScadaData:
         """
-        Runs the EPANET-MSX simulation -- assumes that hydraulics have been already computed
-        (either by calling EPANET or by loading an .hyd file).
+        Runs an advanced quality analysis using EPANET-MSX.
 
         Parameters
         ----------
+        hyd_file_in : `str`
+            Path to an EPANET .hyd file for storing the simulated hydraulics --
+            the quality analysis is computed using those hydraulics.
+        verbose : `bool`, optional
+            If True, method will be verbose (e.g. showing a progress bar).
+
+            The default is False.
+
+        Returns
+        -------
+        :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
+            Quality simulation results as SCADA data.
+        """
+        result = None
+
+        for scada_data in self.run_advanced_quality_simulation_as_generator(hyd_file_in=hyd_file_in,
+                                                                            verbose=verbose):
+            if result is None:
+                result = scada_data
+            else:
+                result.concatenate(scada_data)
+
+        return result
+
+    def run_advanced_quality_simulation_as_generator(self, hyd_file_in: str, verbose: bool = False,
+                                                     support_abort: bool = False
+                                                     ) -> Generator[ScadaData, bool, None]:
+        """
+        Runs an advanced quality analysis using EPANET-MSX.
+
+        Parameters
+        ----------
+        hyd_file_in : `str`
+            Path to an EPANET .hyd file for storing the simulated hydraulics --
+            the quality analysis is computed using those hydraulics.
         verbose : `bool`
             If True, method will be verbose (e.g. showing a progress bar).
 
         Returns
         -------
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
-            EPANET-MSX simulation results as SCADA data (i.e. species concentrations).
+            Generator containing the current EPANET-MSX simulation results as SCADA data
+            (i.e. species concentrations).
         """
-        self.epanet_api.initializeMSXQualityAnalysis(ToolkitConstants.EN_NOSAVE)
+        # Load pre-computed hydraulics
+        self.epanet_api.useMSXHydraulicFile(hyd_file_in)
 
-        bulk_species_idx = self.epanet_api.getMSXSpeciesIndex(self.__sensor_config.bulk_species)
-        surface_species_idx = self.epanet_api.getMSXSpeciesIndex(
-            self.__sensor_config.surface_species)
-
+        # Initialize simulation
         n_nodes = self.epanet_api.getNodeCount()
         n_links = self.epanet_api.getLinkCount()
 
@@ -961,13 +994,17 @@ class ScenarioSimulator():
         reporting_time_step = self.epanet_api.getTimeReportingStep()
         hyd_time_step = self.epanet_api.getTimeHydraulicStep()
 
+        self.epanet_api.initializeMSXQualityAnalysis(ToolkitConstants.EN_NOSAVE)
+
+        bulk_species_idx = self.epanet_api.getMSXSpeciesIndex(self.__sensor_config.bulk_species)
+        surface_species_idx = self.epanet_api.getMSXSpeciesIndex(
+            self.__sensor_config.surface_species)
+
         if verbose is True:
             print("Running EPANET-MSX ...")
             n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
                                      hyd_time_step)
             progress_bar = iter(tqdm(range(n_iterations + 1), desc="Time steps"))
-
-        final_scada_data = None
 
         # Initial concentrations:
         bulk_species_concentrations = []
@@ -1006,19 +1043,27 @@ class ScenarioSimulator():
             next(progress_bar)
 
         if reporting_time_start == 0:
-            final_scada_data = ScadaData(sensor_config=self.__sensor_config,
-                                        bulk_species_concentration_raw=bulk_species_concentrations,
-                                        surface_species_concentration_raw=
-                                        surface_species_concentrations,
-                                        sensor_readings_time=np.array([0]),
-                                        sensor_reading_events=self.__sensor_reading_events,
-                                        sensor_noise=self.__sensor_noise)
+            scada_data = ScadaData(sensor_config=self.__sensor_config,
+                                   bulk_species_concentration_raw=bulk_species_concentrations,
+                                   surface_species_concentration_raw=
+                                   surface_species_concentrations,
+                                   sensor_readings_time=np.array([0]),
+                                   sensor_reading_events=self.__sensor_reading_events,
+                                   sensor_noise=self.__sensor_noise)
+            yield scada_data
 
         # Run step-by-step simulation
         tleft = 1
         while tleft > 0:
+            if support_abort is True:  # Can the simulation be aborted? If so, handle it.
+                abort = yield
+                if abort is not False:
+                    break
+
+            # Compute current time step
             total_time, tleft = self.epanet_api.stepMSXQualityAnalysisTimeLeft()
 
+            # Fetch data at regular time intervals
             if total_time % hyd_time_step == 0:
                 bulk_species_concentrations = []
                 for species_idx in bulk_species_idx:
@@ -1057,22 +1102,18 @@ class ScenarioSimulator():
                 if verbose is True:
                     next(progress_bar)
 
-                scada_data = ScadaData(sensor_config=self.__sensor_config,
-                                       bulk_species_concentration_raw=
-                                       bulk_species_concentrations,
-                                       surface_species_concentration_raw=
-                                       surface_species_concentrations,
-                                       sensor_readings_time=np.array([total_time]),
-                                       sensor_reading_events=self.__sensor_reading_events,
-                                       sensor_noise=self.__sensor_noise)
-
+                # Report results in a regular time interval only!
                 if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
-                    if final_scada_data is None:
-                        final_scada_data = scada_data
-                    else:
-                        final_scada_data.concatenate(scada_data)
+                    scada_data = ScadaData(sensor_config=self.__sensor_config,
+                                           bulk_species_concentration_raw=
+                                           bulk_species_concentrations,
+                                           surface_species_concentration_raw=
+                                           surface_species_concentrations,
+                                           sensor_readings_time=np.array([total_time]),
+                                           sensor_reading_events=self.__sensor_reading_events,
+                                           sensor_noise=self.__sensor_noise)
 
-        return final_scada_data
+                    yield scada_data
 
     def run_basic_quality_simulation(self, hyd_file_in: str, verbose: bool = False) -> ScadaData:
         """
@@ -1227,9 +1268,8 @@ class ScenarioSimulator():
                     result.concatenate(scada_data)
 
             if self.f_msx_in is not None:
-                self.epanet_api.useMSXHydraulicFile(hyd_export)
-
-                result_msx = self._solve_msx(verbose)
+                result_msx = self.run_advanced_quality_simulation(hyd_file_in=hyd_export,
+                                                                  verbose=verbose)
                 result.join(result_msx)
 
                 if hyd_export_old is not None:
