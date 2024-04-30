@@ -5,8 +5,8 @@ Quality
 *******
 
 EPyT-Flow supports :ref:`basic <basic_quality>` and :ref:`advanced <advanced_quality>` quality analysis -- the former is realized
-through `EPANET <https://github.com/USEPA/EPANET2.2>`_ and the latter one
-through the usage of `EPANET-MSX <https://github.com/USEPA/EPANETMSX/>`_.
+through `EPANET <https://github.com/USEPA/EPANET2.2>`__ and the latter one
+through the usage of `EPANET-MSX <https://github.com/USEPA/EPANETMSX/>`__.
 
 
 .. _basic_quality:
@@ -20,6 +20,13 @@ and source tracing analysis.
 .. note::
     Note that only one of these analyses can be performed at a time -- i.e. multiple simulation runs 
     are necessary if different quality analyses are requested.
+    
+If the hydraulic analysis of the WDN has already been computed and stored as an .hyd file,
+those can be utilized when running the quality analysis without having to re-compute the hydraulics.
+The functions :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.run_basic_quality_simulation`
+and :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.run_basic_quality_simulation_as_generator`
+of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance run the quality
+analysis without re-computing the hydraulics.
 
 The requested quality analysis must be set (i.e. activated) before the simulation is run:
 
@@ -157,12 +164,18 @@ When running the simulation by calling
 hydraulics for the entire duration are simulated, and then the quality dynamics
 for the entire duration.
 
+Similar to the case of :ref:`basic quality analysis <basic_quality>`, if the hydraulic analysis of
+the WDN has already been computed and stored as an .hyd file, those can be utilized when running
+the advanced quality analysis without having to re-compute the hydraulics. The functions
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.run_advanced_quality_simulation`
+and :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.run_advanced_quality_simulation_as_generator`
+of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance run the advanced quality
+analysis without re-computing the hydraulics.
+
 .. note::
 
-    Because EPANET and EPANET-MSX do NOT support the simultaneous step-wise simulation of
-    hydraulics and advanced quality, only
-    :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.run_simulation` can
-    be used when working with EPANET-MSX.
+    EPANET and EPANET-MSX do NOT support the simultaneous step-wise simulation of
+    hydraulics and advanced quality.
 
 
 Similar to all other quantities, species sensors must be specified in order to
