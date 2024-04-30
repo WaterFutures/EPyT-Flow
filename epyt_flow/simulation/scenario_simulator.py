@@ -964,8 +964,10 @@ class ScenarioSimulator():
         return result
 
     def run_advanced_quality_simulation_as_generator(self, hyd_file_in: str, verbose: bool = False,
-                                                     support_abort: bool = False
-                                                     ) -> Generator[ScadaData, bool, None]:
+                                                     support_abort: bool = False,
+                                                     return_as_dict: bool = False
+                                                     ) -> Generator[Union[ScadaData, dict],
+                                                                    bool, None]:
         """
         Runs an advanced quality analysis using EPANET-MSX.
 
@@ -976,6 +978,11 @@ class ScenarioSimulator():
             the quality analysis is computed using those hydraulics.
         verbose : `bool`
             If True, method will be verbose (e.g. showing a progress bar).
+        return_as_dict : `bool`, optional
+            If True, simulation results/states are returned as a dictionary instead of a
+            :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance.
+
+            The default is False.
 
         Returns
         -------
@@ -1043,14 +1050,17 @@ class ScenarioSimulator():
             next(progress_bar)
 
         if reporting_time_start == 0:
-            scada_data = ScadaData(sensor_config=self.__sensor_config,
-                                   bulk_species_concentration_raw=bulk_species_concentrations,
-                                   surface_species_concentration_raw=
-                                   surface_species_concentrations,
-                                   sensor_readings_time=np.array([0]),
-                                   sensor_reading_events=self.__sensor_reading_events,
-                                   sensor_noise=self.__sensor_noise)
-            yield scada_data
+            if return_as_dict is True:
+                yield {"bulk_species_concentration_raw": bulk_species_concentrations,
+                       "surface_species_concentration_raw": surface_species_concentrations,
+                       "sensor_readings_time": np.array([total_time])}
+            else:
+                yield ScadaData(sensor_config=self.__sensor_config,
+                                bulk_species_concentration_raw=bulk_species_concentrations,
+                                surface_species_concentration_raw=surface_species_concentrations,
+                                sensor_readings_time=np.array([0]),
+                                sensor_reading_events=self.__sensor_reading_events,
+                                sensor_noise=self.__sensor_noise)
 
         # Run step-by-step simulation
         tleft = 1
@@ -1104,16 +1114,18 @@ class ScenarioSimulator():
 
                 # Report results in a regular time interval only!
                 if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
-                    scada_data = ScadaData(sensor_config=self.__sensor_config,
-                                           bulk_species_concentration_raw=
-                                           bulk_species_concentrations,
-                                           surface_species_concentration_raw=
-                                           surface_species_concentrations,
-                                           sensor_readings_time=np.array([total_time]),
-                                           sensor_reading_events=self.__sensor_reading_events,
-                                           sensor_noise=self.__sensor_noise)
-
-                    yield scada_data
+                    if return_as_dict is True:
+                        yield {"bulk_species_concentration_raw": bulk_species_concentrations,
+                               "surface_species_concentration_raw": surface_species_concentrations,
+                               "sensor_readings_time": np.array([total_time])}
+                    else:
+                        yield ScadaData(sensor_config=self.__sensor_config,
+                                        bulk_species_concentration_raw=bulk_species_concentrations,
+                                        surface_species_concentration_raw=
+                                        surface_species_concentrations,
+                                        sensor_readings_time=np.array([total_time]),
+                                        sensor_reading_events=self.__sensor_reading_events,
+                                        sensor_noise=self.__sensor_noise)
 
     def run_basic_quality_simulation(self, hyd_file_in: str, verbose: bool = False) -> ScadaData:
         """
@@ -1136,18 +1148,32 @@ class ScenarioSimulator():
         """
         result = None
 
+        # Run simulation step-by-step
         for scada_data in self.run_basic_quality_simulation_as_generator(hyd_file_in=hyd_file_in,
-                                                                         verbose=verbose):
+                                                                         verbose=verbose,
+                                                                         return_as_dict=True):
             if result is None:
-                result = scada_data
+                result = {}
+                for data_type, data in scada_data.items():
+                    result[data_type] = [data]
             else:
-                result.concatenate(scada_data)
+                for data_type, data in scada_data.items():
+                    result[data_type].append(data)
 
-        return result
+        # Build ScadaData instance
+        for data_type in result:
+            result[data_type] = np.concatenate(result[data_type], axis=0)
+
+        return ScadaData(**result,
+                         sensor_config=self.__sensor_config,
+                         sensor_reading_events=self.__sensor_reading_events,
+                         sensor_noise=self.__sensor_noise)
 
     def run_basic_quality_simulation_as_generator(self, hyd_file_in: str, verbose: bool = False,
-                                                  support_abort: bool = False
-                                                  ) -> Generator[ScadaData, bool, None]:
+                                                  support_abort: bool = False,
+                                                  return_as_dict: bool = False
+                                                  ) -> Generator[Union[ScadaData, dict],
+                                                                 bool, None]:
         """
         Runs a basic quality analysis using EPANET.
 
@@ -1158,6 +1184,11 @@ class ScenarioSimulator():
             the quality analysis is computed using those hydraulics.
         verbose : `bool`, optional
             If True, method will be verbose (e.g. showing a progress bar).
+
+            The default is False.
+        return_as_dict : `bool`, optional
+            If True, simulation results/states are returned as a dictionary instead of a
+            :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance.
 
             The default is False.
 
@@ -1210,16 +1241,19 @@ class ScenarioSimulator():
             quality_node_data = self.epanet_api.getNodeActualQuality().reshape(1, -1)
             quality_link_data = self.epanet_api.getLinkActualQuality().reshape(1, -1)
 
-            scada_data = ScadaData(sensor_config=self.__sensor_config,
-                                   node_quality_data_raw=quality_node_data,
-                                   link_quality_data_raw=quality_link_data,
-                                   sensor_readings_time=np.array([total_time]),
-                                   sensor_reading_events=self.__sensor_reading_events,
-                                   sensor_noise=self.__sensor_noise)
-
             # Yield results in a regular time interval only!
             if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
-                yield scada_data
+                if return_as_dict is True:
+                    yield {"node_quality_data_raw": quality_node_data,
+                           "link_quality_data_raw": quality_link_data,
+                           "sensor_readings_time": np.array([total_time])}
+                else:
+                    yield ScadaData(sensor_config=self.__sensor_config,
+                                    node_quality_data_raw=quality_node_data,
+                                    link_quality_data_raw=quality_link_data,
+                                    sensor_readings_time=np.array([total_time]),
+                                    sensor_reading_events=self.__sensor_reading_events,
+                                    sensor_noise=self.__sensor_noise)
 
             # Next
             tstep = self.epanet_api.nextQualityAnalysisStep()
@@ -1260,13 +1294,27 @@ class ScenarioSimulator():
             if self.__f_msx_in is not None:
                 hyd_export = os .path.join(get_temp_folder(), f"epytflow_MSX_{time.time()}.hyd")
 
+            # Run hydraulic simulation step-by-step
             for scada_data in self.run_simulation_as_generator(hyd_export=hyd_export,
-                                                               verbose=verbose):
+                                                               verbose=verbose,
+                                                               return_as_dict=True):
                 if result is None:
-                    result = scada_data
+                    result = {}
+                    for data_type, data in scada_data.items():
+                        result[data_type] = [data]
                 else:
-                    result.concatenate(scada_data)
+                    for data_type, data in scada_data.items():
+                        result[data_type].append(data)
 
+            for data_type in result:
+                result[data_type] = np.concatenate(result[data_type], axis=0)
+
+            result = ScadaData(**result,
+                               sensor_config=self.__sensor_config,
+                               sensor_reading_events=self.__sensor_reading_events,
+                               sensor_noise=self.__sensor_noise)
+
+            # If necessary, run advanced quality simulation utilizing the computed hydraulics
             if self.f_msx_in is not None:
                 result_msx = self.run_advanced_quality_simulation(hyd_file_in=hyd_export,
                                                                   verbose=verbose)
@@ -1312,8 +1360,9 @@ class ScenarioSimulator():
                              sensor_noise=self.__sensor_noise)
 
     def run_simulation_as_generator(self, hyd_export: str = None, verbose: bool = False,
-                                    support_abort: bool = False
-                                    ) -> Generator[ScadaData, bool, None]:
+                                    support_abort: bool = False,
+                                    return_as_dict: bool = False,
+                                    ) -> Generator[Union[ScadaData, dict], bool, None]:
         """
         Runs the simulation of this scenario and provides the results as a generator.
 
@@ -1334,6 +1383,11 @@ class ScenarioSimulator():
             If True, the simulation can be aborted after every time step -- i.e. the generator
             takes a boolean as an input (send) to indicate whether the simulation
             is to be aborted or not.
+
+            The default is False.
+        return_as_dict : `bool`, optional
+            If True, simulation results/states are returned as a dictionary instead of a
+            :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance.
 
             The default is False.
 
@@ -1433,7 +1487,20 @@ class ScenarioSimulator():
 
                 # Yield results in a regular time interval only!
                 if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
-                    yield scada_data
+                    if return_as_dict is True:
+                        yield {"pressure_data_raw": pressure_data,
+                               "flow_data_raw": flow_data,
+                               "demand_data_raw": demand_data,
+                               "node_quality_data_raw": quality_node_data,
+                               "link_quality_data_raw": quality_link_data,
+                               "pumps_state_data_raw": pumps_state_data,
+                               "valves_state_data_raw": valves_state_data,
+                               "tanks_volume_data_raw": tanks_volume_data,
+                               "pump_energy_usage_data": pump_energy_usage_data,
+                               "pump_efficiency_data": pump_efficiency_data,
+                               "sensor_readings_time": np.array([total_time])}
+                    else:
+                        yield scada_data
 
                 # Apply control modules
                 for control in self.__controls:
