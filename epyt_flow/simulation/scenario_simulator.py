@@ -1285,79 +1285,44 @@ class ScenarioSimulator():
         """
         self.__adapt_to_network_changes()
 
-        # Step by step simulation is required in some cases
-        if len(self.__controls) != 0 or len(self.__system_events) != 0 or hyd_export is not None \
-                or len(self.sensor_config.tank_volume_sensors) != 0 or self.__f_msx_in is not None:
-            result = None
+        result = None
 
-            hyd_export_old = hyd_export
-            if self.__f_msx_in is not None:
-                hyd_export = os .path.join(get_temp_folder(), f"epytflow_MSX_{time.time()}.hyd")
+        hyd_export_old = hyd_export
+        if self.__f_msx_in is not None:
+            hyd_export = os .path.join(get_temp_folder(), f"epytflow_MSX_{time.time()}.hyd")
 
-            # Run hydraulic simulation step-by-step
-            for scada_data in self.run_simulation_as_generator(hyd_export=hyd_export,
-                                                               verbose=verbose,
-                                                               return_as_dict=True):
-                if result is None:
-                    result = {}
-                    for data_type, data in scada_data.items():
-                        result[data_type] = [data]
-                else:
-                    for data_type, data in scada_data.items():
-                        result[data_type].append(data)
-
-            for data_type in result:
-                result[data_type] = np.concatenate(result[data_type], axis=0)
-
-            result = ScadaData(**result,
-                               sensor_config=self.__sensor_config,
-                               sensor_reading_events=self.__sensor_reading_events,
-                               sensor_noise=self.__sensor_noise)
-
-            # If necessary, run advanced quality simulation utilizing the computed hydraulics
-            if self.f_msx_in is not None:
-                result_msx = self.run_advanced_quality_simulation(hyd_file_in=hyd_export,
-                                                                  verbose=verbose)
-                result.join(result_msx)
-
-                if hyd_export_old is not None:
-                    shutil.copyfile(hyd_export, hyd_export_old)
-
-                os.remove(hyd_export)
-
-            return result
-        else:
-            self.__prepare_simulation()
-            res = self.epanet_api.getComputedTimeSeries()
-            if res.WarnFlag:
-                raise RuntimeError(self.epanet_api.getError(res.ErrCode))
-
-            if len(self.epanet_api.getLinkPumpIndex()) != 0:
-                pumps_state = res.Status[:, self.epanet_api.getLinkPumpIndex() - 1]
+        # Run hydraulic simulation step-by-step
+        for scada_data in self.run_simulation_as_generator(hyd_export=hyd_export,
+                                                           verbose=verbose,
+                                                           return_as_dict=True):
+            if result is None:
+                result = {}
+                for data_type, data in scada_data.items():
+                    result[data_type] = [data]
             else:
-                pumps_state = None
+                for data_type, data in scada_data.items():
+                    result[data_type].append(data)
 
-            if len(self.epanet_api.getLinkValveIndex()) != 0:
-                valves_state = res.Status[:, self.epanet_api.getLinkValveIndex() - 1]
-            else:
-                # TODO: Differs from the step-by-step simulation!
-                valves_state = None
+        for data_type in result:
+            result[data_type] = np.concatenate(result[data_type], axis=0)
 
-            tanks_volume = None  # TODO: No tanks volume data available?
-            pump_energy_usage_data = None  # TODO: No Energy usage data available?
-            pump_efficiency_data = None   # TODO: No pump efficiency data available?
+        result = ScadaData(**result,
+                           sensor_config=self.__sensor_config,
+                           sensor_reading_events=self.__sensor_reading_events,
+                           sensor_noise=self.__sensor_noise)
 
-            return ScadaData(sensor_config=self.sensor_config, pressure_data_raw=res.Pressure[:, :],
-                             flow_data_raw=res.Flow[:, :],
-                             demand_data_raw=res.Demand[:, :],
-                             node_quality_data_raw=res.NodeQuality[:, :],
-                             link_quality_data_raw=res.LinkQuality[:, :],
-                             pumps_state_data_raw=pumps_state, valves_state_data_raw=valves_state,
-                             tanks_volume_data_raw=tanks_volume, sensor_readings_time=res.Time[:],
-                             pump_energy_usage_data=pump_energy_usage_data,
-                             pump_efficiency_data=pump_efficiency_data,
-                             sensor_reading_events=self.__sensor_reading_events,
-                             sensor_noise=self.__sensor_noise)
+        # If necessary, run advanced quality simulation utilizing the computed hydraulics
+        if self.f_msx_in is not None:
+            result_msx = self.run_advanced_quality_simulation(hyd_file_in=hyd_export,
+                                                              verbose=verbose)
+            result.join(result_msx)
+
+            if hyd_export_old is not None:
+                shutil.copyfile(hyd_export, hyd_export_old)
+
+            os.remove(hyd_export)
+
+        return result
 
     def run_simulation_as_generator(self, hyd_export: str = None, verbose: bool = False,
                                     support_abort: bool = False,
