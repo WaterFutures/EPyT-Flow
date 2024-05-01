@@ -31,8 +31,8 @@ Documentation = "https://epytflow.readthedocs.io/en/latest/"
 Repository = "https://github.com/WaterFutures/EPyT-Flow.git"
 Issues = "https://github.com/WaterFutures/EPyT-Flow/issues"
 
-[tool.setuptools]
-packages = ["epyt_flow"]
+[tool.setuptools.packages]
+find = {}
 
 [tool.setuptools.dynamic]
 version = {attr = "epyt_flow.VERSION"}
