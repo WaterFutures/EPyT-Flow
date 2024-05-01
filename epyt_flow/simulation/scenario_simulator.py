@@ -10,7 +10,7 @@ import shutil
 import warnings
 import random
 import math
-import time
+import uuid
 import numpy as np
 from epyt import epanet
 from epyt.epanet import ToolkitConstants
@@ -95,7 +95,7 @@ class ScenarioSimulator():
             if os.path.isfile(os.path.join(path_to_custom_libs, "libepanetmsx2_2_0.so")):
                 custom_epanetmsx_lib = os.path.join(path_to_custom_libs, "libepanetmsx2_2_0.so")
 
-        self.epanet_api = epanet(self.__f_inp_in,
+        self.epanet_api = epanet(self.__f_inp_in, ph=self.__f_msx_in is None,
                                  customlib=custom_epanet_lib)
 
         bulk_species = []
@@ -1289,7 +1289,7 @@ class ScenarioSimulator():
 
         hyd_export_old = hyd_export
         if self.__f_msx_in is not None:
-            hyd_export = os .path.join(get_temp_folder(), f"epytflow_MSX_{time.time()}.hyd")
+            hyd_export = os .path.join(get_temp_folder(), f"epytflow_MSX_{uuid.uuid4()}.hyd")
 
         # Run hydraulic simulation step-by-step
         for scada_data in self.run_simulation_as_generator(hyd_export=hyd_export,
