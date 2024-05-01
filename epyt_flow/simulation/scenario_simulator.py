@@ -1664,14 +1664,14 @@ class ScenarioSimulator():
                 raise ValueError(f"Unknown flow units '{flow_units}'")
 
         if quality_model is not None:
-            if quality_model["type"] == "none":
+            if quality_model["type"] == "NONE":
                 self.epanet_api.setQualityType("none")
-            elif quality_model["type"] == "age":
+            elif quality_model["type"] == "AGE":
                 self.epanet_api.setQualityType("age")
-            elif quality_model["type"] == "chem":
+            elif quality_model["type"] == "CHEM":
                 self.epanet_api.setQualityType("chem", quality_model["chemical_name"],
-                                               quality_model["chemical_units"])
-            elif quality_model["type"] == "trace":
+                                               quality_model["units"])
+            elif quality_model["type"] == "TRACE":
                 self.epanet_api.setQualityType("trace", quality_model["trace_node_id"])
             else:
                 raise ValueError(f"Unknown quality type: {quality_model['type']}")
@@ -1718,7 +1718,7 @@ class ScenarioSimulator():
         self.__adapt_to_network_changes()
 
         self.__warn_if_quality_set()
-        self.set_general_parameters(quality_model={"type": "age"})
+        self.set_general_parameters(quality_model={"type": "AGE"})
 
     def enable_chemical_analysis(self, chemical_name: str = "Chlorine",
                                  chemical_units: str = "mg/L") -> None:
@@ -1742,8 +1742,8 @@ class ScenarioSimulator():
         self.__adapt_to_network_changes()
 
         self.__warn_if_quality_set()
-        self.set_general_parameters(quality_model={"type": "chem", "chemical_name": chemical_name,
-                                                   "chemical_units": chemical_units})
+        self.set_general_parameters(quality_model={"type": "CHEM", "chemical_name": chemical_name,
+                                                   "units": chemical_units})
 
     def add_quality_source(self, node_id: str, pattern: np.ndarray, source_type: int,
                            pattern_id: str = None, source_strength: int = 1.) -> None:
@@ -1825,4 +1825,5 @@ class ScenarioSimulator():
             raise ValueError(f"Invalid node ID '{trace_node_id}'")
 
         self.__warn_if_quality_set()
-        self.set_general_parameters(quality_model={"type": "trace", "trace_node_id": trace_node_id})
+        self.set_general_parameters(quality_model={"type": "TRACE",
+                                                   "trace_node_id": trace_node_id})
