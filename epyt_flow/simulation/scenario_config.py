@@ -51,6 +51,11 @@ class ScenarioConfig(Serializable):
         Specification of all sensors.
 
         The default is None
+    memory_consumption_estimate : float, optional
+        Estimated memory consumption of this scenario in MB -- i.e. the amount of memory that is
+        needed on the hard disk as well as in RAM.
+
+        The default is None.
     sensor_noise : :class:`~epyt_flow.uncertainty.sensor_noise.SensorNoise`, optional
         Speciation of sensor noise -- i.e. noise/uncertainty affecting the sensor readings.
 
@@ -73,6 +78,7 @@ class ScenarioConfig(Serializable):
 
     def __init__(self, scenario_config: Any = None, f_inp_in: str = None, f_msx_in: str = None,
                  general_params: dict = None, sensor_config: SensorConfig = None,
+                 memory_consumption_estimate: float = None,
                  controls: list[AdvancedControlModule] = [],
                  sensor_noise: SensorNoise = None,
                  model_uncertainty: ModelUncertainty = None,
@@ -102,6 +108,9 @@ class ScenarioConfig(Serializable):
                 raise TypeError("'sensor_config' must be an instance of " +
                                 "'epyt_flow.simulation.SensorConfig' but not of " +
                                 f"'{type(sensor_config)}'")
+        if memory_consumption_estimate is not None:
+            if not isinstance(memory_consumption_estimate, float) or memory_consumption_estimate <= 0:
+                raise ValueError("'memory_consumption_estimate' must be a positive integer")
         if not isinstance(controls, list):
             raise TypeError("'controls' must be an instance of " +
                             "'list[epyt_flow.simulation.scada.AdvancedControlModule]' but no of " +
@@ -151,6 +160,11 @@ class ScenarioConfig(Serializable):
             else:
                 self.__sensor_config = sensor_config
 
+            if memory_consumption_estimate is None:
+                self.__memory_consumption_estimate = scenario_config.memory_consumption_estimate
+            else:
+                self.__memory_consumption_estimate = memory_consumption_estimate
+
             if len(controls) == 0:
                 self.__controls = scenario_config.controls
             else:
@@ -180,6 +194,7 @@ class ScenarioConfig(Serializable):
             self.__f_msx_in = f_msx_in
             self.__general_params = general_params
             self.__sensor_config = sensor_config
+            self.__memory_consumption_estimate = memory_consumption_estimate
             self.__controls = controls
             self.__sensor_noise = sensor_noise
             self.__system_events = system_events
@@ -239,6 +254,19 @@ class ScenarioConfig(Serializable):
             Sensor configuration.
         """
         return deepcopy(self.__sensor_config)
+
+    @property
+    def memory_consumption_estimate(self) -> float:
+        """
+        Gets the estimated memory consumption of this scenario -- i.e. the amount of memory that is
+        needed on the hard disk as well as in RAM.
+
+        Returns
+        -------
+        `float`
+            Estimated memory consumption in MB.
+        """
+        return self.__memory_consumption_estimate
 
     @property
     def controls(self) -> list[AdvancedControlModule]:
@@ -304,6 +332,8 @@ class ScenarioConfig(Serializable):
         return super().get_attributes() | {"f_inp_in": self.__f_inp_in, "f_msx_in": self.__f_msx_in,
                                            "general_params": self.__general_params,
                                            "sensor_config": self.__sensor_config,
+                                           "memory_consumption_estimate":
+                                           self.__memory_consumption_estimate,
                                            "controls": self.__controls,
                                            "sensor_noise": self.__sensor_noise,
                                            "model_uncertainty": self.__model_uncertainty,
@@ -317,6 +347,7 @@ class ScenarioConfig(Serializable):
 
         return self.__f_inp_in == other.f_inp_in and self.__f_msx_in == other.f_msx_in \
             and self.__general_params == other.general_params \
+            and self.__memory_consumption_estimate == other.memory_consumption_estimate \
             and self.__sensor_config == other.sensor_config and self.__controls == other.controls \
             and self.__model_uncertainty == other.model_uncertainty \
             and self.__system_events == other.system_events \
@@ -325,6 +356,7 @@ class ScenarioConfig(Serializable):
     def __str__(self) -> str:
         return f"f_inp_in: {self.f_inp_in} f_msx_in: {self.f_msx_in} " + \
             f"general_params: {self.general_params} sensor_config: {self.sensor_config} " + \
+            f"memory_consumption_estimate: {self.memory_consumption_estimate} " + \
             f"controls: {self.controls} sensor_noise: {self.sensor_noise} " + \
             f"model_uncertainty: {self.model_uncertainty} " + \
             f"system_events: {','.join(map(str, self.system_events))} " + \

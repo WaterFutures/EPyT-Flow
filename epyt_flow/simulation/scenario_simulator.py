@@ -494,6 +494,7 @@ class ScenarioSimulator():
 
         return ScenarioConfig(f_inp_in=self.__f_inp_in, f_msx_in=self.__f_msx_in,
                               general_params=general_params, sensor_config=self.sensor_config,
+                              memory_consumption_estimate=self.estimate_memory_consumption(),
                               controls=self.controls, sensor_noise=self.sensor_noise,
                               model_uncertainty=self.model_uncertainty,
                               system_events=self.system_events,
