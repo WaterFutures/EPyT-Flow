@@ -76,6 +76,29 @@ More details on :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` are gi
 :ref:`here <tut.scada>`.
 
 
+EPyT-Flow also supports the parallel simulation of scenarios. This becomes handy in cases where
+many scenarios have to be simulated at once and multiple CPU cores are available.
+
+.. note::
+
+    EPANET (in contrast to EPANET-MSX) does not make use multiple CPU cores -- i.e.
+    simualting the hydraulics of a single scenario will always use a single CPU core only.
+
+For this, the function :func:`~epyt_flow.simulation.parallel_simulation.ParallelScenarioSimulation.run`
+of the static class :class:`~epyt_flow.simulation.parallel_simulation.ParallelScenarioSimulation`
+can be utilized.
+
+.. code-block:: python
+
+    # Load the first 10 LeakDB Net1 scenarios
+    scenarios = load_leakdb_scenarios(range(10), use_net1=True)
+
+    # Run simulations in parallel using as many CPU cores as possible
+    # SCADA data of each scenario will be stored in "my_leakdb_results" folder
+    ParallelScenarioSimulation.run(scenarios,
+                                   callback=callback_save_to_file(folder_out="my_leakdb_results"))
+
+
 Network Topology
 ++++++++++++++++
 
