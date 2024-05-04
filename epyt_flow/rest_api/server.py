@@ -10,8 +10,8 @@ from .scenario_handler import ScenarioManager, ScenarioNewHandler, ScenarioRemov
 from .scada_data_handler import ScadaDataManager, ScadaDataSensorConfigHandler, \
     ScadaDataPressuresHandler, ScadaDataDemandsHandler, ScadaDataFlowsHandler, \
     ScadaDataLinksQualityHandler, ScadaDataNodesQualityHandler, ScadaDataRemoveHandler, \
-    ScadaDataSensorFaultsHandler, ScadaDataBulkSpeciesHandler, \
-    ScadaDataSurfaceSpeciesHandler, ScadaDataTankVolumesHandler, \
+    ScadaDataSensorFaultsHandler, ScadaDataNodeBulkSpeciesHandler, \
+    ScadaDataLinkBulkSpeciesHandler, ScadaDataSurfaceSpeciesHandler, ScadaDataTankVolumesHandler, \
     ScadaDataPumpStatesHandler, ScadaDataValveStatesHandler
 
 
@@ -73,8 +73,10 @@ class RestApiService():
                            ScadaDataNodesQualityHandler(self.scada_data_mgr))
         self.app.add_route("/scada_data/{data_id}/link_qualities",
                            ScadaDataLinksQualityHandler(self.scada_data_mgr))
-        self.app.add_route("/scada_data/{data_id}/bulk_species",
-                           ScadaDataBulkSpeciesHandler(self.scada_data_mgr))
+        self.app.add_route("/scada_data/{data_id}/node_bulk_species",
+                           ScadaDataNodeBulkSpeciesHandler(self.scada_data_mgr))
+        self.app.add_route("/scada_data/{data_id}/link_bulk_species",
+                           ScadaDataLinkBulkSpeciesHandler(self.scada_data_mgr))
         self.app.add_route("/scada_data/{data_id}/surface_species",
                            ScadaDataSurfaceSpeciesHandler(self.scada_data_mgr))
 

@@ -388,14 +388,14 @@ class ScadaDataLinksQualityHandler(ScadaDataBaseHandler):
             resp.status = falcon.HTTP_INTERNAL_SERVER_ERROR
 
 
-class ScadaDataBulkSpeciesHandler(ScadaDataBaseHandler):
+class ScadaDataNodeBulkSpeciesHandler(ScadaDataBaseHandler):
     """
-    Class for handling GET requests for the bulk species concentration sensor readings
+    Class for handling GET requests for the bulk species node concentration sensor readings
     of a given SCADA data instance.
     """
     def on_get(self, _, resp: falcon.Response, data_id: str) -> None:
         """
-        Gets the bulk species concentrations sensor readings of a given SCADA data instance.
+        Gets the bulk species node concentrations sensor readings of a given SCADA data instance.
 
         Parameters
         ----------
@@ -409,9 +409,39 @@ class ScadaDataBulkSpeciesHandler(ScadaDataBaseHandler):
                 self.send_invalid_resource_id_error(resp)
                 return
 
-            data_links_quality = self.scada_data_mgr.get(data_id).\
-                get_data_bulk_species_concentration().tolist()
-            self.send_json_response(resp, data_links_quality)
+            data_conc = self.scada_data_mgr.get(data_id).\
+                get_data_bulk_species_node_concentration().tolist()
+            self.send_json_response(resp, data_conc)
+        except Exception as ex:
+            warnings.warn(str(ex))
+            resp.status = falcon.HTTP_INTERNAL_SERVER_ERROR
+
+
+class ScadaDataLinkBulkSpeciesHandler(ScadaDataBaseHandler):
+    """
+    Class for handling GET requests for the bulk species link/pipe concentration sensor readings
+    of a given SCADA data instance.
+    """
+    def on_get(self, _, resp: falcon.Response, data_id: str) -> None:
+        """
+        Gets the bulk species link/pipe concentrations sensor readings of a
+        given SCADA data instance.
+
+        Parameters
+        ----------
+        resp : `falcon.Response`
+            Response instance.
+        data_id : `str`
+            UUID of the SCADA data.
+        """
+        try:
+            if self.scada_data_mgr.validate_uuid(data_id) is False:
+                self.send_invalid_resource_id_error(resp)
+                return
+
+            data_conc = self.scada_data_mgr.get(data_id).\
+                get_data_bulk_species_link_concentration().tolist()
+            self.send_json_response(resp, data_conc)
         except Exception as ex:
             warnings.warn(str(ex))
             resp.status = falcon.HTTP_INTERNAL_SERVER_ERROR

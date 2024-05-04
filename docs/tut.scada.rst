@@ -21,29 +21,31 @@ simulation every time.
 
 EPyT-Flow supports different types of sensors:
 
-+-----------------------------+--------------------------------------------------------------------------------+
-| Identifier                  | Description                                                                    |
-+=============================+================================================================================+
-| SENSOR_TYPE_NODE_PRESSURE   | Pressure at a node.                                                            |
-+-----------------------------+--------------------------------------------------------------------------------+
-| SENSOR_TYPE_NODE_QUALITY    | Water quality (e.g. chemical concentration, water age, etc.) at a node.        |
-+-----------------------------+--------------------------------------------------------------------------------+
-| SENSOR_TYPE_NODE_DEMAND     | Demand (i.e. water consumption) at a node.                                     |
-+-----------------------------+--------------------------------------------------------------------------------+
-| SENSOR_TYPE_LINK_FLOW       | Flow rate at a link/pipe.                                                      |
-+-----------------------------+--------------------------------------------------------------------------------+
-| SENSOR_TYPE_LINK_QUALITY    | Water quality (e.g. chemical concentration, water age, etc.) at a link/pipe.   |
-+-----------------------------+--------------------------------------------------------------------------------+
-| SENSOR_TYPE_VALVE_STATE     | State of a valve.                                                              |
-+-----------------------------+--------------------------------------------------------------------------------+
-| SENSOR_TYPE_PUMP_STATE      | State of a pump.                                                               |
-+-----------------------------+--------------------------------------------------------------------------------+
-| SENSOR_TYPE_TANK_VOLUME     | Water volume in a tank.                                                        |
-+-----------------------------+--------------------------------------------------------------------------------+
-| SENSOR_TYPE_BULK_SPECIES    | Bulk species concentrations at a node.                                         |
-+-----------------------------+--------------------------------------------------------------------------------+
-| SENSOR_TYPE_SURFACE_SPECIES | Surface species concentrations at a link/pipe.                                 |
-+-----------------------------+--------------------------------------------------------------------------------+
++-------------------------------+--------------------------------------------------------------------------------+
+| Identifier                    | Description                                                                    |
++===============================+================================================================================+
+| SENSOR_TYPE_NODE_PRESSURE     | Pressure at a node.                                                            |
++-------------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_NODE_QUALITY      | Water quality (e.g. chemical concentration, water age, etc.) at a node.        |
++-------------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_NODE_DEMAND       | Demand (i.e. water consumption) at a node.                                     |
++-------------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_LINK_FLOW         | Flow rate at a link/pipe.                                                      |
++-------------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_LINK_QUALITY      | Water quality (e.g. chemical concentration, water age, etc.) at a link/pipe.   |
++-------------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_VALVE_STATE       | State of a valve.                                                              |
++-------------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_PUMP_STATE        | State of a pump.                                                               |
++-------------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_TANK_VOLUME       | Water volume in a tank.                                                        |
++-------------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_NODE_BULK_SPECIES | Bulk species concentrations at a node.                                         |
++-------------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_LINK_BULK_SPECIES | Bulk species concentrations at a link/pipe.                                    |
++-------------------------------+--------------------------------------------------------------------------------+
+| SENSOR_TYPE_SURFACE_SPECIES   | Surface species concentrations at a link/pipe.                                 |
++-------------------------------+--------------------------------------------------------------------------------+
 
 Example for specifying a sensor placement BEFORE the simulation is run:
 
@@ -64,29 +66,31 @@ Example for specifying a sensor placement BEFORE the simulation is run:
 Alternatively, one can use sensor type-specific functions to specify a sensor placement 
 BEFORE the simulation is run:
 
-+--------------------------------+--------------------------------------------------------------------------------------------------+
-| Sensor type                    | Function for specifying sensors                                                                  |
-+================================+==================================================================================================+
-| Pressure                       | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_pressure_sensors`          |
-+--------------------------------+--------------------------------------------------------------------------------------------------+
-| Flow                           | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_flow_sensors`              |
-+--------------------------------+--------------------------------------------------------------------------------------------------+
-| Demand                         | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_demand_sensors`            |
-+--------------------------------+--------------------------------------------------------------------------------------------------+
-| Link quality                   | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_link_quality_sensors`      |
-+--------------------------------+--------------------------------------------------------------------------------------------------+
-| Node quality                   | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_node_quality_sensors`      |
-+--------------------------------+--------------------------------------------------------------------------------------------------+
-| Valve state                    | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_valve_sensors`             |
-+--------------------------------+--------------------------------------------------------------------------------------------------+
-| Pump state                     | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_pump_sensors`              |
-+--------------------------------+--------------------------------------------------------------------------------------------------+
-| Tank water volume              | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_tank_sensors`              |
-+--------------------------------+--------------------------------------------------------------------------------------------------+
-| Bulk species concentrations    | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_bulk_species_sensors`      |
-+--------------------------------+--------------------------------------------------------------------------------------------------+
-| Surface species concentrations | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_surface_species_sensors`   |
-+--------------------------------+--------------------------------------------------------------------------------------------------+
++----------------------------------+--------------------------------------------------------------------------------------------------+
+| Sensor type                      | Function for specifying sensors                                                                  |
++==================================+==================================================================================================+
+| Pressure                         | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_pressure_sensors`          |
++----------------------------------+--------------------------------------------------------------------------------------------------+
+| Flow                             | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_flow_sensors`              |
++----------------------------------+--------------------------------------------------------------------------------------------------+
+| Demand                           | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_demand_sensors`            |
++----------------------------------+--------------------------------------------------------------------------------------------------+
+| Link quality                     | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_link_quality_sensors`      |
++----------------------------------+--------------------------------------------------------------------------------------------------+
+| Node quality                     | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_node_quality_sensors`      |
++----------------------------------+--------------------------------------------------------------------------------------------------+
+| Valve state                      | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_valve_sensors`             |
++----------------------------------+--------------------------------------------------------------------------------------------------+
+| Pump state                       | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_pump_sensors`              |
++----------------------------------+--------------------------------------------------------------------------------------------------+
+| Tank water volume                | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_tank_sensors`              |
++----------------------------------+--------------------------------------------------------------------------------------------------+
+| Bulk species node concentrations | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_bulk_species_node_sensors` |
++----------------------------------+--------------------------------------------------------------------------------------------------+
+| Bulk species link concentrations | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_bulk_species_link_sensors` |
++----------------------------------+--------------------------------------------------------------------------------------------------+
+| Surface species concentrations   | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_surface_species_sensors`   |
++----------------------------------+--------------------------------------------------------------------------------------------------+
 
 .. code-block:: python
 
@@ -164,29 +168,31 @@ Alternatively, one can use sensor type-specific function for retrieving the read
 or some sensors of that type - note that the ordering of the columns (i.e. sensors) in the
 returned array depends on the ordering of the specified sensors:
 
-+-------------------------------+------------------------------------------------------------------------------------------------+
-| Sensor type                   | Function for getting sensor readings                                                           |
-+===============================+================================================================================================+
-| Pressure                      | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pressures`                    |
-+-------------------------------+------------------------------------------------------------------------------------------------+
-| Flow                          | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_flows`                        |
-+-------------------------------+------------------------------------------------------------------------------------------------+
-| Demand                        | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_demands`                      |
-+-------------------------------+------------------------------------------------------------------------------------------------+
-| Node quality                  | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_nodes_quality`                |
-+-------------------------------+------------------------------------------------------------------------------------------------+
-| Link quality                  | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_links_quality`                |
-+-------------------------------+------------------------------------------------------------------------------------------------+
-| Valve state                   | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_valves_state`                 |
-+-------------------------------+------------------------------------------------------------------------------------------------+
-| Pump state                    | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pumps_state`                  |
-+-------------------------------+------------------------------------------------------------------------------------------------+
-| Tank water volume             | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_tanks_water_volume`           |
-+-------------------------------+------------------------------------------------------------------------------------------------+
-| Bulk species concentration    | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_bulk_species_concentration`   |
-+-------------------------------+------------------------------------------------------------------------------------------------+
-| Surface species concentration | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_surface_species_concentration`|
-+-------------------------------+------------------------------------------------------------------------------------------------+
++---------------------------------+--------------------------------------------------------------------------------------------------+
+| Sensor type                     | Function for getting sensor readings                                                             |
++=================================+==================================================================================================+
+| Pressure                        | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pressures`                      |
++---------------------------------+--------------------------------------------------------------------------------------------------+
+| Flow                            | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_flows`                          |
++---------------------------------+--------------------------------------------------------------------------------------------------+
+| Demand                          | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_demands`                        |
++---------------------------------+--------------------------------------------------------------------------------------------------+
+| Node quality                    | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_nodes_quality`                  |
++---------------------------------+--------------------------------------------------------------------------------------------------+
+| Link quality                    | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_links_quality`                  |
++---------------------------------+--------------------------------------------------------------------------------------------------+
+| Valve state                     | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_valves_state`                   |
++---------------------------------+--------------------------------------------------------------------------------------------------+
+| Pump state                      | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pumps_state`                    |
++---------------------------------+--------------------------------------------------------------------------------------------------+
+| Tank water volume               | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_tanks_water_volume`             |
++---------------------------------+--------------------------------------------------------------------------------------------------+
+| Bulk species node concentration | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_bulk_species_node_concentration`|
++---------------------------------+--------------------------------------------------------------------------------------------------+
+| Bulk species link concentration | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_bulk_species_link_concentration`|
++---------------------------------+--------------------------------------------------------------------------------------------------+
+| Surface species concentration   | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_surface_species_concentration`  |
++---------------------------------+--------------------------------------------------------------------------------------------------+
 
 Example for getting the pressure readings at node "5":
 

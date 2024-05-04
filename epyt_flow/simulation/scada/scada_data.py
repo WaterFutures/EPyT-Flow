@@ -8,7 +8,7 @@ import numpy as np
 from ..sensor_config import SensorConfig, SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY, \
     SENSOR_TYPE_NODE_DEMAND, SENSOR_TYPE_NODE_PRESSURE, SENSOR_TYPE_NODE_QUALITY, \
     SENSOR_TYPE_PUMP_STATE, SENSOR_TYPE_TANK_VOLUME, SENSOR_TYPE_VALVE_STATE, \
-    SENSOR_TYPE_BULK_SPECIES, SENSOR_TYPE_SURFACE_SPECIES
+    SENSOR_TYPE_NODE_BULK_SPECIES, SENSOR_TYPE_LINK_BULK_SPECIES, SENSOR_TYPE_SURFACE_SPECIES
 from ..events import SensorFault, SensorReadingAttack, SensorReadingEvent
 from ...uncertainty import SensorNoise
 from ...serialization import serializable, Serializable, SCADA_DATA_ID
@@ -75,8 +75,14 @@ class ScadaData(Serializable):
         third dimension denotes species concentrations at links/pipes.
 
         The default is None.
-    bulk_species_concentration_raw : `numpy.ndarray`, optional
-        Raw concentrations of bulk species as a tree dimensional array --
+    bulk_species_node_concentration_raw : `numpy.ndarray`, optional
+        Raw concentrations of bulk species at nodes as a tree dimensional array --
+        first dimension encodes time, second dimension denotes the different bulk species,
+        third dimension denotes species concentrations at nodes.
+
+        The default is None.
+    bulk_species_link_concentration_raw : `numpy.ndarray`, optional
+        Raw concentrations of bulk species at links as a tree dimensional array --
         first dimension encodes time, second dimension denotes the different bulk species,
         third dimension denotes species concentrations at nodes.
 
@@ -113,7 +119,8 @@ class ScadaData(Serializable):
                  link_quality_data_raw: np.ndarray = None, pumps_state_data_raw: np.ndarray = None,
                  valves_state_data_raw: np.ndarray = None, tanks_volume_data_raw: np.ndarray = None,
                  surface_species_concentration_raw: np.ndarray = None,
-                 bulk_species_concentration_raw: np.ndarray = None,
+                 bulk_species_node_concentration_raw: np.ndarray = None,
+                 bulk_species_link_concentration_raw: np.ndarray = None,
                  pump_energy_usage_data: np.ndarray = None,
                  pump_efficiency_data: np.ndarray = None,
                  sensor_faults: list[SensorFault] = [],
@@ -168,11 +175,14 @@ class ScadaData(Serializable):
                 raise TypeError("'surface_species_concentration_raw' must be an instance of " +
                                 "'numpy.ndarray' but not of " +
                                 f"'{type(surface_species_concentration_raw)}'")
-        if bulk_species_concentration_raw is not None:
-            if not isinstance(bulk_species_concentration_raw, np.ndarray):
-                raise TypeError("'bulk_species_concentration_raw' must be an instance of " +
+        if bulk_species_node_concentration_raw is not None:
+            if not isinstance(bulk_species_node_concentration_raw, np.ndarray):
+                raise TypeError("'bulk_species_node_concentration_raw' must be an instance of " +
                                 "'numpy.ndarray' but not of " +
-                                f"'{type(bulk_species_concentration_raw)}'")
+                                f"'{type(bulk_species_node_concentration_raw)}'")
+        if bulk_species_link_concentration_raw is not None:
+            if not isinstance(bulk_species_link_concentration_raw, np.ndarray):
+                raise TypeError()
         if pump_energy_usage_data is not None:
             if not isinstance(pump_energy_usage_data, np.ndarray):
                 raise TypeError("'pump_energy_usage_data' must be an instance of 'numpy.ndarray' " +
@@ -237,9 +247,12 @@ class ScadaData(Serializable):
         if tanks_volume_data_raw is not None:
             if not tanks_volume_data_raw.shape[0] == n_time_steps:
                 __raise_shape_mismatch("tanks_volume_data_raw")
-        if bulk_species_concentration_raw is not None:
-            if bulk_species_concentration_raw.shape[0] != n_time_steps:
-                __raise_shape_mismatch("bulk_species_concentration_raw")
+        if bulk_species_node_concentration_raw is not None:
+            if bulk_species_node_concentration_raw.shape[0] != n_time_steps:
+                __raise_shape_mismatch("bulk_species_node_concentration_raw")
+        if bulk_species_link_concentration_raw is not None:
+            if bulk_species_link_concentration_raw.shape[0] != n_time_steps:
+                __raise_shape_mismatch("bulk_species_link_concentration_raw")
         if surface_species_concentration_raw is not None:
             if surface_species_concentration_raw.shape[0] != n_time_steps:
                 __raise_shape_mismatch("surface_species_concentration_raw")
@@ -264,7 +277,8 @@ class ScadaData(Serializable):
         self.__valves_state_data_raw = valves_state_data_raw
         self.__tanks_volume_data_raw = tanks_volume_data_raw
         self.__surface_species_concentration_raw = surface_species_concentration_raw
-        self.__bulk_species_concentration_raw = bulk_species_concentration_raw
+        self.__bulk_species_node_concentration_raw = bulk_species_node_concentration_raw
+        self.__bulk_species_link_concentration_raw = bulk_species_link_concentration_raw
         self.__pump_energy_usage_data = pump_energy_usage_data
         self.__pump_efficiency_data = pump_efficiency_data
         self.__sensor_readings = None
@@ -476,7 +490,7 @@ class ScadaData(Serializable):
         return deepcopy(self.__surface_species_concentration_raw)
 
     @property
-    def bulk_species_concentration_raw(self) -> np.ndarray:
+    def bulk_species_node_concentration_raw(self) -> np.ndarray:
         """
         Gets the raw bulk species concentrations at nodes.
 
@@ -485,7 +499,19 @@ class ScadaData(Serializable):
         `numpy.ndarray`
             Raw species concentrations.
         """
-        return deepcopy(self.__bulk_species_concentration_raw)
+        return deepcopy(self.__bulk_species_node_concentration_raw)
+
+    @property
+    def bulk_species_link_concentration_raw(self) -> np.ndarray:
+        """
+        Gets the raw bulk species concentrations at links/pipes.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Raw species concentrations.
+        """
+        return deepcopy(self.__bulk_species_link_concentration_raw)
 
     @property
     def pump_energy_usage_data(self) -> np.ndarray:
@@ -553,7 +579,9 @@ class ScadaData(Serializable):
             elif sensor_event.sensor_type == SENSOR_TYPE_TANK_VOLUME:
                 idx = self.__sensor_config.get_index_of_reading(
                     tank_volume_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_BULK_SPECIES:
+            elif sensor_event.sensor_type == SENSOR_TYPE_NODE_BULK_SPECIES:
+                raise NotImplementedError()
+            elif sensor_event.sensor_type == SENSOR_TYPE_LINK_BULK_SPECIES:
                 raise NotImplementedError()
             elif sensor_event.sensor_type == SENSOR_TYPE_SURFACE_SPECIES:
                 raise NotImplementedError()
@@ -577,8 +605,10 @@ class ScadaData(Serializable):
                                            "tanks_volume_data_raw": self.__tanks_volume_data_raw,
                                            "surface_species_concentration_raw":
                                            self.__surface_species_concentration_raw,
-                                           "bulk_species_concentration_raw":
-                                           self.__bulk_species_concentration_raw,
+                                           "bulk_species_node_concentration_raw":
+                                           self.__bulk_species_node_concentration_raw,
+                                           "bulk_species_link_concentration_raw":
+                                           self.__bulk_species_link_concentration_raw,
                                            "pump_energy_usage_data": self.__pump_energy_usage_data,
                                            "pump_efficiency_data": self.__pump_efficiency_data}
 
@@ -602,8 +632,10 @@ class ScadaData(Serializable):
                 and np.all(self.__tanks_volume_data_raw == other.tanks_volume_data_raw) \
                 and np.all(self.__surface_species_concentration_raw ==
                            other.surface_species_concentration_raw) \
-                and np.all(self.__bulk_species_concentration_raw ==
-                           other.bulk_species_concentration_raw) \
+                and np.all(self.__bulk_species_node_concentration_raw ==
+                           other.bulk_species_node_concentration_raw) \
+                and np.all(self.__bulk_species_link_concentration_raw ==
+                           other.bulk_species_link_concentration_raw) \
                 and np.all(self.__pump_energy_usage_data == other.pump_energy_usage_data) \
                 and np.all(self.__pump_efficiency_data == other.pump_efficiency_data)
         except Exception as ex:
@@ -622,7 +654,8 @@ class ScadaData(Serializable):
             f"valves_state_data_raw: {self.__valves_state_data_raw} " + \
             f"tanks_volume_data_raw: {self.__tanks_volume_data_raw} " + \
             f"surface_species_concentration_raw: {self.__surface_species_concentration_raw} " + \
-            f"bulk_species_concentration_raw: {self.__bulk_species_concentration_raw} " + \
+            f"bulk_species_node_concentration_raw: {self.__bulk_species_node_concentration_raw} " + \
+            f"bulk_species_link_concentration_raw: {self.__bulk_species_link_concentration_raw} " + \
             f"pump_efficiency_data: {self.__pump_efficiency_data} " + \
             f"pump_energy_usage_data: {self.__pump_energy_usage_data}"
 
@@ -783,10 +816,15 @@ class ScadaData(Serializable):
             self.__tanks_volume_data_raw = other.tanks_volume_data_raw
             self.__sensor_config.tank_volume_sensors = other.sensor_config.tank_volume_sensors
 
-        if self.__bulk_species_concentration_raw is None and \
-                other.bulk_species_concentration_raw is not None:
-            self.__bulk_species_concentration_raw = other.bulk_species_concentration_raw
-            self.__sensor_config.bulk_species_sensors = other.sensor_config.bulk_species_sensors
+        if self.__bulk_species_node_concentration_raw is None and \
+                other.bulk_species_node_concentration_raw is not None:
+            self.__bulk_species_node_concentration_raw = other.bulk_species_node_concentration_raw
+            self.__sensor_config.bulk_species_node_sensors = other.sensor_config.bulk_species_node_sensors
+
+        if self.__bulk_species_link_concentration_raw is None and \
+                other.bulk_species_link_concentration_raw is not None:
+            self.__bulk_species_link_concentration_raw = other.bulk_species_link_concentration_raw
+            self.__sensor_config.bulk_species_link_sensors = other.sensor_config.bulk_species_link_sensors
 
         if self.__surface_species_concentration_raw is None and \
                 other.surface_species_concentration_raw is not None:
@@ -863,12 +901,20 @@ class ScadaData(Serializable):
 
         if self.__surface_species_concentration_raw is not None:
             self.__surface_species_concentration_raw = np.concatenate(
-                (self.__surface_species_concentration_raw, other.surface_species_concentration_raw),
+                (self.__surface_species_concentration_raw,
+                 other.surface_species_concentration_raw),
                 axis=0)
 
-        if self.__bulk_species_concentration_raw is not None:
-            self.__bulk_species_concentration_raw = np.concatenate(
-                (self.__bulk_species_concentration_raw, other.bulk_species_concentration_raw),
+        if self.__bulk_species_node_concentration_raw is not None:
+            self.__bulk_species_node_concentration_raw = np.concatenate(
+                (self.__bulk_species_node_concentration_raw,
+                 other.bulk_species_node_concentration_raw),
+                axis=0)
+
+        if self.__bulk_species_link_concentration_raw is not None:
+            self.__bulk_species_link_concentration_raw = np.concatenate(
+                (self.__bulk_species_link_concentration_raw,
+                 other.bulk_species_link_concentration_raw),
                 axis=0)
 
         if self.__pump_energy_usage_data is not None:
@@ -901,7 +947,8 @@ class ScadaData(Serializable):
                              pumps_state=self.__pumps_state_data_raw,
                              valves_state=self.__valves_state_data_raw,
                              tanks_volume=self.__tanks_volume_data_raw,
-                             bulk_species_concentrations=self.__bulk_species_concentration_raw,
+                             bulk_species_node_concentrations=self.__bulk_species_node_concentration_raw,
+                             bulk_species_link_concentrations=self.__bulk_species_link_concentration_raw,
                              surface_species_concentrations=self.__surface_species_concentration_raw)
 
         # Apply sensor uncertainties
@@ -1285,11 +1332,11 @@ class ScadaData(Serializable):
                 for link_id in surface_species_sensor_locations[species_id]]
         return self.__sensor_readings[:, idx]
 
-    def get_data_bulk_species_concentration(self,
-                                            bulk_species_sensor_locations: dict = None
-                                            ) -> np.ndarray:
+    def get_data_bulk_species_node_concentration(self,
+                                                 bulk_species_sensor_locations: dict = None
+                                                 ) -> np.ndarray:
         """
-        Gets the final bulk species concentration sensor readings --
+        Gets the final bulk species node concentration sensor readings --
         note that those might be subject to given sensor faults and sensor noise/uncertainty.
 
         Parameters
@@ -1297,7 +1344,7 @@ class ScadaData(Serializable):
         bulk_species_sensor_locations : `dict`, optional
             Existing bulk species concentration sensors (species ID and node IDs) for which
             the sensor readings are requested.
-            If None, the readings from all bulk species concentration sensors are returned.
+            If None, the readings from all bulk species node concentration sensors are returned.
 
             The default is None.
 
@@ -1306,8 +1353,8 @@ class ScadaData(Serializable):
         `numpy.ndarray`
             Bulk species concentration sensor readings.
         """
-        if self.__sensor_config.bulk_species_sensors == {}:
-            raise ValueError("No bulk species sensors set")
+        if self.__sensor_config.bulk_species_node_sensors == {}:
+            raise ValueError("No bulk species node sensors set")
         if bulk_species_sensor_locations is not None:
             if not isinstance(bulk_species_sensor_locations, dict):
                 raise TypeError("'bulk_species_sensor_locations' must be an instance of 'dict'" +
@@ -1318,19 +1365,69 @@ class ScadaData(Serializable):
                                      "sensor configuration")
 
                 my_bulk_species_sensor_locations = \
-                    self.__sensor_config.bulk_species_sensors[species_id]
+                    self.__sensor_config.bulk_species_node_sensors[species_id]
                 for sensor_id in bulk_species_sensor_locations[species_id]:
                     if sensor_id not in my_bulk_species_sensor_locations:
                         raise ValueError(f"Link '{sensor_id}' is not included in the " +
                                          f"sensor configuration for species '{species_id}'")
         else:
-            bulk_species_sensor_locations = self.__sensor_config.bulk_species_sensors
+            bulk_species_sensor_locations = self.__sensor_config.bulk_species_node_sensors
 
         if self.__sensor_readings is None:
             self.get_data()
 
         idx = [self.__sensor_config.get_index_of_reading(
-            bulk_species_sensor=(species_id, node_id))
+            bulk_species_node_sensor=(species_id, node_id))
+                for species_id in bulk_species_sensor_locations
+                for node_id in bulk_species_sensor_locations[species_id]]
+        return self.__sensor_readings[:, idx]
+
+    def get_data_bulk_species_link_concentration(self,
+                                                 bulk_species_sensor_locations: dict = None
+                                                 ) -> np.ndarray:
+        """
+        Gets the final bulk species link/pipe concentration sensor readings --
+        note that those might be subject to given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        bulk_species_sensor_locations : `dict`, optional
+            Existing bulk species concentration sensors (species ID and link/pipe IDs) for which
+            the sensor readings are requested.
+            If None, the readings from all bulk species concentration link/pipe sensors are returned.
+
+            The default is None.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Bulk species concentration sensor readings.
+        """
+        if self.__sensor_config.bulk_species_link_sensors == {}:
+            raise ValueError("No bulk species link/pipe sensors set")
+        if bulk_species_sensor_locations is not None:
+            if not isinstance(bulk_species_sensor_locations, dict):
+                raise TypeError("'bulk_species_sensor_locations' must be an instance of 'dict'" +
+                                f" but not of '{type(bulk_species_sensor_locations)}'")
+            for species_id in bulk_species_sensor_locations:
+                if species_id not in self.__sensor_config.bulk_species_link_sensors:
+                    raise ValueError(f"Species '{species_id}' is not included in the " +
+                                     "sensor configuration")
+
+                my_bulk_species_sensor_locations = \
+                    self.__sensor_config.bulk_species_link_sensors[species_id]
+                for sensor_id in bulk_species_sensor_locations[species_id]:
+                    if sensor_id not in my_bulk_species_sensor_locations:
+                        raise ValueError(f"Link '{sensor_id}' is not included in the " +
+                                         f"sensor configuration for species '{species_id}'")
+        else:
+            bulk_species_sensor_locations = self.__sensor_config.bulk_species_link_sensors
+
+        if self.__sensor_readings is None:
+            self.get_data()
+
+        idx = [self.__sensor_config.get_index_of_reading(
+            bulk_species_link_sensor=(species_id, node_id))
                 for species_id in bulk_species_sensor_locations
                 for node_id in bulk_species_sensor_locations[species_id]]
         return self.__sensor_readings[:, idx]

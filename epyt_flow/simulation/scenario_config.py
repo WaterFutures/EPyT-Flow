@@ -458,10 +458,15 @@ class ScenarioConfig(Serializable):
         else:
             pump_state_sensors = []
 
-        if "bulk_species_sensors" in sensor_config.keys():
-            bulk_species_sensors = sensor_config["bulk_species_sensors"]
+        if "bulk_species_node_sensors" in sensor_config.keys():
+            bulk_species_node_sensors = sensor_config["bulk_species_node_sensors"]
         else:
-            bulk_species_sensors = {}
+            bulk_species_node_sensors = {}
+
+        if "bulk_species_link_sensors" in sensor_config.keys():
+            bulk_species_link_sensors = sensor_config["bulk_species_link_sensors"]
+        else:
+            bulk_species_link_sensors = {}
 
         if "surface_species_sensors" in sensor_config.keys():
             surface_species_sensors = sensor_config["surface_species_sensors"]
@@ -590,7 +595,8 @@ class ScenarioConfig(Serializable):
                                          valve_state_sensors=valve_state_sensors,
                                          pump_state_sensors=pump_state_sensors,
                                          tank_volume_sensors=tank_volume_sensors,
-                                         bulk_species_sensors=bulk_species_sensors,
+                                         bulk_species_node_sensors=bulk_species_node_sensors,
+                                         bulk_species_link_sensors=bulk_species_link_sensors,
                                          surface_species_sensors=surface_species_sensors)
 
         # Create final scenario configuration

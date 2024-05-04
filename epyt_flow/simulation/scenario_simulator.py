@@ -20,7 +20,7 @@ from .scenario_config import ScenarioConfig
 from .sensor_config import SensorConfig, SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY, \
     SENSOR_TYPE_NODE_DEMAND, SENSOR_TYPE_NODE_PRESSURE, SENSOR_TYPE_NODE_QUALITY, \
     SENSOR_TYPE_PUMP_STATE, SENSOR_TYPE_TANK_VOLUME, SENSOR_TYPE_VALVE_STATE, \
-    SENSOR_TYPE_BULK_SPECIES, SENSOR_TYPE_SURFACE_SPECIES
+    SENSOR_TYPE_NODE_BULK_SPECIES, SENSOR_TYPE_LINK_BULK_SPECIES, SENSOR_TYPE_SURFACE_SPECIES
 from ..uncertainty import ModelUncertainty, SensorNoise
 from .events import SystemEvent, Leakage, ActuatorEvent, SensorFault, SensorReadingAttack, \
     SensorReadingEvent
@@ -358,7 +358,8 @@ class ScenarioSimulator():
             new_sensor_config.pump_state_sensors = self.__sensor_config.pump_state_sensors
             new_sensor_config.valve_state_sensors = self.__sensor_config.valve_state_sensors
             new_sensor_config.tank_volume_sensors = self.__sensor_config.tank_volume_sensors
-            new_sensor_config.bulk_species_sensors = self.__sensor_config.bulk_species_sensors
+            new_sensor_config.bulk_species_node_sensors = self.__sensor_config.bulk_species_node_sensors
+            new_sensor_config.bulk_species_link_sensors = self.__sensor_config.bulk_species_link_sensors
             new_sensor_config.surface_species_sensors = self.__sensor_config.surface_species_sensors
 
             self.__sensor_config = new_sensor_config
@@ -798,8 +799,10 @@ class ScenarioSimulator():
             self.__sensor_config.pump_state_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_TANK_VOLUME:
             self.__sensor_config.tank_volume_sensors = sensor_locations
-        elif sensor_type == SENSOR_TYPE_BULK_SPECIES:
-            self.__sensor_config.bulk_species_sensors = sensor_locations
+        elif sensor_type == SENSOR_TYPE_NODE_BULK_SPECIES:
+            self.__sensor_config.bulk_species_node_sensors = sensor_locations
+        elif sensor_type == SENSOR_TYPE_LINK_BULK_SPECIES:
+            self.__sensor_config.bulk_species_link_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_SURFACE_SPECIES:
             self.__sensor_config.surface_species_sensors = sensor_locations
         else:
@@ -897,9 +900,9 @@ class ScenarioSimulator():
         """
         self.set_sensors(SENSOR_TYPE_TANK_VOLUME, sensor_locations)
 
-    def set_bulk_species_sensors(self, sensor_info: dict) -> None:
+    def set_bulk_species_node_sensors(self, sensor_info: dict) -> None:
         """
-        Sets the bulk species sensors -- i.e. measuring bulk species concentrations
+        Sets the bulk species node sensors -- i.e. measuring bulk species concentrations
         at nodes in the network.
 
         Parameters
@@ -907,7 +910,19 @@ class ScenarioSimulator():
         sensor_info : `dict`
             Bulk species sensors -- keys: bulk species IDs, values: node IDs.
         """
-        self.set_sensors(SENSOR_TYPE_BULK_SPECIES, sensor_info)
+        self.set_sensors(SENSOR_TYPE_NODE_BULK_SPECIES, sensor_info)
+
+    def set_bulk_species_link_sensors(self, sensor_info: dict) -> None:
+        """
+        Sets the bulk species link/pipe sensors -- i.e. measuring bulk species concentrations
+        at links/pipes in the network.
+
+        Parameters
+        ----------
+        sensor_info : `dict`
+            Bulk species sensors -- keys: bulk species IDs, values: node IDs.
+        """
+        self.set_sensors(SENSOR_TYPE_LINK_BULK_SPECIES, sensor_info)
 
     def set_surface_species_sensors(self, sensor_info: dict) -> None:
         """
@@ -1015,21 +1030,32 @@ class ScenarioSimulator():
             progress_bar = iter(tqdm(range(n_iterations + 1), desc="Time steps"))
 
         # Initial concentrations:
-        bulk_species_concentrations = []
+        bulk_species_node_concentrations = []
+        bulk_species_link_concentrations = []
         for species_idx in bulk_species_idx:
             cur_species_concentrations = []
-
             for node_idx in range(1, n_nodes+1):
                 concen = self.epanet_api.msx.MSXgetinitqual(0, node_idx, species_idx)
                 cur_species_concentrations.append(concen)
+            bulk_species_node_concentrations.append(cur_species_concentrations)
 
-            bulk_species_concentrations.append(cur_species_concentrations)
+            cur_species_concentrations = []
+            for link_idx in range(1, n_links+1):
+                concen = self.epanet_api.msx.MSXgetinitqual(1, link_idx, species_idx)
+                cur_species_concentrations.append(concen)
+            bulk_species_link_concentrations.append(cur_species_concentrations)
 
-        if len(bulk_species_concentrations) == 0:
-            bulk_species_concentrations = None
+        if len(bulk_species_node_concentrations) == 0:
+            bulk_species_node_concentrations = None
         else:
-            bulk_species_concentrations = np.array(bulk_species_concentrations).\
+            bulk_species_node_concentrations = np.array(bulk_species_node_concentrations).\
                 reshape((1, len(bulk_species_idx), n_nodes))
+
+        if len(bulk_species_link_concentrations) == 0:
+            bulk_species_link_concentrations = None
+        else:
+            bulk_species_link_concentrations = np.array(bulk_species_link_concentrations).\
+                reshape((1, len(bulk_species_idx), n_links))
 
         surface_species_concentrations = []
         for species_idx in surface_species_idx:
@@ -1052,12 +1078,14 @@ class ScenarioSimulator():
 
         if reporting_time_start == 0:
             if return_as_dict is True:
-                yield {"bulk_species_concentration_raw": bulk_species_concentrations,
+                yield {"bulk_species_node_concentration_raw": bulk_species_node_concentrations,
+                       "bulk_species_link_concentration_raw": bulk_species_link_concentrations,
                        "surface_species_concentration_raw": surface_species_concentrations,
                        "sensor_readings_time": np.array([total_time])}
             else:
                 yield ScadaData(sensor_config=self.__sensor_config,
-                                bulk_species_concentration_raw=bulk_species_concentrations,
+                                bulk_species_node_concentration_raw=bulk_species_node_concentrations,
+                                bulk_species_link_concentration_raw=bulk_species_link_concentrations,
                                 surface_species_concentration_raw=surface_species_concentrations,
                                 sensor_readings_time=np.array([0]),
                                 sensor_reading_events=self.__sensor_reading_events,
@@ -1076,22 +1104,34 @@ class ScenarioSimulator():
 
             # Fetch data at regular time intervals
             if total_time % hyd_time_step == 0:
-                bulk_species_concentrations = []
+                bulk_species_node_concentrations = []
+                bulk_species_link_concentrations = []
                 for species_idx in bulk_species_idx:
                     cur_species_concentrations = []
-
                     for node_idx in range(1, n_nodes+1):
                         concen = self.epanet_api.getMSXSpeciesConcentration(0, node_idx,
                                                                             species_idx)
                         cur_species_concentrations.append(concen)
+                    bulk_species_node_concentrations.append(cur_species_concentrations)
 
-                    bulk_species_concentrations.append(cur_species_concentrations)
+                    cur_species_concentrations = []
+                    for link_idx in range(1, n_links+1):
+                        concen = self.epanet_api.getMSXSpeciesConcentration(1, link_idx,
+                                                                            species_idx)
+                        cur_species_concentrations.append(concen)
+                    bulk_species_link_concentrations.append(cur_species_concentrations)
 
-                if len(bulk_species_concentrations) == 0:
-                    bulk_species_concentrations = None
+                if len(bulk_species_node_concentrations) == 0:
+                    bulk_species_node_concentrations = None
                 else:
-                    bulk_species_concentrations = np.array(bulk_species_concentrations).\
+                    bulk_species_node_concentrations = np.array(bulk_species_node_concentrations).\
                         reshape((1, len(bulk_species_idx), n_nodes))
+
+                if len(bulk_species_link_concentrations) == 0:
+                    bulk_species_link_concentrations = None
+                else:
+                    bulk_species_link_concentrations = np.array(bulk_species_link_concentrations).\
+                        reshape((1, len(bulk_species_idx), n_links))
 
                 surface_species_concentrations = []
                 for species_idx in surface_species_idx:
@@ -1116,12 +1156,16 @@ class ScenarioSimulator():
                 # Report results in a regular time interval only!
                 if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
                     if return_as_dict is True:
-                        yield {"bulk_species_concentration_raw": bulk_species_concentrations,
+                        yield {"bulk_species_node_concentration_raw": bulk_species_node_concentrations,
+                               "bulk_species_link_concentration_raw": bulk_species_link_concentrations,
                                "surface_species_concentration_raw": surface_species_concentrations,
                                "sensor_readings_time": np.array([total_time])}
                     else:
                         yield ScadaData(sensor_config=self.__sensor_config,
-                                        bulk_species_concentration_raw=bulk_species_concentrations,
+                                        bulk_species_node_concentration_raw=
+                                        bulk_species_node_concentrations,
+                                        bulk_species_link_concentration_raw=
+                                        bulk_species_link_concentrations,
                                         surface_species_concentration_raw=
                                         surface_species_concentrations,
                                         sensor_readings_time=np.array([total_time]),

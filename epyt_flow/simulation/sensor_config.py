@@ -8,16 +8,17 @@ import epyt
 from ..serialization import SENSOR_CONFIG_ID, JsonSerializable, serializable
 
 
-SENSOR_TYPE_NODE_PRESSURE   = 1
-SENSOR_TYPE_NODE_QUALITY    = 2
-SENSOR_TYPE_NODE_DEMAND     = 3
-SENSOR_TYPE_LINK_FLOW       = 4
-SENSOR_TYPE_LINK_QUALITY    = 5
-SENSOR_TYPE_VALVE_STATE     = 6
-SENSOR_TYPE_PUMP_STATE      = 7
-SENSOR_TYPE_TANK_VOLUME     = 8
-SENSOR_TYPE_BULK_SPECIES    = 9
-SENSOR_TYPE_SURFACE_SPECIES = 10
+SENSOR_TYPE_NODE_PRESSURE     = 1
+SENSOR_TYPE_NODE_QUALITY      = 2
+SENSOR_TYPE_NODE_DEMAND       = 3
+SENSOR_TYPE_LINK_FLOW         = 4
+SENSOR_TYPE_LINK_QUALITY      = 5
+SENSOR_TYPE_VALVE_STATE       = 6
+SENSOR_TYPE_PUMP_STATE        = 7
+SENSOR_TYPE_TANK_VOLUME       = 8
+SENSOR_TYPE_NODE_BULK_SPECIES = 9
+SENSOR_TYPE_LINK_BULK_SPECIES = 10
+SENSOR_TYPE_SURFACE_SPECIES   = 11
 
 
 @serializable(SENSOR_CONFIG_ID, ".epytflow_sensor_config")
@@ -71,9 +72,14 @@ class SensorConfig(JsonSerializable):
         List of all tanks (i.e. IDs) at which a tank volume sensor is placed.
 
         The default is an empty list.
-    bulk_species_sensors : `dict`, optional
-        Bulk species sensors as a dictionary -- i.e. bulk species ID are the keys,
+    bulk_species_node_sensors : `dict`, optional
+        Bulk species node sensors as a dictionary -- i.e. bulk species ID are the keys,
         and the sensor locations (node IDs) are the values.
+
+        The default is an empty list.
+    bulk_species_link_sensors : `dict`, optional
+        Bulk species link/pipe sensors as a dictionary -- i.e. bulk species ID are the keys,
+        and the sensor locations (link/pipe IDs) are the values.
 
         The default is an empty list.
     surface_species_sensors : `dict`, optional
@@ -133,7 +139,8 @@ class SensorConfig(JsonSerializable):
                  quality_node_sensors: list[str] = [], quality_link_sensors: list[str] = [],
                  valve_state_sensors: list[str] = [], pump_state_sensors: list[str] = [],
                  tank_volume_sensors: list[str] = [],
-                 bulk_species_sensors: dict = {}, surface_species_sensors: dict = {},
+                 bulk_species_node_sensors: dict = {}, bulk_species_link_sensors: dict = {},
+                 surface_species_sensors: dict = {},
                  node_id_to_idx: dict = None, link_id_to_idx: dict = None,
                  valve_id_to_idx: dict = None, pump_id_to_idx: dict = None,
                  tank_id_to_idx: dict = None, bulkspecies_id_to_idx: dict = None,
@@ -242,14 +249,23 @@ class SensorConfig(JsonSerializable):
             raise ValueError("Each item in 'tank_volume_sensors' must be in 'tanks' -- cannot " +
                              "place a sensor at a non-existing tanks.")
 
-        if not isinstance(bulk_species_sensors, dict):
-            raise TypeError("'bulk_species_sensors' must be an instance if 'dict' but not " +
-                            f"of '{type(bulk_species_sensors)}'")
+        if not isinstance(bulk_species_node_sensors, dict):
+            raise TypeError("'bulk_species_node_sensors' must be an instance of 'dict' but not " +
+                            f"of '{type(bulk_species_node_sensors)}'")
         if any(bulk_species_id not in bulk_species
-               for bulk_species_id in bulk_species_sensors.keys()):
-            raise ValueError("Unknown bulk species ID in 'bulk_species_sensors'")
-        if any(node_id not in nodes for node_id in bulk_species_sensors.values()):
-            raise ValueError("Unknown node ID in 'bulk_species_sensors'")
+               for bulk_species_id in bulk_species_node_sensors.keys()):
+            raise ValueError("Unknown bulk species ID in 'bulk_species_node_sensors'")
+        if any(node_id not in nodes for node_id in bulk_species_node_sensors.values()):
+            raise ValueError("Unknown node ID in 'bulk_species_node_sensors'")
+
+        if not isinstance(bulk_species_link_sensors, dict):
+            raise TypeError("'bulk_species_link_sensors' must be an instance of 'dict' but not " +
+                            f"of '{type(bulk_species_link_sensors)}'")
+        if any(bulk_species_id not in bulk_species
+               for bulk_species_id in bulk_species_link_sensors.keys()):
+            raise ValueError("Unknown bulk species ID in 'bulk_species_link_sensors'")
+        if any(link_id not in links for link_id in bulk_species_link_sensors.values()):
+            raise ValueError("Unknown link/pipe ID in 'bulk_species_link_sensors'")
 
         if not isinstance(surface_species_sensors, dict):
             raise TypeError("'surface_species_sensors' must be an instance of 'dict' but not " +
@@ -324,7 +340,8 @@ class SensorConfig(JsonSerializable):
         self.__valve_state_sensors = valve_state_sensors
         self.__pump_state_sensors = pump_state_sensors
         self.__tank_volume_sensors = tank_volume_sensors
-        self.__bulk_species_sensors = bulk_species_sensors
+        self.__bulk_species_node_sensors = bulk_species_node_sensors
+        self.__bulk_species_link_sensors = bulk_species_link_sensors
         self.__surface_species_sensors = surface_species_sensors
         self.__node_id_to_idx = node_id_to_idx
         self.__link_id_to_idx = link_id_to_idx
@@ -489,11 +506,16 @@ class SensorConfig(JsonSerializable):
                                           for p in self.__pump_state_sensors], dtype=np.int32)
         self.__tank_volume_idx = np.array([self.tank_id_to_idx(t)
                                            for t in self.__tank_volume_sensors], dtype=np.int32)
-        self.__bulk_species_idx = np.array([(self.bulkspecies_id_to_idx(s),
-                                             [self.node_id_to_idx(node_id)
-                                              for node_id in self.__bulk_species_sensors[s]])
-                                            for s in self.__bulk_species_sensors.keys()],
-                                           dtype=object)
+        self.__bulk_species_node_idx = np.array([(self.bulkspecies_id_to_idx(s),
+                                                  [self.node_id_to_idx(node_id)
+                                                for node_id in self.__bulk_species_node_sensors[s]])
+                                                for s in self.__bulk_species_node_sensors.keys()],
+                                                dtype=object)
+        self.__bulk_species_link_idx = np.array([(self.bulkspecies_id_to_idx(s),
+                                                  [self.link_id_to_idx(link_id)
+                                                for link_id in self.__bulk_species_link_sensors[s]])
+                                                for s in self.__bulk_species_link_sensors.keys()],
+                                                dtype=object)
         self.__surface_species_idx = np.array([(self.surfacespecies_id_to_idx(s),
                                                 [self.link_id_to_idx(link_id)
                                                  for link_id in self.__surface_species_sensors[s]])
@@ -508,7 +530,8 @@ class SensorConfig(JsonSerializable):
         n_valve_state_sensors = len(self.__valve_state_sensors)
         n_pump_state_sensors = len(self.__pump_state_sensors)
         n_tank_volume_sensors = len(self.__tank_volume_sensors)
-        n_bulk_species_sensors = len(self.__bulk_species_sensors.values())
+        n_bulk_species_node_sensors = len(self.__bulk_species_node_sensors.values())
+        n_bulk_species_link_sensors = len(self.__bulk_species_link_sensors.values())
 
         pressure_idx_shift = 0
         flow_idx_shift = pressure_idx_shift + n_pressure_sensors
@@ -518,8 +541,9 @@ class SensorConfig(JsonSerializable):
         valve_state_idx_shift = link_quality_idx_shift + n_link_quality_sensors
         pump_state_idx_shift = valve_state_idx_shift + n_valve_state_sensors
         tank_volume_idx_shift = pump_state_idx_shift + n_pump_state_sensors
-        bulk_species_idx_shift = tank_volume_idx_shift + n_tank_volume_sensors
-        surface_species_idx_shift = bulk_species_idx_shift + n_bulk_species_sensors
+        bulk_species_node_idx_shift = tank_volume_idx_shift + n_tank_volume_sensors
+        bulk_species_link_idx_shift = bulk_species_node_idx_shift + n_bulk_species_node_sensors
+        surface_species_idx_shift = bulk_species_link_idx_shift + n_bulk_species_link_sensors
 
         def __build_sensors_id_to_idx(sensors: list[str], initial_idx_shift: int) -> dict:
             return {sensor_id: i + initial_idx_shift
@@ -558,9 +582,12 @@ class SensorConfig(JsonSerializable):
                                     "tank_volume":
                                     __build_sensors_id_to_idx(self.__tank_volume_sensors,
                                                               tank_volume_idx_shift),
-                                    "bulk_species":
-                                    __build_species_sensors_id_to_idx(self.__bulk_species_sensors,
-                                                                      bulk_species_idx_shift),
+                                    "bulk_species_node":
+                                    __build_species_sensors_id_to_idx(self.__bulk_species_node_sensors,
+                                                                      bulk_species_node_idx_shift),
+                                    "bulk_species_link":
+                                    __build_species_sensors_id_to_idx(self.__bulk_species_link_sensors,
+                                                                      bulk_species_link_idx_shift),
                                     "surface_species":
                                     __build_species_sensors_id_to_idx(self.__surface_species_sensors,
                                                                       surface_species_idx_shift)}
@@ -886,9 +913,9 @@ class SensorConfig(JsonSerializable):
         self.__compute_indices()
 
     @property
-    def bulk_species_sensors(self) -> dict:
+    def bulk_species_node_sensors(self) -> dict:
         """
-        Gets all bulk species sensors as a dictionary --
+        Gets all bulk species node sensors as a dictionary --
         i.e. bulk species IDs as keys and node IDs as values.
 
         Returns
@@ -896,10 +923,10 @@ class SensorConfig(JsonSerializable):
         `dict`
             Bulk species sensors -- keys: bulk species IDs, values: node IDs.
         """
-        return deepcopy(self.__bulk_species_sensors)
+        return deepcopy(self.__bulk_species_node_sensors)
 
-    @bulk_species_sensors.setter
-    def bulk_species_sensors(self, bulk_species_sensors: dict) -> None:
+    @bulk_species_node_sensors.setter
+    def bulk_species_node_sensors(self, bulk_species_sensors: dict) -> None:
         if not isinstance(bulk_species_sensors, dict):
             raise TypeError("'bulk_species_sensors' must be an instance of 'dict' " +
                             f"but not of '{type(bulk_species_sensors)}'")
@@ -908,7 +935,34 @@ class SensorConfig(JsonSerializable):
         if any(node_id not in self.__nodes for node_id in sum(bulk_species_sensors.values(), [])):
             raise ValueError("Unknown node ID in 'bulk_species_sensors'")
 
-        self.__bulk_species_sensors = bulk_species_sensors
+        self.__bulk_species_node_sensors = bulk_species_sensors
+
+        self.__compute_indices()
+
+    @property
+    def bulk_species_link_sensors(self) -> dict:
+        """
+        Gets all bulk species link/pipe sensors as a dictionary --
+        i.e. bulk species IDs as keys and link/pipe IDs as values.
+
+        Returns
+        -------
+        `dict`
+            Bulk species sensors -- keys: bulk species IDs, values: link/pipe IDs.
+        """
+        return deepcopy(self.__bulk_species_link_sensors)
+
+    @bulk_species_link_sensors.setter
+    def bulk_species_link_sensors(self, bulk_species_sensors: dict) -> None:
+        if not isinstance(bulk_species_sensors, dict):
+            raise TypeError("'bulk_species_sensors' must be an instance of 'dict' " +
+                            f"but not of '{type(bulk_species_sensors)}'")
+        if any(species_id not in self.__bulk_species for species_id in bulk_species_sensors.keys()):
+            raise ValueError("Unknown bulk species ID in 'bulk_species_sensors'")
+        if any(link_id not in self.__links for link_id in sum(bulk_species_sensors.values(), [])):
+            raise ValueError("Unknown link/pipe ID in 'bulk_species_sensors'")
+
+        self.__bulk_species_link_sensors = bulk_species_sensors
 
         self.__compute_indices()
 
@@ -967,7 +1021,10 @@ class SensorConfig(JsonSerializable):
                                            "valve_state_sensors": self.__valve_state_sensors,
                                            "pump_state_sensors": self.__pump_state_sensors,
                                            "tank_volume_sensors": self.__tank_volume_sensors,
-                                           "bulk_species_sensors": self.__bulk_species_sensors,
+                                           "bulk_species_node_sensors":
+                                           self.__bulk_species_node_sensors,
+                                           "bulk_species_link_sensors":
+                                           self.__bulk_species_link_sensors,
                                            "surface_species_sensors":
                                            self.__surface_species_sensors,
                                            "node_id_to_idx": self.__node_id_to_idx,
@@ -996,7 +1053,8 @@ class SensorConfig(JsonSerializable):
             and self.__valve_state_sensors == other.valve_state_sensors \
             and self.__pump_state_sensors == other.pump_state_sensors \
             and self.__tank_volume_sensors == other.tank_volume_sensors \
-            and self.__bulk_species_sensors == other.bulk_species_sensors \
+            and self.__bulk_species_node_sensors == other.bulk_species_node_sensors \
+            and self.__bulk_species_link_sensors == other.bulk_species_link_sensors \
             and self.__surface_species_sensors == other.surface_species_sensors
 
     def __str__(self) -> str:
@@ -1010,13 +1068,15 @@ class SensorConfig(JsonSerializable):
             f"valve_state_sensors: {self.__valve_state_sensors} " +\
             f"pump_state_sensors: {self.__pump_state_sensors} " +\
             f"tank_volume_sensors: {self.__tank_volume_sensors}" +\
-            f"bulk_species_sensors: {self.__bulk_species_sensors}" +\
+            f"bulk_species_node_sensors: {self.__bulk_species_node_sensors}" +\
+            f"bulk_species_link_sensors: {self.__bulk_species_link_sensors}" +\
             f"surface_species_sensors: {self.__surface_species_sensors}"
 
     def compute_readings(self, pressures: np.ndarray, flows: np.ndarray, demands: np.ndarray,
                          nodes_quality: np.ndarray, links_quality: np.ndarray,
                          pumps_state: np.ndarray, valves_state: np.ndarray,
-                         tanks_volume: np.ndarray, bulk_species_concentrations: np.ndarray,
+                         tanks_volume: np.ndarray, bulk_species_node_concentrations: np.ndarray,
+                         bulk_species_link_concentrations: np.ndarray,
                          surface_species_concentrations: np.ndarray) -> np.ndarray:
         """
         Applies the sensor configuration to a set of raw simulation results --
@@ -1040,8 +1100,14 @@ class SensorConfig(JsonSerializable):
             States of all valves.
         tanks_volume : `numpy.ndarray`
             Water volume in all tanks.
-        bulk_species_concentrations : `numpy.ndarray`
+        bulk_species_node_concentrations : `numpy.ndarray`
             Bulk species concentrations at all nodes.
+
+            Expect a three-dimensional array: First dimension denotes time,
+            second dimension corresponds to species ID,
+            and third dimension contains the concentration.
+        bulk_species_link_concentrations : `numpy.ndarray`
+            Bulk species concentrations at all links/pipes.
 
             Expect a three-dimensional array: First dimension denotes time,
             second dimension corresponds to species ID,
@@ -1122,14 +1188,23 @@ class SensorConfig(JsonSerializable):
                 raise ValueError("Surface species concentratinons requested but no " +
                                  "surface species concentration data is given")
 
-        if bulk_species_concentrations is not None:
-            for species_idx, nodes_idx in self.__bulk_species_idx:
-                data.append(bulk_species_concentrations[:, species_idx, nodes_idx].
+        if bulk_species_node_concentrations is not None:
+            for species_idx, nodes_idx in self.__bulk_species_node_idx:
+                data.append(bulk_species_node_concentrations[:, species_idx, nodes_idx].
                             reshape(-1, len(nodes_idx)))
         else:
-            if len(self.__bulk_species_sensors) != 0:
+            if len(self.__bulk_species_node_sensors) != 0:
                 raise ValueError("Bulk species concentratinons requested but no " +
-                                 "bulk species concentration data is given")
+                                 "bulk species node concentration data is given")
+
+        if bulk_species_link_concentrations is not None:
+            for species_idx, links_idx in self.__bulk_species_link_idx:
+                data.append(bulk_species_link_concentrations[:, species_idx, links_idx].
+                            reshape(-1, len(links_idx)))
+        else:
+            if len(self.__bulk_species_link_sensors) != 0:
+                raise ValueError("Bulk species concentratinons requested but no " +
+                                 "bulk species link/pipe concentration data is given")
 
         return np.concatenate(data, axis=1)
 
@@ -1137,7 +1212,8 @@ class SensorConfig(JsonSerializable):
                              demand_sensor: str = None, node_quality_sensor: str = None,
                              link_quality_sensor: str = None, valve_state_sensor: str = None,
                              pump_state_sensor: str = None, tank_volume_sensor: str = None,
-                             bulk_species_sensor: tuple[str, str] = None,
+                             bulk_species_node_sensor: tuple[str, str] = None,
+                             bulk_species_link_sensor: tuple[str, str] = None,
                              surface_species_sensor: tuple[str, str] = None) -> int:
         """
         Gets the index of a particular sensor in the final sensor readings array.
@@ -1163,8 +1239,10 @@ class SensorConfig(JsonSerializable):
             ID of the state sensor (at a pump).
         tank_volume_sensor : `str`
             ID of the water volume sensor (at a tank)
-        bulk_species_sensor : `tuple[str, str]`
+        bulk_species_node_sensor : `tuple[str, str]`
             Tuple of bulk species ID and sensor node ID.
+        bulk_species_link_sensor : `tuple[str, str]`
+            Tuple of bulk species ID and sensor link/pipe ID.
         surface_species_sensor : `tuple[str, str]`
             Tuple of surface species ID and sensor link/pipe ID.
         """
@@ -1187,8 +1265,11 @@ class SensorConfig(JsonSerializable):
         elif surface_species_sensor is not None:
             species_id, sensor_id = surface_species_sensor
             return self.__sensors_id_to_idx["surface_species"][species_id][sensor_id]
-        elif bulk_species_sensor is not None:
-            species_id, sensor_id = bulk_species_sensor
-            return self.__sensors_id_to_idx["bulk_species"][species_id][sensor_id]
+        elif bulk_species_node_sensor is not None:
+            species_id, sensor_id = bulk_species_node_sensor
+            return self.__sensors_id_to_idx["bulk_species_node"][species_id][sensor_id]
+        elif bulk_species_link_sensor is not None:
+            species_id, sensor_id = bulk_species_link_sensor
+            return self.__sensors_id_to_idx["bulk_species_link"][species_id][sensor_id]
         else:
             raise ValueError("No sensor given")

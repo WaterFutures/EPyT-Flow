@@ -12,13 +12,13 @@ def test_msx_net2cl2():
         sim.set_general_parameters(simulation_duration=to_seconds(days=10))
 
         # Monitor "CL2" bulk species at every node
-        sim.set_bulk_species_sensors(sensor_info={"CL2": sim.sensor_config.nodes})
+        sim.set_bulk_species_node_sensors(sensor_info={"CL2": sim.sensor_config.nodes})
 
         # Run entire simulation
         res = sim.run_simulation(verbose=True)
 
         # Show sensor readings over the entire simulation
-        assert res.get_data_bulk_species_concentration() is not None
+        assert res.get_data_bulk_species_node_concentration() is not None
 
 
 def test_msx_Net3NH2CL():
@@ -27,14 +27,16 @@ def test_msx_Net3NH2CL():
         # Set simulation duration to two days
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
-        # Monitor "HOCL" bulk species at every node
-        sim.set_bulk_species_sensors(sensor_info={"HOCL": sim.sensor_config.nodes})
+        # Monitor "HOCL" bulk species at every node and pipe
+        sim.set_bulk_species_node_sensors(sensor_info={"HOCL": sim.sensor_config.nodes})
+        sim.set_bulk_species_link_sensors(sensor_info={"HOCL": sim.sensor_config.links})
 
         # Run entire simulation
         res = sim.run_simulation()
 
         # Show sensor readings over the entire simulation
-        assert res.get_data_bulk_species_concentration() is not None
+        assert res.get_data_bulk_species_node_concentration() is not None
+        assert res.get_data_bulk_species_link_concentration() is not None
 
 
 def test_msx_example():

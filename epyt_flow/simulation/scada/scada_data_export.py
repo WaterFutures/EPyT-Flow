@@ -88,7 +88,8 @@ class ScadaDataExport():
         sensor_config.valve_state_sensors = sensor_config.valves
         sensor_config.tank_level_sensors = sensor_config.tanks
         sensor_config.pump_state_sensors = sensor_config.pumps
-        sensor_config.bulk_species_sensors = sensor_config.bulk_species_sensors
+        sensor_config.bulk_species_node_sensors = sensor_config.bulk_species_node_sensors
+        sensor_config.bulk_species_link_sensors = sensor_config.bulk_species_link_sensors
         sensor_config.surface_species_sensors = sensor_config.surface_species_sensors
 
         return sensor_config

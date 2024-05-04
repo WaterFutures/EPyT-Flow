@@ -9,7 +9,7 @@ from .event import Event
 from ..sensor_config import SensorConfig, SENSOR_TYPE_NODE_PRESSURE, SENSOR_TYPE_NODE_QUALITY, \
     SENSOR_TYPE_NODE_DEMAND, SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY, \
     SENSOR_TYPE_VALVE_STATE, SENSOR_TYPE_PUMP_STATE, SENSOR_TYPE_TANK_VOLUME, \
-    SENSOR_TYPE_BULK_SPECIES, SENSOR_TYPE_SURFACE_SPECIES
+    SENSOR_TYPE_NODE_BULK_SPECIES, SENSOR_TYPE_LINK_BULK_SPECIES, SENSOR_TYPE_SURFACE_SPECIES
 
 
 class SensorReadingEvent(Event):
@@ -32,8 +32,9 @@ class SensorReadingEvent(Event):
         - SENSOR_TYPE_VALVE_STATE       = 6
         - SENSOR_TYPE_PUMP_STATE        = 7
         - SENSOR_TYPE_TANK_VOLUME       = 8
-        - SENSOR_TYPE_BULK_SPECIES      = 9
-        - SENSOR_TYPE_SURFACE_SPECIES   = 10
+        - SENSOR_TYPE_NODE_BULK_SPECIES = 9
+        - SENSOR_TYPE_NODE_LINK_SPECIES = 10
+        - SENSOR_TYPE_SURFACE_SPECIES   = 11
     """
     def __init__(self, sensor_id: str, sensor_type: int, **kwds):
         if not isinstance(sensor_id, str):
@@ -93,8 +94,11 @@ class SensorReadingEvent(Event):
         elif self.__sensor_type == SENSOR_TYPE_TANK_VOLUME:
             if self.__sensor_id not in sensor_config.tank_volume_sensors:
                 __show_warning()
-        elif self.__sensor_type == SENSOR_TYPE_BULK_SPECIES:
-            if self.__sensor_id not in sensor_config.bulk_species_sensors:
+        elif self.__sensor_type == SENSOR_TYPE_NODE_BULK_SPECIES:
+            if self.__sensor_id not in sensor_config.bulk_species_node_sensors:
+                __show_warning()
+        elif self.__sensor_type == SENSOR_TYPE_LINK_BULK_SPECIES:
+            if self.__sensor_id not in sensor_config.bulk_species_link_sensors:
                 __show_warning()
         elif self.__sensor_type == SENSOR_TYPE_SURFACE_SPECIES:
             if self.__sensor_id not in sensor_config.surface_species_sensors:
