@@ -1221,6 +1221,10 @@ class SensorConfig(JsonSerializable):
         Note that only one sensor ID is converted to an index. In case of multiple sensor IDs,
         call this function for each sensor ID separately.
 
+        .. note::
+
+            This function only returns the correct results if the sensor configuraton is NOT frozen!
+
         Parameters
         ----------
         pressure_sensor : `str`

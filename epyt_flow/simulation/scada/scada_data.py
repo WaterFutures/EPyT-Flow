@@ -2,6 +2,7 @@
 Module provides a class for storing and processing SCADA data.
 """
 import warnings
+from typing import Callable
 from copy import deepcopy
 import numpy as np
 
@@ -111,6 +112,11 @@ class ScadaData(Serializable):
         Specification of the sensor noise/uncertainty to be added to the sensor readings.
 
         The default is None.
+    frozen_sensor_config : `bool`, optional
+        If True, the sensor config can not be changed and only the required sensor nodes/links
+        will be stored -- this usually leads to a significant reduction in memory consumption.
+
+        The default is False.
     """
 
     def __init__(self, sensor_config: SensorConfig, sensor_readings_time: np.ndarray,
@@ -126,7 +132,7 @@ class ScadaData(Serializable):
                  sensor_faults: list[SensorFault] = [],
                  sensor_reading_attacks: list[SensorReadingAttack] = [],
                  sensor_reading_events: list[SensorReadingEvent] = [],
-                 sensor_noise: SensorNoise = None, **kwds):
+                 sensor_noise: SensorNoise = None, frozen_sensor_config: bool = False, **kwds):
         if not isinstance(sensor_config, SensorConfig):
             raise TypeError("'sensor_config' must be an instance of " +
                             "'epyt_flow.simulation.SensorConfig' but not of " +
@@ -207,6 +213,9 @@ class ScadaData(Serializable):
             raise TypeError("'sensor_noise' must be an instance of " +
                             "'epyt_flow.uncertainty.SensorNoise' but not of " +
                             f"'{type(sensor_noise)}'")
+        if not isinstance(frozen_sensor_config, bool):
+            raise TypeError("'frozen_sensor_config' must be an instance of 'bool' " +
+                            f"but not of '{type(frozen_sensor_config)}'")
 
         def __raise_shape_mismatch(var_name: str) -> None:
             raise ValueError(f"Shape mismatch in '{var_name}' -- " +
@@ -267,25 +276,120 @@ class ScadaData(Serializable):
         self.__sensor_noise = sensor_noise
         self.__sensor_reading_events = sensor_faults + sensor_reading_attacks + \
             sensor_reading_events
-        self.__pressure_data_raw = pressure_data_raw
-        self.__flow_data_raw = flow_data_raw
-        self.__demand_data_raw = demand_data_raw
-        self.__node_quality_data_raw = node_quality_data_raw
-        self.__link_quality_data_raw = link_quality_data_raw
+
+        self.__sensor_readings = None
+        self.__frozen_sensor_config = frozen_sensor_config
         self.__sensor_readings_time = sensor_readings_time
-        self.__pumps_state_data_raw = pumps_state_data_raw
-        self.__valves_state_data_raw = valves_state_data_raw
-        self.__tanks_volume_data_raw = tanks_volume_data_raw
-        self.__surface_species_concentration_raw = surface_species_concentration_raw
-        self.__bulk_species_node_concentration_raw = bulk_species_node_concentration_raw
-        self.__bulk_species_link_concentration_raw = bulk_species_link_concentration_raw
         self.__pump_energy_usage_data = pump_energy_usage_data
         self.__pump_efficiency_data = pump_efficiency_data
-        self.__sensor_readings = None
+
+        if self.__frozen_sensor_config is False:
+            self.__pressure_data_raw = pressure_data_raw
+            self.__flow_data_raw = flow_data_raw
+            self.__demand_data_raw = demand_data_raw
+            self.__node_quality_data_raw = node_quality_data_raw
+            self.__link_quality_data_raw = link_quality_data_raw
+            self.__pumps_state_data_raw = pumps_state_data_raw
+            self.__valves_state_data_raw = valves_state_data_raw
+            self.__tanks_volume_data_raw = tanks_volume_data_raw
+            self.__surface_species_concentration_raw = surface_species_concentration_raw
+            self.__bulk_species_node_concentration_raw = bulk_species_node_concentration_raw
+            self.__bulk_species_link_concentration_raw = bulk_species_link_concentration_raw
+        else:
+            sensor_config = self.__sensor_config
+
+            node_to_idx = sensor_config.node_id_to_idx
+            link_to_idx = sensor_config.link_id_to_idx
+            pump_to_idx = sensor_config.pump_id_to_idx
+            valve_to_idx = sensor_config.valve_id_to_idx
+            tank_to_idx = sensor_config.tank_id_to_idx
+
+            # EPANET quantities
+            def __reduce_data(data: np.ndarray, sensors: list[str],
+                              item_to_idx: Callable[[str], int]) -> np.ndarray:
+                idx = [item_to_idx(item_id) for item_id in sensors]
+
+                if data is None or len(idx) == 0:
+                    return None
+                else:
+                    return data[:, idx]
+
+            self.__pressure_data_raw = __reduce_data(data=pressure_data_raw,
+                                                     item_to_idx=node_to_idx,
+                                                     sensors=sensor_config.pressure_sensors)
+            self.__flow_data_raw = __reduce_data(data=flow_data_raw,
+                                                 item_to_idx=link_to_idx,
+                                                 sensors=sensor_config.flow_sensors)
+            self.__demand_data_raw = __reduce_data(data=demand_data_raw,
+                                                   item_to_idx=node_to_idx,
+                                                   sensors=sensor_config.demand_sensors)
+            self.__node_quality_data_raw = __reduce_data(data=node_quality_data_raw,
+                                                         item_to_idx=node_to_idx,
+                                                         sensors=sensor_config.quality_node_sensors)
+            self.__link_quality_data_raw = __reduce_data(data=link_quality_data_raw,
+                                                         item_to_idx=link_to_idx,
+                                                         sensors=sensor_config.quality_link_sensors)
+            self.__pumps_state_data_raw = __reduce_data(data=pumps_state_data_raw,
+                                                        item_to_idx=pump_to_idx,
+                                                        sensors=sensor_config.pump_state_sensors)
+            self.__valves_state_data_raw = __reduce_data(data=valves_state_data_raw,
+                                                         item_to_idx=valve_to_idx,
+                                                         sensors=sensor_config.valve_state_sensors)
+            self.__tanks_volume_data_raw = __reduce_data(data=tanks_volume_data_raw,
+                                                         item_to_idx=tank_to_idx,
+                                                         sensors=sensor_config.tank_volume_sensors)
+
+            # EPANET-MSX quantities
+            def __reduce_msx_data(data: np.ndarray, sensors: list[tuple[list[int], list[int]]]
+                                  ) -> np.ndarray:
+                if data is None or len(sensors) == 0:
+                    return None
+                else:
+                    r = []
+                    for species_idx, item_idx in sensors:
+                        r.append(data[:, species_idx, item_idx].reshape(-1, len(item_idx)))
+
+                    return np.concatenate(r, axis=1)
+
+            node_bulk_species_idx = [(sensor_config.bulkspecies_id_to_idx(s),
+                                      [sensor_config.node_id_to_idx(node_id)
+                                       for node_id in sensor_config.bulk_species_node_sensors[s]
+                                       ]) for s in sensor_config.bulk_species_node_sensors.keys()]
+            self.__bulk_species_node_concentration_raw = \
+                __reduce_msx_data(data=bulk_species_node_concentration_raw,
+                                  sensors=node_bulk_species_idx)
+
+            bulk_species_link_idx = [(sensor_config.bulkspecies_id_to_idx(s),
+                                      [sensor_config.link_id_to_idx(link_id)
+                                       for link_id in sensor_config.bulk_species_link_sensors[s]
+                                       ]) for s in sensor_config.bulk_species_link_sensors.keys()]
+            self.__bulk_species_link_concentration_raw = \
+                __reduce_msx_data(data=bulk_species_link_concentration_raw,
+                                  sensors=bulk_species_link_idx)
+
+            surface_species_idx = [(sensor_config.surfacespecies_id_to_idx(s),
+                                    [sensor_config.link_id_to_idx(link_id)
+                                     for link_id in sensor_config.surface_species_sensors[s]
+                                     ]) for s in sensor_config.surface_species_sensors.keys()]
+            self.__surface_species_concentration_raw = \
+                __reduce_msx_data(data=surface_species_concentration_raw,
+                                  sensors=surface_species_idx)
 
         self.__init()
 
         super().__init__(**kwds)
+
+    @property
+    def frozen_sensor_config(self) -> bool:
+        """
+        Checks if the sensor configuration is frozen or not.
+
+        Returns
+        -------
+        `bool`
+            True if the sensor configuration is frozen, False otherwise.
+        """
+        return self.__frozen_sensor_config
 
     @property
     def sensor_config(self) -> SensorConfig:
@@ -301,6 +405,9 @@ class ScadaData(Serializable):
 
     @sensor_config.setter
     def sensor_config(self, sensor_config: SensorConfig) -> None:
+        if self.__frozen_sensor_config is True:
+            raise RuntimeError("Sensor config can not be changed because it is frozen")
+
         self.change_sensor_config(sensor_config)
 
     @property
@@ -580,11 +687,14 @@ class ScadaData(Serializable):
                 idx = self.__sensor_config.get_index_of_reading(
                     tank_volume_sensor=sensor_event.sensor_id)
             elif sensor_event.sensor_type == SENSOR_TYPE_NODE_BULK_SPECIES:
-                raise NotImplementedError()
+                idx = self.__sensor_config.get_index_of_reading(
+                    bulk_species_node_sensor=sensor_event.sensor_id)
             elif sensor_event.sensor_type == SENSOR_TYPE_LINK_BULK_SPECIES:
-                raise NotImplementedError()
+                idx = self.__sensor_config.get_index_of_reading(
+                    bulk_species_link_sensor=sensor_event.sensor_id)
             elif sensor_event.sensor_type == SENSOR_TYPE_SURFACE_SPECIES:
-                raise NotImplementedError()
+                idx = self.__sensor_config.get_index_of_reading(
+                    surface_species_sensor=sensor_event.sensor_id)
 
             self.__apply_sensor_reading_events.append((idx, sensor_event.apply))
 
@@ -592,6 +702,7 @@ class ScadaData(Serializable):
 
     def get_attributes(self) -> dict:
         return super().get_attributes() | {"sensor_config": self.__sensor_config,
+                                           "frozen_sensor_config": self.__frozen_sensor_config,
                                            "sensor_noise": self.__sensor_noise,
                                            "sensor_reading_events": self.__sensor_reading_events,
                                            "pressure_data_raw": self.__pressure_data_raw,
@@ -618,6 +729,7 @@ class ScadaData(Serializable):
 
         try:
             return self.__sensor_config == other.sensor_config \
+                and self.__frozen_sensor_config == other.frozen_sensor_config \
                 and self.__sensor_noise == other.sensor_noise \
                 and all(a == b for a, b in
                         zip(self.__sensor_reading_events, other.sensor_reading_events)) \
@@ -643,7 +755,9 @@ class ScadaData(Serializable):
             return False
 
     def __str__(self) -> str:
-        return f"sensor_config: {self.__sensor_config} sensor_noise: {self.__sensor_noise} " + \
+        return f"sensor_config: {self.__sensor_config} " + \
+            f"frozen_sensor_config: {self.__frozen_sensor_config} " + \
+            f"sensor_noise: {self.__sensor_noise} " + \
             f"sensor_reading_events: {self.__sensor_reading_events} " + \
             f"pressure_data_raw: {self.__pressure_data_raw} " + \
             f"flow_data_raw: {self.__flow_data_raw} demand_data_raw: {self.__demand_data_raw} " + \
@@ -654,9 +768,9 @@ class ScadaData(Serializable):
             f"valves_state_data_raw: {self.__valves_state_data_raw} " + \
             f"tanks_volume_data_raw: {self.__tanks_volume_data_raw} " + \
             f"surface_species_concentration_raw: {self.__surface_species_concentration_raw} " + \
-            f"bulk_species_node_concentration_raw: {self.__bulk_species_node_concentration_raw} " + \
-            f"bulk_species_link_concentration_raw: {self.__bulk_species_link_concentration_raw} " + \
-            f"pump_efficiency_data: {self.__pump_efficiency_data} " + \
+            f"bulk_species_node_concentration_raw: {self.__bulk_species_node_concentration_raw}" +\
+            f" bulk_species_link_concentration_raw: {self.__bulk_species_link_concentration_raw}" +\
+            f" pump_efficiency_data: {self.__pump_efficiency_data} " + \
             f"pump_energy_usage_data: {self.__pump_energy_usage_data}"
 
     def change_sensor_config(self, sensor_config: SensorConfig) -> None:
@@ -668,6 +782,8 @@ class ScadaData(Serializable):
         sensor_config : :class:`~epyt_flow.simulation.sensor_config.SensorConfig`
             New sensor configuration.
         """
+        if self.__frozen_sensor_config is True:
+            raise RuntimeError("Sensor configuration can not be changed because it is frozen")
         if not isinstance(sensor_config, SensorConfig):
             raise TypeError("'sensor_config' must be an instance of " +
                             "'epyt_flow.simulation.SensorConfig' but not of " +
@@ -761,6 +877,9 @@ class ScadaData(Serializable):
         if not isinstance(other, ScadaData):
             raise TypeError("'other' must be an instance of 'ScadaData' " +
                             f"but not of '{type(other)}'")
+        if self.__frozen_sensor_config != other.frozen_sensor_config:
+            raise ValueError("Sensor configurations of both instances must be " +
+                             "either frozen or not frozen")
         if not np.all(self.__sensor_readings_time == other.sensor_readings_time):
             raise ValueError("Both 'ScadaData' instances must be equal in their " +
                              "sensor readings times")
@@ -819,12 +938,14 @@ class ScadaData(Serializable):
         if self.__bulk_species_node_concentration_raw is None and \
                 other.bulk_species_node_concentration_raw is not None:
             self.__bulk_species_node_concentration_raw = other.bulk_species_node_concentration_raw
-            self.__sensor_config.bulk_species_node_sensors = other.sensor_config.bulk_species_node_sensors
+            self.__sensor_config.bulk_species_node_sensors = \
+                other.sensor_config.bulk_species_node_sensors
 
         if self.__bulk_species_link_concentration_raw is None and \
                 other.bulk_species_link_concentration_raw is not None:
             self.__bulk_species_link_concentration_raw = other.bulk_species_link_concentration_raw
-            self.__sensor_config.bulk_species_link_sensors = other.sensor_config.bulk_species_link_sensors
+            self.__sensor_config.bulk_species_link_sensors = \
+                other.sensor_config.bulk_species_link_sensors
 
         if self.__surface_species_concentration_raw is None and \
                 other.surface_species_concentration_raw is not None:
@@ -837,6 +958,8 @@ class ScadaData(Serializable):
 
         if self.__pump_efficiency_data is None and other.pump_efficiency_data is not None:
             self.__pump_efficiency_data = other.pump_efficiency_data
+
+        self.__init()
 
     def concatenate(self, other) -> None:
         """
@@ -856,6 +979,9 @@ class ScadaData(Serializable):
             raise TypeError(f"'other' must be an instance of 'ScadaData' but not of {type(other)}")
         if self.__sensor_config != other.sensor_config:
             raise ValueError("Sensor configurations must be the same!")
+        if self.__frozen_sensor_config != other.frozen_sensor_config:
+            raise ValueError("Sensor configurations of both instances must be " +
+                             "either frozen or not frozen")
         if len(self.__sensor_reading_events) != len(other.sensor_reading_events):
             raise ValueError("'other' must have the same sensor reading events as this instance!")
         if any(e1 != e2 for e1, e2 in zip(self.__sensor_reading_events,
@@ -938,18 +1064,49 @@ class ScadaData(Serializable):
             Final sensor readings.
         """
         # Comute clean sensor readings
-        sensor_readings = self.__sensor_config.\
-            compute_readings(pressures=self.__pressure_data_raw,
-                             flows=self.__flow_data_raw,
-                             demands=self.__demand_data_raw,
-                             nodes_quality=self.__node_quality_data_raw,
-                             links_quality=self.__link_quality_data_raw,
-                             pumps_state=self.__pumps_state_data_raw,
-                             valves_state=self.__valves_state_data_raw,
-                             tanks_volume=self.__tanks_volume_data_raw,
-                             bulk_species_node_concentrations=self.__bulk_species_node_concentration_raw,
-                             bulk_species_link_concentrations=self.__bulk_species_link_concentration_raw,
-                             surface_species_concentrations=self.__surface_species_concentration_raw)
+        if self.__frozen_sensor_config is False:
+            sensor_readings = self.__sensor_config.\
+                compute_readings(pressures=self.__pressure_data_raw,
+                                 flows=self.__flow_data_raw,
+                                 demands=self.__demand_data_raw,
+                                 nodes_quality=self.__node_quality_data_raw,
+                                 links_quality=self.__link_quality_data_raw,
+                                 pumps_state=self.__pumps_state_data_raw,
+                                 valves_state=self.__valves_state_data_raw,
+                                 tanks_volume=self.__tanks_volume_data_raw,
+                                 bulk_species_node_concentrations=
+                                 self.__bulk_species_node_concentration_raw,
+                                 bulk_species_link_concentrations=
+                                 self.__bulk_species_link_concentration_raw,
+                                 surface_species_concentrations=
+                                 self.__surface_species_concentration_raw)
+        else:
+            data = []
+
+            if self.__pressure_data_raw is not None:
+                data.append(self.__pressure_data_raw)
+            if self.__flow_data_raw is not None:
+                data.append(self.__flow_data_raw)
+            if self.__demand_data_raw is not None:
+                data.append(self.__demand_data_raw)
+            if self.__node_quality_data_raw is not None:
+                data.append(self.__node_quality_data_raw)
+            if self.__link_quality_data_raw is not None:
+                data.append(self.__link_quality_data_raw)
+            if self.__valves_state_data_raw is not None:
+                data.append(self.__valves_state_data_raw)
+            if self.__pumps_state_data_raw is not None:
+                data.append(self.__pumps_state_data_raw)
+            if self.__tanks_volume_data_raw is not None:
+                data.append(self.__tanks_volume_data_raw)
+            if self.__surface_species_concentration_raw is not None:
+                data.append(self.__surface_species_concentration_raw)
+            if self.__bulk_species_node_concentration_raw is not None:
+                data.append(self.__bulk_species_node_concentration_raw)
+            if self.__bulk_species_link_concentration_raw is not None:
+                data.append(self.__bulk_species_link_concentration_raw)
+
+            sensor_readings = np.concatenate(data, axis=1)
 
         # Apply sensor uncertainties
         state_sensors_idx = []   # Pump states and valve states are NOT affected!
@@ -1394,7 +1551,8 @@ class ScadaData(Serializable):
         bulk_species_sensor_locations : `dict`, optional
             Existing bulk species concentration sensors (species ID and link/pipe IDs) for which
             the sensor readings are requested.
-            If None, the readings from all bulk species concentration link/pipe sensors are returned.
+            If None, the readings from all bulk species concentration link/pipe sensors
+            are returned.
 
             The default is None.
 

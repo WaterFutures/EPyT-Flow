@@ -949,7 +949,8 @@ class ScenarioSimulator():
             for c in self.__controls:
                 c.init(self.epanet_api)
 
-    def run_advanced_quality_simulation(self, hyd_file_in: str, verbose: bool = False) -> ScadaData:
+    def run_advanced_quality_simulation(self, hyd_file_in: str, verbose: bool = False,
+                                        frozen_sensor_config: bool = False) -> ScadaData:
         """
         Runs an advanced quality analysis using EPANET-MSX.
 
@@ -962,6 +963,11 @@ class ScenarioSimulator():
             If True, method will be verbose (e.g. showing a progress bar).
 
             The default is False.
+        frozen_sensor_config : `bool`, optional
+            If True, the sensor config can not be changed and only the required sensor nodes/links
+            will be stored -- this usually leads to a significant reduction in memory consumption.
+
+            The default is False.
 
         Returns
         -------
@@ -970,8 +976,10 @@ class ScenarioSimulator():
         """
         result = None
 
-        for scada_data in self.run_advanced_quality_simulation_as_generator(hyd_file_in=hyd_file_in,
-                                                                            verbose=verbose):
+        gen = self.run_advanced_quality_simulation_as_generator
+        for scada_data in gen(hyd_file_in=hyd_file_in,
+                              verbose=verbose,
+                              frozen_sensor_config=frozen_sensor_config):
             if result is None:
                 result = scada_data
             else:
@@ -981,7 +989,8 @@ class ScenarioSimulator():
 
     def run_advanced_quality_simulation_as_generator(self, hyd_file_in: str, verbose: bool = False,
                                                      support_abort: bool = False,
-                                                     return_as_dict: bool = False
+                                                     return_as_dict: bool = False,
+                                                     frozen_sensor_config: bool = False
                                                      ) -> Generator[Union[ScadaData, dict],
                                                                     bool, None]:
         """
@@ -997,6 +1006,11 @@ class ScenarioSimulator():
         return_as_dict : `bool`, optional
             If True, simulation results/states are returned as a dictionary instead of a
             :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance.
+
+            The default is False.
+        frozen_sensor_config : `bool`, optional
+            If True, the sensor config can not be changed and only the required sensor nodes/links
+            will be stored -- this usually leads to a significant reduction in memory consumption.
 
             The default is False.
 
@@ -1089,7 +1103,8 @@ class ScenarioSimulator():
                                 surface_species_concentration_raw=surface_species_concentrations,
                                 sensor_readings_time=np.array([0]),
                                 sensor_reading_events=self.__sensor_reading_events,
-                                sensor_noise=self.__sensor_noise)
+                                sensor_noise=self.__sensor_noise,
+                                frozen_sensor_config=frozen_sensor_config)
 
         # Run step-by-step simulation
         tleft = 1
@@ -1156,8 +1171,10 @@ class ScenarioSimulator():
                 # Report results in a regular time interval only!
                 if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
                     if return_as_dict is True:
-                        yield {"bulk_species_node_concentration_raw": bulk_species_node_concentrations,
-                               "bulk_species_link_concentration_raw": bulk_species_link_concentrations,
+                        yield {"bulk_species_node_concentration_raw":
+                               bulk_species_node_concentrations,
+                               "bulk_species_link_concentration_raw":
+                               bulk_species_link_concentrations,
                                "surface_species_concentration_raw": surface_species_concentrations,
                                "sensor_readings_time": np.array([total_time])}
                     else:
@@ -1170,9 +1187,11 @@ class ScenarioSimulator():
                                         surface_species_concentrations,
                                         sensor_readings_time=np.array([total_time]),
                                         sensor_reading_events=self.__sensor_reading_events,
-                                        sensor_noise=self.__sensor_noise)
+                                        sensor_noise=self.__sensor_noise,
+                                        frozen_sensor_config=frozen_sensor_config)
 
-    def run_basic_quality_simulation(self, hyd_file_in: str, verbose: bool = False) -> ScadaData:
+    def run_basic_quality_simulation(self, hyd_file_in: str, verbose: bool = False,
+                                     frozen_sensor_config: bool = False) -> ScadaData:
         """
         Runs a basic quality analysis using EPANET.
 
@@ -1185,6 +1204,11 @@ class ScenarioSimulator():
             If True, method will be verbose (e.g. showing a progress bar).
 
             The default is False.
+        frozen_sensor_config : `bool`, optional
+            If True, the sensor config can not be changed and only the required sensor nodes/links
+            will be stored -- this usually leads to a significant reduction in memory consumption.
+
+            The default is False.
 
         Returns
         -------
@@ -1194,9 +1218,11 @@ class ScenarioSimulator():
         result = None
 
         # Run simulation step-by-step
-        for scada_data in self.run_basic_quality_simulation_as_generator(hyd_file_in=hyd_file_in,
-                                                                         verbose=verbose,
-                                                                         return_as_dict=True):
+        gen = self.run_basic_quality_simulation_as_generator
+        for scada_data in gen(hyd_file_in=hyd_file_in,
+                              verbose=verbose,
+                              return_as_dict=True,
+                              frozen_sensor_config=frozen_sensor_config):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -1212,11 +1238,13 @@ class ScenarioSimulator():
         return ScadaData(**result,
                          sensor_config=self.__sensor_config,
                          sensor_reading_events=self.__sensor_reading_events,
-                         sensor_noise=self.__sensor_noise)
+                         sensor_noise=self.__sensor_noise,
+                         frozen_sensor_config=frozen_sensor_config)
 
     def run_basic_quality_simulation_as_generator(self, hyd_file_in: str, verbose: bool = False,
                                                   support_abort: bool = False,
-                                                  return_as_dict: bool = False
+                                                  return_as_dict: bool = False,
+                                                  frozen_sensor_config: bool = False,
                                                   ) -> Generator[Union[ScadaData, dict],
                                                                  bool, None]:
         """
@@ -1234,6 +1262,11 @@ class ScenarioSimulator():
         return_as_dict : `bool`, optional
             If True, simulation results/states are returned as a dictionary instead of a
             :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance.
+
+            The default is False.
+        frozen_sensor_config : `bool`, optional
+            If True, the sensor config can not be changed and only the required sensor nodes/links
+            will be stored -- this usually leads to a significant reduction in memory consumption.
 
             The default is False.
 
@@ -1298,14 +1331,16 @@ class ScenarioSimulator():
                                     link_quality_data_raw=quality_link_data,
                                     sensor_readings_time=np.array([total_time]),
                                     sensor_reading_events=self.__sensor_reading_events,
-                                    sensor_noise=self.__sensor_noise)
+                                    sensor_noise=self.__sensor_noise,
+                                    frozen_sensor_config=frozen_sensor_config)
 
             # Next
             tstep = self.epanet_api.nextQualityAnalysisStep()
 
         self.epanet_api.closeHydraulicAnalysis()
 
-    def run_simulation(self, hyd_export: str = None, verbose: bool = False) -> ScadaData:
+    def run_simulation(self, hyd_export: str = None, verbose: bool = False,
+                       frozen_sensor_config: bool = False) -> ScadaData:
         """
         Runs the simulation of this scenario.
 
@@ -1322,6 +1357,11 @@ class ScenarioSimulator():
             If True, method will be verbose (e.g. showing a progress bar).
 
             The default is False.
+        frozen_sensor_config : `bool`, optional
+            If True, the sensor config can not be changed and only the required sensor nodes/links
+            will be stored -- this usually leads to a significant reduction in memory consumption.
+
+            The default is False.
 
         Returns
         -------
@@ -1334,12 +1374,14 @@ class ScenarioSimulator():
 
         hyd_export_old = hyd_export
         if self.__f_msx_in is not None:
-            hyd_export = os .path.join(get_temp_folder(), f"epytflow_MSX_{uuid.uuid4()}.hyd")
+            hyd_export = os.path.join(get_temp_folder(), f"epytflow_MSX_{uuid.uuid4()}.hyd")
 
         # Run hydraulic simulation step-by-step
-        for scada_data in self.run_simulation_as_generator(hyd_export=hyd_export,
-                                                           verbose=verbose,
-                                                           return_as_dict=True):
+        gen = self.run_simulation_as_generator
+        for scada_data in gen(hyd_export=hyd_export,
+                              verbose=verbose,
+                              return_as_dict=True,
+                              frozen_sensor_config=frozen_sensor_config):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -1354,12 +1396,15 @@ class ScenarioSimulator():
         result = ScadaData(**result,
                            sensor_config=self.__sensor_config,
                            sensor_reading_events=self.__sensor_reading_events,
-                           sensor_noise=self.__sensor_noise)
+                           sensor_noise=self.__sensor_noise,
+                           frozen_sensor_config=frozen_sensor_config)
 
         # If necessary, run advanced quality simulation utilizing the computed hydraulics
         if self.f_msx_in is not None:
-            result_msx = self.run_advanced_quality_simulation(hyd_file_in=hyd_export,
-                                                              verbose=verbose)
+            gen = self.run_advanced_quality_simulation
+            result_msx = gen(hyd_file_in=hyd_export,
+                             verbose=verbose,
+                             frozen_sensor_config=frozen_sensor_config)
             result.join(result_msx)
 
             if hyd_export_old is not None:
@@ -1372,6 +1417,7 @@ class ScenarioSimulator():
     def run_simulation_as_generator(self, hyd_export: str = None, verbose: bool = False,
                                     support_abort: bool = False,
                                     return_as_dict: bool = False,
+                                    frozen_sensor_config: bool = False,
                                     ) -> Generator[Union[ScadaData, dict], bool, None]:
         """
         Runs the simulation of this scenario and provides the results as a generator.
@@ -1398,6 +1444,11 @@ class ScenarioSimulator():
         return_as_dict : `bool`, optional
             If True, simulation results/states are returned as a dictionary instead of a
             :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance.
+
+            The default is False.
+        frozen_sensor_config : `bool`, optional
+            If True, the sensor config can not be changed and only the required sensor nodes/links
+            will be stored -- this usually leads to a significant reduction in memory consumption.
 
             The default is False.
 
@@ -1493,7 +1544,8 @@ class ScenarioSimulator():
                                        pump_efficiency_data=pump_efficiency_data,
                                        sensor_readings_time=np.array([total_time]),
                                        sensor_reading_events=self.__sensor_reading_events,
-                                       sensor_noise=self.__sensor_noise)
+                                       sensor_noise=self.__sensor_noise,
+                                       frozen_sensor_config=frozen_sensor_config)
 
                 # Yield results in a regular time interval only!
                 if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
