@@ -1043,49 +1043,58 @@ class ScenarioSimulator():
                                      hyd_time_step)
             progress_bar = iter(tqdm(range(n_iterations + 1), desc="Time steps"))
 
+        def __get_concentrations():
+            # Bulk species
+            bulk_species_node_concentrations = []
+            bulk_species_link_concentrations = []
+            for species_idx in bulk_species_idx:
+                cur_species_concentrations = []
+                for node_idx in range(1, n_nodes+1):
+                    concen = self.epanet_api.msx.MSXgetinitqual(0, node_idx, species_idx)
+                    cur_species_concentrations.append(concen)
+                bulk_species_node_concentrations.append(cur_species_concentrations)
+
+                cur_species_concentrations = []
+                for link_idx in range(1, n_links+1):
+                    concen = self.epanet_api.msx.MSXgetinitqual(1, link_idx, species_idx)
+                    cur_species_concentrations.append(concen)
+                bulk_species_link_concentrations.append(cur_species_concentrations)
+
+            if len(bulk_species_node_concentrations) == 0:
+                bulk_species_node_concentrations = None
+            else:
+                bulk_species_node_concentrations = np.array(bulk_species_node_concentrations).\
+                    reshape((1, len(bulk_species_idx), n_nodes))
+
+            if len(bulk_species_link_concentrations) == 0:
+                bulk_species_link_concentrations = None
+            else:
+                bulk_species_link_concentrations = np.array(bulk_species_link_concentrations).\
+                    reshape((1, len(bulk_species_idx), n_links))
+
+            # Surface species
+            surface_species_concentrations = []
+            for species_idx in surface_species_idx:
+                cur_species_concentrations = []
+
+                for link_idx in range(1, n_links+1):
+                    concen = self.epanet_api.msx.MSXgetinitqual(1, link_idx, species_idx)
+                    cur_species_concentrations.append(concen)
+
+                surface_species_concentrations.append(cur_species_concentrations)
+
+            if len(surface_species_concentrations) == 0:
+                surface_species_concentrations = None
+            else:
+                surface_species_concentrations = np.array(surface_species_concentrations).\
+                    reshape((1, len(surface_species_idx), n_links))
+
+            return bulk_species_node_concentrations, bulk_species_link_concentrations, \
+                surface_species_concentrations
+
         # Initial concentrations:
-        bulk_species_node_concentrations = []
-        bulk_species_link_concentrations = []
-        for species_idx in bulk_species_idx:
-            cur_species_concentrations = []
-            for node_idx in range(1, n_nodes+1):
-                concen = self.epanet_api.msx.MSXgetinitqual(0, node_idx, species_idx)
-                cur_species_concentrations.append(concen)
-            bulk_species_node_concentrations.append(cur_species_concentrations)
-
-            cur_species_concentrations = []
-            for link_idx in range(1, n_links+1):
-                concen = self.epanet_api.msx.MSXgetinitqual(1, link_idx, species_idx)
-                cur_species_concentrations.append(concen)
-            bulk_species_link_concentrations.append(cur_species_concentrations)
-
-        if len(bulk_species_node_concentrations) == 0:
-            bulk_species_node_concentrations = None
-        else:
-            bulk_species_node_concentrations = np.array(bulk_species_node_concentrations).\
-                reshape((1, len(bulk_species_idx), n_nodes))
-
-        if len(bulk_species_link_concentrations) == 0:
-            bulk_species_link_concentrations = None
-        else:
-            bulk_species_link_concentrations = np.array(bulk_species_link_concentrations).\
-                reshape((1, len(bulk_species_idx), n_links))
-
-        surface_species_concentrations = []
-        for species_idx in surface_species_idx:
-            cur_species_concentrations = []
-
-            for link_idx in range(1, n_links+1):
-                concen = self.epanet_api.msx.MSXgetinitqual(1, link_idx, species_idx)
-                cur_species_concentrations.append(concen)
-
-            surface_species_concentrations.append(cur_species_concentrations)
-
-        if len(surface_species_concentrations) == 0:
-            surface_species_concentrations = None
-        else:
-            surface_species_concentrations = np.array(surface_species_concentrations).\
-                reshape((1, len(surface_species_idx), n_links))
+        bulk_species_node_concentrations, bulk_species_link_concentrations, \
+            surface_species_concentrations = __get_concentrations()
 
         if verbose is True:
             next(progress_bar)
@@ -1119,51 +1128,8 @@ class ScenarioSimulator():
 
             # Fetch data at regular time intervals
             if total_time % hyd_time_step == 0:
-                bulk_species_node_concentrations = []
-                bulk_species_link_concentrations = []
-                for species_idx in bulk_species_idx:
-                    cur_species_concentrations = []
-                    for node_idx in range(1, n_nodes+1):
-                        concen = self.epanet_api.getMSXSpeciesConcentration(0, node_idx,
-                                                                            species_idx)
-                        cur_species_concentrations.append(concen)
-                    bulk_species_node_concentrations.append(cur_species_concentrations)
-
-                    cur_species_concentrations = []
-                    for link_idx in range(1, n_links+1):
-                        concen = self.epanet_api.getMSXSpeciesConcentration(1, link_idx,
-                                                                            species_idx)
-                        cur_species_concentrations.append(concen)
-                    bulk_species_link_concentrations.append(cur_species_concentrations)
-
-                if len(bulk_species_node_concentrations) == 0:
-                    bulk_species_node_concentrations = None
-                else:
-                    bulk_species_node_concentrations = np.array(bulk_species_node_concentrations).\
-                        reshape((1, len(bulk_species_idx), n_nodes))
-
-                if len(bulk_species_link_concentrations) == 0:
-                    bulk_species_link_concentrations = None
-                else:
-                    bulk_species_link_concentrations = np.array(bulk_species_link_concentrations).\
-                        reshape((1, len(bulk_species_idx), n_links))
-
-                surface_species_concentrations = []
-                for species_idx in surface_species_idx:
-                    cur_species_concentrations = []
-
-                    for link_idx in range(1, n_links+1):
-                        concen = self.epanet_api.getMSXSpeciesConcentration(1, link_idx,
-                                                                            species_idx)
-                        cur_species_concentrations.append(concen)
-
-                    surface_species_concentrations.append(cur_species_concentrations)
-
-                if len(surface_species_concentrations) == 0:
-                    surface_species_concentrations = None
-                else:
-                    surface_species_concentrations = np.array(surface_species_concentrations).\
-                        reshape((1, len(surface_species_idx), n_links))
+                bulk_species_node_concentrations, bulk_species_link_concentrations, \
+                    surface_species_concentrations = __get_concentrations()
 
                 if verbose is True:
                     next(progress_bar)

@@ -188,7 +188,9 @@ class ScadaData(Serializable):
                                 f"'{type(bulk_species_node_concentration_raw)}'")
         if bulk_species_link_concentration_raw is not None:
             if not isinstance(bulk_species_link_concentration_raw, np.ndarray):
-                raise TypeError()
+                raise TypeError("'bulk_species_link_concentration_raw' must be an instance of " +
+                                "'numpy.ndarray' but not of " +
+                                f"'{type(bulk_species_link_concentration_raw)}'")
         if pump_energy_usage_data is not None:
             if not isinstance(pump_energy_usage_data, np.ndarray):
                 raise TypeError("'pump_energy_usage_data' must be an instance of 'numpy.ndarray' " +
@@ -701,27 +703,26 @@ class ScadaData(Serializable):
         self.__sensor_readings = None
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"sensor_config": self.__sensor_config,
-                                           "frozen_sensor_config": self.__frozen_sensor_config,
-                                           "sensor_noise": self.__sensor_noise,
-                                           "sensor_reading_events": self.__sensor_reading_events,
-                                           "pressure_data_raw": self.__pressure_data_raw,
-                                           "flow_data_raw": self.__flow_data_raw,
-                                           "demand_data_raw": self.__demand_data_raw,
-                                           "node_quality_data_raw": self.__node_quality_data_raw,
-                                           "link_quality_data_raw": self.__link_quality_data_raw,
-                                           "sensor_readings_time": self.__sensor_readings_time,
-                                           "pumps_state_data_raw": self.__pumps_state_data_raw,
-                                           "valves_state_data_raw": self.__valves_state_data_raw,
-                                           "tanks_volume_data_raw": self.__tanks_volume_data_raw,
-                                           "surface_species_concentration_raw":
-                                           self.__surface_species_concentration_raw,
-                                           "bulk_species_node_concentration_raw":
-                                           self.__bulk_species_node_concentration_raw,
-                                           "bulk_species_link_concentration_raw":
-                                           self.__bulk_species_link_concentration_raw,
-                                           "pump_energy_usage_data": self.__pump_energy_usage_data,
-                                           "pump_efficiency_data": self.__pump_efficiency_data}
+        attr = {"sensor_config": self.__sensor_config,
+                "frozen_sensor_config": self.__frozen_sensor_config,
+                "sensor_noise": self.__sensor_noise,
+                "sensor_reading_events": self.__sensor_reading_events,
+                "pressure_data_raw": self.__pressure_data_raw,
+                "flow_data_raw": self.__flow_data_raw,
+                "demand_data_raw": self.__demand_data_raw,
+                "node_quality_data_raw": self.__node_quality_data_raw,
+                "link_quality_data_raw": self.__link_quality_data_raw,
+                "sensor_readings_time": self.__sensor_readings_time,
+                "pumps_state_data_raw": self.__pumps_state_data_raw,
+                "valves_state_data_raw": self.__valves_state_data_raw,
+                "tanks_volume_data_raw": self.__tanks_volume_data_raw,
+                "surface_species_concentration_raw": self.__surface_species_concentration_raw,
+                "bulk_species_node_concentration_raw": self.__bulk_species_node_concentration_raw,
+                "bulk_species_link_concentration_raw": self.__bulk_species_link_concentration_raw,
+                "pump_energy_usage_data": self.__pump_energy_usage_data,
+                "pump_efficiency_data": self.__pump_efficiency_data}
+
+        return super().get_attributes() | attr
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, ScadaData):
@@ -1065,21 +1066,18 @@ class ScadaData(Serializable):
         """
         # Comute clean sensor readings
         if self.__frozen_sensor_config is False:
-            sensor_readings = self.__sensor_config.\
-                compute_readings(pressures=self.__pressure_data_raw,
-                                 flows=self.__flow_data_raw,
-                                 demands=self.__demand_data_raw,
-                                 nodes_quality=self.__node_quality_data_raw,
-                                 links_quality=self.__link_quality_data_raw,
-                                 pumps_state=self.__pumps_state_data_raw,
-                                 valves_state=self.__valves_state_data_raw,
-                                 tanks_volume=self.__tanks_volume_data_raw,
-                                 bulk_species_node_concentrations=
-                                 self.__bulk_species_node_concentration_raw,
-                                 bulk_species_link_concentrations=
-                                 self.__bulk_species_link_concentration_raw,
-                                 surface_species_concentrations=
-                                 self.__surface_species_concentration_raw)
+            args = {"pressures": self.__pressure_data_raw,
+                    "flows": self.__flow_data_raw,
+                    "demands": self.__demand_data_raw,
+                    "nodes_quality": self.__node_quality_data_raw,
+                    "links_quality": self.__link_quality_data_raw,
+                    "pumps_state": self.__pumps_state_data_raw,
+                    "valves_state": self.__valves_state_data_raw,
+                    "tanks_volume": self.__tanks_volume_data_raw,
+                    "bulk_species_node_concentrations": self.__bulk_species_node_concentration_raw,
+                    "bulk_species_link_concentrations": self.__bulk_species_link_concentration_raw,
+                    "surface_species_concentrations": self.__surface_species_concentration_raw}
+            sensor_readings = self.__sensor_config.compute_readings(**args)
         else:
             data = []
 

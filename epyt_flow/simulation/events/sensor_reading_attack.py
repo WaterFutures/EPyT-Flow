@@ -152,11 +152,11 @@ class SensorReplayAttack(SensorReadingAttack, JsonSerializable):
         return self.__sensor_data_time_window_end
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"new_sensor_values": self.__new_sensor_values,
-                                           "replay_data_time_window_start":
-                                           self.__sensor_data_time_window_start,
-                                           "replay_data_time_window_end":
-                                           self.__sensor_data_time_window_end}
+        my_attributes = {"new_sensor_values": self.__new_sensor_values,
+                         "replay_data_time_window_start": self.__sensor_data_time_window_start,
+                         "replay_data_time_window_end": self.__sensor_data_time_window_end}
+
+        return super().get_attributes() | my_attributes
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, SensorReplayAttack):

@@ -109,7 +109,8 @@ class ScenarioConfig(Serializable):
                                 "'epyt_flow.simulation.SensorConfig' but not of " +
                                 f"'{type(sensor_config)}'")
         if memory_consumption_estimate is not None:
-            if not isinstance(memory_consumption_estimate, float) or memory_consumption_estimate <= 0:
+            if not isinstance(memory_consumption_estimate, float) or \
+                    memory_consumption_estimate <= 0:
                 raise ValueError("'memory_consumption_estimate' must be a positive integer")
         if not isinstance(controls, list):
             raise TypeError("'controls' must be an instance of " +
@@ -329,16 +330,17 @@ class ScenarioConfig(Serializable):
         return deepcopy(self.__sensor_reading_events)
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"f_inp_in": self.__f_inp_in, "f_msx_in": self.__f_msx_in,
-                                           "general_params": self.__general_params,
-                                           "sensor_config": self.__sensor_config,
-                                           "memory_consumption_estimate":
-                                           self.__memory_consumption_estimate,
-                                           "controls": self.__controls,
-                                           "sensor_noise": self.__sensor_noise,
-                                           "model_uncertainty": self.__model_uncertainty,
-                                           "system_events": self.__system_events,
-                                           "sensor_reading_events": self.__sensor_reading_events}
+        my_attributes = {"f_inp_in": self.__f_inp_in, "f_msx_in": self.__f_msx_in,
+                         "general_params": self.__general_params,
+                         "sensor_config": self.__sensor_config,
+                         "memory_consumption_estimate": self.__memory_consumption_estimate,
+                         "controls": self.__controls,
+                         "sensor_noise": self.__sensor_noise,
+                         "model_uncertainty": self.__model_uncertainty,
+                         "system_events": self.__system_events,
+                         "sensor_reading_events": self.__sensor_reading_events}
+
+        return super().get_attributes() | my_attributes
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, ScenarioConfig):

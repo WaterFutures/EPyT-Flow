@@ -135,11 +135,15 @@ class SensorConfig(JsonSerializable):
     def __init__(self, nodes: list[str], links: list[str], valves: list[str], pumps: list[str],
                  tanks: list[str], bulk_species: list[str], surface_species: list[str],
                  pressure_sensors: list[str] = [],
-                 flow_sensors: list[str] = [], demand_sensors: list[str] = [],
-                 quality_node_sensors: list[str] = [], quality_link_sensors: list[str] = [],
-                 valve_state_sensors: list[str] = [], pump_state_sensors: list[str] = [],
+                 flow_sensors: list[str] = [],
+                 demand_sensors: list[str] = [],
+                 quality_node_sensors: list[str] = [],
+                 quality_link_sensors: list[str] = [],
+                 valve_state_sensors: list[str] = [],
+                 pump_state_sensors: list[str] = [],
                  tank_volume_sensors: list[str] = [],
-                 bulk_species_node_sensors: dict = {}, bulk_species_link_sensors: dict = {},
+                 bulk_species_node_sensors: dict = {},
+                 bulk_species_link_sensors: dict = {},
                  surface_species_sensors: dict = {},
                  node_id_to_idx: dict = None, link_id_to_idx: dict = None,
                  valve_id_to_idx: dict = None, pump_id_to_idx: dict = None,
@@ -561,36 +565,30 @@ class SensorConfig(JsonSerializable):
 
             return r
 
-        self.__sensors_id_to_idx = {"pressure": __build_sensors_id_to_idx(self.__pressure_sensors,
-                                                                          pressure_idx_shift),
-                                    "flow": __build_sensors_id_to_idx(self.__flow_sensors,
-                                                                      flow_idx_shift),
-                                    "demand": __build_sensors_id_to_idx(self.__demand_sensors,
-                                                                        demand_idx_shift),
-                                    "quality_node":
-                                    __build_sensors_id_to_idx(self.__quality_node_sensors,
-                                                              node_quality_idx_shift),
-                                    "quality_link":
-                                    __build_sensors_id_to_idx(self.__quality_link_sensors,
-                                                              link_quality_idx_shift),
-                                    "valve_state":
-                                    __build_sensors_id_to_idx(self.__valve_state_sensors,
-                                                              valve_state_idx_shift),
-                                    "pump_state":
-                                    __build_sensors_id_to_idx(self.__pump_state_sensors,
-                                                              pump_state_idx_shift),
-                                    "tank_volume":
-                                    __build_sensors_id_to_idx(self.__tank_volume_sensors,
-                                                              tank_volume_idx_shift),
-                                    "bulk_species_node":
-                                    __build_species_sensors_id_to_idx(self.__bulk_species_node_sensors,
-                                                                      bulk_species_node_idx_shift),
-                                    "bulk_species_link":
-                                    __build_species_sensors_id_to_idx(self.__bulk_species_link_sensors,
-                                                                      bulk_species_link_idx_shift),
-                                    "surface_species":
-                                    __build_species_sensors_id_to_idx(self.__surface_species_sensors,
-                                                                      surface_species_idx_shift)}
+        mapping = {"pressure": __build_sensors_id_to_idx(self.__pressure_sensors,
+                                                         pressure_idx_shift),
+                   "flow": __build_sensors_id_to_idx(self.__flow_sensors,flow_idx_shift),
+                   "demand": __build_sensors_id_to_idx(self.__demand_sensors,demand_idx_shift),
+                   "quality_node": __build_sensors_id_to_idx(self.__quality_node_sensors,
+                                                             node_quality_idx_shift),
+                   "quality_link": __build_sensors_id_to_idx(self.__quality_link_sensors,
+                                                             link_quality_idx_shift),
+                   "valve_state": __build_sensors_id_to_idx(self.__valve_state_sensors,
+                                                            valve_state_idx_shift),
+                   "pump_state": __build_sensors_id_to_idx(self.__pump_state_sensors,
+                                                           pump_state_idx_shift),
+                   "tank_volume": __build_sensors_id_to_idx(self.__tank_volume_sensors,
+                                                            tank_volume_idx_shift),
+                   "bulk_species_node":
+                   __build_species_sensors_id_to_idx(self.__bulk_species_node_sensors,
+                                                     bulk_species_node_idx_shift),
+                   "bulk_species_link":
+                   __build_species_sensors_id_to_idx(self.__bulk_species_link_sensors,
+                                                     bulk_species_link_idx_shift),
+                   "surface_species":
+                   __build_species_sensors_id_to_idx(self.__surface_species_sensors,
+                                                     surface_species_idx_shift)}
+        self.__sensors_id_to_idx = mapping
 
     def validate(self, epanet_api: epyt.epanet) -> None:
         """
@@ -1008,33 +1006,30 @@ class SensorConfig(JsonSerializable):
         return deepcopy(self.__sensors_id_to_idx)
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"nodes": self.__nodes, "links": self.__links,
-                                           "valves": self.__valves, "pumps": self.__pumps,
-                                           "tanks": self.__tanks,
-                                           "bulk_species": self.__bulk_species,
-                                           "surface_species": self.__surface_species,
-                                           "pressure_sensors": self.__pressure_sensors,
-                                           "flow_sensors": self.__flow_sensors,
-                                           "demand_sensors": self.__demand_sensors,
-                                           "quality_node_sensors": self.__quality_node_sensors,
-                                           "quality_link_sensors": self.__quality_link_sensors,
-                                           "valve_state_sensors": self.__valve_state_sensors,
-                                           "pump_state_sensors": self.__pump_state_sensors,
-                                           "tank_volume_sensors": self.__tank_volume_sensors,
-                                           "bulk_species_node_sensors":
-                                           self.__bulk_species_node_sensors,
-                                           "bulk_species_link_sensors":
-                                           self.__bulk_species_link_sensors,
-                                           "surface_species_sensors":
-                                           self.__surface_species_sensors,
-                                           "node_id_to_idx": self.__node_id_to_idx,
-                                           "link_id_to_idx": self.__link_id_to_idx,
-                                           "valve_id_to_idx": self.__valve_id_to_idx,
-                                           "pump_id_to_idx": self.__pump_id_to_idx,
-                                           "tank_id_to_idx": self.__tank_id_to_idx,
-                                           "bulkspecies_id_to_idx": self.__bulkspecies_id_to_idx,
-                                           "surfacespecies_id_to_idx":
-                                           self.__surfacespecies_id_to_idx}
+        attr = {"nodes": self.__nodes, "links": self.__links,
+                "valves": self.__valves, "pumps": self.__pumps,
+                "tanks": self.__tanks, "bulk_species": self.__bulk_species,
+                "surface_species": self.__surface_species,
+                "pressure_sensors": self.__pressure_sensors,
+                "flow_sensors": self.__flow_sensors,
+                "demand_sensors": self.__demand_sensors,
+                "quality_node_sensors": self.__quality_node_sensors,
+                "quality_link_sensors": self.__quality_link_sensors,
+                "valve_state_sensors": self.__valve_state_sensors,
+                "pump_state_sensors": self.__pump_state_sensors,
+                "tank_volume_sensors": self.__tank_volume_sensors,
+                "bulk_species_node_sensors": self.__bulk_species_node_sensors,
+                "bulk_species_link_sensors": self.__bulk_species_link_sensors,
+                "surface_species_sensors": self.__surface_species_sensors,
+                "node_id_to_idx": self.__node_id_to_idx,
+                "link_id_to_idx": self.__link_id_to_idx,
+                "valve_id_to_idx": self.__valve_id_to_idx,
+                "pump_id_to_idx": self.__pump_id_to_idx,
+                "tank_id_to_idx": self.__tank_id_to_idx,
+                "bulkspecies_id_to_idx": self.__bulkspecies_id_to_idx,
+                "surfacespecies_id_to_idx": self.__surfacespecies_id_to_idx}
+
+        return super().get_attributes() | attr
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, SensorConfig):
