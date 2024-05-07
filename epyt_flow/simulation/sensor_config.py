@@ -610,10 +610,20 @@ class SensorConfig(JsonSerializable):
         pumps = epanet_api.getLinkPumpNameID()
         tanks = epanet_api.getNodeTankNameID()
 
+        bulk_species = []
+        surface_species = []
+        if hasattr(epanet_api, "msx"):
+            for species_id, species_type in zip(epanet_api.getMSXSpeciesNameID(),
+                                                epanet_api.getMSXSpeciesType()):
+                if species_type == "BULK":
+                    bulk_species.append(species_id)
+                elif species_type == "WALL":
+                    surface_species.append(species_id)
+
         if any(node_id not in nodes for node_id in self.__nodes):
             raise ValueError("Invalid node ID detected -- " +
                              "all given node IDs must exist in the .inp file")
-        if any(link_id not in links for link_id in self.links):
+        if any(link_id not in links for link_id in self.__links):
             raise ValueError("Invalid link/pipe ID detected -- all given link/pipe IDs " +
                              "must exist in the .inp file")
         if any(valve_id not in valves for valve_id in self.__valves):
@@ -625,6 +635,11 @@ class SensorConfig(JsonSerializable):
         if any(tank_id not in tanks for tank_id in self.__tanks):
             raise ValueError("Invalid tank ID detected -- all given tank IDs must exist " +
                              "in the .inp file")
+        if any(surface_species_id not in surface_species
+               for surface_species_id in self.__surface_species):
+            raise ValueError("Invalid surface species ID detected")
+        if any(bulk_species_id not in bulk_species for bulk_species_id in self.__bulk_species):
+            raise ValueError("Invalid bulk species ID detected")
 
     @property
     def nodes(self) -> list[str]:
