@@ -3,7 +3,7 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "epyt_flow"
+name = "epyt-flow"
 description = "EPyT-Flow -- EPANET Python Toolkit - Flow"
 authors = [
     {name = "André Artelt", email = "aartelt@techfak.uni-bielefeld.de"},
