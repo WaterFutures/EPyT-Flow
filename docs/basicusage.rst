@@ -9,7 +9,7 @@ Quick example
 
 .. raw:: html
 
-    <a target="_blank" href="https://colab.research.google.com/github/https://raw.githubusercontent.com/WaterFutures/EPyT-Flow/main/docs/examples/basic_usage.ipynb">
+    <a target="_blank" href="https://colab.research.google.com/github/WaterFutures/EPyT-Flow/blob/main/docs/examples/basic_usage.ipynb">
     <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
     </a>
 
