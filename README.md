@@ -9,7 +9,7 @@ and [EPANET-MSX](https://github.com/USEPA/EPANETMSX/).
 EPyT-Flow provides easy access to popular benchmark data sets for event detection and localization.
 Furthermore, it also provides an environment for developing and testing control algorithms.
 
-![](https://raw.githubusercontent.com/WaterFutures/EPyT-Flow/main/docs/_static/net1_plot.png)
+![](https://github.com/WaterFutures/EPyT-Flow/blob/main/docs/_static/net1_plot.png?raw=true)
 
 ## Installation
 
