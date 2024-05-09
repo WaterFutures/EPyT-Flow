@@ -1043,20 +1043,25 @@ class ScenarioSimulator():
                                      hyd_time_step)
             progress_bar = iter(tqdm(range(n_iterations + 1), desc="Time steps"))
 
-        def __get_concentrations():
+        def __get_concentrations(init_qual=False):
+            if init_qual is True:
+                msx_get_cur_value = self.epanet_api.msx.MSXgetinitqual
+            else:
+                msx_get_cur_value = self.epanet_api.getMSXSpeciesConcentration
+
             # Bulk species
             bulk_species_node_concentrations = []
             bulk_species_link_concentrations = []
             for species_idx in bulk_species_idx:
                 cur_species_concentrations = []
                 for node_idx in range(1, n_nodes+1):
-                    concen = self.epanet_api.msx.MSXgetinitqual(0, node_idx, species_idx)
+                    concen = msx_get_cur_value(0, node_idx, species_idx)
                     cur_species_concentrations.append(concen)
                 bulk_species_node_concentrations.append(cur_species_concentrations)
 
                 cur_species_concentrations = []
                 for link_idx in range(1, n_links+1):
-                    concen = self.epanet_api.msx.MSXgetinitqual(1, link_idx, species_idx)
+                    concen = msx_get_cur_value(1, link_idx, species_idx)
                     cur_species_concentrations.append(concen)
                 bulk_species_link_concentrations.append(cur_species_concentrations)
 
@@ -1078,7 +1083,7 @@ class ScenarioSimulator():
                 cur_species_concentrations = []
 
                 for link_idx in range(1, n_links+1):
-                    concen = self.epanet_api.msx.MSXgetinitqual(1, link_idx, species_idx)
+                    concen = msx_get_cur_value(1, link_idx, species_idx)
                     cur_species_concentrations.append(concen)
 
                 surface_species_concentrations.append(cur_species_concentrations)
@@ -1094,7 +1099,7 @@ class ScenarioSimulator():
 
         # Initial concentrations:
         bulk_species_node_concentrations, bulk_species_link_concentrations, \
-            surface_species_concentrations = __get_concentrations()
+            surface_species_concentrations = __get_concentrations(init_qual=True)
 
         if verbose is True:
             next(progress_bar)
