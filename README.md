@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
 ## Documentation
 
-Documentation is available on readthedocs: [https://epytflow.readthedocs.io/en/latest/](https://epytflow.readthedocs.io/en/latest/)
+Documentation is available on readthedocs:[https://epyt-flow.readthedocs.io/en/latest/](https://epyt-flow.readthedocs.io/en/stable)
 
 ## License
 
