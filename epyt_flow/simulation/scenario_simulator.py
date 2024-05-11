@@ -329,15 +329,15 @@ class ScenarioSimulator():
         node_id_to_idx = {node_id: self.epanet_api.getNodeIndex(node_id) - 1 for node_id in nodes}
         link_id_to_idx = {link_id: self.epanet_api.getLinkIndex(link_id) - 1 for link_id in links}
         valve_id_to_idx = None  # {valve_id: self.epanet_api.getLinkValveIndex(valve_id) for valve_id in valves}
-        pump_id_to_idx = None # {pump_id: self.epanet_api.getLinkPumpIndex(pump_id) - 1 for pump_id in pumps}
-        tank_id_to_idx = None #{tank_id: self.epanet_api.getNodeTankIndex(tank_id) - 1 for tank_id in tanks}
+        pump_id_to_idx = None  # {pump_id: self.epanet_api.getLinkPumpIndex(pump_id) - 1 for pump_id in pumps}
+        tank_id_to_idx = None  # {tank_id: self.epanet_api.getNodeTankIndex(tank_id) - 1 for tank_id in tanks}
         bulkspecies_id_to_idx = None
         surfacespecies_id_to_idx = None
 
         if nodes != self.__sensor_config.nodes or links != self.__sensor_config.links or \
-            valves != self.__sensor_config.valves or pumps != self.__sensor_config.pumps or \
-            tanks != self.__sensor_config.tanks or \
-            bulk_species != self.__sensor_config.bulk_species or \
+                valves != self.__sensor_config.valves or pumps != self.__sensor_config.pumps or \
+                tanks != self.__sensor_config.tanks or \
+                bulk_species != self.__sensor_config.bulk_species or \
                 surface_species != self.__sensor_config.surface_species:
             # Adapt sensor configuration if anything in the network topology changed
             new_sensor_config = SensorConfig(nodes=nodes, links=links, valves=valves, pumps=pumps,
@@ -516,8 +516,8 @@ class ScenarioSimulator():
         n_time_steps = int(self.epanet_api.getTimeSimulationDuration() /
                            self.epanet_api.getTimeReportingStep())
         n_quantities = self.epanet_api.getNodeCount() * 3 + self.epanet_api.getNodeTankCount() + \
-            self.epanet_api.getLinkValveCount() + self.epanet_api.getLinkPumpCount() + \
-            self.epanet_api.getLinkCount() * 2
+                       self.epanet_api.getLinkValveCount() + self.epanet_api.getLinkPumpCount() + \
+                       self.epanet_api.getLinkCount() * 2
         n_bytes_per_quantity = 64
 
         return n_time_steps * n_quantities * n_bytes_per_quantity * .000001
@@ -1006,13 +1006,13 @@ class ScenarioSimulator():
                                                      support_abort: bool = False,
                                                      return_as_dict: bool = False,
                                                      frozen_sensor_config: bool = False
-                                                     ) -> Generator[Union[ScadaData, dict],
-                                                                    bool, None]:
+                                                     ) -> Generator[Union[ScadaData, dict], bool, None]:
         """
         Runs an advanced quality analysis using EPANET-MSX.
 
         Parameters
         ----------
+        support_abort : `bool`, optional
         hyd_file_in : `str`
             Path to an EPANET .hyd file for storing the simulated hydraulics --
             the quality analysis is computed using those hydraulics.
@@ -1069,13 +1069,13 @@ class ScenarioSimulator():
             bulk_species_link_concentrations = []
             for species_idx in bulk_species_idx:
                 cur_species_concentrations = []
-                for node_idx in range(1, n_nodes+1):
+                for node_idx in range(1, n_nodes + 1):
                     concen = msx_get_cur_value(0, node_idx, species_idx)
                     cur_species_concentrations.append(concen)
                 bulk_species_node_concentrations.append(cur_species_concentrations)
 
                 cur_species_concentrations = []
-                for link_idx in range(1, n_links+1):
+                for link_idx in range(1, n_links + 1):
                     concen = msx_get_cur_value(1, link_idx, species_idx)
                     cur_species_concentrations.append(concen)
                 bulk_species_link_concentrations.append(cur_species_concentrations)
@@ -1083,13 +1083,13 @@ class ScenarioSimulator():
             if len(bulk_species_node_concentrations) == 0:
                 bulk_species_node_concentrations = None
             else:
-                bulk_species_node_concentrations = np.array(bulk_species_node_concentrations).\
+                bulk_species_node_concentrations = np.array(bulk_species_node_concentrations). \
                     reshape((1, len(bulk_species_idx), n_nodes))
 
             if len(bulk_species_link_concentrations) == 0:
                 bulk_species_link_concentrations = None
             else:
-                bulk_species_link_concentrations = np.array(bulk_species_link_concentrations).\
+                bulk_species_link_concentrations = np.array(bulk_species_link_concentrations). \
                     reshape((1, len(bulk_species_idx), n_links))
 
             # Surface species
@@ -1097,7 +1097,7 @@ class ScenarioSimulator():
             for species_idx in surface_species_idx:
                 cur_species_concentrations = []
 
-                for link_idx in range(1, n_links+1):
+                for link_idx in range(1, n_links + 1):
                     concen = msx_get_cur_value(1, link_idx, species_idx)
                     cur_species_concentrations.append(concen)
 
@@ -1106,7 +1106,7 @@ class ScenarioSimulator():
             if len(surface_species_concentrations) == 0:
                 surface_species_concentrations = None
             else:
-                surface_species_concentrations = np.array(surface_species_concentrations).\
+                surface_species_concentrations = np.array(surface_species_concentrations). \
                     reshape((1, len(surface_species_idx), n_links))
 
             return bulk_species_node_concentrations, bulk_species_link_concentrations, \
@@ -1117,7 +1117,10 @@ class ScenarioSimulator():
             surface_species_concentrations = __get_concentrations(init_qual=True)
 
         if verbose is True:
-            next(progress_bar)
+            try:
+                next(progress_bar)
+            except StopIteration:
+                pass
 
         if reporting_time_start == 0:
             if return_as_dict is True:
@@ -1146,21 +1149,24 @@ class ScenarioSimulator():
             # Compute current time step
             total_time, tleft = self.epanet_api.stepMSXQualityAnalysisTimeLeft()
 
+            if verbose is True:
+                try:
+                    next(progress_bar)
+                except StopIteration:
+                    pass
+
             # Fetch data at regular time intervals
             if total_time % hyd_time_step == 0:
                 bulk_species_node_concentrations, bulk_species_link_concentrations, \
                     surface_species_concentrations = __get_concentrations()
 
-                if verbose is True:
-                    next(progress_bar)
-
                 # Report results in a regular time interval only!
                 if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
                     if return_as_dict is True:
                         yield {"bulk_species_node_concentration_raw":
-                               bulk_species_node_concentrations,
+                                   bulk_species_node_concentrations,
                                "bulk_species_link_concentration_raw":
-                               bulk_species_link_concentrations,
+                                   bulk_species_link_concentrations,
                                "surface_species_concentration_raw": surface_species_concentrations,
                                "sensor_readings_time": np.array([total_time])}
                     else:
@@ -1231,13 +1237,13 @@ class ScenarioSimulator():
                                                   support_abort: bool = False,
                                                   return_as_dict: bool = False,
                                                   frozen_sensor_config: bool = False,
-                                                  ) -> Generator[Union[ScadaData, dict],
-                                                                 bool, None]:
+                                                  ) -> Generator[Union[ScadaData, dict], bool, None]:
         """
         Runs a basic quality analysis using EPANET.
 
         Parameters
         ----------
+        support_abort : `bool`, optional
         hyd_file_in : `str`
             Path to an EPANET .hyd file for storing the simulated hydraulics --
             the quality analysis is computed using those hydraulics.
@@ -1292,16 +1298,18 @@ class ScenarioSimulator():
 
             if verbose is True:
                 if (total_time + tstep) % requested_time_step == 0:
-                    next(progress_bar)
+                    try:
+                        next(progress_bar)
+                    except StopIteration:
+                        pass
 
             # Compute current time step
             t = self.epanet_api.runQualityAnalysis()
             total_time = t
 
             # Fetch data
-            quality_node_data = None
-            quality_link_data = None
-
+            # quality_node_data = None
+            # quality_link_data = None
             quality_node_data = self.epanet_api.getNodeActualQuality().reshape(1, -1)
             quality_link_data = self.epanet_api.getLinkActualQuality().reshape(1, -1)
 
@@ -1483,8 +1491,11 @@ class ScenarioSimulator():
                     first_itr = False
 
                 if verbose is True:
-                    if (total_time + tstep) % requested_time_step == 0:
+                    #if (total_time + tstep) % requested_time_step == 0:
+                    try:
                         next(progress_bar)
+                    except StopIteration:
+                        pass
 
                 # Apply system events in a regular time interval only!
                 if (total_time + tstep) % requested_time_step == 0:
@@ -1497,13 +1508,13 @@ class ScenarioSimulator():
                 total_time = t
 
                 # Fetch data
-                pressure_data = None
-                flow_data = None
-                demand_data = None
-                quality_node_data = None
-                quality_link_data = None
-                pumps_state_data = None
-                valves_state_data = None
+                # pressure_data = None
+                # flow_data = None
+                # demand_data = None
+                # quality_node_data = None
+                # quality_link_data = None
+                # pumps_state_data = None
+                # valves_state_data = None
 
                 pressure_data = self.epanet_api.getNodePressure().reshape(1, -1)
                 flow_data = self.epanet_api.getLinkFlows().reshape(1, -1)
