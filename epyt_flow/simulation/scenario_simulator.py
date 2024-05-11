@@ -1396,7 +1396,11 @@ class ScenarioSimulator():
             if hyd_export_old is not None:
                 shutil.copyfile(hyd_export, hyd_export_old)
 
-            os.remove(hyd_export)
+            try:
+                # temp solution
+                os.remove(hyd_export)
+            except:
+                pass
 
         return result
 
