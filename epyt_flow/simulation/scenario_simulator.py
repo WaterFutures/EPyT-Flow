@@ -979,13 +979,28 @@ class ScenarioSimulator():
         gen = self.run_advanced_quality_simulation_as_generator
         for scada_data in gen(hyd_file_in=hyd_file_in,
                               verbose=verbose,
+                              return_as_dict=True,
                               frozen_sensor_config=frozen_sensor_config):
             if result is None:
-                result = scada_data
+                result = {}
+                for data_type, data in scada_data.items():
+                    result[data_type] = [data]
             else:
-                result.concatenate(scada_data)
+                for data_type, data in scada_data.items():
+                    result[data_type].append(data)
 
-        return result
+        # Build ScadaData instance
+        for data_type in result:
+            if not any(d is None for d in result[data_type]):
+                result[data_type] = np.concatenate(result[data_type], axis=0)
+            else:
+                result[data_type] = None
+
+        return ScadaData(**result,
+                         sensor_config=self.__sensor_config,
+                         sensor_reading_events=self.__sensor_reading_events,
+                         sensor_noise=self.__sensor_noise,
+                         frozen_sensor_config=frozen_sensor_config)
 
     def run_advanced_quality_simulation_as_generator(self, hyd_file_in: str, verbose: bool = False,
                                                      support_abort: bool = False,
@@ -1109,7 +1124,7 @@ class ScenarioSimulator():
                 yield {"bulk_species_node_concentration_raw": bulk_species_node_concentrations,
                        "bulk_species_link_concentration_raw": bulk_species_link_concentrations,
                        "surface_species_concentration_raw": surface_species_concentrations,
-                       "sensor_readings_time": np.array([total_time])}
+                       "sensor_readings_time": np.array([0])}
             else:
                 yield ScadaData(sensor_config=self.__sensor_config,
                                 bulk_species_node_concentration_raw=bulk_species_node_concentrations,
