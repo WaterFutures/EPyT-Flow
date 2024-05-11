@@ -612,7 +612,7 @@ class SensorConfig(JsonSerializable):
 
         bulk_species = []
         surface_species = []
-        if hasattr(epanet_api, "msx"):
+        if epanet_api.msx is not None:
             for species_id, species_type in zip(epanet_api.getMSXSpeciesNameID(),
                                                 epanet_api.getMSXSpeciesType()):
                 if species_type == "BULK":
