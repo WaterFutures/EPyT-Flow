@@ -1,3 +1,10 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![pypi](https://img.shields.io/pypi/v/epyt-flow.svg)](https://pypi.org/project/epyt-flow/)
+[![build](https://github.com/WaterFutures/EPyT-Flow/actions/workflows/build_tests.yml/badge.svg)](https://github.com/WaterFutures/EPyT-Flow/actions/workflows/build_tests.yml)
+[![Documentation Status](https://readthedocs.org/projects/epyt-flow/badge/?version=stable)](https://epyt-flow.readthedocs.io/en/stable/?badge=stable)
+[![Downloads](https://static.pepy.tech/badge/epyt-flow)](https://pepy.tech/project/epyt-flow)
+[![Downloads](https://static.pepy.tech/badge/epyt-flow/month)](https://pepy.tech/project/epyt-flow)
+
 # EPyT-Flow -- EPANET Python Toolkit - Flow
 
 EPyT-Flow is a Python package building on top of [EPyT](https://github.com/OpenWaterAnalytics/EPyT) 
@@ -15,7 +22,7 @@ Furthermore, it also provides an environment for developing and testing control 
 
 EPyT-Flow supports Python 3.9 - 3.12
 
-Note that [EPANET and EPANET-MSX sources](epyt_flow/EPANET/) are compiled and overrite the binaries
+Note that [EPANET and EPANET-MSX sources](epyt_flow/EPANET/) are compiled and overwrite the binaries
 shipped by EPyT IF EPyT-Flow is installed on a Linux system. By this we not only aim to achieve
 a better performance of the simulations but also avoid any compatibility problems of pre-compiled binaries.
 
