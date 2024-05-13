@@ -1,4 +1,5 @@
 import subprocess
+import warnings
 import shutil
 import sys
 import os
@@ -23,23 +24,7 @@ if sys.platform.startswith("linux"):
                 print("Compiling EPANET and EPANET-MSX...")
                 subprocess.check_call(f"cd \"{path_to_epanet}\"; bash compile.sh", shell=True)
             else:
-                raise Exception("GCC is not available to compile the required libraries.")
+                warnings.warn("GCC is not available to compile the required libraries.\n" +
+                              "Falling back to pre-compiled library shipped by EPyT.")
 
-
-    def test_existing_libraries():
-        """Test existing EPANET and EPANET-MSX libraries."""
-        try:
-            from epyt import epanet
-            d = epanet('net2-cl2.inp', loadfile=True, display_msg=False)
-            d.loadMSXFile('net2-cl2.msx', ignore_properties=True)
-            d.unloadMSX()
-            d.unload()
-            return True
-        except Exception:
-            return False
-
-
-    if not test_existing_libraries():
-        compile_libraries()
-        if not test_existing_libraries():
-            print("Fails after attempting to compile libraries.")
+    compile_libraries()
