@@ -1308,8 +1308,6 @@ class ScenarioSimulator():
             total_time = t
 
             # Fetch data
-            # quality_node_data = None
-            # quality_link_data = None
             quality_node_data = self.epanet_api.getNodeActualQuality().reshape(1, -1)
             quality_link_data = self.epanet_api.getLinkActualQuality().reshape(1, -1)
 
@@ -1408,7 +1406,7 @@ class ScenarioSimulator():
                 # temp solution
                 os.remove(hyd_export)
             except:
-                pass
+                warnings.warn(f"Failed to remove temporary file '{hyd_export}'")
 
         return result
 
@@ -1508,14 +1506,6 @@ class ScenarioSimulator():
                 total_time = t
 
                 # Fetch data
-                # pressure_data = None
-                # flow_data = None
-                # demand_data = None
-                # quality_node_data = None
-                # quality_link_data = None
-                # pumps_state_data = None
-                # valves_state_data = None
-
                 pressure_data = self.epanet_api.getNodePressure().reshape(1, -1)
                 flow_data = self.epanet_api.getLinkFlows().reshape(1, -1)
                 demand_data = self.epanet_api.getNodeActualDemand().reshape(1,
