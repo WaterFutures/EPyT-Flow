@@ -6,7 +6,8 @@ from epyt_flow.simulation import ToolkitConstants
 from epyt_flow.data.networks import load_hanoi, load_net1
 from epyt_flow.simulation import ScenarioSimulator
 from epyt_flow.simulation.sensor_config import SENSOR_TYPE_NODE_QUALITY
-from epyt_flow.utils import get_temp_folder
+
+from .utils import get_temp_folder
 
 
 def test_water_age():
