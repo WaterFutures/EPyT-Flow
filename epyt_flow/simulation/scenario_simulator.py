@@ -96,7 +96,7 @@ class ScenarioSimulator():
                 custom_epanetmsx_lib = os.path.join(path_to_custom_libs, "libepanetmsx2_2_0.so")
 
         self.epanet_api = epanet(self.__f_inp_in, ph=self.__f_msx_in is None,
-                                 customlib=custom_epanet_lib)
+                                 customlib=custom_epanet_lib, loadfile=True)
 
         bulk_species = []
         surface_species = []
