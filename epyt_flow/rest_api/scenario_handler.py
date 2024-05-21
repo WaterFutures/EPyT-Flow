@@ -326,6 +326,40 @@ class ScenarioSimulationHandler(ScenarioBaseHandler):
 
         super().__init__(**kwds)
 
+    def on_post(self, req: falcon.Request, resp: falcon.Response, scenario_id: str) -> None:
+        """
+        Runs the simulation of a given scenario.
+
+        Note that in contrat to the GET request
+        (:func:`~epyt_flow.rest_api.scenario_handler.ScenarioSimulationHandler.on_get`),
+        the POST request allows to specify additional arguments passed to
+        :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.run_simulation`.
+
+        Parameters
+        ----------
+        req : `falcon.Request`
+            Request instance.
+        resp : `falcon.Response`
+            Response instance.
+        scenario_id : `str`
+            UUID of the scenario.
+        """
+        try:
+            if self.scenario_mgr.validate_uuid(scenario_id) is False:
+                self.send_invalid_resource_id_error(resp)
+                return
+
+            params = self.load_json_data_from_request(req)
+
+            my_scenario = self.scenario_mgr.get(scenario_id)
+            res = my_scenario.run_simulation(**params)
+
+            data_id = self.scada_data_mgr.create_new_item(res)
+            self.send_json_response(resp, {"data_id": data_id})
+        except Exception as ex:
+            warnings.warn(str(ex))
+            resp.status = falcon.HTTP_INTERNAL_SERVER_ERROR
+
     def on_get(self, _, resp: falcon.Response, scenario_id: str) -> None:
         """
         Runs the simulation of a given scenario.
