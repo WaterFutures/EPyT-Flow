@@ -237,6 +237,8 @@ class ScenarioGeneralParamsHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
+        req : `falcon.Request`
+            Request instance.
         resp : `falcon.Request`
             Request instance.
         scenario_id : `str`
@@ -290,6 +292,8 @@ class ScenarioSensorConfigHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
+        req : `falcon.Request`
+            Request instance.
         resp : `falcon.Request`
             Request instance.
         scenario_id : `str`
