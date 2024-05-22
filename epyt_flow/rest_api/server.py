@@ -12,7 +12,8 @@ from .scada_data_handler import ScadaDataManager, ScadaDataSensorConfigHandler, 
     ScadaDataLinksQualityHandler, ScadaDataNodesQualityHandler, ScadaDataRemoveHandler, \
     ScadaDataSensorFaultsHandler, ScadaDataNodeBulkSpeciesHandler, \
     ScadaDataLinkBulkSpeciesHandler, ScadaDataSurfaceSpeciesHandler, ScadaDataTankVolumesHandler, \
-    ScadaDataPumpStatesHandler, ScadaDataValveStatesHandler
+    ScadaDataPumpStatesHandler, ScadaDataValveStatesHandler, ScadaDataExportHandler, \
+    ScadaDataXlsxExportHandler, ScadaDataMatlabExportHandler, ScadaDataNumpyExportHandler
 
 
 class RestApiService():
@@ -79,6 +80,14 @@ class RestApiService():
                            ScadaDataLinkBulkSpeciesHandler(self.scada_data_mgr))
         self.app.add_route("/scada_data/{data_id}/surface_species",
                            ScadaDataSurfaceSpeciesHandler(self.scada_data_mgr))
+        self.app.add_route("/scada_data/{data_id}/export/xlsx",
+                           ScadaDataXlsxExportHandler(scada_data_mgr=self.scada_data_mgr))
+        self.app.add_route("/scada_data/{data_id}/export/matlab",
+                           ScadaDataMatlabExportHandler(scada_data_mgr=self.scada_data_mgr))
+        self.app.add_route("/scada_data/{data_id}/export/numpy",
+                           ScadaDataNumpyExportHandler(scada_data_mgr=self.scada_data_mgr))
+        self.app.add_route("/scada_data/{data_id}/export",
+                           ScadaDataExportHandler(scada_data_mgr=self.scada_data_mgr))
 
     @property
     def port(self) -> int:
