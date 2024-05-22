@@ -974,6 +974,9 @@ class ScenarioSimulator():
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             Quality simulation results as SCADA data.
         """
+        if self.__f_msx_in is None:
+            raise ValueError("No .msx file specified")
+
         result = None
 
         gen = self.run_advanced_quality_simulation_as_generator
@@ -1035,6 +1038,9 @@ class ScenarioSimulator():
             Generator containing the current EPANET-MSX simulation results as SCADA data
             (i.e. species concentrations).
         """
+        if self.__f_msx_in is None:
+            raise ValueError("No .msx file specified")
+
         # Load pre-computed hydraulics
         self.epanet_api.useMSXHydraulicFile(hyd_file_in)
 
