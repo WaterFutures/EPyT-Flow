@@ -6,7 +6,8 @@ import falcon
 
 from .scenario_handler import ScenarioManager, ScenarioNewHandler, ScenarioRemoveHandler, \
     ScenarioGeneralParamsHandler, ScenarioSensorConfigHandler, ScenarioSimulationHandler, \
-    ScenarioTopologyHandler, ScenarioConfigHandler, ScenarioLeakageHandler
+    ScenarioTopologyHandler, ScenarioConfigHandler, ScenarioLeakageHandler, \
+    ScenarioBasicQualitySimulationHandler, ScenarioAdvancedQualitySimulationHandler
 from .scada_data_handler import ScadaDataManager, ScadaDataSensorConfigHandler, \
     ScadaDataPressuresHandler, ScadaDataDemandsHandler, ScadaDataFlowsHandler, \
     ScadaDataLinksQualityHandler, ScadaDataNodesQualityHandler, ScadaDataRemoveHandler, \
@@ -51,6 +52,14 @@ class RestApiService():
         self.app.add_route("/scenario/{scenario_id}/simulation",
                            ScenarioSimulationHandler(scenario_mgr=self.scenario_mgr,
                                                      scada_data_mgr=self.scada_data_mgr))
+        self.app.add_route("/scenario/{scenario_id}/simulation/advanced_quality",
+                           ScenarioBasicQualitySimulationHandler(scenario_mgr=self.scenario_mgr,
+                                                                 scada_data_mgr=
+                                                                 self.scada_data_mgr))
+        self.app.add_route("/scenario/{scenario_id}/simulation/basic_quality",
+                           ScenarioAdvancedQualitySimulationHandler(scenario_mgr=self.scenario_mgr,
+                                                                    scada_data_mgr=
+                                                                    self.scada_data_mgr))
 
         self.app.add_route("/scada_data/{data_id}",
                            ScadaDataRemoveHandler(self.scada_data_mgr))
