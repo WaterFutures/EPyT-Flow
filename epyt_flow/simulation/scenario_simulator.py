@@ -296,6 +296,21 @@ class ScenarioSimulator():
                                     self.__sensor_reading_events)))
 
     @property
+    def sensor_reading_attacks(self) -> list[SensorReadingAttack]:
+        """
+        Gets all sensor reading attacks.
+
+        Returns
+        -------
+        list[:class:`~epyt_flow.simulation.events.sensor_reading_attacks.SensorReadingAttack`]
+            All sensor reading attacks.
+        """
+        self.__adapt_to_network_changes()
+
+        return deepcopy(list(filter(lambda e: isinstance(e, SensorReadingAttack)),
+                             self.__sensor_reading_events))
+
+    @property
     def sensor_reading_events(self) -> list[SensorReadingEvent]:
         """
         Gets all sensor reading events (e.g. sensor faults, etc.).
