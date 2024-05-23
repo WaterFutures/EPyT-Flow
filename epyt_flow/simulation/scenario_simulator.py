@@ -396,6 +396,169 @@ class ScenarioSimulator():
     def __exit__(self, *args):
         self.close()
 
+    def save_to_epanet_file(self, inp_file_path: str, msx_file_path: str = None,
+                            export_sensor_config: bool = True) -> None:
+        """
+        Exports this scenario to EPANET files -- i.e. an .inp file
+        and (optionally) a .msx file if EPANET-MSX was loaded.
+
+        Parameters
+        ----------
+        inp_file_path : `str`
+            Path to the .inp file where this scenario will be stored.
+
+            If 'inp_file_path' is None, 'msx_file_path' must not be None!
+        msx_file_path : `str`, optional
+            Path to the .msx file where this MSX component of this scneario will be stored.
+
+            Note that this is only applicable if EPANET-MSX was loaded.
+
+            The default is None.
+        export_sensor_config : `bool`, optional
+            If True, the current sensor placement is exported as well.
+
+            The default is True.
+        """
+        if inp_file_path is None and msx_file_path is None:
+            raise ValueError("At least one of the paths (.inp and .msx) must not be None")
+        if inp_file_path is not None:
+            if not isinstance(inp_file_path, str):
+                raise TypeError("'inp_file_path' must be an instance of 'str' " +
+                                f"but not of '{type(inp_file_path)}'")
+        if msx_file_path is not None:
+            if not isinstance(msx_file_path, str):
+                raise TypeError("msx_file_path' msut be an instance of 'str' " +
+                                f"but not of {type(msx_file_path)}")
+        if not isinstance(export_sensor_config, bool):
+            raise TypeError("'export_sensor_config' must be an instance of 'bool' " +
+                            f"but not of '{type(export_sensor_config)}'")
+
+        def __override_report_section(file_in: str, report_desc: str) -> None:
+            with open(file_in, mode="r+", encoding="utf-8") as f_in:
+                # Find and remove exiting REPORT section
+                content = f_in.read()
+                try:
+                    report_section_start_idx = content.index("[REPORT]")
+                    report_section_end_idx = content.index("[", report_section_start_idx + 1)
+
+                    content = content[:report_section_start_idx] + content[report_section_end_idx:]
+                    f_in.seek(0)
+                    f_in.write(content)
+                    f_in.truncate()
+                except ValueError:
+                    pass
+
+                # Write new REPORT section in the very end of the file
+                write_end_section = False
+                try:
+                    end_idx = content.index("[END]")
+                    write_end_section = True
+                    f_in.seek(end_idx)
+                except ValueError:
+                    pass
+                f_in.write(report_desc)
+                if write_end_section is True:
+                    f_in.write("\n[END]")
+
+        if inp_file_path is not None:
+            self.epanet_api.saveInputFile(inp_file_path)
+
+            if export_sensor_config is True:
+                report_desc = "\n\n[REPORT]\n"
+                report_desc += "ENERGY YES\n"
+                report_desc += "STATUS YES\n"
+
+                nodes = []
+                links = []
+
+                # Parse sensor config
+                pressure_sensors = self.__sensor_config.pressure_sensors
+                if len(pressure_sensors) != 0:
+                    report_desc += "Pressure YES\n"
+                    nodes += pressure_sensors
+
+                flow_sensors = self.__sensor_config.flow_sensors
+                if len(flow_sensors) != 0:
+                    report_desc += "Flow YES\n"
+                    links += flow_sensors
+
+                demand_sensors = self.__sensor_config.demand_sensors
+                if len(demand_sensors) != 0:
+                    report_desc += "Demand YES\n"
+                    nodes += demand_sensors
+
+                node_quality_sensors = self.__sensor_config.quality_node_sensors
+                if len(node_quality_sensors) != 0:
+                    report_desc += "Quality YES\n"
+                    nodes += node_quality_sensors
+
+                link_quality_sensors = self.__sensor_config.quality_link_sensors
+                if len(link_quality_sensors) != 0:
+                    if len(node_quality_sensors) == 0:
+                        report_desc += "Quality YES\n"
+                    links += link_quality_sensors
+
+                # Create final REPORT section
+                nodes = list(set(nodes))
+                links = list(set(links))
+
+                if len(nodes) != 0:
+                    if set(nodes) == set(self.__sensor_config.nodes):
+                        nodes = ["ALL"]
+                    report_desc += f"NODES {' '.join(nodes)}\n"
+
+                if len(links) != 0:
+                    if set(links) == set(self.__sensor_config.links):
+                        links = ["ALL"]
+                    report_desc += f"LINKS {' '.join(links)}\n"
+
+                __override_report_section(inp_file_path, report_desc)
+
+        if self.__f_msx_in is not None and msx_file_path is not None:
+            self.epanet_api.saveMSXFile(msx_file_path)
+
+            if export_sensor_config is True:
+                report_desc = "\n\n[REPORT]\n"
+                species = []
+                nodes = []
+                links = []
+
+                # Parse sensor config
+                bulk_species_node_sensors = self.__sensor_config.bulk_species_node_sensors
+                for bulk_species_id in bulk_species_node_sensors.keys():
+                    species.append(bulk_species_id)
+                    nodes += bulk_species_node_sensors[bulk_species_id]
+
+                bulk_species_link_sensors = self.__sensor_config.bulk_species_link_sensors
+                for bulk_species_id in bulk_species_link_sensors.keys():
+                    species.append(bulk_species_id)
+                    links += bulk_species_link_sensors[bulk_species_id]
+
+                surface_species_link_sensors = self.__sensor_config.surface_species_sensors
+                for surface_species_id in surface_species_link_sensors.keys():
+                    species.append(surface_species_id)
+                    links += surface_species_link_sensors[surface_species_id]
+
+                nodes = list(set(nodes))
+                links = list((set(links)))
+                species = list(set(species))
+
+                # Create REPORT section
+                if len(nodes) != 0:
+                    if set(nodes) == set(self.__sensor_config.nodes):
+                        nodes = ["ALL"]
+                    report_desc += f"NODES {' '.join(nodes)}\n"
+
+                if len(links) != 0:
+                    if set(links) == set(self.__sensor_config.links):
+                        links = ["ALL"]
+                    report_desc += f"LINKS {' '.join(links)}\n"
+
+                for species_id in species:
+                    report_desc += f"SPECIES {species_id} YES\n"
+
+                __override_report_section(msx_file_path, report_desc)
+
     def get_flow_units(self) -> int:
         """
         Gets the flow units.
