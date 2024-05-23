@@ -518,6 +518,10 @@ class ScenarioSimulator():
         n_quantities = self.epanet_api.getNodeCount() * 3 + self.epanet_api.getNodeTankCount() + \
                        self.epanet_api.getLinkValveCount() + self.epanet_api.getLinkPumpCount() + \
                        self.epanet_api.getLinkCount() * 2
+
+        if self.__f_msx_in is not None:
+            n_quantities += self.epanet_api.getLinkCount() * 2 + self.epanet_api.getNodeCount()
+
         n_bytes_per_quantity = 64
 
         return n_time_steps * n_quantities * n_bytes_per_quantity * .000001
