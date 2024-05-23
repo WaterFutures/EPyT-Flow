@@ -316,6 +316,43 @@ class ScenarioSensorConfigHandler(ScenarioBaseHandler):
             resp.status = falcon.HTTP_INTERNAL_SERVER_ERROR
 
 
+class ScenarioNodeDemandPatternHandler(ScenarioBaseHandler):
+    """
+    Class for handling POST requests for node demand patterns of a given scenario.
+    """
+    def on_post(self, req: falcon.Request, resp: falcon.Response, scenario_id: str,
+                node_id: str) -> None:
+        """
+        Sets the demand pattern of a specific node in a given scenario.
+
+        Parameters
+        ----------
+        req : `falcon.Request`
+            Request instance.
+        resp : `falcon.Response`
+            Response instance.
+        scenario_id : `str`
+            UUID of the scenario.
+        node_id : `str`
+            ID of the node.
+        """
+        try:
+            if self.scenario_mgr.validate_uuid(scenario_id) is False:
+                self.send_invalid_resource_id_error(resp)
+                return
+
+            params = self.load_json_data_from_request(req)
+
+            my_scenario = self.scenario_mgr.get(scenario_id)
+            my_scenario.set_node_demand_pattern(node_id, params["base_demand"],
+                                                params["demand_pattern_id"],
+                                                params["demand_pattern"])
+        except Exception as ex:
+            warnings.warn(str(ex))
+            resp.data = str(ex)
+            resp.status = falcon.HTTP_INTERNAL_SERVER_ERROR
+
+
 class ScenarioSimulationHandler(ScenarioBaseHandler):
     """
     Class for handling GET requests for simulating a given scenario.
