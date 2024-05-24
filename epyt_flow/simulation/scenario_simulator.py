@@ -48,6 +48,10 @@ class ScenarioSimulator():
 
         If this is None, then 'f_inp_in' must be set with a valid path to the .inp file
         that is to be simulated.
+    epanet_verbose : `bool`, optional
+        If True, EPyT is verbose and might print messages from time to time.
+
+        The default is False.
 
     Attributes
     ----------
@@ -56,7 +60,7 @@ class ScenarioSimulator():
     """
 
     def __init__(self, f_inp_in: str = None, f_msx_in: str = None,
-                 scenario_config: ScenarioConfig = None):
+                 scenario_config: ScenarioConfig = None, epanet_verbose: bool = False):
         if f_msx_in is not None and f_inp_in is None:
             raise ValueError("'f_inp_in' must be set if 'f_msx_in' is set.")
         if f_inp_in is None and scenario_config is None:
@@ -74,6 +78,9 @@ class ScenarioSimulator():
                 raise TypeError("'scenario_config' must be an instance of " +
                                 "'epyt_flow.simulation.ScenarioConfig' but not of " +
                                 f"'{type(scenario_config)}'")
+        if not isinstance(epanet_verbose, bool):
+            raise TypeError("'epanet_verbose' must be an instance of 'bool' " +
+                            f"but not of '{type(epanet_verbose)}'")
 
         self.__f_inp_in = f_inp_in if scenario_config is None else scenario_config.f_inp_in
         self.__f_msx_in = f_msx_in if scenario_config is None else scenario_config.f_msx_in
@@ -96,7 +103,8 @@ class ScenarioSimulator():
                 custom_epanetmsx_lib = os.path.join(path_to_custom_libs, "libepanetmsx2_2_0.so")
 
         self.epanet_api = epanet(self.__f_inp_in, ph=self.__f_msx_in is None,
-                                 customlib=custom_epanet_lib, loadfile=True)
+                                 customlib=custom_epanet_lib, loadfile=True,
+                                 display_msg=epanet_verbose)
 
         bulk_species = []
         surface_species = []
