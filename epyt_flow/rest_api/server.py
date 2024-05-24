@@ -8,7 +8,8 @@ from .scenario_handler import ScenarioManager, ScenarioNewHandler, ScenarioRemov
     ScenarioGeneralParamsHandler, ScenarioSensorConfigHandler, ScenarioSimulationHandler, \
     ScenarioTopologyHandler, ScenarioConfigHandler, ScenarioLeakageHandler, \
     ScenarioBasicQualitySimulationHandler, ScenarioAdvancedQualitySimulationHandler, \
-    ScenarioNodeDemandPatternHandler, ScenarioSensorFaultHandler, ScenarioExportHandler
+    ScenarioNodeDemandPatternHandler, ScenarioSensorFaultHandler, ScenarioExportHandler, \
+    ScenarioModelUncertaintyHandler, ScenarioSensorUncertaintyHandler
 from .scada_data_handler import ScadaDataManager, ScadaDataSensorConfigHandler, \
     ScadaDataPressuresHandler, ScadaDataDemandsHandler, ScadaDataFlowsHandler, \
     ScadaDataLinksQualityHandler, ScadaDataNodesQualityHandler, ScadaDataRemoveHandler, \
@@ -50,6 +51,10 @@ class RestApiService():
                            ScenarioGeneralParamsHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/sensor_config",
                            ScenarioSensorConfigHandler(self.scenario_mgr))
+        self.app.add_route("/scenario/{scenario_id}/uncertainty/model",
+                           ScenarioModelUncertaintyHandler(self.scenario_mgr))
+        self.app.add_route("/scenario/{scenario_id}/uncertainty/sensors",
+                           ScenarioSensorUncertaintyHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/leakages",
                            ScenarioLeakageHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/sensor_faults",
