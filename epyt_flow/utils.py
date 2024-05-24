@@ -234,6 +234,22 @@ def create_path_if_not_exist(path_in: str) -> None:
     Path(path_in).mkdir(parents=True, exist_ok=True)
 
 
+def pack_zip_archive(f_in: list[str], f_out: str) -> None:
+    """
+    Compresses a given list of files into a .zip archive.
+
+    Parameters
+    ----------
+    f_in : `list[str]`
+        List of files to be compressed into the .zip archive.
+    f_out : `str`
+        Path to the final .zip file.
+    """
+    with zipfile.ZipFile(f_out, "w") as f_zip_out:
+        for f_cur_in in f_in:
+            f_zip_out.write(f_cur_in, compress_type=zipfile.ZIP_DEFLATED)
+
+
 def unpack_zip_archive(f_in: str, folder_out: str) -> None:
     """
     Unpacks a .zip archive.

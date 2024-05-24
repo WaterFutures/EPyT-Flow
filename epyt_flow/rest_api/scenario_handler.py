@@ -2,10 +2,12 @@
 This module provides all handlers for requests concerning scenarios.
 """
 import warnings
+import os
 import falcon
 
 from .base_handler import BaseHandler
 from .res_manager import ResourceManager
+from ..utils import get_temp_folder, pack_zip_archive
 from .scada_data_handler import ScadaDataManager
 from ..simulation import ScenarioSimulator, Leakage, SensorConfig, SensorFault
 
@@ -64,6 +66,78 @@ class ScenarioRemoveHandler(ScenarioBaseHandler):
                 return
 
             self.scenario_mgr.remove(scenario_id)
+        except Exception as ex:
+            warnings.warn(str(ex))
+            resp.status = falcon.HTTP_INTERNAL_SERVER_ERROR
+
+
+class ScenarioExportHandler(ScenarioBaseHandler):
+    """
+    Class for handling GET requests for exporting a given scenario to EPANET files
+    -- i.e. .inp and (otpionally) .msx files.
+    """
+    def __create_temp_file_path(self, scenario_id: str, file_ext: str) -> None:
+        """
+        Returns a path to a temporary file for storing the scenario.
+
+        Parameters
+        ----------
+        scenario_id : `str`
+            UUID of the scenario.
+        file_ext : `str`
+            File extension.
+        """
+        return os.path.join(get_temp_folder(), f"{scenario_id}.{file_ext}")
+
+    def __send_temp_file(self, resp: falcon.Response, tmp_file: str,
+                         content_type: str = "application/octet-stream") -> None:
+        """
+        Sends a given file (`tmp_file`) to the the client.
+
+        Parameters
+        ----------
+        resp : `falcon.Response`
+            Response instance.
+        tmp_file : `str`
+            Path to the temporary file to be send.
+        """
+        resp.status = falcon.HTTP_200
+        resp.content_type = content_type
+        with open(tmp_file, 'rb') as f:
+            resp.text = f.read()
+
+    def on_get(self, _, resp: falcon.Response, scenario_id: str) -> None:
+        """
+        Exports a given scenario to an .inp and (optionally) .msx file.
+
+        Parameters
+        ----------
+        resp : `falcon.Response`
+            Response instance.
+        scenario_id : `str`
+            UUID of the scenario.
+        """
+        try:
+            if self.scenario_mgr.validate_uuid(scenario_id) is False:
+                self.send_invalid_resource_id_error(resp)
+                return
+
+            my_scenario = self.scenario_mgr.get(scenario_id)
+
+            f_inp_out = self.__create_temp_file_path(scenario_id, "inp")
+            f_msx_out = self.__create_temp_file_path(scenario_id, "msx")
+            my_scenario.save_to_epanet_file(f_inp_out, f_msx_out)
+
+            if os.path.isfile(f_msx_out):
+                f_out = self.__create_temp_file_path(scenario_id, "zip")
+                pack_zip_archive([f_inp_out, f_msx_out], f_out)
+
+                self.__send_temp_file(resp, f_out)
+                os.remove(f_out)
+                os.remove(f_msx_out)
+            else:
+                self.__send_temp_file(resp, f_inp_out)
+            os.remove(f_inp_out)
         except Exception as ex:
             warnings.warn(str(ex))
             resp.status = falcon.HTTP_INTERNAL_SERVER_ERROR

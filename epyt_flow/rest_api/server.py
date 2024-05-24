@@ -8,7 +8,7 @@ from .scenario_handler import ScenarioManager, ScenarioNewHandler, ScenarioRemov
     ScenarioGeneralParamsHandler, ScenarioSensorConfigHandler, ScenarioSimulationHandler, \
     ScenarioTopologyHandler, ScenarioConfigHandler, ScenarioLeakageHandler, \
     ScenarioBasicQualitySimulationHandler, ScenarioAdvancedQualitySimulationHandler, \
-    ScenarioNodeDemandPatternHandler, ScenarioSensorFaultHandler
+    ScenarioNodeDemandPatternHandler, ScenarioSensorFaultHandler, ScenarioExportHandler
 from .scada_data_handler import ScadaDataManager, ScadaDataSensorConfigHandler, \
     ScadaDataPressuresHandler, ScadaDataDemandsHandler, ScadaDataFlowsHandler, \
     ScadaDataLinksQualityHandler, ScadaDataNodesQualityHandler, ScadaDataRemoveHandler, \
@@ -40,6 +40,8 @@ class RestApiService():
                            ScenarioNewHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}",
                            ScenarioRemoveHandler(self.scenario_mgr))
+        self.app.add_route("/scenario/{scenario_id}/export",
+                           ScenarioExportHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/topology",
                            ScenarioTopologyHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/scenario_config",
