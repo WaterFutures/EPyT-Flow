@@ -2,6 +2,11 @@ epyt_flow.rest_api
 ==================
 
 
+.. toctree::
+   epyt_flow.rest_api.scada_data
+   epyt_flow.rest_api.scenario
+
+
 epyt_flow.rest_api.server
 -------------------------
 
@@ -22,21 +27,5 @@ epyt_flow.rest_api.base_handler
 -------------------------------
 
 .. automodule:: epyt_flow.rest_api.base_handler
-   :members:
-   :show-inheritance:
-
-
-epyt_flow.rest_api.scenario_handler
------------------------------------
-
-.. automodule:: epyt_flow.rest_api.scenario_handler
-   :members:
-   :show-inheritance:
-
-
-epyt_flow.rest_api.scada_data_handler
--------------------------------------
-
-.. automodule:: epyt_flow.rest_api.scada_data_handler
    :members:
    :show-inheritance:

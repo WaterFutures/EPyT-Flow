@@ -4,19 +4,24 @@ This module provides the EPyT-Flow REST API server.
 from wsgiref.simple_server import make_server, WSGIServer
 import falcon
 
-from .scenario_handler import ScenarioManager, ScenarioNewHandler, ScenarioRemoveHandler, \
-    ScenarioGeneralParamsHandler, ScenarioSensorConfigHandler, ScenarioSimulationHandler, \
-    ScenarioTopologyHandler, ScenarioConfigHandler, ScenarioLeakageHandler, \
-    ScenarioBasicQualitySimulationHandler, ScenarioAdvancedQualitySimulationHandler, \
-    ScenarioNodeDemandPatternHandler, ScenarioSensorFaultHandler, ScenarioExportHandler, \
-    ScenarioModelUncertaintyHandler, ScenarioSensorUncertaintyHandler
-from .scada_data_handler import ScadaDataManager, ScadaDataSensorConfigHandler, \
-    ScadaDataPressuresHandler, ScadaDataDemandsHandler, ScadaDataFlowsHandler, \
-    ScadaDataLinksQualityHandler, ScadaDataNodesQualityHandler, ScadaDataRemoveHandler, \
-    ScadaDataSensorFaultsHandler, ScadaDataNodeBulkSpeciesHandler, \
-    ScadaDataLinkBulkSpeciesHandler, ScadaDataSurfaceSpeciesHandler, ScadaDataTankVolumesHandler, \
-    ScadaDataPumpStatesHandler, ScadaDataValveStatesHandler, ScadaDataExportHandler, \
-    ScadaDataXlsxExportHandler, ScadaDataMatlabExportHandler, ScadaDataNumpyExportHandler
+from .scenario.handlers import ScenarioManager, ScenarioNewHandler, \
+    ScenarioRemoveHandler, ScenarioGeneralParamsHandler, ScenarioSensorConfigHandler, \
+    ScenarioExportHandler, ScenarioTopologyHandler, ScenarioConfigHandler, \
+    ScenarioNodeDemandPatternHandler
+from .scenario.uncertainty_handlers import ScenarioModelUncertaintyHandler, \
+    ScenarioSensorUncertaintyHandler
+from .scenario.event_handlers import ScenarioLeakageHandler, ScenarioSensorFaultHandler
+from .scenario.simulation_handlers import ScenarioSimulationHandler, \
+    ScenarioBasicQualitySimulationHandler, ScenarioAdvancedQualitySimulationHandler
+from .scada_data.handlers import ScadaDataManager, ScadaDataSensorConfigHandler, \
+    ScadaDataRemoveHandler, ScadaDataSensorFaultsHandler
+from .scada_data.data_handlers import ScadaDataPressuresHandler, ScadaDataDemandsHandler, \
+    ScadaDataFlowsHandler, ScadaDataLinksQualityHandler, ScadaDataNodesQualityHandler, \
+    ScadaDataNodeBulkSpeciesHandler, ScadaDataLinkBulkSpeciesHandler, \
+    ScadaDataSurfaceSpeciesHandler, ScadaDataTankVolumesHandler, ScadaDataPumpStatesHandler, \
+    ScadaDataValveStatesHandler
+from .scada_data.export_handlers import ScadaDataExportHandler, ScadaDataXlsxExportHandler, \
+    ScadaDataMatlabExportHandler, ScadaDataNumpyExportHandler
 
 
 class RestApiService():
@@ -55,9 +60,9 @@ class RestApiService():
                            ScenarioModelUncertaintyHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/uncertainty/sensors",
                            ScenarioSensorUncertaintyHandler(self.scenario_mgr))
-        self.app.add_route("/scenario/{scenario_id}/leakages",
+        self.app.add_route("/scenario/{scenario_id}/events/leakages",
                            ScenarioLeakageHandler(self.scenario_mgr))
-        self.app.add_route("/scenario/{scenario_id}/sensor_faults",
+        self.app.add_route("/scenario/{scenario_id}/events/sensor_faults",
                            ScenarioSensorFaultHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/node/{node_id}/demand_pattern",
                            ScenarioNodeDemandPatternHandler(self.scenario_mgr))
@@ -79,28 +84,28 @@ class RestApiService():
                            ScadaDataSensorConfigHandler(self.scada_data_mgr))
         self.app.add_route("/scada_data/{data_id}/sensor_faults",
                            ScadaDataSensorFaultsHandler(self.scada_data_mgr))
-        self.app.add_route("/scada_data/{data_id}/pressures",
+        self.app.add_route("/scada_data/{data_id}/nodes/pressures",
                            ScadaDataPressuresHandler(self.scada_data_mgr))
-        self.app.add_route("/scada_data/{data_id}/flows",
-                           ScadaDataFlowsHandler(self.scada_data_mgr))
-        self.app.add_route("/scada_data/{data_id}/demands",
+        self.app.add_route("/scada_data/{data_id}/nodes/demands",
                            ScadaDataDemandsHandler(self.scada_data_mgr))
+        self.app.add_route("/scada_data/{data_id}/nodes/quality",
+                           ScadaDataNodesQualityHandler(self.scada_data_mgr))
+        self.app.add_route("/scada_data/{data_id}/nodes/bulk_species",
+                           ScadaDataNodeBulkSpeciesHandler(self.scada_data_mgr))
+        self.app.add_route("/scada_data/{data_id}/links/flows",
+                           ScadaDataFlowsHandler(self.scada_data_mgr))
+        self.app.add_route("/scada_data/{data_id}/links/quality",
+                           ScadaDataLinksQualityHandler(self.scada_data_mgr))
+        self.app.add_route("/scada_data/{data_id}/links/bulk_species",
+                           ScadaDataLinkBulkSpeciesHandler(self.scada_data_mgr))
+        self.app.add_route("/scada_data/{data_id}/links/surface_species",
+                           ScadaDataSurfaceSpeciesHandler(self.scada_data_mgr))
         self.app.add_route("/scada_data/{data_id}/pump_states",
                            ScadaDataPumpStatesHandler(self.scada_data_mgr))
         self.app.add_route("/scada_data/{data_id}/valve_states",
                            ScadaDataValveStatesHandler(self.scada_data_mgr))
         self.app.add_route("/scada_data/{data_id}/tank_volumes",
                            ScadaDataTankVolumesHandler(self.scada_data_mgr))
-        self.app.add_route("/scada_data/{data_id}/node_qualities",
-                           ScadaDataNodesQualityHandler(self.scada_data_mgr))
-        self.app.add_route("/scada_data/{data_id}/link_qualities",
-                           ScadaDataLinksQualityHandler(self.scada_data_mgr))
-        self.app.add_route("/scada_data/{data_id}/node_bulk_species",
-                           ScadaDataNodeBulkSpeciesHandler(self.scada_data_mgr))
-        self.app.add_route("/scada_data/{data_id}/link_bulk_species",
-                           ScadaDataLinkBulkSpeciesHandler(self.scada_data_mgr))
-        self.app.add_route("/scada_data/{data_id}/surface_species",
-                           ScadaDataSurfaceSpeciesHandler(self.scada_data_mgr))
         self.app.add_route("/scada_data/{data_id}/export/xlsx",
                            ScadaDataXlsxExportHandler(scada_data_mgr=self.scada_data_mgr))
         self.app.add_route("/scada_data/{data_id}/export/matlab",
