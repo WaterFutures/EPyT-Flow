@@ -13,6 +13,22 @@ and `EPANET-MSX <https://github.com/USEPA/EPANETMSX/>`_.
 EPyT-Flow provides easy access to popular benchmark data sets for event detection and localization.
 Furthermore, it also provides an environment for developing and testing control algorithms.
 
+Unique Features
+---------------
+
+Unique features of EPyT-Flow that make it superior to other (Python) toolboxes are the following:
+
+- High-performance hydraulic and (advanced) water quality simulation
+- High- and low-level interface
+- Object-orientated design that is easy to extend and customize
+- Sensor configurations
+- Wide variety of pre-defined events (e.g. leakages, sensor faults, actuator events, cyber-attacks, etc.)
+- Wide variety of pre-defined types of uncertainties (e.g. model uncertainties)
+- Step-wise simulation and environment for training and evaluating control strategies
+- Serialization module for easy exchange of data and (scenario) configurations
+- REST API to make EPyT-Flow accessible in other applications
+- Access to many WDNs and popular benchmarks (incl. their evaluation)
+
 .. toctree::
     :maxdepth: 2
     :caption: User Guide

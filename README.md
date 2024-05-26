@@ -18,6 +18,23 @@ Furthermore, it also provides an environment for developing and testing control 
 
 ![](https://github.com/WaterFutures/EPyT-Flow/blob/main/docs/_static/net1_plot.png?raw=true)
 
+
+## Unique Features
+
+Unique features of EPyT-Flow that make it superior to other (Python) toolboxes are the following:
+
+- High-performance hydraulic and (advanced) water quality simulation
+- High- and low-level interface
+- Object-orientated design that is easy to extend and customize
+- Sensor configurations
+- Wide variety of pre-defined events (e.g. leakages, sensor faults, actuator events, cyber-attacks, etc.)
+- Wide variety of pre-defined types of uncertainties (e.g. model uncertainties)
+- Step-wise simulation and environment for training and evaluating control strategies
+- Serialization module for easy exchange of data and (scenario) configurations
+- REST API to make EPyT-Flow accessible in other applications
+- Access to many WDNs and popular benchmarks (incl. their evaluation)
+
+
 ## Installation
 
 EPyT-Flow supports Python 3.9 - 3.12
