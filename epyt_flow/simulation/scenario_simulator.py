@@ -573,16 +573,16 @@ class ScenarioSimulator():
 
         Will be one of the following EPANET toolkit constants:
 
-            - EN_CFS = 0
-            - EN_GPM = 1
-            - EN_MGD = 2
-            - EN_IMGD = 3
-            - EN_AFD = 4
-            - EN_LPS = 5
-            - EN_LPM = 6
-            - EN_MLD = 7
-            - EN_CMH = 8
-            - EN_CMD = 9
+            - EN_CFS = 0 (cu foot/sec)
+            - EN_GPM = 1 (gal/min)
+            - EN_MGD = 2 (Million gal/day)
+            - EN_IMGD = 3 (Imperial MGD)
+            - EN_AFD = 4 (ac-foot/day)
+            - EN_LPS = 5 (liter/sec)
+            - EN_LPM = 6 (liter/min)
+            - EN_MLD = 7 (Megaliter/day)
+            - EN_CMH = 8 (cubic meter/hr)
+            - EN_CMD = 9 (cubic meter/day)
 
         Returns
         -------
@@ -1857,16 +1857,16 @@ class ScenarioSimulator():
 
             Must be one of the following EPANET toolkit constants:
 
-                - EN_CFS = 0
-                - EN_GPM = 1
-                - EN_MGD = 2
-                - EN_IMGD = 3
-                - EN_AFD = 4
-                - EN_LPS = 5
-                - EN_LPM = 6
-                - EN_MLD = 7
-                - EN_CMH = 8
-                - EN_CMD = 9
+                - EN_CFS = 0 (cu foot/sec)
+                - EN_GPM = 1 (gal/min)
+                - EN_MGD = 2 (Million gal/day)
+                - EN_IMGD = 3 (Imperial MGD)
+                - EN_AFD = 4 (ac-foot/day)
+                - EN_LPS = 5 (liter/sec)
+                - EN_LPM = 6 (liter/min)
+                - EN_MLD = 7 (Megaliter/day)
+                - EN_CMH = 8 (cubic meter/hr)
+                - EN_CMD = 9 (cubic meter/day)
 
             The default is None.
         quality_model : `dict`, optional
