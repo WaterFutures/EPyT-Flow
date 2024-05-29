@@ -7,12 +7,14 @@ from epyt_flow.utils import to_seconds, plot_timeseries_data
 
 if __name__ == "__main__":
     # Load scenario for chlorine analysis in Net2
-    with ScenarioSimulator(f_inp_in="net2-cl2.inp", f_msx_in="net2-cl2.msx") as sim:
+    with ScenarioSimulator(f_inp_in="net2-cl2.inp",
+                           f_msx_in="net2-cl2.msx") as sim:
         # Set simulation duration to 5 days
         sim.set_general_parameters(simulation_duration=to_seconds(days=5))
 
         # Monitor "CL2" bulk species at every node
-        sim.set_bulk_species_node_sensors(sensor_info={"CL2": sim.sensor_config.nodes})
+        sensors = {"CL2": sim.sensor_config.nodes}
+        sim.set_bulk_species_node_sensors(sensor_info=sensors)
 
         # Run entire simulation
         scada_data = sim.run_simulation()
