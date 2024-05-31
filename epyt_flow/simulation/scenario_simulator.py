@@ -17,8 +17,10 @@ from epyt.epanet import ToolkitConstants
 from tqdm import tqdm
 
 from .scenario_config import ScenarioConfig
-from .sensor_config import SensorConfig, SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY, \
-    SENSOR_TYPE_NODE_DEMAND, SENSOR_TYPE_NODE_PRESSURE, SENSOR_TYPE_NODE_QUALITY, \
+from .sensor_config import SensorConfig, areaunit_to_id, massunit_to_id, qualityunits_to_id, \
+    qualityunits_to_str, MASS_UNIT_MG, \
+    SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY, SENSOR_TYPE_NODE_DEMAND, \
+    SENSOR_TYPE_NODE_PRESSURE, SENSOR_TYPE_NODE_QUALITY, \
     SENSOR_TYPE_PUMP_STATE, SENSOR_TYPE_TANK_VOLUME, SENSOR_TYPE_VALVE_STATE, \
     SENSOR_TYPE_NODE_BULK_SPECIES, SENSOR_TYPE_LINK_BULK_SPECIES, SENSOR_TYPE_SURFACE_SPECIES
 from ..uncertainty import ModelUncertainty, SensorNoise
@@ -106,25 +108,10 @@ class ScenarioSimulator():
                                  customlib=custom_epanet_lib, loadfile=True,
                                  display_msg=epanet_verbose)
 
-        bulk_species = []
-        surface_species = []
         if self.__f_msx_in is not None:
             self.epanet_api.loadMSXFile(self.__f_msx_in, customMSXlib=custom_epanetmsx_lib)
 
-            for species_id, species_type in zip(self.epanet_api.getMSXSpeciesNameID(),
-                                                self.epanet_api.getMSXSpeciesType()):
-                if species_type == "BULK":
-                    bulk_species.append(species_id)
-                elif species_type == "WALL":
-                    surface_species.append(species_id)
-
-        self.__sensor_config = SensorConfig(nodes=self.epanet_api.getNodeNameID(),
-                                            links=self.epanet_api.getLinkNameID(),
-                                            valves=self.epanet_api.getLinkValveNameID(),
-                                            pumps=self.epanet_api.getLinkPumpNameID(),
-                                            tanks=self.epanet_api.getNodeTankNameID(),
-                                            bulk_species=bulk_species,
-                                            surface_species=surface_species)
+        self.__sensor_config = self.__get_empty_sensor_config()
         if scenario_config is not None:
             if scenario_config.general_params is not None:
                 self.set_general_parameters(**scenario_config.general_params)
@@ -139,6 +126,51 @@ class ScenarioSimulator():
                 self.add_system_event(event)
             for event in scenario_config.sensor_reading_events:
                 self.add_sensor_reading_event(event)
+
+    def __get_empty_sensor_config(self, node_id_to_idx: dict = None, link_id_to_idx: dict = None,
+                                  valve_id_to_idx: dict = None, pump_id_to_idx: dict = None,
+                                  tank_id_to_idx: dict = None, bulkspecies_id_to_idx: dict = None,
+                                  surfacespecies_id_to_idx: dict = None) -> SensorConfig:
+        flow_unit = self.epanet_api.api.ENgetflowunits()
+        quality_unit = qualityunits_to_id(self.epanet_api.getQualityInfo().QualityChemUnits)
+        bulk_species = []
+        surface_species = []
+        bulk_species_mass_unit = []
+        surface_species_mass_unit = []
+        surface_species_area_unit = None
+
+        if self.__f_msx_in is not None:
+            surface_species_area_unit = areaunit_to_id(self.epanet_api.getMSXAreaUnits())
+
+            for species_id, species_type, mass_unit in zip(self.epanet_api.getMSXSpeciesNameID(),
+                                                           self.epanet_api.getMSXSpeciesType(),
+                                                           self.epanet_api.getMSXSpeciesUnits()):
+                if species_type == "BULK":
+                    bulk_species.append(species_id)
+                    bulk_species_mass_unit.append(massunit_to_id(mass_unit))
+                elif species_type == "WALL":
+                    surface_species.append(species_id)
+                    surface_species_mass_unit.append(massunit_to_id(mass_unit))
+
+        return SensorConfig(nodes=self.epanet_api.getNodeNameID(),
+                            links=self.epanet_api.getLinkNameID(),
+                            valves=self.epanet_api.getLinkValveNameID(),
+                            pumps=self.epanet_api.getLinkPumpNameID(),
+                            tanks=self.epanet_api.getNodeTankNameID(),
+                            bulk_species=bulk_species,
+                            surface_species=surface_species,
+                            flow_unit=flow_unit,
+                            quality_unit=quality_unit,
+                            bulk_species_mass_unit=bulk_species_mass_unit,
+                            surface_species_mass_unit=surface_species_mass_unit,
+                            surface_species_area_unit=surface_species_area_unit,
+                            node_id_to_idx=node_id_to_idx,
+                            link_id_to_idx=link_id_to_idx,
+                            valve_id_to_idx=valve_id_to_idx,
+                            pump_id_to_idx=pump_id_to_idx,
+                            tank_id_to_idx=tank_id_to_idx,
+                            bulkspecies_id_to_idx=bulkspecies_id_to_idx,
+                            surfacespecies_id_to_idx=surfacespecies_id_to_idx)
 
     @property
     def f_inp_in(self) -> str:
@@ -335,19 +367,6 @@ class ScenarioSimulator():
     def __adapt_to_network_changes(self):
         nodes = self.epanet_api.getNodeNameID()
         links = self.epanet_api.getLinkNameID()
-        valves = self.epanet_api.getLinkValveNameID()
-        pumps = self.epanet_api.getLinkPumpNameID()
-        tanks = self.epanet_api.getNodeTankNameID()
-        bulk_species = []
-        surface_species = []
-
-        if self.__f_msx_in is not None:
-            for species_id, species_type in zip(self.epanet_api.getMSXSpeciesNameID(),
-                                                self.epanet_api.getMSXSpeciesType()):
-                if species_type == "BULK":
-                    bulk_species.append(species_id)
-                elif species_type == "WALL":
-                    surface_species.append(species_id)
 
         node_id_to_idx = {node_id: self.epanet_api.getNodeIndex(node_id) - 1 for node_id in nodes}
         link_id_to_idx = {link_id: self.epanet_api.getLinkIndex(link_id) - 1 for link_id in links}
@@ -357,35 +376,24 @@ class ScenarioSimulator():
         bulkspecies_id_to_idx = None
         surfacespecies_id_to_idx = None
 
-        if nodes != self.__sensor_config.nodes or links != self.__sensor_config.links or \
-                valves != self.__sensor_config.valves or pumps != self.__sensor_config.pumps or \
-                tanks != self.__sensor_config.tanks or \
-                bulk_species != self.__sensor_config.bulk_species or \
-                surface_species != self.__sensor_config.surface_species:
-            # Adapt sensor configuration if anything in the network topology changed
-            new_sensor_config = SensorConfig(nodes=nodes, links=links, valves=valves, pumps=pumps,
-                                             tanks=tanks, bulk_species=bulk_species,
-                                             surface_species=surface_species,
-                                             node_id_to_idx=node_id_to_idx,
-                                             link_id_to_idx=link_id_to_idx,
-                                             valve_id_to_idx=valve_id_to_idx,
-                                             pump_id_to_idx=pump_id_to_idx,
-                                             tank_id_to_idx=tank_id_to_idx,
-                                             bulkspecies_id_to_idx=bulkspecies_id_to_idx,
-                                             surfacespecies_id_to_idx=surfacespecies_id_to_idx)
-            new_sensor_config.pressure_sensors = self.__sensor_config.pressure_sensors
-            new_sensor_config.flow_sensors = self.__sensor_config.flow_sensors
-            new_sensor_config.demand_sensors = self.__sensor_config.demand_sensors
-            new_sensor_config.quality_node_sensors = self.__sensor_config.quality_node_sensors
-            new_sensor_config.quality_link_sensors = self.__sensor_config.quality_link_sensors
-            new_sensor_config.pump_state_sensors = self.__sensor_config.pump_state_sensors
-            new_sensor_config.valve_state_sensors = self.__sensor_config.valve_state_sensors
-            new_sensor_config.tank_volume_sensors = self.__sensor_config.tank_volume_sensors
-            new_sensor_config.bulk_species_node_sensors = self.__sensor_config.bulk_species_node_sensors
-            new_sensor_config.bulk_species_link_sensors = self.__sensor_config.bulk_species_link_sensors
-            new_sensor_config.surface_species_sensors = self.__sensor_config.surface_species_sensors
+        # Adapt sensor configuration to potential cahnges in the network's topology
+        new_sensor_config = self.__get_empty_sensor_config(node_id_to_idx, link_id_to_idx,
+                                                           valve_id_to_idx, pump_id_to_idx,
+                                                           tank_id_to_idx, bulkspecies_id_to_idx,
+                                                           surfacespecies_id_to_idx)
+        new_sensor_config.pressure_sensors = self.__sensor_config.pressure_sensors
+        new_sensor_config.flow_sensors = self.__sensor_config.flow_sensors
+        new_sensor_config.demand_sensors = self.__sensor_config.demand_sensors
+        new_sensor_config.quality_node_sensors = self.__sensor_config.quality_node_sensors
+        new_sensor_config.quality_link_sensors = self.__sensor_config.quality_link_sensors
+        new_sensor_config.pump_state_sensors = self.__sensor_config.pump_state_sensors
+        new_sensor_config.valve_state_sensors = self.__sensor_config.valve_state_sensors
+        new_sensor_config.tank_volume_sensors = self.__sensor_config.tank_volume_sensors
+        new_sensor_config.bulk_species_node_sensors = self.__sensor_config.bulk_species_node_sensors
+        new_sensor_config.bulk_species_link_sensors = self.__sensor_config.bulk_species_link_sensors
+        new_sensor_config.surface_species_sensors = self.__sensor_config.surface_species_sensors
 
-            self.__sensor_config = new_sensor_config
+        self.__sensor_config = new_sensor_config
 
     def close(self):
         """
@@ -657,7 +665,7 @@ class ScenarioSimulator():
         return {"code": qual_info.QualityCode,
                 "type": qual_info.QualityType,
                 "chemical_name": qual_info.QualityChemName,
-                "units": qual_info.QualityChemUnits,
+                "units": qualityunits_to_id(qual_info.QualityChemUnits),
                 "trace_node_id": qual_info.TraceNode}
 
     def get_scenario_config(self) -> ScenarioConfig:
@@ -1954,7 +1962,7 @@ class ScenarioSimulator():
                 self.epanet_api.setQualityType("age")
             elif quality_model["type"] == "CHEM":
                 self.epanet_api.setQualityType("chem", quality_model["chemical_name"],
-                                               quality_model["units"])
+                                               qualityunits_to_str(quality_model["units"]))
             elif quality_model["type"] == "TRACE":
                 self.epanet_api.setQualityType("trace", quality_model["trace_node_id"])
             else:
@@ -2005,7 +2013,7 @@ class ScenarioSimulator():
         self.set_general_parameters(quality_model={"type": "AGE"})
 
     def enable_chemical_analysis(self, chemical_name: str = "Chlorine",
-                                 chemical_units: str = "mg/L") -> None:
+                                 chemical_units: int = MASS_UNIT_MG) -> None:
         """
         Sets chemical analysis.
 
@@ -2019,9 +2027,13 @@ class ScenarioSimulator():
             The default is "Chlorine".
         chemical_units : `str`, optional
             Units that the chemical is measured in.
-            Either "mg/L" or "ug/L".
 
-            The default is "mg/L".
+            Must be one of the following constants:
+
+                - MASS_UNIT_MG = 4  (mg/L)
+                - MASS_UNIT_UG = 5  (ug/L)
+
+            The default is MASS_UNIT_MG.
         """
         self.__adapt_to_network_changes()
 

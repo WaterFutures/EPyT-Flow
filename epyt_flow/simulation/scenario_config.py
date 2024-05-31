@@ -582,24 +582,18 @@ class ScenarioConfig(Serializable):
         sensor_config = None
         from .scenario_simulator import ScenarioSimulator
         with ScenarioSimulator(f_inp_in) as scenario:
-            sensor_config = SensorConfig(nodes=scenario.sensor_config.nodes,
-                                         links=scenario.sensor_config.links,
-                                         valves=scenario.sensor_config.valves,
-                                         pumps=scenario.sensor_config.pumps,
-                                         tanks=scenario.sensor_config.tanks,
-                                         bulk_species=scenario.sensor_config.bulk_species,
-                                         surface_species=scenario.sensor_config.surface_species,
-                                         pressure_sensors=pressure_sensors,
-                                         flow_sensors=flow_sensors,
-                                         demand_sensors=demand_sensors,
-                                         quality_node_sensors=node_quality_sensors,
-                                         quality_link_sensors=link_quality_sensors,
-                                         valve_state_sensors=valve_state_sensors,
-                                         pump_state_sensors=pump_state_sensors,
-                                         tank_volume_sensors=tank_volume_sensors,
-                                         bulk_species_node_sensors=bulk_species_node_sensors,
-                                         bulk_species_link_sensors=bulk_species_link_sensors,
-                                         surface_species_sensors=surface_species_sensors)
+            sensor_config = SensorConfig.create_empty_sensor_config(scenario.sensor_config)
+            sensor_config.pressure_sensors = pressure_sensors
+            sensor_config.flow_sensors = flow_sensors
+            sensor_config.demand_sensors = demand_sensors
+            sensor_config.quality_node_sensors = node_quality_sensors
+            sensor_config.quality_link_sensors = link_quality_sensors
+            sensor_config.valve_state_sensors = valve_state_sensors
+            sensor_config.pump_state_sensors = pump_state_sensors
+            sensor_config.tank_volume_sensors = tank_volume_sensors
+            sensor_config.bulk_species_node_sensors = bulk_species_node_sensors
+            sensor_config.bulk_species_link_sensors = bulk_species_link_sensors
+            sensor_config.surface_species_sensors = surface_species_sensors
 
         # Create final scenario configuration
         return ScenarioConfig(f_inp_in=f_inp_in, f_msx_in=f_msx_in, general_params=general_params,

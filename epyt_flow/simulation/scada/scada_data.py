@@ -118,7 +118,6 @@ class ScadaData(Serializable):
 
         The default is False.
     """
-
     def __init__(self, sensor_config: SensorConfig, sensor_readings_time: np.ndarray,
                  pressure_data_raw: np.ndarray = None, flow_data_raw: np.ndarray = None,
                  demand_data_raw: np.ndarray = None, node_quality_data_raw: np.ndarray = None,
@@ -132,7 +131,8 @@ class ScadaData(Serializable):
                  sensor_faults: list[SensorFault] = [],
                  sensor_reading_attacks: list[SensorReadingAttack] = [],
                  sensor_reading_events: list[SensorReadingEvent] = [],
-                 sensor_noise: SensorNoise = None, frozen_sensor_config: bool = False, **kwds):
+                 sensor_noise: SensorNoise = None, frozen_sensor_config: bool = False,
+                 **kwds):
         if not isinstance(sensor_config, SensorConfig):
             raise TypeError("'sensor_config' must be an instance of " +
                             "'epyt_flow.simulation.SensorConfig' but not of " +

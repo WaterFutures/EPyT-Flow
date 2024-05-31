@@ -2,6 +2,7 @@
 Module provides a class for implementing sensor configurations.
 """
 from copy import deepcopy
+import warnings
 import numpy as np
 import epyt
 
@@ -19,6 +20,115 @@ SENSOR_TYPE_TANK_VOLUME       = 8
 SENSOR_TYPE_NODE_BULK_SPECIES = 9
 SENSOR_TYPE_LINK_BULK_SPECIES = 10
 SENSOR_TYPE_SURFACE_SPECIES   = 11
+
+AREA_UNIT_FT2 = 1
+AREA_UNIT_M2 = 2
+AREA_UNIT_CM2 = 3
+MASS_UNIT_MG = 4
+MASS_UNIT_UG = 5
+MASS_UNIT_MOL = 6
+MASS_UNIT_MMOL = 7
+TIME_UNIT_HRS = 8
+
+
+def areaunit_to_id(unit_desc: str) -> int:
+    """
+    Converts a given area units string to the corresponding ID.
+
+    Parameters
+    ----------
+    unit_desc : `str`
+        Area units string.
+
+    Returns
+    -------
+    `int`
+        Corresponding area unit ID.
+    """
+    return {"FT2": AREA_UNIT_FT2,
+            "M2": AREA_UNIT_M2,
+            "CM2": AREA_UNIT_CM2}[unit_desc]
+
+
+def massunit_to_id(unit_desc: str) -> int:
+    """
+    Converts a given mass units string to the corresponding ID.
+
+    Parameters
+    ----------
+    unit_desc : `str`
+        Mass units string.
+
+    Returns
+    -------
+    `int`
+        Corresponding mass unit ID.
+    """
+    return {"MG": MASS_UNIT_MG,
+            "UG": MASS_UNIT_UG,
+            "MOL": MASS_UNIT_MOL,
+            "MMOL": MASS_UNIT_MMOL}[unit_desc]
+
+
+def qualityunits_to_id(unit_desc: str) -> int:
+    """
+    Converts a given measurement unit description to the corresponding mass unit ID.
+
+    Parameters
+    ----------
+    unit_desc : `str`
+        Mass unit.
+
+    Returns
+    -------
+    `int`
+        Mass unit ID.
+
+        Will be either None (if no water quality analysis was set up) or
+        one of the following constants:
+
+            - MASS_UNIT_MG = 4   (mg/L)
+            - MASS_UNIT_UG = 5   (ug/L)
+            - TIME_UNIT_HRS = 8  (hrs)
+    """
+    if unit_desc == "mg/L":
+        return MASS_UNIT_MG
+    elif unit_desc == "ug/L":
+        return MASS_UNIT_UG
+    elif unit_desc == "hrs":
+        return TIME_UNIT_HRS
+    else:
+        return None
+
+
+def qualityunits_to_str(unit_id: int) -> str:
+    """
+    Converts a given measurement unit ID to the corresponding description.
+
+    Parameters
+    ----------
+    unit_id : `int`
+        ID of the mass unit.
+
+        Must be one of the following constants:
+
+            - MASS_UNIT_MG = 4  (mg/L)
+            - MASS_UNIT_UG = 5  (ug/L)
+            - TIME_UNIT_HRS = 8  (hrs)
+
+    Returns
+    -------
+    `str`
+        Mass unit description.
+    """
+    if unit_id == MASS_UNIT_MG:
+        return "mg/L"
+    elif unit_id == MASS_UNIT_UG:
+        return "ug/L"
+    elif unit_id == TIME_UNIT_HRS:
+        return "hrs"
+    else:
+        raise ValueError(f"Unknown unit ID '{unit_id}'")
 
 
 @serializable(SENSOR_CONFIG_ID, ".epytflow_sensor_config")
@@ -39,7 +149,7 @@ class SensorConfig(JsonSerializable):
     tanks : `list[str]`
         List of all tanks (i.e. IDs) in the network.
     species : `list[str]`
-        List of all (EPANET-MSX) species (i.e. IDs) in the network    
+        List of all (EPANET-MSX) species (i.e. IDs) in the network
     pressure_sensors : `list[str]`, optional
         List of all nodes (i.e. IDs) at which a pressure sensor is placed.
 
@@ -131,9 +241,65 @@ class SensorConfig(JsonSerializable):
         sorted according to their EPANET index.
 
         The default is None.
+    flow_unit : `int`
+        Specifies the flow units and consequently all other hydraulic units
+        (US CUSTOMARY or SI METRIC) as well.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS = 0 (cu foot/sec)
+            - EN_GPM = 1 (gal/min)
+            - EN_MGD = 2 (Million gal/day)
+            - EN_IMGD = 3 (Imperial MGD)
+            - EN_AFD = 4 (ac-foot/day)
+            - EN_LPS = 5 (liter/sec)
+            - EN_LPM = 6 (liter/min)
+            - EN_MLD = 7 (Megaliter/day)
+            - EN_CMH = 8 (cubic meter/hr)
+            - EN_CMD = 9 (cubic meter/day)
+    quality_unit : `str`, optional
+        Measurement unit (in a basic quality analysis) -- only relevant
+        if basic water quality is enabled.
+
+        Must be one of the following constants:
+
+            - MASS_UNIT_MG = 4     (mg/L)
+            - MASS_UNIT_UG = 5     (ug/L)
+            - TIME_UNIT_HRS = 8    (hrs)
+
+    bulk_species_mass_unit : `list[int]`, optional
+        Specifies the mass unit for each bulk species -- only relevant if EPANET-MSX is used.
+
+        Must be one of the following constants:
+
+            - MASS_UNIT_MG = 4      (milligram)
+            - MASS_UNIT_UG = 5      (microgram)
+            - MASS_UNIT_MOL = 6     (mole)
+            - MASS_UNIT_MMOL = 7    (millimole)
+
+        Note that the assumed ordering is the same as given in 'bulk_species'.
+    surface_species_mass_unit : `list[int]`, optional
+        Specifies the mass unit for each surface species -- only relevant if EPANET-MSX is used.
+
+        Must be one of the following constants:
+
+            - MASS_UNIT_MG = 4      (milligram)
+            - MASS_UNIT_UG = 5      (microgram)
+            - MASS_UNIT_MOL = 6     (mole)
+            - MASS_UNIT_MMOL = 7    (millimole)
+
+        Note that the assumed ordering is the same as given in 'surface_species'.
+    surface_species_area_unit : `int`, optional
+        Species the are unit of all surface species -- only relevant if EPANET-MSX is used.
+        Must be one of the following constants:
+
+            - AREA_UNIT_FT2 = 1     (square feet)
+            - AREA_UNIT_M2 = 2      (square meters)
+            - AREA_UNIT_CM2 = 3     (square centimeters)
     """
     def __init__(self, nodes: list[str], links: list[str], valves: list[str], pumps: list[str],
                  tanks: list[str], bulk_species: list[str], surface_species: list[str],
+                 flow_unit: int = None,
                  pressure_sensors: list[str] = [],
                  flow_sensors: list[str] = [],
                  demand_sensors: list[str] = [],
@@ -148,7 +314,12 @@ class SensorConfig(JsonSerializable):
                  node_id_to_idx: dict = None, link_id_to_idx: dict = None,
                  valve_id_to_idx: dict = None, pump_id_to_idx: dict = None,
                  tank_id_to_idx: dict = None, bulkspecies_id_to_idx: dict = None,
-                 surfacespecies_id_to_idx: dict = None, **kwds):
+                 surfacespecies_id_to_idx: dict = None,
+                 quality_unit: int = None,
+                 bulk_species_mass_unit : list[int] = [],
+                 surface_species_mass_unit : list[int] = [],
+                 surface_species_area_unit : int = None,
+                 **kwds):
         if not isinstance(nodes, list):
             raise TypeError("'nodes' must be an instance of 'list[str]' " +
                             f"but not of '{type(nodes)}'")
@@ -329,6 +500,48 @@ class SensorConfig(JsonSerializable):
             if any(s not in surface_species for s in surfacespecies_id_to_idx.keys()):
                 raise ValueError("Unknown surface species ID in 'surfacespecies_id_to_idx'")
 
+        if flow_unit is not None:
+            if not isinstance(flow_unit, int):
+                raise TypeError("'flow_unit' must be a an instance of 'int' " +
+                                f"but not of '{type(flow_unit)}'")
+            if flow_unit not in range(10):
+                raise ValueError("Invalid value of 'flow_unit'")
+        else:
+            warnings.warn("Loading a file that was created with an outdated version of EPyT-Flow" +
+                          " -- support of such old files will be removed in the next release!",
+                          DeprecationWarning)
+
+        if quality_unit is not None:
+            if not isinstance(quality_unit, int):
+                raise TypeError("'quality_mass_unit' must be an instance of 'int' " +
+                                f"but not of '{type(quality_unit)}'")
+            if quality_unit not in [MASS_UNIT_MG, MASS_UNIT_UG, TIME_UNIT_HRS]:
+                raise ValueError("Invalid value of 'quality_unit'")
+
+        if len(bulk_species_mass_unit) != len(bulk_species):
+            raise ValueError("Inconsistency between 'bulk_species_mass_unit' and 'bulk_species'")
+        if any(not isinstance(mass_unit, int) for mass_unit in bulk_species_mass_unit):
+            raise TypeError("All items in 'bulk_species_mass_unit' must be an instance of 'int'")
+        if any(mass_unit not in [MASS_UNIT_MG, MASS_UNIT_UG, MASS_UNIT_MOL, MASS_UNIT_MMOL]
+               for mass_unit in bulk_species_mass_unit):
+            raise ValueError("Invalid mass unit in 'bulk_species_mass_unit'")
+
+        if len(surface_species_mass_unit) != len(surface_species):
+            raise ValueError("Inconsistency between 'surface_species_mass_unit' " +
+                             "and 'surface_species'")
+        if any(not isinstance(mass_unit, int) for mass_unit in surface_species_mass_unit):
+            raise TypeError("All items in 'surface_species_mass_unit' must be an instance of 'int'")
+        if any(mass_unit not in [MASS_UNIT_MG, MASS_UNIT_UG, MASS_UNIT_MOL, MASS_UNIT_MMOL]
+               for mass_unit in surface_species_mass_unit):
+            raise ValueError("Invalid mass unit in 'surface_species_mass_unit'")
+
+        if surface_species_area_unit is not None:
+            if not isinstance(surface_species_area_unit, int):
+                raise TypeError("'surface_species_area_unit' must be a an instance of 'int' " +
+                                f"but not of '{type(surface_species_area_unit)}'")
+            if surface_species_area_unit not in [AREA_UNIT_FT2, AREA_UNIT_M2, AREA_UNIT_CM2]:
+                raise ValueError("Invalid area unit 'surface_species_area_unit'")
+
         self.__nodes = nodes
         self.__links = links
         self.__valves = valves
@@ -354,10 +567,44 @@ class SensorConfig(JsonSerializable):
         self.__tank_id_to_idx = tank_id_to_idx
         self.__bulkspecies_id_to_idx = bulkspecies_id_to_idx
         self.__surfacespecies_id_to_idx = surfacespecies_id_to_idx
+        self.__flow_unit = flow_unit
+        self.__quality_unit = quality_unit
+        self.__bulk_species_mass_unit = bulk_species_mass_unit
+        self.__surface_species_mass_unit = surface_species_mass_unit
+        self.__surface_species_area_unit = surface_species_area_unit
 
         self.__compute_indices()    # Compute indices
 
         super().__init__(**kwds)
+
+    @staticmethod
+    def create_empty_sensor_config(sensor_config):
+        """
+        Creates an empty sensor configuration from a given sensor configuration
+        -- i.e. a clone of the given sensor configuration except that no sensors are set.
+
+        Parameters
+        ----------
+        sensor_config : :class:`epyt_flow.simulation.sensor_config.SensorConfig`
+            Sensor configuration used as a basis.
+
+        Returns
+        -------
+        :class:`epyt_flow.simulation.sensor_config.SensorConfig`
+            Empty sensor configuration.
+        """
+        return SensorConfig(nodes=sensor_config.nodes,
+                            links=sensor_config.links,
+                            valves=sensor_config.valves,
+                            pumps=sensor_config.pumps,
+                            tanks=sensor_config.tanks,
+                            flow_unit=sensor_config.flow_unit,
+                            quality_unit=sensor_config.quality_unit,
+                            bulk_species=sensor_config.bulk_species,
+                            surface_species=sensor_config.surface_species,
+                            bulk_species_mass_unit=sensor_config.bulk_species_mass_unit,
+                            surface_species_mass_unit=sensor_config.surface_species_mass_unit,
+                            surface_species_area_unit=sensor_config.surface_species_area_unit)
 
     def node_id_to_idx(self, node_id: str) -> int:
         """
@@ -702,6 +949,50 @@ class SensorConfig(JsonSerializable):
         return self.__tanks.copy()
 
     @property
+    def flow_unit(self) -> int:
+        """
+        Gets the flow units.
+        Note that this specifies all other hydraulic units as well.
+
+        Will be one of the following EPANET toolkit constants:
+
+            - EN_CFS = 0 (cu foot/sec)
+            - EN_GPM = 1 (gal/min)
+            - EN_MGD = 2 (Million gal/day)
+            - EN_IMGD = 3 (Imperial MGD)
+            - EN_AFD = 4 (ac-foot/day)
+            - EN_LPS = 5 (liter/sec)
+            - EN_LPM = 6 (liter/min)
+            - EN_MLD = 7 (Megaliter/day)
+            - EN_CMH = 8 (cubic meter/hr)
+            - EN_CMD = 9 (cubic meter/day)
+
+        Returns
+        -------
+        `int`
+            Flow unit ID.
+        """
+        return self.__flow_unit
+
+    @property
+    def quality_unit(self) -> int:
+        """
+        Gets the measurement unit ID used in the basic quality analysis.
+
+        Will be one of the following constants:
+
+            - MASS_UNIT_MG = 4      (milligram)
+            - MASS_UNIT_UG = 5      (microgram)
+            - 
+
+        Returns
+        -------
+        `int`
+            Mass unit ID.
+        """
+        return self.__quality_unit
+
+    @property
     def bulk_species(self) -> list[str]:
         """
         Gets all bulk species IDs -- i.e. species that live in the water.
@@ -724,6 +1015,62 @@ class SensorConfig(JsonSerializable):
             All species IDs.
         """
         return self.__surface_species.copy()
+
+    @property
+    def bulk_species_mass_unit(self) -> list[int]:
+        """
+        Gets the mass unit of each bulk species.
+
+        Will be one of the following constants:
+
+            - MASS_UNIT_MG = 4      (milligram)
+            - MASS_UNIT_UG = 5      (microgram)
+            - MASS_UNIT_MOL = 6     (mole)
+            - MASS_UNIT_MMOL = 7    (millimole)
+
+        Returns
+        -------
+        `int`
+            Mass unit ID.
+        """
+        return self.__bulk_species_mass_unit
+
+    @property
+    def surface_species_mass_unit(self) -> list[int]:
+        """
+        Gets the mass unit of each surface species.
+
+        Will be one of the following constants:
+
+            - MASS_UNIT_MG = 4      (milligram)
+            - MASS_UNIT_UG = 5      (microgram)
+            - MASS_UNIT_MOL = 6     (mole)
+            - MASS_UNIT_MMOL = 7    (millimole)
+
+        Returns
+        -------
+        `int`
+            Mass unit ID.
+        """
+        return self.__surface_species_mass_unit
+
+    @property
+    def surface_species_area_unit(self) -> int:
+        """
+        Gets the surface species area unit.
+
+        Will be one of the following constants:
+
+            - AREA_UNIT_FT2 = 1     (square feet)
+            - AREA_UNIT_M2 = 2      (square meters)
+            - AREA_UNIT_CM2 = 3     (square centimeters)
+
+        Returns
+        -------
+        `int`
+            Area unit ID.
+        """
+        return self.__surface_species_area_unit
 
     @property
     def pressure_sensors(self) -> list[str]:
@@ -1042,7 +1389,12 @@ class SensorConfig(JsonSerializable):
                 "pump_id_to_idx": self.__pump_id_to_idx,
                 "tank_id_to_idx": self.__tank_id_to_idx,
                 "bulkspecies_id_to_idx": self.__bulkspecies_id_to_idx,
-                "surfacespecies_id_to_idx": self.__surfacespecies_id_to_idx}
+                "surfacespecies_id_to_idx": self.__surfacespecies_id_to_idx,
+                "flow_unit": self.__flow_unit,
+                "quality_unit": self.__quality_unit,
+                "bulk_species_mass_unit": self.__bulk_species_mass_unit,
+                "surface_species_mass_unit": self.__surface_species_mass_unit,
+                "surface_species_area_unit": self.__surface_species_area_unit}
 
         return super().get_attributes() | attr
 
@@ -1065,7 +1417,12 @@ class SensorConfig(JsonSerializable):
             and self.__tank_volume_sensors == other.tank_volume_sensors \
             and self.__bulk_species_node_sensors == other.bulk_species_node_sensors \
             and self.__bulk_species_link_sensors == other.bulk_species_link_sensors \
-            and self.__surface_species_sensors == other.surface_species_sensors
+            and self.__surface_species_sensors == other.surface_species_sensors \
+            and self.__flow_unit == other.flow_unit \
+            and self.__quality_unit == other.quality_unit \
+            and self.__bulk_species_mass_unit == other.bulk_species_mass_unit \
+            and self.__surface_species_mass_unit == other.surface_species_mass_unit \
+            and self.__surface_species_area_unit == other.surface_species_area_unit
 
     def __str__(self) -> str:
         return f"nodes: {self.__nodes} links: {self.__links} valves: {self.__valves} " +\
@@ -1077,10 +1434,14 @@ class SensorConfig(JsonSerializable):
             f"quality_link_sensors: {self.__quality_link_sensors} " +\
             f"valve_state_sensors: {self.__valve_state_sensors} " +\
             f"pump_state_sensors: {self.__pump_state_sensors} " +\
-            f"tank_volume_sensors: {self.__tank_volume_sensors}" +\
-            f"bulk_species_node_sensors: {self.__bulk_species_node_sensors}" +\
-            f"bulk_species_link_sensors: {self.__bulk_species_link_sensors}" +\
-            f"surface_species_sensors: {self.__surface_species_sensors}"
+            f"tank_volume_sensors: {self.__tank_volume_sensors} " +\
+            f"bulk_species_node_sensors: {self.__bulk_species_node_sensors} " +\
+            f"bulk_species_link_sensors: {self.__bulk_species_link_sensors} " +\
+            f"surface_species_sensors: {self.__surface_species_sensors} " +\
+            f"flow_unit: {self.__flow_unit} quality_unit: {self.__quality_unit}" +\
+            f"bulk_species_mass_unit: {self.__bulk_species_mass_unit} " +\
+            f"surface_species_mass_unit: {self.__surface_species_mass_unit} " +\
+            f"surface_species_area_unit: {self.__surface_species_area_unit}"
 
     def compute_readings(self, pressures: np.ndarray, flows: np.ndarray, demands: np.ndarray,
                          nodes_quality: np.ndarray, links_quality: np.ndarray,

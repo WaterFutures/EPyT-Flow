@@ -73,13 +73,7 @@ class ScadaDataExport():
         """
         old_sensor_config = scada_data.sensor_config
 
-        sensor_config = SensorConfig(nodes=old_sensor_config.nodes,
-                                     links=old_sensor_config.links,
-                                     valves=old_sensor_config.valves,
-                                     pumps=old_sensor_config.pumps,
-                                     tanks=old_sensor_config.tanks,
-                                     bulk_species=old_sensor_config.bulk_species,
-                                     surface_species=old_sensor_config.surface_species)
+        sensor_config = SensorConfig.create_empty_sensor_config(old_sensor_config)
         sensor_config.pressure_sensors = sensor_config.nodes
         sensor_config.flow_sensors = sensor_config.links
         sensor_config.demand_sensors = sensor_config.nodes
