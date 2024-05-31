@@ -95,14 +95,19 @@ class ScenarioSimulator():
 
         custom_epanet_lib = None
         custom_epanetmsx_lib = None
-        if sys.platform.startswith("linux"):
+        if sys.platform.startswith("linux") or sys.platform.startswith("darwin") :
             path_to_custom_libs = os.path.join(pathlib.Path(__file__).parent.resolve(),
                                                "..", "customlibs")
 
-            if os.path.isfile(os.path.join(path_to_custom_libs, "libepanet2_2.so")):
-                custom_epanet_lib = os.path.join(path_to_custom_libs, "libepanet2_2.so")
-            if os.path.isfile(os.path.join(path_to_custom_libs, "libepanetmsx2_2_0.so")):
-                custom_epanetmsx_lib = os.path.join(path_to_custom_libs, "libepanetmsx2_2_0.so")
+            libepanet_name = "libepanet2_2.so" if sys.platform.startswith("linux") \
+                else "libepanet2_2.dylib"
+            libepanetmsx_name = "libepanetmsx2_2_0.so" if sys.platform.startswith("linux") \
+                else "libepanetmsx2_2_0.dylib"
+
+            if os.path.isfile(os.path.join(path_to_custom_libs, libepanet_name)):
+                custom_epanet_lib = os.path.join(path_to_custom_libs, libepanet_name)
+            if os.path.isfile(os.path.join(path_to_custom_libs, libepanetmsx_name)):
+                custom_epanetmsx_lib = os.path.join(path_to_custom_libs, libepanetmsx_name)
 
         self.epanet_api = epanet(self.__f_inp_in, ph=self.__f_msx_in is None,
                                  customlib=custom_epanet_lib, loadfile=True,
