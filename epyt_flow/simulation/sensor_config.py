@@ -290,7 +290,7 @@ class SensorConfig(JsonSerializable):
 
         Note that the assumed ordering is the same as given in 'surface_species'.
     surface_species_area_unit : `int`, optional
-        Species the are unit of all surface species -- only relevant if EPANET-MSX is used.
+        Species the area unit of all surface species -- only relevant if EPANET-MSX is used.
         Must be one of the following constants:
 
             - AREA_UNIT_FT2 = 1     (square feet)
@@ -983,7 +983,7 @@ class SensorConfig(JsonSerializable):
 
             - MASS_UNIT_MG = 4      (milligram)
             - MASS_UNIT_UG = 5      (microgram)
-            - 
+            - TIME_UNIT_HRS = 6     (hours)
 
         Returns
         -------
