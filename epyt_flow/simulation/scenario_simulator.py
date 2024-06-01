@@ -27,7 +27,7 @@ from ..uncertainty import ModelUncertainty, SensorNoise
 from .events import SystemEvent, Leakage, ActuatorEvent, SensorFault, SensorReadingAttack, \
     SensorReadingEvent
 from .scada import ScadaData, AdvancedControlModule
-from ..topology import NetworkTopology
+from ..topology import NetworkTopology, UNITS_SIMETRIC, UNITS_USCUSTOM
 from ..utils import get_temp_folder
 
 
@@ -604,6 +604,27 @@ class ScenarioSimulator():
         """
         return self.epanet_api.api.ENgetflowunits()
 
+    def get_units_category(self) -> int:
+        """
+        Gets the category of units -- i.e. US Customary or SI Metric units.
+
+        Will be one of the following constants:
+
+            - UNITS_USCUSTOM = 0  (US Customary)
+            - UNITS_SIMETRIC = 1  (SI Metric)
+
+        Returns
+        -------
+        `int`
+            Units category.
+        """
+        if self.get_flow_units() in [ToolkitConstants.EN_CFS, ToolkitConstants.EN_GPM,
+                                     ToolkitConstants.EN_MGD, ToolkitConstants.EN_IMGD,
+                                     ToolkitConstants.EN_AFD]:
+            return UNITS_USCUSTOM
+        else:
+            return UNITS_SIMETRIC
+
     def get_hydraulic_time_step(self) -> int:
         """
         Gets the hydraulic time step -- i.e. time step in the hydraulic simulation.
@@ -764,7 +785,8 @@ class ScenarioSimulator():
                                           "bulk_coeff": bulk_coeff, "wall_coeff": wall_coeff,
                                           "loss_coeff": loss_coeff}))
 
-        return NetworkTopology(f_inp=self.f_inp_in, nodes=nodes, links=links)
+        return NetworkTopology(f_inp=self.f_inp_in, nodes=nodes, links=links,
+                               units=self.get_units_category())
 
     def randomize_demands(self) -> None:
         """

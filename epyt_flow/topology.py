@@ -1,11 +1,17 @@
 """
 Module provides a class for representing the topology of WDN.
 """
+from copy import deepcopy
+import warnings
 import numpy as np
 import networkx as nx
 from scipy.sparse import bsr_array
 
 from .serialization import serializable, JsonSerializable, NETWORK_TOPOLOGY_ID
+
+
+UNITS_USCUSTOM = 0
+UNITS_SIMETRIC = 1
 
 
 @serializable(NETWORK_TOPOLOGY_ID, ".epytflow_topology")
@@ -22,13 +28,28 @@ class NetworkTopology(nx.Graph, JsonSerializable):
     links : `list[tuple[tuple[str, str], dict]]`
         List of all links/pipes -- i.e. link ID, ID of connecting nodes, and link information
         such as pipe diameter, length, etc.
+    units : `int`
+        Measurement units category.
+
+        Must be one of the following constants:
+
+            - UNITS_USCUSTOM = 0  (US Customary)
+            - UNITS_SIMETRIC = 1  (SI Metric)
     """
     def __init__(self, f_inp: str, nodes: list[tuple[str, dict]],
-                 links: list[tuple[str, tuple[str, str], dict]], **kwds):
+                 links: list[tuple[str, tuple[str, str], dict]],
+                 units: int = None,
+                 **kwds):
         super().__init__(name=f_inp, **kwds)
 
         self.__nodes = nodes
         self.__links = links
+        self.__units = units
+
+        if units is None:
+            warnings.warn("Loading a file that was created with an outdated version of EPyT-Flow" +
+                          " -- support of such old files will be removed in the next release!",
+                          DeprecationWarning)
 
         for node_id, node_info in nodes:
             node_elevation = node_info["elevation"]
@@ -104,23 +125,43 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
         raise ValueError(f"Unknown link '{link_id}'")
 
+    @property
+    def units(self) -> int:
+        """
+        Gets the used measurement units category.
+
+        Will be one of the following constants:
+
+            - UNITS_USCUSTOM = 0  (US Customary)
+            - UNITS_SIMETRIC = 1  (SI Metric)
+
+        Returns
+        -------
+        `int`
+            Measurement units category.
+        """
+        return self.__units
+
     def __eq__(self, other) -> bool:
         if not isinstance(other, NetworkTopology):
             raise TypeError("Can not compare 'NetworkTopology' instance to " +
                             f"'{type(other)}' instance")
 
         return super().__eq__(other) and \
-            self.get_all_nodes() == other.get_all_nodes() and \
-            all(link_a[0] == link_b[0] and all(link_a[1] == link_b[1])
-                for link_a, link_b in zip(self.get_all_links(), other.get_all_links()))
+            self.get_all_nodes() == other.get_all_nodes() \
+            and all(link_a[0] == link_b[0] and all(link_a[1] == link_b[1])
+                    for link_a, link_b in zip(self.get_all_links(), other.get_all_links())) \
+            and self.__units == other.units
 
     def __str__(self) -> str:
-        return f"f_inp: {self.name} nodes: {self.__nodes} links: {self.__links}"
+        return f"f_inp: {self.name} nodes: {self.__nodes} links: {self.__links} " +\
+            f"units: {self.__units}"
 
     def get_attributes(self) -> dict:
         return super().get_attributes() | {"f_inp": self.name,
                                            "nodes": self.__nodes,
-                                           "links": self.__links}
+                                           "links": self.__links,
+                                           "units": self.__units}
 
     def get_adj_matrix(self) -> bsr_array:
         """
