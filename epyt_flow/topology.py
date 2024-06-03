@@ -29,7 +29,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         List of all links/pipes -- i.e. link ID, ID of connecting nodes, and link information
         such as pipe diameter, length, etc.
     units : `int`
-        Measurement units category.
+        Measurement units category -- i.e. US Customary or SI Metric.
 
         Must be one of the following constants:
 
@@ -62,6 +62,71 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             self.add_edge(link[0], link[1], length=link_length,
                           info={"id": link_id, "nodes": link, "diameter": link_diameter,
                                 "length": link_length})
+
+    def convert_units(self, units: int):
+        """
+        Converts this instance to a :class:`epyt_flow.topology.NetworkTopology` instance
+        where everything is measured in given measurement units category
+        (US Customary or SI Metric).
+
+        Parameters
+        ----------
+        units : `int`
+            Measurement units category.
+
+            Must be one of the following constants:
+
+                - UNITS_USCUSTOM = 0  (US Customary)
+                - UNITS_SIMETRIC = 1  (SI Metric)
+
+        Returns
+        -------
+        :class:`epyt_flow.topology.NetworkTopology`
+            Network topology with the new measurements units.
+        """
+        if self.__units is None:
+            raise ValueError("This instance does not contain any units!")
+
+        if not isinstance(units, int):
+            raise TypeError(f"'units' must be an instance of 'int' but not of '{type(units)}'")
+        if units not in [UNITS_SIMETRIC, UNITS_USCUSTOM]:
+            raise ValueError(f"Invalid units '{units}'")
+
+        if units == self.__units:
+            warnings.warn("Units already set in this NetworkTopology instance -- nothing to do!")
+            return deepcopy(self)
+
+        # Get all data and convert units
+        inch_to_millimeter = 25.4
+        feet_to_meter = 0.3048
+
+        nodes = []
+        for node_id, node_info in self.__nodes:
+            if units == UNITS_USCUSTOM:
+                conv_factor = 1. / feet_to_meter
+            else:
+                conv_factor = feet_to_meter
+            node_info["elevation"] *= conv_factor
+
+            nodes.append((node_id, node_info))
+
+        links = []
+        for link_id, link_nodes, link_info in self.__links:
+            if units == UNITS_USCUSTOM:
+                conv_factor = 1. / feet_to_meter
+            else:
+                conv_factor = feet_to_meter
+            link_info["length"] *= conv_factor
+
+            if units == UNITS_USCUSTOM:
+                conv_factor = 1. / inch_to_millimeter
+            else:
+                conv_factor = inch_to_millimeter
+            link_info["diameter"] *= conv_factor
+
+            links.append((link_id, link_nodes, link_info))
+
+        return NetworkTopology(f_inp=self.name, nodes=nodes, links=links, units=units)
 
     def get_all_nodes(self) -> list[str]:
         """
