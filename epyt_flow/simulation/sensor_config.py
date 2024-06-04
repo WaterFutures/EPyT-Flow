@@ -3,6 +3,7 @@ Module provides a class for implementing sensor configurations.
 """
 from copy import deepcopy
 import warnings
+import itertools
 import numpy as np
 import epyt
 from epyt.epanet import ToolkitConstants
@@ -148,7 +149,7 @@ def flowunit_to_str(unit_id: int) -> str:
 
         Must be one of the following EPANET toolkit constants:
 
-            - EN_CFS = 0 (cu foot/sec)
+            - EN_CFS = 0 (cubic foot/sec)
             - EN_GPM = 1 (gal/min)
             - EN_MGD = 2 (Million gal/day)
             - EN_IMGD = 3 (Imperial MGD)
@@ -167,7 +168,7 @@ def flowunit_to_str(unit_id: int) -> str:
     if unit_id is None:
         return ""
     elif unit_id == ToolkitConstants.EN_CFS:
-        return "cu foot/sec"
+        return "cubic foot/sec"
     elif unit_id == ToolkitConstants.EN_GPM:
         return "gal/min"
     elif unit_id == ToolkitConstants.EN_MGD:
@@ -233,7 +234,7 @@ def is_flowunit_simetric(unit_id: int) -> bool:
 
         Must be one of the following EPANET toolkit constants:
 
-            - EN_CFS = 0 (cu foot/sec)
+            - EN_CFS = 0 (cubic foot/sec)
             - EN_GPM = 1 (gal/min)
             - EN_MGD = 2 (Million gal/day)
             - EN_IMGD = 3 (Imperial MGD)
@@ -369,7 +370,7 @@ class SensorConfig(JsonSerializable):
 
         Must be one of the following EPANET toolkit constants:
 
-            - EN_CFS = 0 (cu foot/sec)
+            - EN_CFS = 0 (cubic foot/sec)
             - EN_GPM = 1 (gal/min)
             - EN_MGD = 2 (Million gal/day)
             - EN_IMGD = 3 (Imperial MGD)
@@ -552,7 +553,8 @@ class SensorConfig(JsonSerializable):
         if any(bulk_species_id not in bulk_species
                for bulk_species_id in bulk_species_node_sensors.keys()):
             raise ValueError("Unknown bulk species ID in 'bulk_species_node_sensors'")
-        if any(node_id not in nodes for node_id in bulk_species_node_sensors.values()):
+        if any(node_id not in nodes for node_id in list(itertools.chain(
+                *bulk_species_node_sensors.values()))):
             raise ValueError("Unknown node ID in 'bulk_species_node_sensors'")
 
         if not isinstance(bulk_species_link_sensors, dict):
@@ -561,7 +563,8 @@ class SensorConfig(JsonSerializable):
         if any(bulk_species_id not in bulk_species
                for bulk_species_id in bulk_species_link_sensors.keys()):
             raise ValueError("Unknown bulk species ID in 'bulk_species_link_sensors'")
-        if any(link_id not in links for link_id in bulk_species_link_sensors.values()):
+        if any(link_id not in links for link_id in list(itertools.chain(
+                *bulk_species_link_sensors.values()))):
             raise ValueError("Unknown link/pipe ID in 'bulk_species_link_sensors'")
 
         if not isinstance(surface_species_sensors, dict):
@@ -570,7 +573,8 @@ class SensorConfig(JsonSerializable):
         if any(surface_species_id not in surface_species_sensors
                for surface_species_id in surface_species_sensors.keys()):
             raise ValueError("Unknown surface species ID in 'surface_species_sensors'")
-        if any(link_id not in links for link_id in surface_species_sensors.values()):
+        if any(link_id not in links for link_id in list(itertools.chain(
+                *surface_species_sensors.values()))):
             raise ValueError("Unknown link ID in 'surface_species_sensors'")
 
         if node_id_to_idx is not None:
@@ -903,8 +907,10 @@ class SensorConfig(JsonSerializable):
         n_valve_state_sensors = len(self.__valve_state_sensors)
         n_pump_state_sensors = len(self.__pump_state_sensors)
         n_tank_volume_sensors = len(self.__tank_volume_sensors)
-        n_bulk_species_node_sensors = len(self.__bulk_species_node_sensors.values())
-        n_bulk_species_link_sensors = len(self.__bulk_species_link_sensors.values())
+        n_bulk_species_node_sensors = len(list(itertools.chain(
+            *self.__bulk_species_node_sensors.values())))
+        n_bulk_species_link_sensors = len(list(itertools.chain(
+            *self.__bulk_species_link_sensors.values())))
 
         pressure_idx_shift = 0
         flow_idx_shift = pressure_idx_shift + n_pressure_sensors
@@ -1078,7 +1084,7 @@ class SensorConfig(JsonSerializable):
 
         Will be one of the following EPANET toolkit constants:
 
-            - EN_CFS = 0 (cu foot/sec)
+            - EN_CFS = 0 (cubic foot/sec)
             - EN_GPM = 1 (gal/min)
             - EN_MGD = 2 (Million gal/day)
             - EN_IMGD = 3 (Imperial MGD)
@@ -1441,7 +1447,8 @@ class SensorConfig(JsonSerializable):
                             f"but not of '{type(bulk_species_sensors)}'")
         if any(species_id not in self.__bulk_species for species_id in bulk_species_sensors.keys()):
             raise ValueError("Unknown bulk species ID in 'bulk_species_sensors'")
-        if any(link_id not in self.__links for link_id in sum(bulk_species_sensors.values(), [])):
+        if any(link_id not in self.__links for link_id in list(itertools.chain(
+                *bulk_species_sensors.values()))):
             raise ValueError("Unknown link/pipe ID in 'bulk_species_sensors'")
 
         self.__bulk_species_link_sensors = bulk_species_sensors
@@ -1470,7 +1477,7 @@ class SensorConfig(JsonSerializable):
                for species_id in surface_species_sensors.keys()):
             raise ValueError("Unknown surface species ID in 'surface_species_sensors'")
         if any(link_id not in self.__links
-               for link_id in sum(surface_species_sensors.values(), [])):
+               for link_id in list(itertools.chain(*surface_species_sensors.values()))):
             raise ValueError("Unknown link/pipe ID in 'surface_species_sensors'")
 
         self.__surface_species_sensors = surface_species_sensors
