@@ -761,6 +761,7 @@ class ScenarioSimulator():
         nodes_id = self.epanet_api.getNodeNameID()
         nodes_elevation = self.epanet_api.getNodeElevations()
         nodes_type = [self.epanet_api.TYPENODE[i] for i in self.epanet_api.getNodeTypeIndex()]
+        node_tank_names = self.epanet_api.getNodeTankNameID()
 
         links_id = self.epanet_api.getLinkNameID()
         links_data = self.epanet_api.getNodesConnectingLinksID()
@@ -773,8 +774,13 @@ class ScenarioSimulator():
 
         # Build graph describing the topology
         nodes = []
-        for node, node_elevation, node_type in zip(nodes_id, nodes_elevation, nodes_type):
-            nodes.append((node, {"elevation": node_elevation, "type": node_type}))
+        for node_id, node_elevation, node_type in zip(nodes_id, nodes_elevation, nodes_type):
+            node_info = {"elevation": node_elevation, "type": node_type}
+            if node_type == "TANK":
+                node_tank_idx = node_tank_names.index(node_id) + 1
+                node_info["diameter"] = float(self.epanet_api.getNodeTankDiameter(node_tank_idx))
+
+            nodes.append((node_id, node_info))
 
         links = []
         for link_id, link, diameter, length, roughness_coeff, bulk_coeff, wall_coeff, loss_coeff \

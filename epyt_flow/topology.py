@@ -137,6 +137,8 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             else:
                 conv_factor = feet_to_meter
             node_info["elevation"] *= conv_factor
+            if "diameter" in node_info:
+                node_info["diameter"] *= conv_factor
 
             nodes.append((node_id, node_info))
 
