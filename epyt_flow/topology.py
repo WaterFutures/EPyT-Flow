@@ -14,6 +14,35 @@ UNITS_USCUSTOM = 0
 UNITS_SIMETRIC = 1
 
 
+def unitscategoryid_to_str(unit_category_id: int) -> str:
+    """
+    Converts a given units category ID to the corresponding description.
+
+    Parameters
+    ----------
+    unit_category_id : `int`
+        ID of the units category.
+
+        Must be one of the following constants:
+
+            - UNITS_USCUSTOM = 0
+            - UNITS_SIMETRIC = 1
+
+    Returns
+    -------
+    `str`
+        Units category description.
+    """
+    if unit_category_id is None:
+        return ""
+    elif unit_category_id == UNITS_USCUSTOM:
+        return "US CUSTOMARY"
+    elif unit_category_id == UNITS_SIMETRIC:
+        return "SI METRIC"
+    else:
+        raise ValueError(f"Unknown units category ID '{unit_category_id}'")
+
+
 @serializable(NETWORK_TOPOLOGY_ID, ".epytflow_topology")
 class NetworkTopology(nx.Graph, JsonSerializable):
     """
@@ -101,7 +130,8 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         feet_to_meter = 0.3048
 
         nodes = []
-        for node_id, node_info in self.__nodes:
+        for node_id in self.get_all_nodes():
+            node_info = self.get_node_info(node_id)
             if units == UNITS_USCUSTOM:
                 conv_factor = 1. / feet_to_meter
             else:
@@ -111,7 +141,9 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             nodes.append((node_id, node_info))
 
         links = []
-        for link_id, link_nodes, link_info in self.__links:
+        for link_id, link_nodes in self.get_all_links():
+            link_info = self.get_link_info(link_id)
+
             if units == UNITS_USCUSTOM:
                 conv_factor = 1. / feet_to_meter
             else:
@@ -150,7 +182,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         """
         return [(link_id, end_points) for link_id, end_points, _ in self.__links]
 
-    def get_node_info(self, node_id) -> dict:
+    def get_node_info(self, node_id: str) -> dict:
         """
         Gets all information (e.g. elevation, type, etc.) associated with a given node.
 
@@ -170,7 +202,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
         raise ValueError(f"Unknown node '{node_id}'")
 
-    def get_link_info(self, link_id) -> dict:
+    def get_link_info(self, link_id: str) -> dict:
         """
         Gets all information (e.g. diameter, length, etc.) associated with a given link/pipe.
 
@@ -220,7 +252,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
     def __str__(self) -> str:
         return f"f_inp: {self.name} nodes: {self.__nodes} links: {self.__links} " +\
-            f"units: {self.__units}"
+            f"units: {unitscategoryid_to_str(self.__units)}"
 
     def get_attributes(self) -> dict:
         return super().get_attributes() | {"f_inp": self.name,
