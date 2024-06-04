@@ -3,6 +3,7 @@ Module provides a class for representing the topology of WDN.
 """
 from copy import deepcopy
 import warnings
+from typing import Any
 import numpy as np
 import networkx as nx
 from scipy.sparse import bsr_array
@@ -92,7 +93,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                           info={"id": link_id, "nodes": link, "diameter": link_diameter,
                                 "length": link_length})
 
-    def convert_units(self, units: int):
+    def convert_units(self, units: int) -> Any:
         """
         Converts this instance to a :class:`epyt_flow.topology.NetworkTopology` instance
         where everything is measured in given measurement units category
