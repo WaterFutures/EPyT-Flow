@@ -8,7 +8,8 @@ from scipy.io import savemat
 import pandas as pd
 
 from .scada_data import ScadaData
-from ..sensor_config import SensorConfig
+from ..sensor_config import SensorConfig, massunit_to_str, flowunit_to_str, qualityunit_to_str, \
+    is_flowunit_simetric
 
 
 class ScadaDataExport():
@@ -106,13 +107,42 @@ class ScadaDataExport():
         """
         sensor_readings = scada_data.get_data()
 
+        def __get_sensor_unit(sensor_type):
+            if sensor_type == "pressure":
+                if is_flowunit_simetric(scada_data.sensor_config.flow_unit):
+                    return "psi"
+                else:
+                    return "meter"
+            elif sensor_type == "flow" or sensor_type == "demand":
+                return flowunit_to_str(scada_data.sensor_config.flow_unit)
+            elif sensor_type == "quality_node" or sensor_type == "quality_link":
+                return qualityunit_to_str(scada_data.sensor_config.quality_unit)
+            elif sensor_type == "tank_volume":
+                if is_flowunit_simetric(scada_data.sensor_config.flow_unit):
+                    return "cubic meter"
+                else:
+                    return "cubic foot"
+            else:
+                return ""
+
         col_desc = [None for _ in range(sensor_readings.shape[1])]
         sensor_config = scada_data.sensor_config
         sensors_id_to_idx = sensor_config.sensors_id_to_idx
         for sensor_type in sensors_id_to_idx:
+            unit_desc = __get_sensor_unit(sensor_type)
             for item_id in sensors_id_to_idx[sensor_type]:
                 col_id = sensors_id_to_idx[sensor_type][item_id]
-                col_desc[col_id] = [sensor_type, item_id]
+
+                if sensor_type == "bulk_species_node" or sensor_type == "bulk_species_link":
+                    bulk_species_idx = sensor_config.bulk_species.index(item_id)
+                    unit_desc = massunit_to_str(sensor_config.
+                                                bulk_species_mass_unit[bulk_species_idx])
+                elif sensor_type == "surface_species":
+                    surface_species_idx = sensor_config.surface_species.index(item_id)
+                    unit_desc = massunit_to_str(sensor_config.
+                                                bulk_species_mass_unit[surface_species_idx])
+
+                col_desc[col_id] = [sensor_type, item_id, unit_desc]
 
         return np.array(col_desc, dtype=object)
 
@@ -163,7 +193,8 @@ class ScadaDataNumpyExport(ScadaDataExport):
             scada_data.change_sensor_config(old_sensor_config)
 
         np.savez(self.f_out, sensor_readings=sensor_readings, col_desc=col_desc,
-                 sensor_readings_time=sensor_readings_time)
+                 sensor_readings_time=sensor_readings_time,
+                 flow_unit=scada_data.sensor_config.flow_unit)
 
 
 class ScadaDataXlsxExport(ScadaDataExport):
@@ -208,7 +239,7 @@ class ScadaDataXlsxExport(ScadaDataExport):
                 to_excel(writer, sheet_name="Sensor readings", index=False)
             pd.DataFrame(sensor_readings_time, columns=["Time (s)"]). \
                 to_excel(writer, sheet_name="Sensor readings time", index=False)
-            pd.DataFrame(col_desc, columns=["Name", "Type", "Location"]). \
+            pd.DataFrame(col_desc, columns=["Name", "Type", "Location", "Unit"]). \
                 to_excel(writer, sheet_name="Sensors description", index=False)
 
 
@@ -246,4 +277,6 @@ class ScadaDataMatlabExport(ScadaDataExport):
             scada_data.change_sensor_config(old_sensor_config)
 
         savemat(self.f_out, {"sensor_readings": sensor_readings,
-                             "sensor_readings_time": sensor_readings_time, "col_desc": col_desc})
+                             "sensor_readings_time": sensor_readings_time,
+                             "col_desc": col_desc,
+                             "flow_unit": scada_data.sensor_config.flow_unit})

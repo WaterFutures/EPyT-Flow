@@ -5,6 +5,7 @@ from copy import deepcopy
 import warnings
 import numpy as np
 import epyt
+from epyt.epanet import ToolkitConstants
 
 from ..serialization import SENSOR_CONFIG_ID, JsonSerializable, serializable
 
@@ -70,7 +71,7 @@ def massunit_to_id(unit_desc: str) -> int:
             "MMOL": MASS_UNIT_MMOL}[unit_desc]
 
 
-def qualityunits_to_id(unit_desc: str) -> int:
+def qualityunit_to_id(unit_desc: str) -> int:
     """
     Converts a given measurement unit description to the corresponding mass unit ID.
 
@@ -101,14 +102,102 @@ def qualityunits_to_id(unit_desc: str) -> int:
         return None
 
 
-def qualityunits_to_str(unit_id: int) -> str:
+def massunit_to_str(unit_id: int) -> str:
     """
-    Converts a given measurement unit ID to the corresponding description.
+    Converts a given mass unit ID to the corresponding description.
 
     Parameters
     ----------
     unit_id : `int`
-        ID of the mass unit.
+        ID of the flow unit.
+
+        Must be one of the following constant:
+
+            - MASS_UNIT_MG = 4
+            - MASS_UNIT_UG = 5
+            - MASS_UNIT_MOL = 6
+            - MASS_UNIT_MMOL = 7
+
+    Returns
+    -------
+    `str`
+        Mass unit description.
+    """
+    if unit_id is None:
+        return ""
+    elif unit_id == MASS_UNIT_MG:
+        return "MG"
+    elif unit_id == MASS_UNIT_UG:
+        return "UG"
+    elif unit_id == MASS_UNIT_MOL:
+        return "MOL"
+    elif unit_id == MASS_UNIT_MMOL:
+        return "MMOL"
+    else:
+        raise ValueError(f"Unknown mass unit ID '{unit_id}'")
+
+
+def flowunit_to_str(unit_id: int) -> str:
+    """
+    Converts a given flow unit ID to the corresponding description.
+
+    Parameters
+    ----------
+    unit_id : `int`
+        ID of the flow unit.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS = 0 (cu foot/sec)
+            - EN_GPM = 1 (gal/min)
+            - EN_MGD = 2 (Million gal/day)
+            - EN_IMGD = 3 (Imperial MGD)
+            - EN_AFD = 4 (ac-foot/day)
+            - EN_LPS = 5 (liter/sec)
+            - EN_LPM = 6 (liter/min)
+            - EN_MLD = 7 (Megaliter/day)
+            - EN_CMH = 8 (cubic meter/hr)
+            - EN_CMD = 9 (cubic meter/day)
+
+    Returns
+    -------
+    `str`
+        Flow unit description.
+    """
+    if unit_id is None:
+        return ""
+    elif unit_id == ToolkitConstants.EN_CFS:
+        return "cu foot/sec"
+    elif unit_id == ToolkitConstants.EN_GPM:
+        return "gal/min"
+    elif unit_id == ToolkitConstants.EN_MGD:
+        return "Million gal/day"
+    elif unit_id == ToolkitConstants.EN_IMGD:
+        return "Imperial MGD"
+    elif unit_id == ToolkitConstants.EN_AFD:
+        return "ac-foot/day"
+    elif unit_id == ToolkitConstants.EN_LPS:
+        return "liter/sec"
+    elif unit_id == ToolkitConstants.EN_LPM:
+        return "liter/min"
+    elif unit_id == ToolkitConstants.EN_MLD:
+        return "Megaliter/day"
+    elif unit_id == ToolkitConstants.EN_CMH:
+        return "cubic meter/hr"
+    elif unit_id == ToolkitConstants.EN_CMD:
+        return "cubic meter/day"
+    else:
+        raise ValueError(f"Unknown unit ID '{unit_id}'")
+
+
+def qualityunit_to_str(unit_id: int) -> str:
+    """
+    Converts a given quality measurement unit ID to the corresponding description.
+
+    Parameters
+    ----------
+    unit_id : `int`
+        ID of the quality unit.
 
         Must be one of the following constants:
 
@@ -121,7 +210,9 @@ def qualityunits_to_str(unit_id: int) -> str:
     `str`
         Mass unit description.
     """
-    if unit_id == MASS_UNIT_MG:
+    if unit_id is None:
+        return ""
+    elif unit_id == MASS_UNIT_MG:
         return "mg/L"
     elif unit_id == MASS_UNIT_UG:
         return "ug/L"
@@ -129,6 +220,37 @@ def qualityunits_to_str(unit_id: int) -> str:
         return "hrs"
     else:
         raise ValueError(f"Unknown unit ID '{unit_id}'")
+
+
+def is_flowunit_simetric(unit_id: int) -> bool:
+    """
+    Checks if a given flow unit belongs to SI metric units.
+
+    Parameters
+    ----------
+    unit_id : `int`
+        ID of the flow unit.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS = 0 (cu foot/sec)
+            - EN_GPM = 1 (gal/min)
+            - EN_MGD = 2 (Million gal/day)
+            - EN_IMGD = 3 (Imperial MGD)
+            - EN_AFD = 4 (ac-foot/day)
+            - EN_LPS = 5 (liter/sec)
+            - EN_LPM = 6 (liter/min)
+            - EN_MLD = 7 (Megaliter/day)
+            - EN_CMH = 8 (cubic meter/hr)
+            - EN_CMD = 9 (cubic meter/day)
+
+    Returns
+    -------
+    `bool`
+        True if the fiven unit is a SI metric unit, False otherwise.
+    """
+    return unit_id in [ToolkitConstants.EN_LPM, ToolkitConstants.EN_MLD,
+                       ToolkitConstants.EN_CMH, ToolkitConstants.EN_CMD]
 
 
 @serializable(SENSOR_CONFIG_ID, ".epytflow_sensor_config")

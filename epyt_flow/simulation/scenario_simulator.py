@@ -17,8 +17,8 @@ from epyt.epanet import ToolkitConstants
 from tqdm import tqdm
 
 from .scenario_config import ScenarioConfig
-from .sensor_config import SensorConfig, areaunit_to_id, massunit_to_id, qualityunits_to_id, \
-    qualityunits_to_str, MASS_UNIT_MG, \
+from .sensor_config import SensorConfig, areaunit_to_id, massunit_to_id, qualityunit_to_id, \
+    qualityunit_to_str, MASS_UNIT_MG, \
     SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY, SENSOR_TYPE_NODE_DEMAND, \
     SENSOR_TYPE_NODE_PRESSURE, SENSOR_TYPE_NODE_QUALITY, \
     SENSOR_TYPE_PUMP_STATE, SENSOR_TYPE_TANK_VOLUME, SENSOR_TYPE_VALVE_STATE, \
@@ -137,7 +137,7 @@ class ScenarioSimulator():
                                   tank_id_to_idx: dict = None, bulkspecies_id_to_idx: dict = None,
                                   surfacespecies_id_to_idx: dict = None) -> SensorConfig:
         flow_unit = self.epanet_api.api.ENgetflowunits()
-        quality_unit = qualityunits_to_id(self.epanet_api.getQualityInfo().QualityChemUnits)
+        quality_unit = qualityunit_to_id(self.epanet_api.getQualityInfo().QualityChemUnits)
         bulk_species = []
         surface_species = []
         bulk_species_mass_unit = []
@@ -691,7 +691,7 @@ class ScenarioSimulator():
         return {"code": qual_info.QualityCode,
                 "type": qual_info.QualityType,
                 "chemical_name": qual_info.QualityChemName,
-                "units": qualityunits_to_id(qual_info.QualityChemUnits),
+                "units": qualityunit_to_id(qual_info.QualityChemUnits),
                 "trace_node_id": qual_info.TraceNode}
 
     def get_scenario_config(self) -> ScenarioConfig:
@@ -1989,7 +1989,7 @@ class ScenarioSimulator():
                 self.epanet_api.setQualityType("age")
             elif quality_model["type"] == "CHEM":
                 self.epanet_api.setQualityType("chem", quality_model["chemical_name"],
-                                               qualityunits_to_str(quality_model["units"]))
+                                               qualityunit_to_str(quality_model["units"]))
             elif quality_model["type"] == "TRACE":
                 self.epanet_api.setQualityType("trace", quality_model["trace_node_id"])
             else:
