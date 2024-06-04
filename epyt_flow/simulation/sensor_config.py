@@ -89,8 +89,8 @@ def qualityunit_to_id(unit_desc: str) -> int:
         Will be either None (if no water quality analysis was set up) or
         one of the following constants:
 
-            - MASS_UNIT_MG = 4   (mg/L)
-            - MASS_UNIT_UG = 5   (ug/L)
+            - MASS_UNIT_MG  = 4   (mg/L)
+            - MASS_UNIT_UG  = 5   (ug/L)
             - TIME_UNIT_HRS = 8  (hrs)
     """
     if unit_desc == "mg/L":
@@ -114,9 +114,9 @@ def massunit_to_str(unit_id: int) -> str:
 
         Must be one of the following constant:
 
-            - MASS_UNIT_MG = 4
-            - MASS_UNIT_UG = 5
-            - MASS_UNIT_MOL = 6
+            - MASS_UNIT_MG   = 4
+            - MASS_UNIT_UG   = 5
+            - MASS_UNIT_MOL  = 6
             - MASS_UNIT_MMOL = 7
 
     Returns
@@ -149,16 +149,16 @@ def flowunit_to_str(unit_id: int) -> str:
 
         Must be one of the following EPANET toolkit constants:
 
-            - EN_CFS = 0 (cubic foot/sec)
-            - EN_GPM = 1 (gal/min)
-            - EN_MGD = 2 (Million gal/day)
+            - EN_CFS  = 0 (cubic foot/sec)
+            - EN_GPM  = 1 (gal/min)
+            - EN_MGD  = 2 (Million gal/day)
             - EN_IMGD = 3 (Imperial MGD)
-            - EN_AFD = 4 (ac-foot/day)
-            - EN_LPS = 5 (liter/sec)
-            - EN_LPM = 6 (liter/min)
-            - EN_MLD = 7 (Megaliter/day)
-            - EN_CMH = 8 (cubic meter/hr)
-            - EN_CMD = 9 (cubic meter/day)
+            - EN_AFD  = 4 (ac-foot/day)
+            - EN_LPS  = 5 (liter/sec)
+            - EN_LPM  = 6 (liter/min)
+            - EN_MLD  = 7 (Megaliter/day)
+            - EN_CMH  = 8 (cubic meter/hr)
+            - EN_CMD  = 9 (cubic meter/day)
 
     Returns
     -------
@@ -202,8 +202,8 @@ def qualityunit_to_str(unit_id: int) -> str:
 
         Must be one of the following constants:
 
-            - MASS_UNIT_MG = 4  (mg/L)
-            - MASS_UNIT_UG = 5  (ug/L)
+            - MASS_UNIT_MG  = 4  (mg/L)
+            - MASS_UNIT_UG  = 5  (ug/L)
             - TIME_UNIT_HRS = 8  (hrs)
 
     Returns
@@ -223,6 +223,38 @@ def qualityunit_to_str(unit_id: int) -> str:
         raise ValueError(f"Unknown unit ID '{unit_id}'")
 
 
+def areaunit_to_str(unit_id: int) -> str:
+    """
+    Converts a given area measurement unit ID to the corresponding description.
+
+    Parameters
+    ----------
+    unit_id : `int`
+        ID of the area unit.
+
+        Must be one of the following constants:
+
+            - AREA_UNIT_FT2 = 1
+            - AREA_UNIT_M2  = 2
+            - AREA_UNIT_CM2 = 3
+
+    Returns
+    -------
+    `str`
+        Area unit description.
+    """
+    if unit_id is None:
+        return None
+    elif unit_id == AREA_UNIT_FT2:
+        return "FT2"
+    elif unit_id == AREA_UNIT_M2:
+        return "M2"
+    elif unit_id == AREA_UNIT_CM2:
+        return "CM2"
+    else:
+        raise ValueError(f"Unknown unit ID '{unit_id}'")
+
+
 def is_flowunit_simetric(unit_id: int) -> bool:
     """
     Checks if a given flow unit belongs to SI metric units.
@@ -234,16 +266,16 @@ def is_flowunit_simetric(unit_id: int) -> bool:
 
         Must be one of the following EPANET toolkit constants:
 
-            - EN_CFS = 0 (cubic foot/sec)
-            - EN_GPM = 1 (gal/min)
-            - EN_MGD = 2 (Million gal/day)
+            - EN_CFS  = 0 (cubic foot/sec)
+            - EN_GPM  = 1 (gal/min)
+            - EN_MGD  = 2 (Million gal/day)
             - EN_IMGD = 3 (Imperial MGD)
-            - EN_AFD = 4 (ac-foot/day)
-            - EN_LPS = 5 (liter/sec)
-            - EN_LPM = 6 (liter/min)
-            - EN_MLD = 7 (Megaliter/day)
-            - EN_CMH = 8 (cubic meter/hr)
-            - EN_CMD = 9 (cubic meter/day)
+            - EN_AFD  = 4 (ac-foot/day)
+            - EN_LPS  = 5 (liter/sec)
+            - EN_LPM  = 6 (liter/min)
+            - EN_MLD  = 7 (Megaliter/day)
+            - EN_CMH  = 8 (cubic meter/hr)
+            - EN_CMD  = 9 (cubic meter/day)
 
     Returns
     -------
@@ -1556,7 +1588,7 @@ class SensorConfig(JsonSerializable):
     def __str__(self) -> str:
         return f"nodes: {self.__nodes} links: {self.__links} valves: {self.__valves} " +\
             f"pumps: {self.__pumps} tanks: {self.__tanks} bulk_species: {self.__bulk_species} " +\
-            f"surface_species: {self.__surface_species}" + \
+            f"surface_species: {self.__surface_species} " + \
             f"pressure_sensors: {self.__pressure_sensors} flow_sensors: {self.__flow_sensors} " +\
             f"demand_sensors: {self.__demand_sensors} " +\
             f"quality_node_sensors: {self.__quality_node_sensors} " +\
@@ -1567,10 +1599,13 @@ class SensorConfig(JsonSerializable):
             f"bulk_species_node_sensors: {self.__bulk_species_node_sensors} " +\
             f"bulk_species_link_sensors: {self.__bulk_species_link_sensors} " +\
             f"surface_species_sensors: {self.__surface_species_sensors} " +\
-            f"flow_unit: {self.__flow_unit} quality_unit: {self.__quality_unit}" +\
-            f"bulk_species_mass_unit: {self.__bulk_species_mass_unit} " +\
-            f"surface_species_mass_unit: {self.__surface_species_mass_unit} " +\
-            f"surface_species_area_unit: {self.__surface_species_area_unit}"
+            f"flow_unit: {flowunit_to_str(self.__flow_unit)} " +\
+            f"quality_unit: {qualityunit_to_str(self.__quality_unit)} " +\
+            "bulk_species_mass_unit: " +\
+            f"{list(map(massunit_to_str, self.__bulk_species_mass_unit))} " +\
+            "surface_species_mass_unit: " +\
+            f"{list(map(massunit_to_str, self.__surface_species_mass_unit))} " +\
+            f"surface_species_area_unit: {areaunit_to_str(self.__surface_species_area_unit)}"
 
     def compute_readings(self, pressures: np.ndarray, flows: np.ndarray, demands: np.ndarray,
                          nodes_quality: np.ndarray, links_quality: np.ndarray,
