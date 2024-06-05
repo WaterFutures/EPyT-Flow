@@ -11,6 +11,20 @@ class BaseHandler():
     """
     Base class for all REST API handlers.
     """
+    def send_error(self, resp: falcon.Response, error_msg: str) -> None:
+        """
+        Sends an error message back.
+
+        Parameters
+        ----------
+        resp : `falcon.Response`
+            Response instance.
+        error_msg : `str`
+            Error message.
+        """
+        resp.status = falcon.HTTP_BAD_REQUEST
+        resp.data = error_msg.encode()
+
     def send_invalid_resource_id_error(self, resp: falcon.Response) -> None:
         """
         Sends an error that th given resource ID (e.g. scenario ID, or SCADA data ID) is invalid.

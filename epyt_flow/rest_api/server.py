@@ -14,7 +14,7 @@ from .scenario.event_handlers import ScenarioLeakageHandler, ScenarioSensorFault
 from .scenario.simulation_handlers import ScenarioSimulationHandler, \
     ScenarioBasicQualitySimulationHandler, ScenarioAdvancedQualitySimulationHandler
 from .scada_data.handlers import ScadaDataManager, ScadaDataSensorConfigHandler, \
-    ScadaDataRemoveHandler, ScadaDataSensorFaultsHandler
+    ScadaDataRemoveHandler, ScadaDataSensorFaultsHandler, ScadaDataConvertUnitsHandler
 from .scada_data.data_handlers import ScadaDataPressuresHandler, ScadaDataDemandsHandler, \
     ScadaDataFlowsHandler, ScadaDataLinksQualityHandler, ScadaDataNodesQualityHandler, \
     ScadaDataNodeBulkSpeciesHandler, ScadaDataLinkBulkSpeciesHandler, \
@@ -114,6 +114,8 @@ class RestApiService():
                            ScadaDataNumpyExportHandler(scada_data_mgr=self.scada_data_mgr))
         self.app.add_route("/scada_data/{data_id}/export",
                            ScadaDataExportHandler(scada_data_mgr=self.scada_data_mgr))
+        self.app.add_route("/scada_data/{data_id}/convert_units",
+                           ScadaDataConvertUnitsHandler(scada_data_mgr=self.scada_data_mgr))
 
     @property
     def port(self) -> int:

@@ -165,3 +165,45 @@ class ScadaDataSensorFaultsHandler(ScadaDataBaseHandler):
         except Exception as ex:
             warnings.warn(str(ex))
             resp.status = falcon.HTTP_INTERNAL_SERVER_ERROR
+
+
+class ScadaDataConvertUnitsHandler(ScadaDataBaseHandler):
+    """
+    Class for handling POST requests concerning unit conversion of a
+    given SCADA data instance.
+    """
+    def on_post(self, req: falcon.Request, resp: falcon.Response, data_id: str) -> None:
+        """
+        Converts the units of a given SCADA data instance and returns a new SCADA data instance.
+
+        Parameters
+        ----------
+        req : `falcon.Request`
+            Request instance.
+        resp : `falcon.Response`
+            Response instance.
+        data_id : `str`
+            UUID of the SCADA data.
+        """
+        try:
+            if self.scada_data_mgr.validate_uuid(data_id) is False:
+                self.send_invalid_resource_id_error(resp)
+                return
+
+            new_units = self.load_json_data_from_request(req)
+            if not isinstance(new_units, dict):
+                self.send_json_parsing_error(resp)
+                return
+
+            my_scada_data = self.scada_data_mgr.get(data_id)
+            try:
+                scada_data_new = my_scada_data.convert_units(**new_units)
+            except Exception as ex:
+                self.send_error(resp, str(ex))
+                return
+
+            new_scada_data_id = self.scada_data_mgr.create_new_item(scada_data_new)
+            self.send_json_response(resp, {"data_id": new_scada_data_id})
+        except Exception as ex:
+            warnings.warn(str(ex))
+            resp.status = falcon.HTTP_INTERNAL_SERVER_ERROR
