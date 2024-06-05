@@ -530,14 +530,14 @@ class ScadaData(Serializable):
                 if surface_species_area_unit not in [AREA_UNIT_FT2, AREA_UNIT_M2, AREA_UNIT_CM2]:
                     raise ValueError("Invalid area unit 'surface_species_area_unit'")
 
-        def __get_mass_convert_factor(new_unit_id: int, old_unit: int) -> float:
-            if new_unit_id == MASS_UNIT_MG and old_unit == MASS_UNIT_UG:
+        def __get_mass_convert_factor(new_unit_id: int, old_unit_id: int) -> float:
+            if new_unit_id == MASS_UNIT_MG and old_unit_id == MASS_UNIT_UG:
                 return .001
-            elif new_unit_id == MASS_UNIT_UG and old_unit == MASS_UNIT_MG:
+            elif new_unit_id == MASS_UNIT_UG and old_unit_id == MASS_UNIT_MG:
                 return 1000.
-            elif new_unit_id == MASS_UNIT_MOL and old_unit == MASS_UNIT_MMOL:
+            elif new_unit_id == MASS_UNIT_MOL and old_unit_id == MASS_UNIT_MMOL:
                 return .001
-            elif new_unit_id == MASS_UNIT_MMOL and old_unit == MASS_UNIT_MOL:
+            elif new_unit_id == MASS_UNIT_MMOL and old_unit_id == MASS_UNIT_MOL:
                 return 1000.
             else:
                 raise NotImplementedError(f"Can not convert '{massunit_to_str(old_unit_id)}' to " +
