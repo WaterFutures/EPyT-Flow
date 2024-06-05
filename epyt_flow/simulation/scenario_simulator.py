@@ -1745,8 +1745,7 @@ class ScenarioSimulator():
                 # Fetch data
                 pressure_data = self.epanet_api.getNodePressure().reshape(1, -1)
                 flow_data = self.epanet_api.getLinkFlows().reshape(1, -1)
-                demand_data = self.epanet_api.getNodeActualDemand().reshape(1,
-                                                                            -1)  # TODO: Does not go back after emitter coefficient is changed back to zero
+                demand_data = self.epanet_api.getNodeActualDemand().reshape(1, -1)
                 quality_node_data = self.epanet_api.getNodeActualQuality().reshape(1, -1)
                 quality_link_data = self.epanet_api.getLinkActualQuality().reshape(1, -1)
                 pumps_state_data = self.epanet_api.getLinkPumpState().reshape(1, -1)
@@ -1928,8 +1927,7 @@ class ScenarioSimulator():
             if not isinstance(simulation_duration, int) or simulation_duration <= 0:
                 raise ValueError("'simulation_duration' must be a positive integer specifying " +
                                  "the number of seconds to simulate")
-            self.epanet_api.setTimeSimulationDuration(simulation_duration)  # TODO: Changing the simulation
-            # duration from .inp file seems to break EPANET-MSX
+            self.epanet_api.setTimeSimulationDuration(simulation_duration)
 
         if hydraulic_time_step is not None:
             if not isinstance(hydraulic_time_step, int) or hydraulic_time_step <= 0:
