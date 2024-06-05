@@ -9,8 +9,17 @@ Note that EPyT-Flow supports Python 3.9 - 3.12
 .. note::
 
     EPyT-Flow compiles EPANET and EPANET-MSX libraries (and uses those instead of the pre-compiled
-    libraries that are shipped with EPyT) if it is installed on a Linux system and if
-    build tools (i.e. *build-essentials* package) are available.
+    libraries that are shipped with EPyT) if it is installed on a Unix system and if
+    the *gcc* compiler is available -- i.e. Linux user can simply install the
+    *build-essentials* package.
+
+    **Attention macOS users:** The "true" *gcc* compiler (version 12) is needed which is not the
+    *clang* compiler that is shipped with Xcode and is linked to gcc!
+    The correct version of the "true" *gcc* can be installed via `brew <https://brew.sh/>`_:
+    
+    .. code:: bash
+
+        brew install gcc@12
 
 PyPI
 ----

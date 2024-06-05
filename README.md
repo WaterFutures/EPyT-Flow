@@ -40,8 +40,18 @@ Unique features of EPyT-Flow that make it superior to other (Python) toolboxes a
 EPyT-Flow supports Python 3.9 - 3.12
 
 Note that [EPANET and EPANET-MSX sources](epyt_flow/EPANET/) are compiled and overwrite the binaries
-shipped by EPyT IF EPyT-Flow is installed on a Linux system. By this we not only aim to achieve
-a better performance of the simulations but also avoid any compatibility problems of pre-compiled binaries.
+shipped by EPyT **IF** EPyT-Flow is installed on a Unix system and the *gcc* compiler is available.
+By this we not only aim to achieve a better performance of the simulations but also avoid any
+compatibility issues of pre-compiled binaries.
+
+#### Prerequisites for macOS users
+The "true" *gcc* compiler (version 12) is needed which is not the
+*clang* compiler that is shipped with Xcode and is linked to gcc!
+
+The correct version of the "true" *gcc* can be installed via [brew](https://brew.sh/):
+```
+brew install gcc@12
+```
 
 ### PyPI
 
