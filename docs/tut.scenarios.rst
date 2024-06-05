@@ -165,6 +165,15 @@ Example of manually setting the emitter coefficient of a node by calling an EPAN
         # ....
 
 
+Units of Measurements
++++++++++++++++++++++
+
+The units if measurement are automatically derived from the .inp and .msx files.
+However, it is also possible to change some of those before the simulation is run and all
+measurement units can be changed afterwards by post-processing the SCADA data --
+see :ref:`here <scada_change_units>` for more information.
+
+
 Scenario Configurations
 +++++++++++++++++++++++
 

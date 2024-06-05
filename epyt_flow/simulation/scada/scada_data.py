@@ -2,14 +2,18 @@
 Module provides a class for storing and processing SCADA data.
 """
 import warnings
-from typing import Callable
+from typing import Callable, Any
 from copy import deepcopy
 import numpy as np
+from epyt.epanet import ToolkitConstants
 
-from ..sensor_config import SensorConfig, SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY, \
-    SENSOR_TYPE_NODE_DEMAND, SENSOR_TYPE_NODE_PRESSURE, SENSOR_TYPE_NODE_QUALITY, \
-    SENSOR_TYPE_PUMP_STATE, SENSOR_TYPE_TANK_VOLUME, SENSOR_TYPE_VALVE_STATE, \
-    SENSOR_TYPE_NODE_BULK_SPECIES, SENSOR_TYPE_LINK_BULK_SPECIES, SENSOR_TYPE_SURFACE_SPECIES
+from ..sensor_config import SensorConfig, is_flowunit_simetric, massunit_to_str, \
+    MASS_UNIT_MG, MASS_UNIT_UG, TIME_UNIT_HRS, MASS_UNIT_MOL, MASS_UNIT_MMOL, \
+    AREA_UNIT_CM2, AREA_UNIT_FT2, AREA_UNIT_M2, \
+    SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY,  SENSOR_TYPE_NODE_DEMAND, \
+    SENSOR_TYPE_NODE_PRESSURE, SENSOR_TYPE_NODE_QUALITY, SENSOR_TYPE_PUMP_STATE, \
+    SENSOR_TYPE_TANK_VOLUME, SENSOR_TYPE_VALVE_STATE, SENSOR_TYPE_NODE_BULK_SPECIES, \
+    SENSOR_TYPE_LINK_BULK_SPECIES, SENSOR_TYPE_SURFACE_SPECIES
 from ..events import SensorFault, SensorReadingAttack, SensorReadingEvent
 from ...uncertainty import SensorNoise
 from ...serialization import serializable, Serializable, SCADA_DATA_ID
@@ -380,6 +384,533 @@ class ScadaData(Serializable):
         self.__init()
 
         super().__init__(**kwds)
+
+    def convert_units(self, flow_unit: int = None, quality_unit: int = None,
+                      bulk_species_mass_unit: list[int] = None,
+                      surface_species_mass_unit: list[int] = None,
+                      surface_species_area_unit: int = None) -> Any:
+        """
+        Changes the units of some measurement units.
+
+        .. note::
+
+            Beaware of potential rounding errors.
+
+        Parameters
+        ----------
+        flow_unit : `int`, optional
+            New units of hydraulic measurements -- note that the flow unit specifies all other
+            hydraulic measurement units.
+
+            Must be one of the following EPANET toolkit constants:
+
+                - EN_CFS  = 0 (cubic foot/sec)
+                - EN_GPM  = 1 (gal/min)
+                - EN_MGD  = 2 (Million gal/day)
+                - EN_IMGD = 3 (Imperial MGD)
+                - EN_AFD  = 4 (ac-foot/day)
+                - EN_LPS  = 5 (liter/sec)
+                - EN_LPM  = 6 (liter/min)
+                - EN_MLD  = 7 (Megaliter/day)
+                - EN_CMH  = 8 (cubic meter/hr)
+                - EN_CMD  = 9 (cubic meter/day)
+
+            If None, units of hydraulic measurement are not changed.
+
+            The default is None.
+        quality_unit : `int`, optional
+            New unit of quality measurements -- i.e. chemical concentration.
+            Only relevant if basic quality analysis was performed.
+
+            Must be one of the following constants:
+
+                - MASS_UNIT_MG = 4     (mg/L)
+                - MASS_UNIT_UG = 5     (ug/L)
+
+            If None, units of quality measurements are not changed.
+
+            The default is None.
+        bulk_species_mass_unit : `list[int]`, optional
+            New units of all bulk species measurements -- i.e. for each
+            bulk species the measurement unit is specified.
+            Note that the assumed ordering is the same as given in 'bulk_species'
+            in the sensor configuration -- only relevant if EPANET-MSX is used.
+
+            Must be one of the following constants:
+
+                - MASS_UNIT_MG   = 4      (milligram)
+                - MASS_UNIT_UG   = 5      (microgram)
+                - MASS_UNIT_MOL  = 6      (mole)
+                - MASS_UNIT_MMOL = 7      (millimole)
+
+            If None, measurement units of bulk species are not changed.
+
+            The default is None.
+        surface_species_mass_unit : `list[int]`, optional
+            New units of all surface species measurements -- i.e. for each
+            surface species the measurement unit is specified.
+            Note that the assumed ordering is the same as given in 'surface_species'
+            in the sensor configuration -- only relevant if EPANET-MSX is used.
+
+            Must be one of the following constants:
+
+                - MASS_UNIT_MG   = 4      (milligram)
+                - MASS_UNIT_UG   = 5      (microgram)
+                - MASS_UNIT_MOL  = 6      (mole)
+                - MASS_UNIT_MMOL = 7      (millimole)
+
+            If None, measurement units of surface species are not changed.
+
+            The default is None.
+        surface_species_area_unit : `int`, optional
+            New area unit of all surface species -- only relevant if EPANET-MSX is used.
+
+            Must be one of the following constants:
+
+                - AREA_UNIT_FT2 = 1     (square feet)
+                - AREA_UNIT_M2  = 2     (square meters)
+                - AREA_UNIT_CM2 = 3     (square centimeters)
+
+            If None, are units of surface species are not changed.
+
+            The default is None.
+
+        Returns
+        -------
+        :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
+            SCADA data instance with the new units.
+        """
+        if flow_unit is not None:
+            if not isinstance(flow_unit, int):
+                raise TypeError("'flow_unit' must be a an instance of 'int' " +
+                                f"but not of '{type(flow_unit)}'")
+            if flow_unit not in range(10):
+                raise ValueError("Invalid value of 'flow_unit'")
+
+        if quality_unit is not None:
+            if not isinstance(quality_unit, int):
+                raise TypeError("'quality_mass_unit' must be an instance of 'int' " +
+                                f"but not of '{type(quality_unit)}'")
+            if quality_unit not in [MASS_UNIT_MG, MASS_UNIT_UG, TIME_UNIT_HRS]:
+                raise ValueError("Invalid value of 'quality_unit'")
+
+        if bulk_species_mass_unit is not None:
+            if not isinstance(bulk_species_mass_unit, list):
+                raise TypeError("'bulk_species_mass_unit' must be an instance of 'list[int]' " +
+                                f"but not of '{type(bulk_species_mass_unit)}'")            
+            if len(bulk_species_mass_unit) != len(self.__sensor_config.bulk_species):
+                raise ValueError("Inconsistency between 'bulk_species_mass_unit' and " +
+                                 "'bulk_species'")
+            if any(not isinstance(mass_unit, int) for mass_unit in bulk_species_mass_unit):
+                raise TypeError("All items in 'bulk_species_mass_unit' must be an instance " +
+                                "of 'int'")
+            if any(mass_unit not in [MASS_UNIT_MG, MASS_UNIT_UG, MASS_UNIT_MOL, MASS_UNIT_MMOL]
+                   for mass_unit in bulk_species_mass_unit):
+                raise ValueError("Invalid mass unit in 'bulk_species_mass_unit'")
+
+        if surface_species_mass_unit is not None:
+            if not isinstance(surface_species_mass_unit, list):
+                raise TypeError("'surface_species_mass_unit' must be an instance of 'list[int]' " +
+                                f"but not of '{type(surface_species_mass_unit)}'")            
+            if len(surface_species_mass_unit) != len(self.__sensor_config.surface_species):
+                raise ValueError("Inconsistency between 'surface_species_mass_unit' and " +
+                                 "'surface_species'")
+            if any(not isinstance(mass_unit, int) for mass_unit in surface_species_mass_unit):
+                raise TypeError("All items in 'surface_species_mass_unit' must be an instance " +
+                                "of 'int'")
+            if any(mass_unit not in [MASS_UNIT_MG, MASS_UNIT_UG, MASS_UNIT_MOL, MASS_UNIT_MMOL]
+                   for mass_unit in surface_species_mass_unit):
+                raise ValueError("Invalid mass unit in 'surface_species_mass_unit'")
+
+        if surface_species_area_unit is not None:
+            if surface_species_area_unit is not None:
+                if not isinstance(surface_species_area_unit, int):
+                    raise TypeError("'surface_species_area_unit' must be a an instance of 'int' " +
+                                    f"but not of '{type(surface_species_area_unit)}'")
+                if surface_species_area_unit not in [AREA_UNIT_FT2, AREA_UNIT_M2, AREA_UNIT_CM2]:
+                    raise ValueError("Invalid area unit 'surface_species_area_unit'")
+
+        def __get_mass_convert_factor(new_unit_id: int, old_unit: int) -> float:
+            if new_unit_id == MASS_UNIT_MG and old_unit == MASS_UNIT_UG:
+                return .001
+            elif new_unit_id == MASS_UNIT_UG and old_unit == MASS_UNIT_MG:
+                return 1000.
+            elif new_unit_id == MASS_UNIT_MOL and old_unit == MASS_UNIT_MMOL:
+                return .001
+            elif new_unit_id == MASS_UNIT_MMOL and old_unit == MASS_UNIT_MOL:
+                return 1000.
+            else:
+                raise NotImplementedError(f"Can not convert '{massunit_to_str(old_unit_id)}' to " +
+                                          f"'{massunit_to_str(new_unit_id)}'")
+
+        def __get_flow_convert_factor(new_unit_id: int, old_unit: int) -> float:
+            if new_unit_id == ToolkitConstants.EN_CFS:
+                if old_unit == ToolkitConstants.EN_GPM:
+                    return .0022280093
+                elif old_unit == ToolkitConstants.EN_MGD:
+                    return 1.5472286523
+                elif old_unit == ToolkitConstants.EN_IMGD:
+                    return 1.8581441347
+                elif old_unit == ToolkitConstants.EN_AFD:
+                    return .5041666667
+                elif old_unit == ToolkitConstants.EN_LPS:
+                    return .0353146667
+                elif old_unit == ToolkitConstants.EN_LPM:
+                    return .0005885778
+                elif old_unit == ToolkitConstants.EN_MLD:
+                    return .40873456853575
+                elif old_unit == ToolkitConstants.EN_CMH:
+                    return .0098096296
+                elif old_unit == ToolkitConstants.EN_CMD:
+                    return .0004087346
+            elif new_unit_id == ToolkitConstants.EN_GPM:
+                if old_unit == ToolkitConstants.EN_CFS:
+                    return 448.8325660485
+                elif old_unit == ToolkitConstants.EN_MGD:
+                    return 694.44444444
+                elif old_unit == ToolkitConstants.EN_IMGD:
+                    return 833.99300382
+                elif old_unit == ToolkitConstants.EN_AFD:
+                    return 226.28571429
+                elif old_unit == ToolkitConstants.EN_LPS:
+                    return 15.850323141
+                elif old_unit == ToolkitConstants.EN_LPM:
+                    return .2641720524
+                elif old_unit == ToolkitConstants.EN_MLD:
+                    return 183.4528141376
+                elif old_unit == ToolkitConstants.EN_CMH:
+                    return 4.4028675393
+                elif old_unit == ToolkitConstants.EN_CMD:
+                    return .1834528141
+            elif new_unit_id == ToolkitConstants.EN_MGD:
+                if old_unit == ToolkitConstants.EN_CFS:
+                    return .6463168831
+                elif old_unit == ToolkitConstants.EN_GPM:
+                    return .00144
+                elif old_unit == ToolkitConstants.EN_IMGD:
+                    return 1.2009499255
+                elif old_unit == ToolkitConstants.EN_AFD:
+                    return 0.3258514286
+                elif old_unit == ToolkitConstants.EN_LPS:
+                    return .0228244653
+                elif old_unit == ToolkitConstants.EN_LPM:
+                    return .0003804078
+                elif old_unit == ToolkitConstants.EN_MLD:
+                    return .26417205124156
+                elif old_unit == ToolkitConstants.EN_CMH:
+                    return .0063401293
+                elif old_unit == ToolkitConstants.EN_CMD:
+                    return .0002641721
+            elif new_unit_id == ToolkitConstants.EN_IMGD:
+                if old_unit == ToolkitConstants.EN_CFS:
+                    return .5381713837
+                elif old_unit == ToolkitConstants.EN_MGD:
+                    return .8326741846
+                elif old_unit == ToolkitConstants.EN_GPM:
+                    return .0011990508
+                elif old_unit == ToolkitConstants.EN_AFD:
+                    return .2713280726
+                elif old_unit == ToolkitConstants.EN_LPS:
+                    return .0190053431
+                elif old_unit == ToolkitConstants.EN_LPM:
+                    return .0003167557
+                elif old_unit == ToolkitConstants.EN_MLD:
+                    return .21996924829908776
+                elif old_unit == ToolkitConstants.EN_CMH:
+                    return .005279262
+                elif old_unit == ToolkitConstants.EN_CMD:
+                    return .0002199692
+            elif new_unit_id == ToolkitConstants.EN_AFD:
+                if old_unit == ToolkitConstants.EN_CFS:
+                    return 1.9834710744
+                elif old_unit == ToolkitConstants.EN_MGD:
+                    return 3.0688832772
+                elif old_unit == ToolkitConstants.EN_GPM:
+                    return .0044191919
+                elif old_unit == ToolkitConstants.EN_IMGD:
+                    return 3.6855751432
+                elif old_unit == ToolkitConstants.EN_LPS:
+                    return .0700456199
+                elif old_unit == ToolkitConstants.EN_LPM:
+                    return .001167427
+                elif old_unit == ToolkitConstants.EN_MLD:
+                    return .81070995093708
+                elif old_unit == ToolkitConstants.EN_CMH:
+                    return .0194571167
+                elif old_unit == ToolkitConstants.EN_CMD:
+                    return .0008107132
+            elif new_unit_id == ToolkitConstants.EN_LPS:
+                if old_unit == ToolkitConstants.EN_CFS:
+                    return 28.316846592
+                elif old_unit == ToolkitConstants.EN_MGD:
+                    return 43.812636389
+                elif old_unit == ToolkitConstants.EN_IMGD:
+                    return 52.616782407
+                elif old_unit == ToolkitConstants.EN_GPM:
+                    return .0630901964
+                elif old_unit == ToolkitConstants.EN_AFD:
+                    return 14.276410157
+                elif old_unit == ToolkitConstants.EN_LPM:
+                    return .0166666667
+                elif old_unit == ToolkitConstants.EN_MLD:
+                    return 11.574074074074
+                elif old_unit == ToolkitConstants.EN_CMH:
+                    return .2777777778
+                elif old_unit == ToolkitConstants.EN_CMD:
+                    return .0115740741
+            elif new_unit_id == ToolkitConstants.EN_LPM:
+                if old_unit == ToolkitConstants.EN_CFS:
+                    return 1699.0107955
+                elif old_unit == ToolkitConstants.EN_MGD:
+                    return 2628.7581833
+                elif old_unit == ToolkitConstants.EN_IMGD:
+                    return 3157.0069444
+                elif old_unit == ToolkitConstants.EN_AFD:
+                    return 856.58460941
+                elif old_unit == ToolkitConstants.EN_LPS:
+                    return 60
+                elif old_unit == ToolkitConstants.EN_GPM:
+                    return 3.785411784
+                elif old_unit == ToolkitConstants.EN_MLD:
+                    return 694.44444444443
+                elif old_unit == ToolkitConstants.EN_CMH:
+                    return 16.666666667
+                elif old_unit == ToolkitConstants.EN_CMD:
+                    return 0.6944444444
+            elif new_unit_id == ToolkitConstants.EN_MLD:
+                if old_unit == ToolkitConstants.EN_CFS:
+                    return 2.4465755456688
+                elif old_unit == ToolkitConstants.EN_MGD:
+                    return 3.7854117999999777
+                elif old_unit == ToolkitConstants.EN_IMGD:
+                    return 4.54609
+                elif old_unit == ToolkitConstants.EN_AFD:
+                    return 1.2334867714947
+                elif old_unit == ToolkitConstants.EN_LPS:
+                    return .0864
+                elif old_unit == ToolkitConstants.EN_LPM:
+                    return .00144
+                elif old_unit == ToolkitConstants.EN_GPM:
+                    return .00545099296896
+                elif old_unit == ToolkitConstants.EN_CMH:
+                    return .024
+                elif old_unit == ToolkitConstants.EN_CMD:
+                    return .00099999999999999
+            elif new_unit_id == ToolkitConstants.EN_CMH:
+                if old_unit == ToolkitConstants.EN_CFS:
+                    return 101.94064773
+                elif old_unit == ToolkitConstants.EN_MGD:
+                    return 157.725491
+                elif old_unit == ToolkitConstants.EN_IMGD:
+                    return 189.42041667
+                elif old_unit == ToolkitConstants.EN_AFD:
+                    return 51.395076564
+                elif old_unit == ToolkitConstants.EN_LPS:
+                    return 3.6
+                elif old_unit == ToolkitConstants.EN_LPM:
+                    return .06
+                elif old_unit == ToolkitConstants.EN_MLD:
+                    return 41.666666666666
+                elif old_unit == ToolkitConstants.EN_GPM:
+                    return .227124707
+                elif old_unit == ToolkitConstants.EN_CMD:
+                    return 0.0416666667
+            elif new_unit_id == ToolkitConstants.EN_CMD:
+                if old_unit == ToolkitConstants.EN_CFS:
+                    return 2446.5755455
+                elif old_unit == ToolkitConstants.EN_MGD:
+                    return 3785.411784
+                elif old_unit == ToolkitConstants.EN_IMGD:
+                    return 4546.09
+                elif old_unit == ToolkitConstants.EN_AFD:
+                    return 1233.4818375
+                elif old_unit == ToolkitConstants.EN_LPS:
+                    return 86.4
+                elif old_unit == ToolkitConstants.EN_LPM:
+                    return 1.44
+                elif old_unit == ToolkitConstants.EN_MLD:
+                    return 1000.
+                elif old_unit == ToolkitConstants.EN_CMH:
+                    return 24
+                elif old_unit == ToolkitConstants.EN_GPM:
+                    return 5.450992969
+
+        # Convert units
+        pressure_data = self.pressure_data_raw
+        flow_data = self.flow_data_raw
+        demand_data = self.demand_data_raw
+        quality_node_data = self.node_quality_data_raw
+        quality_link_data = self.link_quality_data_raw
+        tanks_volume_data = self.tanks_volume_data_raw
+        surface_species_concentrations = self.surface_species_concentration_raw
+        bulk_species_node_concentrations = self.bulk_species_node_concentration_raw
+        bulk_species_link_concentrations = self.bulk_species_link_concentration_raw
+
+        if flow_unit is not None:
+            old_flow_unit = self.__sensor_config.flow_unit
+            if flow_unit == old_flow_unit:
+                warnings.warn("'flow_unit' is identical to the current flow units " +
+                              "-- nothing to do!", UserWarning)
+            else:
+                # Convert flows and demands
+                convert_factor = __get_flow_convert_factor(flow_unit, old_flow_unit)
+
+                flow_data *= convert_factor
+                demand_data *= convert_factor
+
+                if is_flowunit_simetric(flow_unit) != is_flowunit_simetric(old_flow_unit):
+                    # Convert tank volume and pressure
+                    convert_factor = None
+                    convert_factor_pressure = None
+                    if is_flowunit_simetric(flow_unit) is True and \
+                            is_flowunit_simetric(old_flow_unit) is False:
+                        convert_factor_volume = .0283168
+                        convert_factor_pressure = .70325
+                    else:
+                        convert_factor_volume = 35.3147
+                        convert_factor_pressure = 1.4219702084872
+
+                    pressure_data *= convert_factor_pressure
+                    tanks_volume_data *= convert_factor_volume
+
+        if quality_unit is not None:
+            old_quality_unit = self.__sensor_config.quality_unit()
+            if quality_unit == old_quality_unit:
+                warnings.warn("'quality_unit' are identical to the current quality units " +
+                              "-- nothing to do!", UserWarning)
+            else:
+                # Convert chemical concentration and time (basic quality analysis)
+                if quality_unit != TIME_UNIT_HRS:
+                    convert_factor = __get_mass_convert_factor(quality_unit, old_quality_unit)
+
+                    quality_node_data *= convert_factor
+                    quality_link_data *= convert_factor
+
+        if bulk_species_mass_unit is not None:
+            # Convert bulk species concentrations
+            if self.__frozen_sensor_config is True:
+                for i, species_id, _ in enumerate(self.__sensor_config.bulk_species_node_sensors):
+                    species_idx = self.__sensor_config.bulk_species.index(species_id)
+                    new_mass_unit = bulk_species_mass_unit[species_idx]
+                    old_mass_unit = self.__sensor_config.bulk_species_mass_unit[species_idx]
+
+                    if new_mass_unit != old_mass_unit:
+                        convert_factor = __get_mass_convert_factor(new_mass_unit, old_mass_unit)
+                        bulk_species_node_concentrations[:, i, :] *= convert_factor
+
+                for i, species_id, _ in enumerate(self.__sensor_config.bulk_species_link_sensors):
+                    species_idx = self.__sensor_config.bulk_species.index(species_id)
+                    new_mass_unit = bulk_species_mass_unit[species_idx]
+                    old_mass_unit = self.__sensor_config.bulk_species_mass_unit[species_idx]
+
+                    if new_mass_unit != old_mass_unit:
+                        convert_factor = __get_mass_convert_factor(new_mass_unit, old_mass_unit)
+                        bulk_species_link_concentrations[:, i, :] *= convert_factor
+            else:
+                for i in range(bulk_species_node_concentrations.shape[1]):
+                    if bulk_species_mass_unit[i] != self.__sensor_config.bulk_species_mass_unit[i]:
+                        old_mass_unit = self.__sensor_config.bulk_species_mass_unit[i]
+                        convert_factor = __get_mass_convert_factor(bulk_species_mass_unit[i],
+                                                                   old_mass_unit)
+
+                        bulk_species_node_concentrations[:, i, :] *= convert_factor
+                        bulk_species_link_concentrations[:, i, :] *= convert_factor
+
+        if surface_species_mass_unit is not None:
+            # Convert surface species concentrations
+            if self.__frozen_sensor_config is True:
+                for i, species_id, _ in enumerate(self.__sensor_config.surface_species_sensors):
+                    species_idx = self.__sensor_config.surface_species.index(species_id)
+                    new_mass_unit = surface_species_mass_unit[species_idx]
+                    old_mass_unit = self.__sensor_config.surface_species_mass_unit[species_idx]
+
+                    if new_mass_unit != old_mass_unit:
+                        convert_factor = __get_mass_convert_factor(new_mass_unit, old_mass_unit)
+                        surface_species_concentrations[:, i, :] *= convert_factor
+            else:
+                for i in range(surface_species_concentrations.shape[1]):
+                    old_mass_unit = self.__sensor_config.surface_species_mass_unit[i]
+                    if surface_species_mass_unit[i] != old_mass_unit:
+                        convert_factor = __get_mass_convert_factor(surface_species_mass_unit[i],
+                                                                   old_mass_unit)
+
+                        surface_species_concentrations[:, i, :] *= convert_factor
+
+        # Create new SCADA data instance
+        new_flow_unit = self.__sensor_config.flow_unit
+        if flow_unit is not None:
+            new_flow_unit = flow_unit
+
+        new_quality_unit = self.__sensor_config.quality_unit
+        if quality_unit is not None:
+            new_quality_unit = quality_unit
+
+        new_bulk_species_mass_unit = self.__sensor_config.bulk_species_mass_unit
+        if bulk_species_mass_unit is not None:
+            new_bulk_species_mass_unit = bulk_species_mass_unit
+
+        new_surface_species_mass_unit = self.__sensor_config.surface_species_mass_unit
+        if surface_species_mass_unit is not None:
+            new_surface_species_mass_unit = surface_species_mass_unit
+
+        new_surface_species_area_unit = self.__sensor_config.surface_species_area_unit
+        if surface_species_area_unit is not None:
+            new_surface_species_mass_unit = surface_species_area_unit
+
+        sensor_config = SensorConfig(nodes=self.__sensor_config.nodes,
+                                     links=self.__sensor_config.links,
+                                     valves=self.__sensor_config.valves,
+                                     pumps=self.__sensor_config.pumps,
+                                     tanks=self.__sensor_config.tanks,
+                                     bulk_species=self.__sensor_config.bulk_species,
+                                     surface_species=self.__sensor_config.surface_species,
+                                     flow_unit=new_flow_unit,
+                                     pressure_sensors=self.__sensor_config.pressure_sensors,
+                                     flow_sensors=self.__sensor_config.flow_sensors,
+                                     demand_sensors=self.__sensor_config.demand_sensors,
+                                     quality_node_sensors=self.__sensor_config.quality_node_sensors,
+                                     quality_link_sensors=self.__sensor_config.quality_link_sensors,
+                                     valve_state_sensors=self.__sensor_config.valve_state_sensors,
+                                     pump_state_sensors=self.__sensor_config.pump_state_sensors,
+                                     tank_volume_sensors=self.__sensor_config.tank_volume_sensors,
+                                     bulk_species_node_sensors=
+                                     self.__sensor_config.bulk_species_node_sensors,
+                                     bulk_species_link_sensors=
+                                     self.__sensor_config.bulk_species_link_sensors,
+                                     surface_species_sensors=
+                                     self.__sensor_config.surface_species_sensors,
+                                     #node_id_to_idx=self.__sensor_config.node_id_to_idx,
+                                     #link_id_to_idx=self.__sensor_config.link_id_to_idx,
+                                     #valve_id_to_idx=self.__sensor_config.valve_id_to_idx,
+                                     #pump_id_to_idx=self.__sensor_config.pump_id_to_idx,
+                                     #tank_id_to_idx=self.__sensor_config.tank_id_to_idx,
+                                     #bulkspecies_id_to_idx=
+                                     #self.__sensor_config.bulkspecies_id_to_idx,
+                                     #surfacespecies_id_to_idx=
+                                     #self.__sensor_config.surfacespecies_id_to_idx,
+                                     quality_unit=new_quality_unit,
+                                     bulk_species_mass_unit=new_bulk_species_mass_unit,
+                                     surface_species_mass_unit=new_surface_species_mass_unit,
+                                     surface_species_area_unit=new_surface_species_area_unit)
+
+        return ScadaData(sensor_config=sensor_config,
+                         sensor_readings_time=self.sensor_readings_time,
+                         sensor_reading_events=self.sensor_reading_events,
+                         sensor_noise=self.sensor_noise,
+                         frozen_sensor_config=self.frozen_sensor_config,
+                         pressure_data_raw=pressure_data,
+                         flow_data_raw=flow_data,
+                         demand_data_raw=demand_data,
+                         node_quality_data_raw=quality_node_data,
+                         link_quality_data_raw=quality_link_data,
+                         pumps_state_data_raw=self.pumps_state_data_raw,
+                         valves_state_data_raw=self.valves_state_data_raw,
+                         tanks_volume_data_raw=tanks_volume_data,
+                         pump_energy_usage_data=self.pump_energy_usage_data,
+                         pump_efficiency_data=self.pump_efficiency_data,
+                         bulk_species_node_concentration_raw=bulk_species_node_concentrations,
+                         bulk_species_link_concentration_raw=bulk_species_link_concentrations,
+                         surface_species_concentration_raw=surface_species_concentrations)
 
     @property
     def frozen_sensor_config(self) -> bool:
@@ -863,7 +1394,7 @@ class ScadaData(Serializable):
 
     def join(self, other) -> None:
         """
-        Joins two :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData` instances based
+        Joins two :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances based
         on the sensor reading times. Consequently, **both instances must be equal in their
         sensor reading times**.
         Attributes (i.e. types of sensor readings) that are NOT present in THIS instance
@@ -872,7 +1403,7 @@ class ScadaData(Serializable):
 
         Parameters
         ----------
-        other : :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData`
+        other : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             Other scada data to be concatenated to this data.
         """
         if not isinstance(other, ScadaData):
@@ -964,16 +1495,16 @@ class ScadaData(Serializable):
 
     def concatenate(self, other) -> None:
         """
-        Concatenates two :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData` instances
+        Concatenates two :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances
         -- i.e. add SCADA data from another given
-        :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData` instance to this one.
+        :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance to this one.
 
-        Note that the two :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData` instances
+        Note that the two :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances
         must be the same in all other attributs (e.g. sensor configuration, etc.).
 
         Parameters
         ----------
-        other : :class:`~epyt_flow.simulation.scada_data.scada_data.ScadaData`
+        other : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             Other scada data to be concatenated to this data.
         """
         if not isinstance(other, ScadaData):

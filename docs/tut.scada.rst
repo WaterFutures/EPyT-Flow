@@ -208,6 +208,37 @@ Example for getting the pressure readings at node "5":
     pressure_at_node_5 = scada_data.get_data_pressures(sensor_locations=["5"])
 
 
+.. _scada_change_units:
+
+Units of Measurement
+++++++++++++++++++++
+
+The units of measurements are stored in the sensor configuration:
+
++----------------------------+--------------------------------------------------------------------------------------+
+| Units of Measurements      | Attribute in the sensor configuration                                                |
++============================+======================================================================================+
+| Hydraulics units           | :func:`~epyt_flow.simulation.sensor_config.SensorConfig.flow_unit`                   |
++----------------------------+--------------------------------------------------------------------------------------+
+| Water quality unit         | :func:`~epyt_flow.simulation.sensor_config.SensorConfig.quality_unit`                |
++----------------------------+--------------------------------------------------------------------------------------+
+| Bulk species mass unit     | :func:`~epyt_flow.simulation.sensor_config.SensorConfig.bulk_species_mass_unit`      |
++----------------------------+--------------------------------------------------------------------------------------+
+| Surface species mass unit  | :func:`~epyt_flow.simulation.sensor_config.SensorConfig.surface_species_mass_unit`   |
++----------------------------+--------------------------------------------------------------------------------------+
+| Surface species area unit  | :func:`~epyt_flow.simulation.sensor_config.SensorConfig.surface_species_area_unit`   |
++----------------------------+--------------------------------------------------------------------------------------+
+
+For a full list of supported measurement units and how they releate to each other
+can be found in the
+`EPANET documentation <https://epanet22.readthedocs.io/en/latest/back_matter.html#>`_.
+
+The units can be changed (i.e. measurements are converted) by calling the function
+:func:`~epyt_flow.simulation.scada.scada_data.ScadaData.convert_units` of a
+:class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
+instances.
+
+
 Importing and Exporting
 +++++++++++++++++++++++
 
