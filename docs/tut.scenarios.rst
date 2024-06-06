@@ -173,6 +173,29 @@ However, it is also possible to change some of those before the simulation is ru
 measurement units can be changed afterwards by post-processing the SCADA data --
 see :ref:`here <scada_change_units>` for more information.
 
+The most convient way of changing/specifying the hydraulic units is by specifying the flow units
+when loading the .inp file -- note that the flow units specify all other hydraulic units as stated
+in the `EPANET documentation <https://epanet22.readthedocs.io/en/latest/back_matter.html>`_:
+
+.. code-block:: python
+
+    # Load Net1 with CMH (cubic meter per hour) as the flow unit
+    scenario_config = load_net1(flow_units_id=ToolkitConstants.EN_CMH)
+
+
+Alternatively, the flow units can be changed anytime by calling
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_general_parameters` of a
+:class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance:
+
+.. code-block:: python
+
+    # Open/Create a new scenario based on the Hanoi network
+    with ScenarioSimulator(f_inp="Hanoi.inp") as sim:
+        # Change flow units to CMH (cubic meter per hour)
+        sim.set_general_parameters(flow_units_id=ToolkitConstants.EN_CMH)
+
+        # ...
+
 
 Scenario Configurations
 +++++++++++++++++++++++
