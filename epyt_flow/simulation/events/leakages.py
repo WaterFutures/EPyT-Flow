@@ -5,6 +5,7 @@ from copy import deepcopy
 import math
 import numpy as np
 import epyt
+from epyt.epanet import ToolkitConstants
 
 from .system_event import SystemEvent
 from ...serialization import serializable, JsonSerializable, \
@@ -23,14 +24,14 @@ class Leakage(SystemEvent, JsonSerializable):
         Note that if the leak is placed at a node, then 'link_id' must be None and the
         ID of the node must be set in 'node_id'
     diameter : `float`, optional
-        Diameter of this leak.
+        Diameter of this leak in either *foot* or *meter* (depending on the used flow units).
 
         Alternatively, 'area' can be used for specifying the size of this leakage --
         in this case, 'diameter' must be set to 'None'.
 
         The default is None.
     area : `float`, optional
-        Area of this leak.
+        Area of this leak in either *foot^2* or *meter^2* (depending on the used flow units).
 
         Alternatively, 'diameter' can be used for specifying the size of this leakage --
         in this case, 'area' must be set to 'None'.
@@ -124,19 +125,21 @@ class Leakage(SystemEvent, JsonSerializable):
     @property
     def diameter(self) -> float:
         """
-        Gets the diameter of the leak.
+        Gets the diameter of the leak in either *foot* or *meter*
+        (depending on the sued flow units).
 
         Returns
         -------
         `float`
-            Diameter of the leak.
+            Diameter (*foot* or *meter*) of the leak.
         """
         return self.__diameter
 
     @property
     def area(self) -> float:
         """
-        Gets the area of the leak.
+        Gets the area of the leak in either *foot^2* or *meter^2*
+        (depending on the sued flow units).
 
         Returns
         -------
@@ -190,46 +193,53 @@ class Leakage(SystemEvent, JsonSerializable):
         """
         Computes the leak area given the diameter.
 
+        leak_area = pi * (diameter * .5)^2
+
         Parameters
         ----------
         diameter : `float`
-            Diameter (m) of the leak.
+            Diameter (*foot* or *meter*) of the leak.
 
         Returns
         -------
         `float`
-            Leak area in mm^2.
+            Leak area in *foot^2* or *meter^2*.
         """
-        return (np.pi * (diameter / 2) ** 2) * 10000.
+        return np.pi * (diameter / 2) ** 2
 
-    def compute_leak_emitter_coefficient(self, area: float, discharge_coef: float = .75,
-                                         g: float = 9.80665) -> float:
+    def compute_leak_emitter_coefficient(self, area: float, discharge_coef: float = .75) -> float:
         """
         Computes the leak emitter coefficient.
 
-        emitter_coef = discharge_coef * area * sqrt(2*g)   where g = 9.8, discharge_coef = .75
+        emitter_coef = discharge_coef * area * sqrt(2*g)
+           where g is the gravitational constant, discharge_coef = .75
 
         leak_demand = emitter_coef * pressure^alpha       where alpha = .5
 
         Parameters
         ----------
         area : `float`
-            Leak area (mm^2) as computed in
+            Leak area (foot^2 or meter^2) as computed in
             :func:`epyt_flow.simulation.events.leakages.Leakage.compute_leak_area`.
         discharge_coef : `float`, optional
             Discharge coefficient.
 
             The default is set to 0.75
-        g : `float`, optional
-            Gravitational constant. Do not change this!
-
-            The default is 9.8
 
         Returns
         -------
         `float`
             Leak emitter coefficient.
         """
+        flow_unit = self._epanet_api.api.ENgetflowunits()
+        if flow_unit == ToolkitConstants.EN_CMH:
+            g = 127137600   # m/h^2
+        elif flow_unit == ToolkitConstants.EN_CFS:
+            g = 32.17405    # feet/s^2
+        else:
+            raise ValueError("Leakages are only implemented for the following flow units:\n" +
+                             " EN_CMH (cubic foot/sec)\n EN_CFS (cubic meter/hr)")
+
         return discharge_coef * area * np.sqrt(2. * g)
 
     def init(self, epanet_api: epyt.epanet) -> None:

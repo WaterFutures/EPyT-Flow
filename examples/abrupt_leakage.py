@@ -15,6 +15,11 @@ if __name__ == "__main__":
         # Set simulation duration to 7 days
         sim.set_general_parameters(simulation_duration=to_seconds(days=7))
 
+        # Note that leakages are only modeled for two flow units.
+        # We therefore change the flow units to cubic meter per hour --
+        # could also be done when loading the network!
+        sim.epanet_api.setFlowUnitsCMH()
+
         # Add an abrupt leakage at link/pipe "14" -- the leakage is active for 18 hours and
         # starts at 10 hours after simulation begin -- recall that the time arguments are seconds!
         leak = AbruptLeakage(link_id="14", diameter=0.001,

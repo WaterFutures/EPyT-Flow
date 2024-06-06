@@ -475,12 +475,10 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
                                   (int(week_year_pat.shape[0]), int(week_year_pat.shape[1])))
 
         # Create demand
-        if use_net1 is True:
-            base = 1
-        else:
-            base = 0.3  # Avoid negative pressure in Hanoi
+        base = 1
         variation = 0.75 + np.random.normal(0, 0.07)  # from 0 to 1
         dem = base * (year_offset+1) * (week_year_pat*variation+1) * (random+1)
+
         dem = dem.tolist()
         dem_final = []
         for d in dem:
@@ -508,6 +506,7 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
                 wdn.epanet_api.setTimeHydraulicStep(general_params["hydraulic_time_step"])
                 wdn.epanet_api.setTimeSimulationDuration(general_params["simulation_duration"])
                 wdn.epanet_api.setTimePatternStep(general_params["hydraulic_time_step"])
+                wdn.epanet_api.setFlowUnitsCMH()
 
                 wdn.epanet_api.deletePatternsAll()
 
@@ -542,14 +541,10 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
             upper = data + z
             return lower + np.random.uniform() * (upper - lower)
 
-    model_uncertainty = ModelUncertainty(pipe_length_uncertainty=MyUniformUncertainty(low=0,
-                                                                                      high=0.25),
-                                         pipe_diameter_uncertainty=MyUniformUncertainty(low=0,
-                                                                                        high=0.25),
-                                         pipe_roughness_uncertainty=MyUniformUncertainty(low=0,
-                                                                                         high=0.25),
-                                         demand_base_uncertainty=MyUniformUncertainty(low=0,
-                                                                                      high=0.25))
+    my_uncertainties = {"pipe_length_uncertainty": MyUniformUncertainty(low=0, high=0.25),
+                        "pipe_roughness_uncertainty": MyUniformUncertainty(low=0, high=0.25),
+                        "demand_base_uncertainty": MyUniformUncertainty(low=0, high=0.25)}
+    model_uncertainty = ModelUncertainty(**my_uncertainties)
 
     # Create sensor config (place pressure and flow sensors everywhere)
     sensor_config = network_config.sensor_config

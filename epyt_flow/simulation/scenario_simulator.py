@@ -1846,7 +1846,7 @@ class ScenarioSimulator():
     def set_general_parameters(self, demand_model: dict = None, simulation_duration: int = None,
                                hydraulic_time_step: int = None, quality_time_step: int = None,
                                reporting_time_step: int = None, reporting_time_start: int = None,
-                               flow_units: int = None, quality_model: dict = None) -> None:
+                               flow_units_id: int = None, quality_model: dict = None) -> None:
         """
         Sets some general parameters.
 
@@ -1891,22 +1891,22 @@ class ScenarioSimulator():
             Start time (in seconds) at which reporting of hydraulic and quality states starts.
 
             The default is None.
-        flow_units : `int`, optional
+        flow_units_id : `int`, optional
             Specifies the flow units -- i.e. all flows will be reported in these units.
             If None, the units from the .inp file will be used.
 
             Must be one of the following EPANET toolkit constants:
 
-                - EN_CFS = 0 (cu foot/sec)
-                - EN_GPM = 1 (gal/min)
-                - EN_MGD = 2 (Million gal/day)
-                - EN_IMGD = 3 (Imperial MGD)
-                - EN_AFD = 4 (ac-foot/day)
-                - EN_LPS = 5 (liter/sec)
-                - EN_LPM = 6 (liter/min)
-                - EN_MLD = 7 (Megaliter/day)
-                - EN_CMH = 8 (cubic meter/hr)
-                - EN_CMD = 9 (cubic meter/day)
+                - EN_CFS  = 0  (cubic foot/sec)
+                - EN_GPM  = 1  (gal/min)
+                - EN_MGD  = 2  (Million gal/day)
+                - EN_IMGD = 3  (Imperial MGD)
+                - EN_AFD  = 4  (ac-foot/day)
+                - EN_LPS  = 5  (liter/sec)
+                - EN_LPM  = 6  (liter/min)
+                - EN_MLD  = 7  (Megaliter/day)
+                - EN_CMH  = 8  (cubic meter/hr)
+                - EN_CMD  = 9  (cubic meter/day)
 
             The default is None.
         quality_model : `dict`, optional
@@ -1962,29 +1962,29 @@ class ScenarioSimulator():
                                  "greater than the hydraulic time step")
             self.epanet_api.setTimeQualityStep(quality_time_step)
 
-        if flow_units is not None:
-            if flow_units == ToolkitConstants.EN_CFS:
+        if flow_units_id is not None:
+            if flow_units_id == ToolkitConstants.EN_CFS:
                 self.epanet_api.setFlowUnitsCFS()
-            elif flow_units == ToolkitConstants.EN_GPM:
+            elif flow_units_id == ToolkitConstants.EN_GPM:
                 self.epanet_api.setFlowUnitsGPM()
-            elif flow_units == ToolkitConstants.EN_MGD:
+            elif flow_units_id == ToolkitConstants.EN_MGD:
                 self.epanet_api.setFlowUnitsMGD()
-            elif flow_units == ToolkitConstants.EN_IMGD:
+            elif flow_units_id == ToolkitConstants.EN_IMGD:
                 self.epanet_api.setFlowUnitsIMGD()
-            elif flow_units == ToolkitConstants.EN_AFD:
+            elif flow_units_id == ToolkitConstants.EN_AFD:
                 self.epanet_api.setFlowUnitsAFD()
-            elif flow_units == ToolkitConstants.EN_LPS:
+            elif flow_units_id == ToolkitConstants.EN_LPS:
                 self.epanet_api.setFlowUnitsLPS()
-            elif flow_units == ToolkitConstants.EN_LPM:
+            elif flow_units_id == ToolkitConstants.EN_LPM:
                 self.epanet_api.setFlowUnitsLPM()
-            elif flow_units == ToolkitConstants.EN_MLD:
+            elif flow_units_id == ToolkitConstants.EN_MLD:
                 self.epanet_api.setFlowUnitsMLD()
-            elif flow_units == ToolkitConstants.EN_CMH:
+            elif flow_units_id == ToolkitConstants.EN_CMH:
                 self.epanet_api.setFlowUnitsCMH()
-            elif flow_units == ToolkitConstants.EN_CMD:
+            elif flow_units_id == ToolkitConstants.EN_CMD:
                 self.epanet_api.setFlowUnitsCMD()
             else:
-                raise ValueError(f"Unknown flow units '{flow_units}'")
+                raise ValueError(f"Unknown flow units '{flow_units_id}'")
 
         if quality_model is not None:
             if quality_model["type"] == "NONE":

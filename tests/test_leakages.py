@@ -3,6 +3,7 @@ Module provides test to test different types of leakages.
 """
 import math
 import numpy as np
+from epyt.epanet import ToolkitConstants
 
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import ScenarioSimulator, IncipientLeakage, AbruptLeakage, Leakage
@@ -13,7 +14,8 @@ from .utils import get_temp_folder
 
 def test_abrupt_leakage():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
-                                      include_default_sensor_placement=True)
+                                      include_default_sensor_placement=True,
+                                      flow_units_id=ToolkitConstants.EN_CMH)
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
@@ -26,7 +28,8 @@ def test_abrupt_leakage():
 
 def test_abrupt_leakage_area():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
-                                      include_default_sensor_placement=True)
+                                      include_default_sensor_placement=True,
+                                      flow_units_id=ToolkitConstants.EN_CMH)
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
@@ -39,7 +42,8 @@ def test_abrupt_leakage_area():
 
 def test_incipient_leakage():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
-                                      include_default_sensor_placement=True)
+                                      include_default_sensor_placement=True,
+                                      flow_units_id=ToolkitConstants.EN_CMH)
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
@@ -53,7 +57,8 @@ def test_incipient_leakage():
 
 def test_incipient_leakage_area():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
-                                      include_default_sensor_placement=True)
+                                      include_default_sensor_placement=True,
+                                      flow_units_id=ToolkitConstants.EN_CMH)
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
@@ -67,7 +72,8 @@ def test_incipient_leakage_area():
 
 def test_custom_leakage_profile():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
-                                      include_default_sensor_placement=True)
+                                      include_default_sensor_placement=True,
+                                      flow_units_id=ToolkitConstants.EN_CMH)
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 

@@ -415,8 +415,8 @@ class ScenarioConfig(Serializable):
             general_params["demand_model"] = general_settings["demand_model"]
         if "quality_model" in general_settings.keys():
             general_params["quality_model"] = general_settings["quality_model"]
-        if "flow_units" in general_settings.keys():
-            general_params["flow_units"] = general_settings["flow_units"]
+        if "flow_units_id" in general_settings.keys():
+            general_params["flow_units_id"] = general_settings["flow_units_id"]
 
         sensor_config = data["sensors"]
 

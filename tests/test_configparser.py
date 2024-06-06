@@ -16,7 +16,8 @@ def test_configparser():
                 "demand_model": {"type": "PDA", "pressure_min": 0, "pressure_required": 0.1, "pressure_exponent": 0.5},
                 "hydraulic_time_step": 1800,
                 "quality_time_step": 300,
-                "reporting_time_step": 1800
+                "reporting_time_step": 1800,
+                "flow_units_id": 8
             },
             "uncertainties": {
                 "pipe_length": {"type": "absolute_gaussian", "mean": 0, "scale": 1},

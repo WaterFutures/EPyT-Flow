@@ -25,9 +25,30 @@ def create_empty_sensor_config(f_inp: str) -> SensorConfig:
         return sim.sensor_config
 
 
-def get_default_hydraulic_options() -> dict:
+def get_default_hydraulic_options(flow_units_id: int = None) -> dict:
     """
     Gets standard hydraulic default options -- i.e. switch to pressure-driven analysis.
+
+    Parameters
+    ----------
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -35,11 +56,16 @@ def get_default_hydraulic_options() -> dict:
         Dictionary with default hydraulics options that can be passed to
         :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_general_parameters`.
     """
-    return {"demand_model": {"type": "PDA", "pressure_min": 0, "pressure_required": 0.1,
-                             "pressure_exponent": 0.5}}
+    params = {"demand_model": {"type": "PDA", "pressure_min": 0, "pressure_required": 0.1,
+                               "pressure_exponent": 0.5}}
+    if flow_units_id is not None:
+        params |= {"flow_units_id": flow_units_id}
+
+    return params
 
 
-def load_inp(f_in: str, include_empty_sensor_config: bool = True) -> ScenarioConfig:
+def load_inp(f_in: str, include_empty_sensor_config: bool = True,
+             flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads an .inp file and wraps it into a scenario configuration.
 
@@ -52,6 +78,24 @@ def load_inp(f_in: str, include_empty_sensor_config: bool = True) -> ScenarioCon
         scenario configuration.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -63,12 +107,14 @@ def load_inp(f_in: str, include_empty_sensor_config: bool = True) -> ScenarioCon
 
     if include_empty_sensor_config is True:
         return ScenarioConfig(f_inp_in=f_in, sensor_config=create_empty_sensor_config(f_inp=f_in),
-                              general_params=get_default_hydraulic_options())
+                              general_params=get_default_hydraulic_options(flow_units_id))
     else:
-        return ScenarioConfig(f_inp_in=f_in, general_params=get_default_hydraulic_options())
+        return ScenarioConfig(f_inp_in=f_in,
+                              general_params=get_default_hydraulic_options(flow_units_id))
 
 
-def load_net1(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
+def load_net1(download_dir: str = get_temp_folder(), verbose: bool = True,
+              flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Net1 network.
 
@@ -82,6 +128,24 @@ def load_net1(download_dir: str = get_temp_folder(), verbose: bool = True) -> Sc
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -94,10 +158,11 @@ def load_net1(download_dir: str = get_temp_folder(), verbose: bool = True) -> Sc
           "asce-tf-wdst/Net1.inp"
 
     download_if_necessary(f_in, url, verbose)
-    return load_inp(f_in)
+    return load_inp(f_in, flow_units_id=flow_units_id)
 
 
-def load_net2(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
+def load_net2(download_dir: str = get_temp_folder(), verbose: bool = True,
+              flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Net2 network.
 
@@ -111,6 +176,24 @@ def load_net2(download_dir: str = get_temp_folder(), verbose: bool = True) -> Sc
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -123,10 +206,11 @@ def load_net2(download_dir: str = get_temp_folder(), verbose: bool = True) -> Sc
           "asce-tf-wdst/Net2.inp"
 
     download_if_necessary(f_in, url, verbose)
-    return load_inp(f_in)
+    return load_inp(f_in, flow_units_id=flow_units_id)
 
 
-def load_net3(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
+def load_net3(download_dir: str = get_temp_folder(), verbose: bool = True,
+              flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Net3 network.
 
@@ -140,6 +224,24 @@ def load_net3(download_dir: str = get_temp_folder(), verbose: bool = True) -> Sc
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -152,10 +254,11 @@ def load_net3(download_dir: str = get_temp_folder(), verbose: bool = True) -> Sc
           "asce-tf-wdst/Net3.inp"
 
     download_if_necessary(f_in, url, verbose)
-    return load_inp(f_in)
+    return load_inp(f_in, flow_units_id=flow_units_id)
 
 
-def load_net6(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
+def load_net6(download_dir: str = get_temp_folder(), verbose: bool = True,
+              flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Net6 network.
 
@@ -169,6 +272,24 @@ def load_net6(download_dir: str = get_temp_folder(), verbose: bool = True) -> Sc
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -180,10 +301,11 @@ def load_net6(download_dir: str = get_temp_folder(), verbose: bool = True) -> Sc
     url = "https://github.com/OpenWaterAnalytics/WNTR/raw/main/examples/networks/Net6.inp"
 
     download_if_necessary(f_in, url, verbose)
-    return load_inp(f_in)
+    return load_inp(f_in, flow_units_id=flow_units_id)
 
 
-def load_richmond(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
+def load_richmond(download_dir: str = get_temp_folder(), verbose: bool = True,
+                  flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Richmond network.
 
@@ -197,6 +319,24 @@ def load_richmond(download_dir: str = get_temp_folder(), verbose: bool = True) -
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -209,10 +349,11 @@ def load_richmond(download_dir: str = get_temp_folder(), verbose: bool = True) -
           "exeter-benchmarks/Richmond_standard.inp"
 
     download_if_necessary(f_in, url, verbose)
-    return load_inp(f_in)
+    return load_inp(f_in, flow_units_id=flow_units_id)
 
 
-def load_micropolis(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
+def load_micropolis(download_dir: str = get_temp_folder(), verbose: bool = True,
+                    flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the MICROPOLIS network.
 
@@ -226,6 +367,24 @@ def load_micropolis(download_dir: str = get_temp_folder(), verbose: bool = True)
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -238,10 +397,11 @@ def load_micropolis(download_dir: str = get_temp_folder(), verbose: bool = True)
           "MICROPOLIS_v1.inp"
 
     download_if_necessary(f_in, url, verbose)
-    return load_inp(f_in)
+    return load_inp(f_in, flow_units_id=flow_units_id)
 
 
-def load_balerma(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
+def load_balerma(download_dir: str = get_temp_folder(), verbose: bool = True,
+                 flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Balerma network.
 
@@ -255,6 +415,24 @@ def load_balerma(download_dir: str = get_temp_folder(), verbose: bool = True) ->
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -267,10 +445,11 @@ def load_balerma(download_dir: str = get_temp_folder(), verbose: bool = True) ->
           "asce-tf-wdst/Balerma.inp"
 
     download_if_necessary(f_in, url, verbose)
-    return load_inp(f_in)
+    return load_inp(f_in, flow_units_id=flow_units_id)
 
 
-def load_rural(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
+def load_rural(download_dir: str = get_temp_folder(), verbose: bool = True,
+               flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Rural network.
 
@@ -284,6 +463,24 @@ def load_rural(download_dir: str = get_temp_folder(), verbose: bool = True) -> S
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -296,10 +493,11 @@ def load_rural(download_dir: str = get_temp_folder(), verbose: bool = True) -> S
           "asce-tf-wdst/RuralNetwork.inp"
 
     download_if_necessary(f_in, url, verbose)
-    return load_inp(f_in)
+    return load_inp(f_in, flow_units_id=flow_units_id)
 
 
-def load_bwsn1(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
+def load_bwsn1(download_dir: str = get_temp_folder(), verbose: bool = True,
+               flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the BWSN-1 network.
 
@@ -313,6 +511,24 @@ def load_bwsn1(download_dir: str = get_temp_folder(), verbose: bool = True) -> S
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -325,10 +541,11 @@ def load_bwsn1(download_dir: str = get_temp_folder(), verbose: bool = True) -> S
           "asce-tf-wdst/BWSN_Network_1.inp"
 
     download_if_necessary(f_in, url, verbose)
-    return load_inp(f_in)
+    return load_inp(f_in, flow_units_id=flow_units_id)
 
 
-def load_bwsn2(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
+def load_bwsn2(download_dir: str = get_temp_folder(), verbose: bool = True,
+               flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the BWSN-2 network.
 
@@ -342,6 +559,24 @@ def load_bwsn2(download_dir: str = get_temp_folder(), verbose: bool = True) -> S
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -354,10 +589,11 @@ def load_bwsn2(download_dir: str = get_temp_folder(), verbose: bool = True) -> S
           "asce-tf-wdst/BWSN_Network_2.inp"
 
     download_if_necessary(f_in, url, verbose)
-    return load_inp(f_in)
+    return load_inp(f_in, flow_units_id=flow_units_id)
 
 
-def load_anytown(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
+def load_anytown(download_dir: str = get_temp_folder(), verbose: bool = True,
+                 flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Anytown network.
 
@@ -371,6 +607,24 @@ def load_anytown(download_dir: str = get_temp_folder(), verbose: bool = True) ->
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -383,10 +637,11 @@ def load_anytown(download_dir: str = get_temp_folder(), verbose: bool = True) ->
           "asce-tf-wdst/Anytown.inp"
 
     download_if_necessary(f_in, url, verbose)
-    return load_inp(f_in)
+    return load_inp(f_in, flow_units_id=flow_units_id)
 
 
-def load_dtown(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
+def load_dtown(download_dir: str = get_temp_folder(), verbose: bool = True,
+               flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the D-Town network.
 
@@ -400,6 +655,24 @@ def load_dtown(download_dir: str = get_temp_folder(), verbose: bool = True) -> S
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -411,10 +684,11 @@ def load_dtown(download_dir: str = get_temp_folder(), verbose: bool = True) -> S
     url = "https://www.exeter.ac.uk/media/universityofexeter/emps/research/cws/downloads/d-town.inp"
 
     download_if_necessary(f_in, url, verbose)
-    return load_inp(f_in)
+    return load_inp(f_in, flow_units_id=flow_units_id)
 
 
-def load_ctown(download_dir: str = get_temp_folder(), verbose: bool = True) -> ScenarioConfig:
+def load_ctown(download_dir: str = get_temp_folder(), verbose: bool = True,
+               flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the C-Town network.
 
@@ -428,6 +702,24 @@ def load_ctown(download_dir: str = get_temp_folder(), verbose: bool = True) -> S
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -439,11 +731,11 @@ def load_ctown(download_dir: str = get_temp_folder(), verbose: bool = True) -> S
     url = "https://github.com/scy-phy/www.batadal.net/raw/master/data/CTOWN.INP"
 
     download_if_necessary(f_in, url, verbose)
-    return load_inp(f_in)
+    return load_inp(f_in, flow_units_id=flow_units_id)
 
 
 def load_kentucky(wdn_id: int = 1, download_dir: str = get_temp_folder(),
-                  verbose: bool = True) -> ScenarioConfig:
+                  verbose: bool = True, flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the specified Kentucky network.
 
@@ -461,6 +753,24 @@ def load_kentucky(wdn_id: int = 1, download_dir: str = get_temp_folder(),
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -478,12 +788,12 @@ def load_kentucky(wdn_id: int = 1, download_dir: str = get_temp_folder(),
           f"asce-tf-wdst/ky{wdn_id}.inp"
 
     download_if_necessary(f_in, url, verbose)
-    return load_inp(f_in)
+    return load_inp(f_in, flow_units_id=flow_units_id)
 
 
 def load_hanoi(download_dir: str = get_temp_folder(),
                include_default_sensor_placement: bool = False,
-               verbose: bool = True) -> ScenarioConfig:
+               verbose: bool = True, flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the Hanoi network.
 
@@ -501,6 +811,24 @@ def load_hanoi(download_dir: str = get_temp_folder(),
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -513,7 +841,7 @@ def load_hanoi(download_dir: str = get_temp_folder(),
           "asce-tf-wdst/Hanoi.inp"
 
     download_if_necessary(f_in, url, verbose)
-    config = load_inp(f_in)
+    config = load_inp(f_in, flow_units_id=flow_units_id)
 
     if include_default_sensor_placement is True:
         sensor_config = config.sensor_config
@@ -527,7 +855,7 @@ def load_hanoi(download_dir: str = get_temp_folder(),
 
 def load_ltown(download_dir: str = get_temp_folder(), use_realistic_demands: bool = False,
                include_default_sensor_placement: bool = False,
-               verbose: bool = True) -> ScenarioConfig:
+               verbose: bool = True, flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the L-TOWN_v2 network.
 
@@ -551,6 +879,24 @@ def load_ltown(download_dir: str = get_temp_folder(), use_realistic_demands: boo
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -567,7 +913,7 @@ def load_ltown(download_dir: str = get_temp_folder(), use_realistic_demands: boo
         url = "https://zenodo.org/records/4017659/files/L-TOWN_Real.inp?download=1"
 
     download_if_necessary(f_in, url, verbose)
-    config = load_inp(f_in)
+    config = load_inp(f_in, flow_units_id=flow_units_id)
 
     if include_default_sensor_placement is True:
         sensor_config = config.sensor_config
@@ -597,7 +943,7 @@ def load_ltown(download_dir: str = get_temp_folder(), use_realistic_demands: boo
 
 def load_ltown_a(download_dir: str = get_temp_folder(), use_realistic_demands: bool = False,
                  include_default_sensor_placement: bool = False,
-                 verbose: bool = True) -> ScenarioConfig:
+                 verbose: bool = True, flow_units_id: int = None) -> ScenarioConfig:
     """
     Loads (and downloads if necessary) the L-TOWN-A network (area "A" of the L-TOWN network).
 
@@ -621,6 +967,24 @@ def load_ltown_a(download_dir: str = get_temp_folder(), use_realistic_demands: b
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    flow_units_id : `int`, optional
+        Specifies the flow units to be used in this scenario.
+        If None, the units from the .inp file will be used.
+
+        Must be one of the following EPANET toolkit constants:
+
+            - EN_CFS  = 0  (cubic foot/sec)
+            - EN_GPM  = 1  (gal/min)
+            - EN_MGD  = 2  (Million gal/day)
+            - EN_IMGD = 3  (Imperial MGD)
+            - EN_AFD  = 4  (ac-foot/day)
+            - EN_LPS  = 5  (liter/sec)
+            - EN_LPM  = 6  (liter/min)
+            - EN_MLD  = 7  (Megaliter/day)
+            - EN_CMH  = 8  (cubic meter/hr)
+            - EN_CMD  = 9  (cubic meter/day)
+
+        The default is None.
 
     Returns
     -------
@@ -634,7 +998,7 @@ def load_ltown_a(download_dir: str = get_temp_folder(), use_realistic_demands: b
     url = f"https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/{f_inp}"
 
     download_if_necessary(f_in, url, verbose)
-    config = load_inp(f_in)
+    config = load_inp(f_in, flow_units_id=flow_units_id)
 
     if include_default_sensor_placement is True:
         sensor_config = config.sensor_config

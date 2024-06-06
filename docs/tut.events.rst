@@ -22,6 +22,17 @@ and an incipient leakage implemented in :class:`~epyt_flow.simulation.events.lea
 
 Custom leakages can be implemented by deriving a sub-class from :class:`~epyt_flow.simulation.events.leakages.Leakage`.
 
+.. note::
+    Leakages are modeled by means of emitter coefficients which are connected to the flow units.
+    In EPyT-Flow, leakages are only modeled for two flow units:
+
+    - EN_CMH  (cubic meter per hour)
+    - EN_CFS  (cubic feet per second)
+
+    More details on the computation of emitter coefficients can be found in the documentation of
+    :func:`~epyt_flow.simulation.events.leakages.Leakage.compute_leak_emitter_coefficient` --
+    leakages for other flow units can be implemented by overriding this function.
+
 The created leakage can be added to the scenario by calling 
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_leakage`  
 of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
@@ -44,6 +55,10 @@ Example for adding an abrupt and an incipient leakage:
     # Load Hanoi network with a default sensor configuration
     network_config = load_hanoi(include_default_sensor_placement=True)
     with ScenarioSimulator(scenario_config=network_config) as sim:
+        # Note that leakages are only modeled for two flow units.
+        # We therefore change the flow units to cubic meter per hour
+        sim.epanet_api.setFlowUnitsCMH()
+
         # Place a large abrupt leakage at link/pipe "12"
         leak = AbruptLeakage(link_id="12", diameter=0.1,
                              start_time=to_seconds(hours=2),
