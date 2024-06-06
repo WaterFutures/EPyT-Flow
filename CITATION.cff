@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+authors:
+  - family-names: Artelt
+    given-names: André
+    orcid: "https://orcid.org/0000-0002-2426-3126"
+  - family-names: Kyriakou
+    given-names: Marios S.
+    orcid: "https://orcid.org/0000-0002-2324-8661"
+  - family-names: Demetriades
+    given-names: Marios
+    orcid: "https://orcid.org/0000-0001-7775-4319"
+  - family-names: Vrachimis
+    given-names: Stelios G.
+    orcid: "https://orcid.org/0000-0001-8862-5205"
+  - family-names: Eliades
+    given-names: Demetrios G.
+    orcid: "https://orcid.org/0000-0001-6184-6366"
+  - family-names: Hammer
+    given-names: Barbara
+    orcid: "https://orcid.org/0000-0002-0935-5591"
+  - family-names: Polycarpou
+    given-names: Marios M.
+    orcid: "https://orcid.org/0000-0001-6495-9171"
+contact:
+  - family-names: Artelt
+    given-names: André
+    orcid: "https://orcid.org/0000-0002-2426-3126"
+message: "If you use this software, please cite it using these metadata."
+title: "EPyT-Flow -- EPANET Python Toolkit - Flow"
+keywords:
+  - python
+  - simulation
+  - water
+  - epanet
+  - epanet-python-toolkit
+license: MIT
+repository-code: "https://github.com/WaterFutures/EPyT-Flow"
