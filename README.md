@@ -1,11 +1,14 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![pypi](https://img.shields.io/pypi/v/epyt-flow.svg)](https://pypi.org/project/epyt-flow/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/epyt-flow)
 [![build](https://github.com/WaterFutures/EPyT-Flow/actions/workflows/build_tests.yml/badge.svg)](https://github.com/WaterFutures/EPyT-Flow/actions/workflows/build_tests.yml)
 [![Documentation Status](https://readthedocs.org/projects/epyt-flow/badge/?version=stable)](https://epyt-flow.readthedocs.io/en/stable/?badge=stable)
 [![Downloads](https://static.pepy.tech/badge/epyt-flow)](https://pepy.tech/project/epyt-flow)
 [![Downloads](https://static.pepy.tech/badge/epyt-flow/month)](https://pepy.tech/project/epyt-flow)
 
 # EPyT-Flow -- EPANET Python Toolkit - Flow
+
+<img src="https://github.com/WaterFutures/EPyT-Flow/blob/main/docs/_static/net1_plot.png?raw=true" align="right" height="230px"/>
 
 EPyT-Flow is a Python package building on top of [EPyT](https://github.com/OpenWaterAnalytics/EPyT) 
 for providing easy access to water distribution network simulations.
@@ -15,8 +18,6 @@ and [EPANET-MSX](https://github.com/USEPA/EPANETMSX/).
 
 EPyT-Flow provides easy access to popular benchmark data sets for event detection and localization.
 Furthermore, it also provides an environment for developing and testing control algorithms.
-
-![](https://github.com/WaterFutures/EPyT-Flow/blob/main/docs/_static/net1_plot.png?raw=true)
 
 
 ## Unique Features
@@ -41,7 +42,7 @@ EPyT-Flow supports Python 3.9 - 3.12
 
 Note that [EPANET and EPANET-MSX sources](epyt_flow/EPANET/) are compiled and overwrite the binaries
 shipped by EPyT **IF** EPyT-Flow is installed on a Unix system and the *gcc* compiler is available.
-By this we not only aim to achieve a better performance of the simulations but also avoid any
+By this, we not only aim to achieve a better performance of the simulations but also avoid any
 compatibility issues of pre-compiled binaries.
 
 #### Prerequisites for macOS users
