@@ -212,7 +212,7 @@ class Leakage(SystemEvent, JsonSerializable):
         Computes the leak emitter coefficient.
 
         emitter_coef = discharge_coef * area * sqrt(2*g)
-           where g is the gravitational constant, discharge_coef = .75
+        where g is the gravitational constant, and discharge_coef = .75
 
         leak_demand = emitter_coef * pressure^alpha       where alpha = .5
 
@@ -220,7 +220,7 @@ class Leakage(SystemEvent, JsonSerializable):
         ----------
         area : `float`
             Leak area (foot^2 or meter^2) as computed in
-            :func:`epyt_flow.simulation.events.leakages.Leakage.compute_leak_area`.
+            :func:`~epyt_flow.simulation.events.leakages.Leakage.compute_leak_area`.
         discharge_coef : `float`, optional
             Discharge coefficient.
 
