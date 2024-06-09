@@ -743,7 +743,7 @@ class SensorConfig(JsonSerializable):
 
         Parameters
         ----------
-        sensor_config : :class:`epyt_flow.simulation.sensor_config.SensorConfig`
+        sensor_config : :class:`~epyt_flow.simulation.sensor_config.SensorConfig`
             Sensor configuration used as a basis.
 
         Returns
@@ -762,9 +762,128 @@ class SensorConfig(JsonSerializable):
                             surface_species=sensor_config.surface_species,
                             bulk_species_mass_unit=sensor_config.bulk_species_mass_unit,
                             surface_species_mass_unit=sensor_config.surface_species_mass_unit,
-                            surface_species_area_unit=sensor_config.surface_species_area_unit)
+                            surface_species_area_unit=sensor_config.surface_species_area_unit,
+                            node_id_to_idx=sensor_config.node_id_to_idx,
+                            link_id_to_idx=sensor_config.link_id_to_idx,
+                            valve_id_to_idx=sensor_config.valve_id_to_idx,
+                            pump_id_to_idx=sensor_config.pump_id_to_idx,
+                            tank_id_to_idx=sensor_config.tank_id_to_idx,
+                            bulkspecies_id_to_idx=sensor_config.bulkspecies_id_to_idx,
+                            surfacespecies_id_to_idx=sensor_config.surfacespecies_id_to_idx)
 
-    def node_id_to_idx(self, node_id: str) -> int:
+    @property
+    def node_id_to_idx(self) -> dict:
+        """
+        Mapping of a surface node ID to the EPANET index
+        (i.e. position in the raw sensor reading data).
+
+        If None, it is assumed that the nodes (in 'nodes') are
+        sorted according to their EPANET index.
+
+        Returns
+        -------
+        `dict`
+            Node ID to index mapping.
+        """
+        return self.__node_id_to_idx
+
+    @property
+    def link_id_to_idx(self) -> dict:
+        """
+        Mapping of a link/pipe ID to the EPANET index
+        (i.e. position in the raw sensor reading data).
+
+        If None is given, it is assumed that the links/pipes (in 'links') are
+        sorted according to their EPANET index.
+
+        Returns
+        -------
+        `dict`
+            Link/Pipe ID to index mapping.
+        """
+        return self.__link_id_to_idx
+
+    @property
+    def valve_id_to_idx(self) -> dict:
+        """
+        Mapping of a valve ID to the EPANET index
+        (i.e. position in the raw sensor reading data).
+
+        If None, it is assumed that the valves (in 'valves') are
+        sorted according to their EPANET index.
+
+        Returns
+        -------
+        `dict`
+            Valve ID to index mapping.
+        """
+        return self.__valve_id_to_idx
+
+    @property
+    def pump_id_to_idx(self) -> dict:
+        """
+        Mapping of a pump ID to the EPANET index
+        (i.e. position in the raw sensor reading data).
+
+        If None, it is assumed that the pumps (in 'pumps') are
+        sorted according to their EPANET index.
+
+        Returns
+        -------
+        `dict`
+            Pump ID to index mapping.
+        """
+        return self.__pump_id_to_idx
+
+    @property
+    def tank_id_to_idx(self) -> dict:
+        """
+        Mapping of a tank ID to the EPANET index
+        (i.e. position in the raw sensor reading data).
+
+        If None, it is assumed that the tanks (in 'tanks') are
+        sorted according to their EPANET index.
+
+        Returns
+        -------
+        `dict`
+            Tank ID to index mapping.
+        """
+        return self.__tank_id_to_idx
+
+    @property
+    def bulkspecies_id_to_idx(self) -> dict:
+        """
+        Mapping of a bulk species ID to the EPANET index
+        (i.e. position in the raw sensor reading data).
+
+        If None, it is assumed that the bulk species (in 'bulk_species') are
+        sorted according to their EPANET index.
+
+        Returns
+        -------
+        `dict`
+            Bulk species ID to index mapping.
+        """
+        return self.__bulkspecies_id_to_idx
+
+    @property
+    def surfacespecies_id_to_idx(self) -> dict:
+        """
+        Mapping of a surface species ID to the EPANET index
+        (i.e. position in the raw sensor reading data).
+
+        If None, it is assumed that the surface species (in 'surface_species') are
+        sorted according to their EPANET index.
+
+        Returns
+        -------
+        `dict`
+            Surface species ID to index mapping.
+        """
+        return self.__surfacespecies_id_to_idx
+
+    def map_node_id_to_idx(self, node_id: str) -> int:
         """
         Gets the index of a given node ID.
 
@@ -783,7 +902,7 @@ class SensorConfig(JsonSerializable):
         else:
             return self.__nodes.index(node_id)
 
-    def link_id_to_idx(self, link_id: str) -> int:
+    def map_link_id_to_idx(self, link_id: str) -> int:
         """
         Gets the index of a given link ID.
 
@@ -802,7 +921,7 @@ class SensorConfig(JsonSerializable):
         else:
             return self.__links.index(link_id)
 
-    def valve_id_to_idx(self, valve_id: str) -> int:
+    def map_valve_id_to_idx(self, valve_id: str) -> int:
         """
         Gets the index of a given valve ID.
 
@@ -821,7 +940,7 @@ class SensorConfig(JsonSerializable):
         else:
             return self.__valves.index(valve_id)
 
-    def pump_id_to_idx(self, pump_id: str) -> int:
+    def map_pump_id_to_idx(self, pump_id: str) -> int:
         """
         Gets the index of a given pump ID.
 
@@ -840,7 +959,7 @@ class SensorConfig(JsonSerializable):
         else:
             return self.__pumps.index(pump_id)
 
-    def tank_id_to_idx(self, tank_id: str) -> int:
+    def map_tank_id_to_idx(self, tank_id: str) -> int:
         """
         Gets the index of a given tank ID.
 
@@ -859,7 +978,7 @@ class SensorConfig(JsonSerializable):
         else:
             return self.__tanks.index(tank_id)
 
-    def bulkspecies_id_to_idx(self, bulk_species_id: str) -> int:
+    def map_bulkspecies_id_to_idx(self, bulk_species_id: str) -> int:
         """
         Gets the index of a given bulk species ID.
 
@@ -878,7 +997,7 @@ class SensorConfig(JsonSerializable):
         else:
             return self.__bulk_species.index(bulk_species_id)
 
-    def surfacespecies_id_to_idx(self, surface_species_id: str) -> int:
+    def map_surfacespecies_id_to_idx(self, surface_species_id: str) -> int:
         """
         Gets the index of a given surface species ID.
 
@@ -898,35 +1017,35 @@ class SensorConfig(JsonSerializable):
             return self.__surface_species.index(surface_species_id)
 
     def __compute_indices(self):
-        self.__pressure_idx = np.array([self.node_id_to_idx(n)
+        self.__pressure_idx = np.array([self.map_node_id_to_idx(n)
                                         for n in self.__pressure_sensors], dtype=np.int32)
-        self.__flow_idx = np.array([self.link_id_to_idx(link)
+        self.__flow_idx = np.array([self.map_link_id_to_idx(link)
                                     for link in self.__flow_sensors], dtype=np.int32)
-        self.__demand_idx = np.array([self.node_id_to_idx(n)
+        self.__demand_idx = np.array([self.map_node_id_to_idx(n)
                                       for n in self.__demand_sensors], dtype=np.int32)
-        self.__quality_node_idx = np.array([self.node_id_to_idx(n)
+        self.__quality_node_idx = np.array([self.map_node_id_to_idx(n)
                                             for n in self.__quality_node_sensors], dtype=np.int32)
-        self.__quality_link_idx = np.array([self.link_id_to_idx(link)
+        self.__quality_link_idx = np.array([self.map_link_id_to_idx(link)
                                             for link in self.__quality_link_sensors],
                                            dtype=np.int32)
-        self.__valve_state_idx = np.array([self.valve_id_to_idx(v)
+        self.__valve_state_idx = np.array([self.map_valve_id_to_idx(v)
                                            for v in self.__valve_state_sensors], dtype=np.int32)
-        self.__pump_state_idx = np.array([self.pump_id_to_idx(p)
+        self.__pump_state_idx = np.array([self.map_pump_id_to_idx(p)
                                           for p in self.__pump_state_sensors], dtype=np.int32)
-        self.__tank_volume_idx = np.array([self.tank_id_to_idx(t)
+        self.__tank_volume_idx = np.array([self.map_tank_id_to_idx(t)
                                            for t in self.__tank_volume_sensors], dtype=np.int32)
-        self.__bulk_species_node_idx = np.array([(self.bulkspecies_id_to_idx(s),
-                                                  [self.node_id_to_idx(node_id)
+        self.__bulk_species_node_idx = np.array([(self.map_bulkspecies_id_to_idx(s),
+                                                  [self.map_node_id_to_idx(node_id)
                                                 for node_id in self.__bulk_species_node_sensors[s]])
                                                 for s in self.__bulk_species_node_sensors.keys()],
                                                 dtype=object)
-        self.__bulk_species_link_idx = np.array([(self.bulkspecies_id_to_idx(s),
-                                                  [self.link_id_to_idx(link_id)
+        self.__bulk_species_link_idx = np.array([(self.map_bulkspecies_id_to_idx(s),
+                                                  [self.map_link_id_to_idx(link_id)
                                                 for link_id in self.__bulk_species_link_sensors[s]])
                                                 for s in self.__bulk_species_link_sensors.keys()],
                                                 dtype=object)
-        self.__surface_species_idx = np.array([(self.surfacespecies_id_to_idx(s),
-                                                [self.link_id_to_idx(link_id)
+        self.__surface_species_idx = np.array([(self.map_surfacespecies_id_to_idx(s),
+                                                [self.map_link_id_to_idx(link_id)
                                                  for link_id in self.__surface_species_sensors[s]])
                                                for s in self.__surface_species_sensors.keys()],
                                               dtype=object)
@@ -1583,12 +1702,24 @@ class SensorConfig(JsonSerializable):
             and self.__quality_unit == other.quality_unit \
             and self.__bulk_species_mass_unit == other.bulk_species_mass_unit \
             and self.__surface_species_mass_unit == other.surface_species_mass_unit \
-            and self.__surface_species_area_unit == other.surface_species_area_unit
+            and self.__surface_species_area_unit == other.surface_species_area_unit \
+            and self.__node_id_to_idx == other.node_id_to_idx \
+            and self.__link_id_to_idx == other.link_id_to_idx \
+            and self.__valve_id_to_idx == other.valve_id_to_idx \
+            and self.__pump_id_to_idx == other.pump_id_to_idx \
+            and self.__tank_id_to_idx == other.tank_id_to_idx \
+            and self.__bulkspecies_id_to_idx == other.bulkspecies_id_to_idx \
+            and self.__surfacespecies_id_to_idx == other.surfacespecies_id_to_idx
 
     def __str__(self) -> str:
         return f"nodes: {self.__nodes} links: {self.__links} valves: {self.__valves} " +\
             f"pumps: {self.__pumps} tanks: {self.__tanks} bulk_species: {self.__bulk_species} " +\
             f"surface_species: {self.__surface_species} " + \
+            f"node_id_to_idx: {self.__node_id_to_idx} link_id_to_idx: {self.__link_id_to_idx} " +\
+            f"pump_id_to_idx: {self.__pump_id_to_idx} tank_id_to_idx: {self.__tank_id_to_idx} " +\
+            f"valve_id_to_idx: {self.__valve_id_to_idx} " +\
+            f"bulkspecies_id_to_idx: {self.__bulkspecies_id_to_idx} " +\
+            f"surfacespecies_id_to_idx: {self.__surfacespecies_id_to_idx}" +\
             f"pressure_sensors: {self.__pressure_sensors} flow_sensors: {self.__flow_sensors} " +\
             f"demand_sensors: {self.__demand_sensors} " +\
             f"quality_node_sensors: {self.__quality_node_sensors} " +\

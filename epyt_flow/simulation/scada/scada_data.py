@@ -864,6 +864,15 @@ class ScadaData(Serializable):
                                      tanks=self.__sensor_config.tanks,
                                      bulk_species=self.__sensor_config.bulk_species,
                                      surface_species=self.__sensor_config.surface_species,
+                                     node_id_to_idx=self.__sensor_config.node_id_to_idx,
+                                     link_id_to_idx=self.__sensor_config.link_id_to_idx,
+                                     valve_id_to_idx=self.__sensor_config.valve_id_to_idx,
+                                     pump_id_to_idx=self.__sensor_config.pump_id_to_idx,
+                                     tank_id_to_idx=self.__sensor_config.tank_id_to_idx,
+                                     bulkspecies_id_to_idx=self.__sensor_config.
+                                        bulkspecies_id_to_idx,
+                                     surfacespecies_id_to_idx=self.__sensor_config.
+                                        surfacespecies_id_to_idx,
                                      flow_unit=new_flow_unit,
                                      pressure_sensors=self.__sensor_config.pressure_sensors,
                                      flow_sensors=self.__sensor_config.flow_sensors,
@@ -879,15 +888,6 @@ class ScadaData(Serializable):
                                      self.__sensor_config.bulk_species_link_sensors,
                                      surface_species_sensors=
                                      self.__sensor_config.surface_species_sensors,
-                                     #node_id_to_idx=self.__sensor_config.node_id_to_idx,
-                                     #link_id_to_idx=self.__sensor_config.link_id_to_idx,
-                                     #valve_id_to_idx=self.__sensor_config.valve_id_to_idx,
-                                     #pump_id_to_idx=self.__sensor_config.pump_id_to_idx,
-                                     #tank_id_to_idx=self.__sensor_config.tank_id_to_idx,
-                                     #bulkspecies_id_to_idx=
-                                     #self.__sensor_config.bulkspecies_id_to_idx,
-                                     #surfacespecies_id_to_idx=
-                                     #self.__sensor_config.surfacespecies_id_to_idx,
                                      quality_unit=new_quality_unit,
                                      bulk_species_mass_unit=new_bulk_species_mass_unit,
                                      surface_species_mass_unit=new_surface_species_mass_unit,
