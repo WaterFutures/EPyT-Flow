@@ -55,9 +55,15 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         Path to .inp file to which this topology belongs.
     nodes : `list[tuple[str, dict]]`
         List of all nodes -- i.e. node ID and node information such as type and elevation.
-    links : `list[tuple[tuple[str, str], dict]]`
+    links : `list[tuple[str, tuple[str, str], dict]]`
         List of all links/pipes -- i.e. link ID, ID of connecting nodes, and link information
         such as pipe diameter, length, etc.
+    pumps : `dict`
+        List of all pumps -- i.e. valve ID, and information such as
+        pump type and connecting nodes.
+    valves : `dict`
+        List of all valves -- i.e. valve ID, and information such as
+        valve type and connecting nodes.
     units : `int`
         Measurement units category -- i.e. US Customary or SI Metric.
 
@@ -68,12 +74,16 @@ class NetworkTopology(nx.Graph, JsonSerializable):
     """
     def __init__(self, f_inp: str, nodes: list[tuple[str, dict]],
                  links: list[tuple[str, tuple[str, str], dict]],
+                 pumps: dict,
+                 valves: dict,
                  units: int = None,
                  **kwds):
         super().__init__(name=f_inp, **kwds)
 
         self.__nodes = nodes
         self.__links = links
+        self.__pumps = pumps
+        self.__valves = valves
         self.__units = units
 
         if units is None:
@@ -87,11 +97,12 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             self.add_node(node_id, info={"elevation": node_elevation, "type": node_type})
 
         for link_id, link, link_info in links:
+            link_type = link_info["type"]
             link_diameter = link_info["diameter"]
             link_length = link_info["length"]
             self.add_edge(link[0], link[1], length=link_length,
-                          info={"id": link_id, "nodes": link, "diameter": link_diameter,
-                                "length": link_length})
+                          info={"id": link_id, "type": link_type, "nodes": link,
+                                "diameter": link_diameter, "length": link_length})
 
     def convert_units(self, units: int) -> Any:
         """
@@ -161,7 +172,8 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
             links.append((link_id, link_nodes, link_info))
 
-        return NetworkTopology(f_inp=self.name, nodes=nodes, links=links, units=units)
+        return NetworkTopology(f_inp=self.name, nodes=nodes, links=links, pumps=self.pumps,
+                               valves=self.valves, units=units)
 
     def get_all_nodes(self) -> list[str]:
         """
@@ -185,6 +197,28 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         """
         return [(link_id, end_points) for link_id, end_points, _ in self.__links]
 
+    def get_all_pumps(self) -> list[str]:
+        """
+        Gets the IDs of all pumps.
+
+        Returns
+        -------
+        `list[str]`
+            Pump IDs.
+        """
+        return self.__pumps.keys()
+
+    def get_all_valves(self) -> list[str]:
+        """
+        Gets the IDs of all valves.
+
+        Returns
+        -------
+        `list[str]`
+            Valve IDs.
+        """
+        return self.__valves.keys()
+
     def get_node_info(self, node_id: str) -> dict:
         """
         Gets all information (e.g. elevation, type, etc.) associated with a given node.
@@ -207,23 +241,87 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
     def get_link_info(self, link_id: str) -> dict:
         """
-        Gets all information (e.g. diameter, length, etc.) associated with a given link/pipe.
+        Gets all information (e.g. diameter, length, etc.) associated with a given link.
+
+        Note that links can be pipes, pumps, or valves.
 
         Parameters
         ----------
         link_id : `str`
-            ID of the link/pipe.
+            ID of the link.
 
         Returns
         -------
         `dict`
-            Information associated with the given link/pipe.
+            Information associated with the given link.
         """
         for link_id_, link_nodes, link_info in self.__links:
             if link_id_ == link_id:
                 return {"nodes": link_nodes} | link_info
 
         raise ValueError(f"Unknown link '{link_id}'")
+
+    def get_pump_info(self, pump_id: str) -> dict:
+        """
+        Gets all information associated with a given pump.
+
+        Parameters
+        ----------
+        pump_id : `str`
+            ID of the pump.
+
+        Returns
+        -------
+        `dict`
+            Pump information.
+        """
+        if pump_id in self.__pumps:
+            return self.__pumps[pump_id]
+        else:
+            raise ValueError(f"Unknown pump: '{pump_id}'")
+
+    def get_valve_info(self, valve_id: str) -> dict:
+        """
+        Gets all information associated with a given valve.
+
+        Parameters
+        ----------
+        valve_id : `str`
+            ID of the valve.
+
+        Returns
+        -------
+        `dict`
+            Valve information.
+        """
+        if valve_id in self.__valves:
+            return self.__valves[valve_id]
+        else:
+            raise ValueError(f"Unknown valve: '{valve_id}'")
+
+    @property
+    def pumps(self) -> dict:
+        """
+        Gets all pumps -- i.e. ID and associated information such as the pump type.
+
+        Returns
+        -------
+        `dict`
+            All pumps and their associated information.
+        """
+        return deepcopy(self.__pumps)
+
+    @property
+    def valves(self) -> dict:
+        """
+        Gets all valves -- i.e. ID and associated information such as the valve type.
+
+        Returns
+        -------
+        `dict`
+            All valves and their associated information.
+        """
+        return deepcopy(self.__valves)
 
     @property
     def units(self) -> int:
@@ -251,16 +349,21 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             self.get_all_nodes() == other.get_all_nodes() \
             and all(link_a[0] == link_b[0] and all(link_a[1] == link_b[1])
                     for link_a, link_b in zip(self.get_all_links(), other.get_all_links())) \
-            and self.__units == other.units
+            and self.__units == other.units \
+            and self.__pumps == other.pumps \
+            and self.__valves == other.valves
 
     def __str__(self) -> str:
         return f"f_inp: {self.name} nodes: {self.__nodes} links: {self.__links} " +\
+            f"pumps: {self.__pumps} valves: {self.__valves} " +\
             f"units: {unitscategoryid_to_str(self.__units)}"
 
     def get_attributes(self) -> dict:
         return super().get_attributes() | {"f_inp": self.name,
                                            "nodes": self.__nodes,
                                            "links": self.__links,
+                                           "pumps": self.__pumps,
+                                           "valves": self.__valves,
                                            "units": self.__units}
 
     def get_adj_matrix(self) -> bsr_array:

@@ -766,6 +766,7 @@ class ScenarioSimulator():
         node_tank_names = self.epanet_api.getNodeTankNameID()
 
         links_id = self.epanet_api.getLinkNameID()
+        links_type = self.epanet_api.getLinkType()
         links_data = self.epanet_api.getNodesConnectingLinksID()
         links_diameter = self.epanet_api.getLinkDiameter()
         links_length = self.epanet_api.getLinkLength()
@@ -773,6 +774,11 @@ class ScenarioSimulator():
         links_bulk_coeff = self.epanet_api.getLinkBulkReactionCoeff()
         links_wall_coeff = self.epanet_api.getLinkWallReactionCoeff()
         links_loss_coeff = self.epanet_api.getLinkMinorLossCoeff()
+
+        pumps_id = self.epanet_api.getLinkPumpNameID()
+        pumps_type = self.epanet_api.getLinkPumpType()
+
+        valves_id = self.epanet_api.getLinkValveNameID()
 
         # Build graph describing the topology
         nodes = []
@@ -788,16 +794,30 @@ class ScenarioSimulator():
             nodes.append((node_id, node_info))
 
         links = []
-        for link_id, link, diameter, length, roughness_coeff, bulk_coeff, wall_coeff, loss_coeff \
-                in zip(links_id, links_data, links_diameter, links_length, links_roughness_coeff,
-                       links_bulk_coeff, links_wall_coeff, links_loss_coeff):
-            links.append((link_id, link, {"diameter": diameter, "length": length,
-                                          "roughness_coeff": roughness_coeff,
-                                          "bulk_coeff": bulk_coeff, "wall_coeff": wall_coeff,
-                                          "loss_coeff": loss_coeff}))
+        for link_id, link_type, link, diameter, length, roughness_coeff, bulk_coeff, wall_coeff, loss_coeff \
+                in zip(links_id, links_type, links_data, links_diameter, links_length,
+                       links_roughness_coeff, links_bulk_coeff, links_wall_coeff, links_loss_coeff):
+            links.append((link_id, list(link),
+                          {"type": link_type, "diameter": diameter, "length": length,
+                           "roughness_coeff": roughness_coeff,
+                           "bulk_coeff": bulk_coeff, "wall_coeff": wall_coeff,
+                           "loss_coeff": loss_coeff}))
 
-        return NetworkTopology(f_inp=self.f_inp_in, nodes=nodes, links=links,
-                               units=self.get_units_category())
+        pumps = {}
+        for pump_id, pump_type in zip(pumps_id, pumps_type):
+            link_idx = links_id.index(pump_id)
+            link = links_data[link_idx]
+            pumps[pump_id] = {"type": pump_type, "end_points": link}
+
+        valves = {}
+        for valve_id in valves_id:
+            link_idx = links_id.index(valve_id)
+            link = links_data[link_idx]
+            valve_type = link_type[link_idx]
+            valves[valve_id] = {"type": valve_type, "end_points": link}
+
+        return NetworkTopology(f_inp=self.f_inp_in, nodes=nodes, links=links, pumps=pumps,
+                               valves=valves, units=self.get_units_category())
 
     def randomize_demands(self) -> None:
         """
