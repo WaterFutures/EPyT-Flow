@@ -111,8 +111,10 @@ The topology :class:`~epyt_flow.topology.NetworkTopology` not only contains the 
 but also includes node and link/pipe attributes such as elevation, diameter, length, etc.
 Furthermore, :class:`~epyt_flow.topology.NetworkTopology` also comes with some helper functions
 such as those for computing the adjacency matrix
-(:func:`~epyt_flow.topology.NetworkTopology.get_adj_matrix`) or the shortest path between two nodes
-(:func:`~epyt_flow.topology.NetworkTopology.get_shortest_path`).
+(:func:`~epyt_flow.topology.NetworkTopology.get_adj_matrix`), the shortest path between two nodes
+(:func:`~epyt_flow.topology.NetworkTopology.get_shortest_path`), or exporting the topology to
+`GeoDataFrame <https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html>`_
+instances (:func:`~epyt_flow.topology.NetworkTopology.to_gis`).
 
 Example of working with :class:`~epyt_flow.topology.NetworkTopology`:
 
@@ -135,6 +137,9 @@ Example of working with :class:`~epyt_flow.topology.NetworkTopology`:
         # Adjacency matrix of the graph
         # A sparse matrix is returned, which we convert it to a dense matrix
         print(topo.get_adj_matrix().todense())
+
+        # Get nodes as a geopandas.GeoDataFrame
+        print(topo.to_gis()["nodes"])
 
 
 Low-level EPANET and EPANET-MSX Functions

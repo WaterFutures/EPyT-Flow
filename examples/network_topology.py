@@ -33,10 +33,15 @@ if __name__ == "__main__":
         # Show information associated with link "10"
         print(topo.get_link_info("10"))
 
+        # Get GeoDataFrame
+        geo_data = topo.to_gis()
+        print(geo_data["nodes"])
+
         # Which units are used in this NetworkTopology instance?
         print(unitscategoryid_to_str(topo.units))
 
-        # Convert units to SI METRIC -- i.e. pipe diameter in *millimeter*, pipe length in *meter*, node elevation in *meter*, ...
+        # Convert units to SI METRIC -- i.e. pipe diameter in *millimeter*,
+        # pipe length in *meter*, node elevation in *meter*, ...
         new_topo = topo.convert_units(UNITS_SIMETRIC)
 
         print(new_topo.get_node_info("2"))

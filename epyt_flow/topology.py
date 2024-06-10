@@ -7,6 +7,8 @@ from typing import Any
 import numpy as np
 import networkx as nx
 from scipy.sparse import bsr_array
+from geopandas import GeoDataFrame
+from shapely.geometry import Point, LineString
 
 from .serialization import serializable, JsonSerializable, NETWORK_TOPOLOGY_ID
 
@@ -365,6 +367,103 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                                            "pumps": self.__pumps,
                                            "valves": self.__valves,
                                            "units": self.__units}
+
+    def to_gis(self, coord_reference_system: str = None, pumps_as_points: bool = False,
+               valves_as_points: bool = False) -> dict:
+        """
+        Gets the network topology as a dictionary of `geopandas.GeoDataFrames` instances --
+        i.e. each quantity (nodes, links/pipes, valves, etc.) is represented by a
+        `geopandas.GeoDataFrames instance.
+
+        Parameters
+        ----------
+        coord_reference_system : `str`, optional
+            Coordinate reference system.
+
+            The default is None.
+        pumps_as_points : `bool`, optional
+            If True, pumps are represented by points, otherwise by lines.
+
+            The default is False.
+
+        valves_as_points : `bool`, optional
+            If True, valves are represented by points, otherwise by lines.
+
+            The default is False.
+
+        Returns
+        -------
+        `dict`
+            Network topology as a dictionary of `geopandas.GeoDataFrames` instances.
+            If a quantity does not exist, the data frame will be None.
+        """
+        gis = {"nodes": None, "links": None,
+               "tanks": None, "reservoirs": None,
+               "valves": None, "pumps": None}
+
+        # Nodes
+        node_data = {"id": [], "type": [], "elevation": [], "geometry": []}
+        tank_data = {"id": [], "elevation": [], "diameter": [], "geometry": []}
+        reservoir_data = {"id": [], "elevation": [], "geometry": []}
+        for node_id in self.get_all_nodes():
+            node_info = self.get_node_info(node_id)
+
+            node_data["id"].append(node_id)
+            node_data["type"].append(node_info["type"])
+            node_data["elevation"].append(node_info["elevation"])
+            node_data["geometry"].append(Point(node_info["coord"]))
+
+            if node_info["type"] == "TANK":
+                tank_data["id"].append(node_id)
+                tank_data["elevation"].append(node_info["elevation"])
+                tank_data["diameter"].append(node_info["diameter"])
+                tank_data["geometry"].append(Point(node_info["coord"]))
+            elif node_info["type"] == "RESERVOIR":
+                reservoir_data["id"].append(node_id)
+                reservoir_data["elevation"].append(node_info["elevation"])
+                reservoir_data["geometry"].append(Point(node_info["coord"]))
+
+        gis["nodes"] = GeoDataFrame(node_data, crs=coord_reference_system)
+        gis["tanks"] = GeoDataFrame(tank_data, crs=coord_reference_system)
+        gis["reservoirs"] = GeoDataFrame(reservoir_data, crs=coord_reference_system)
+
+        # Links
+        pipe_data = {"id": [], "type": [], "end_point_a": [], "end_point_b": [],
+                     "length": [], "diameter": [], "geometry": []}
+        valve_data = {"id": [], "type": [], "geometry": []}
+        pump_data = {"id": [], "type": [], "geometry": []}
+        for link_id, link_nodes in self.get_all_links():
+            link_info = self.get_link_info(link_id)
+            end_points_coord = [self.get_node_info(n)["coord"] for n in link_nodes]
+
+            if link_info["type"] == "PIPE":
+                pipe_data["id"].append(link_id)
+                pipe_data["type"].append(link_info["type"])
+                pipe_data["end_point_a"].append(link_nodes[0])
+                pipe_data["end_point_b"].append(link_nodes[1])
+                pipe_data["length"].append(link_info["length"])
+                pipe_data["diameter"].append(link_info["diameter"])
+                pipe_data["geometry"].append(LineString(end_points_coord))
+            elif link_info["type"] == "PUMP":
+                pump_data["id"].append(link_id)
+                pump_data["type"].append(self.get_pump_info(link_id)["type"])
+                if pumps_as_points is True:
+                    pump_data["geometry"].append(Point(end_points_coord[0]))
+                else:
+                    pump_data["geometry"].append(LineString(end_points_coord))
+            else:   # Valve
+                valve_data["id"].append(link_id)
+                valve_data["type"].append(self.get_valve_info[link_id]["type"])
+                if valves_as_points is True:
+                    valve_data["geometry"].append(Point(end_points_coord[0]))
+                else:
+                    valve_data["geometry"].append(LineString(end_points_coord))
+
+        gis["pipes"] = GeoDataFrame(pipe_data, crs=coord_reference_system)
+        gis["valves"] = GeoDataFrame(valve_data, crs=coord_reference_system)
+        gis["pumps"] = GeoDataFrame(pump_data, crs=coord_reference_system)
+
+        return gis
 
     def get_adj_matrix(self) -> bsr_array:
         """
