@@ -1,7 +1,7 @@
 """
 Module provides functions for simulating several scenarios in parallel.
 """
-from typing import Callable
+from typing import Callable, Any
 import os
 import warnings
 from multiprocess import Pool, cpu_count
@@ -38,9 +38,9 @@ def callback_save_to_file(folder_out: str = "") -> Callable[[ScadaData, Scenario
 
 
 def _run_scenario_simulation(scenario_config: ScenarioConfig, scenario_idx: int,
-                             callback: Callable[[ScadaData, ScenarioConfig, int], None]) -> None:
+                             callback: Callable[[ScadaData, ScenarioConfig, int], Any]) -> Any:
     with ScenarioSimulator(scenario_config=scenario_config) as sim:
-        callback(sim.run_simulation(), scenario_config, scenario_idx)
+        return callback(sim.run_simulation(), scenario_config, scenario_idx)
 
 
 class ParallelScenarioSimulation():
@@ -50,8 +50,8 @@ class ParallelScenarioSimulation():
     @staticmethod
     def run(scenarios: list[ScenarioConfig], n_jobs: int = -1,
             max_working_memory_consumption: int = None,
-            callback: Callable[[ScadaData, ScenarioConfig, int], None] = callback_save_to_file()
-            ) -> None:
+            callback: Callable[[ScadaData, ScenarioConfig, int], Any] = callback_save_to_file()
+            ) -> Any:
         """
         Simulates multiple scenarios in parallel.
 
@@ -76,7 +76,7 @@ class ParallelScenarioSimulation():
 
             The callback gets the simulation results as a
             :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance, the scenario
-            configuration as a :class: `epyt_flow.simulation.scenario_config.ScenarioConfig`
+            configuration as a :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
             instance, and the index of the scenario in 'scenarios' as arguments.
 
             The default is :func:`~epyt_flow.simulation.parallel_simulation.callback_save_to_file`.
@@ -144,4 +144,4 @@ class ParallelScenarioSimulation():
             scenarios_task.append((scenario, scenario_idx, callback))
 
         with Pool(processes=n_parallel_scenarios, maxtasksperchild=1) as pool:
-            pool.starmap(_run_scenario_simulation, scenarios_task)
+            return pool.starmap(_run_scenario_simulation, scenarios_task)
