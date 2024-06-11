@@ -2,6 +2,7 @@
 Module provides a class for implementing model uncertainty.
 """
 from copy import deepcopy
+import warnings
 import epyt
 import numpy as np
 
@@ -29,7 +30,7 @@ class ModelUncertainty(JsonSerializable):
         Uncertainty of pipe diameters. None, in the case of no uncertainty.
 
         The default is None.
-    demand_base_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
+    base_demand_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
         Uncertainty of base demands. None, in the case of no uncertainty.
 
         The default is None.
@@ -53,11 +54,17 @@ class ModelUncertainty(JsonSerializable):
     def __init__(self, pipe_length_uncertainty: Uncertainty = None,
                  pipe_roughness_uncertainty: Uncertainty = None,
                  pipe_diameter_uncertainty: Uncertainty = None,
-                 demand_base_uncertainty: Uncertainty = None,
+                 base_demand_uncertainty: Uncertainty = None,
                  demand_pattern_uncertainty: Uncertainty = None,
                  elevation_uncertainty: Uncertainty = None,
                  constants_uncertainty: Uncertainty = None,
-                 parameters_uncertainty: Uncertainty = None, **kwds):
+                 parameters_uncertainty: Uncertainty = None,
+                 demand_base_uncertainty: Uncertainty = None, **kwds):
+        if demand_base_uncertainty is not None:
+            warnings.warn("Loading a file that was created with an outdated version of EPyT-Flow" +
+                          " -- support of such old files will be removed in the next release!",
+                          DeprecationWarning)
+
         if pipe_length_uncertainty is not None:
             if not isinstance(pipe_length_uncertainty, Uncertainty):
                 raise TypeError("'pipe_length_uncertainty' must be an instance of " +
@@ -73,11 +80,11 @@ class ModelUncertainty(JsonSerializable):
                 raise TypeError("'pipe_diameter_uncertainty' must be an instance of " +
                                 "'epyt_flow.uncertainty.Uncertainty' but not of " +
                                 f"'{type(pipe_diameter_uncertainty)}'")
-        if demand_base_uncertainty is not None:
-            if not isinstance(demand_base_uncertainty, Uncertainty):
-                raise TypeError("'demand_base_uncertainty' must be an instance of " +
+        if base_demand_uncertainty is not None:
+            if not isinstance(base_demand_uncertainty, Uncertainty):
+                raise TypeError("'base_demand_uncertainty' must be an instance of " +
                                 "'epyt_flow.uncertainty.Uncertainty' but not of " +
-                                f"'{type(demand_base_uncertainty)}'")
+                                f"'{type(base_demand_uncertainty)}'")
         if demand_pattern_uncertainty is not None:
             if not isinstance(demand_pattern_uncertainty, Uncertainty):
                 raise TypeError("'demand_pattern_uncertainty' must be an instance of " +
@@ -102,7 +109,7 @@ class ModelUncertainty(JsonSerializable):
         self.__pipe_length = pipe_length_uncertainty
         self.__pipe_roughness = pipe_roughness_uncertainty
         self.__pipe_diameter = pipe_diameter_uncertainty
-        self.__demand_base = demand_base_uncertainty
+        self.__base_demand = base_demand_uncertainty
         self.__demand_pattern = demand_pattern_uncertainty
         self.__elevation = elevation_uncertainty
         self.__constants = constants_uncertainty
@@ -147,16 +154,16 @@ class ModelUncertainty(JsonSerializable):
         return deepcopy(self.__pipe_diameter)
 
     @property
-    def demand_base(self) -> Uncertainty:
+    def base_demand(self) -> Uncertainty:
         """
-        Gets the demand base uncertainty.
+        Gets the base demand uncertainty.
 
         Returns
         -------
         :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
             Demand base uncertainty.
         """
-        return deepcopy(self.__demand_base)
+        return deepcopy(self.__base_demand)
 
     @property
     def demand_pattern(self) -> Uncertainty:
@@ -210,7 +217,7 @@ class ModelUncertainty(JsonSerializable):
         return super().get_attributes() | {"pipe_length_uncertainty": self.__pipe_length,
                                            "pipe_roughness_uncertainty": self.__pipe_roughness,
                                            "pipe_diameter_uncertainty": self.__pipe_diameter,
-                                           "demand_base_uncertainty": self.__demand_base,
+                                           "base_demand_uncertainty": self.__base_demand,
                                            "demand_pattern_uncertainty": self.__demand_pattern,
                                            "elevation_uncertainty": self.__elevation,
                                            "constants_uncertainty": self.__constants,
@@ -224,14 +231,14 @@ class ModelUncertainty(JsonSerializable):
         return self.__pipe_length == other.pipe_length \
             and self.__pipe_roughness == other.pipe_roughness \
             and self.__pipe_diameter == other.pipe_diameter \
-            and self.__demand_base == other.demand_base \
+            and self.__base_demand == other.base_demand \
             and self.__demand_pattern == other.demand_pattern \
             and self.__elevation == other.elevation \
             and self.__parameters == other.parameters and self.__constants == other.constants
 
     def __str__(self) -> str:
         return f"pipe_length: {self.__pipe_length} pipe_roughness: {self.__pipe_roughness} " + \
-            f"pipe_diameter: {self.__pipe_diameter} demand_base: {self.__demand_base} " + \
+            f"pipe_diameter: {self.__pipe_diameter} demand_base: {self.__base_demand} " + \
             f"demand_pattern: {self.__demand_pattern} elevation: {self.__elevation} " + \
             f"constants: {self.__constants} parameters: {self.__parameters}"
 
@@ -259,13 +266,13 @@ class ModelUncertainty(JsonSerializable):
             coeffs = self.__pipe_roughness.apply_batch(coeffs)
             epanet_api.setLinkRoughnessCoeff(coeffs)
 
-        if self.__demand_base is not None:
+        if self.__base_demand is not None:
             all_nodes_idx = epanet_api.getNodeIndex()
             for node_idx in all_nodes_idx:
                 n_demand_categories = epanet_api.getNodeDemandCategoriesNumber(node_idx)
                 for demand_category in range(n_demand_categories):
                     base_demand = epanet_api.getNodeBaseDemands(node_idx)[demand_category + 1]
-                    base_demand = self.__demand_base.apply(base_demand)
+                    base_demand = self.__base_demand.apply(base_demand)
                     epanet_api.setNodeBaseDemands(node_idx, demand_category + 1, base_demand)
 
         if self.__demand_pattern is not None:

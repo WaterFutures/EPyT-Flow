@@ -24,7 +24,7 @@ def test_model_uncertainty():
                                                                                    high=1.25),
                              pipe_diameter_uncertainty=AbsoluteGaussianUncertainty(mean=0.,
                                                                                    scale=.05),
-                             demand_base_uncertainty=RelativeUniformUncertainty(low=0.75,
+                             base_demand_uncertainty=RelativeUniformUncertainty(low=0.75,
                                                                                 high=1.25),
                              demand_pattern_uncertainty=RelativeUniformUncertainty(low=0.75,
                                                                                    high=1.25),
