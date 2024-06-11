@@ -373,7 +373,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         """
         Gets the network topology as a dictionary of `geopandas.GeoDataFrames` instances --
         i.e. each quantity (nodes, links/pipes, valves, etc.) is represented by a
-        `geopandas.GeoDataFrames instance.
+        `geopandas.GeoDataFrames` instance.
 
         Parameters
         ----------

@@ -1841,14 +1841,14 @@ class ScenarioSimulator():
 
         Parameters
         ----------
-        model_uncertainty : :class:`~epyt_flow.uncertainties.model_uncertainty.ModelUncertainty`
+        model_uncertainty : :class:`~epyt_flow.uncertainty.model_uncertainty.ModelUncertainty`
             Model uncertainty specifications.
         """
         self.__adapt_to_network_changes()
 
         if not isinstance(model_uncertainty, ModelUncertainty):
             raise TypeError("'model_uncertainty' must be an instance of " +
-                            "'epyt_flow.uncertainties.ModelUncertainty' but not of " +
+                            "'epyt_flow.uncertainty.ModelUncertainty' but not of " +
                             f"'{type(model_uncertainty)}'")
 
         self.__model_uncertainty = model_uncertainty
