@@ -483,6 +483,7 @@ class ScenarioSimulator():
 
         if inp_file_path is not None:
             self.epanet_api.saveInputFile(inp_file_path)
+            self.__f_inp_in = inp_file_path
 
             if export_sensor_config is True:
                 report_desc = "\n\n[REPORT]\n"
@@ -537,6 +538,7 @@ class ScenarioSimulator():
 
         if self.__f_msx_in is not None and msx_file_path is not None:
             self.epanet_api.saveMSXFile(msx_file_path)
+            self.__f_msx_in = msx_file_path
 
             if export_sensor_config is True:
                 report_desc = "\n\n[REPORT]\n"
@@ -708,8 +710,9 @@ class ScenarioSimulator():
 
         general_params = {"hydraulic_time_step": self.get_hydraulic_time_step(),
                           "quality_time_step": self.get_quality_time_step(),
+                          "reporting_time_step": self.epanet_api.getTimeReportingStep(),
                           "simulation_duration": self.get_simulation_duration(),
-                          "flow_units": self.get_flow_units(),
+                          "flow_units_id": self.get_flow_units(),
                           "quality_model": self.get_quality_model(),
                           "demand_model": self.get_demand_model()}
 
