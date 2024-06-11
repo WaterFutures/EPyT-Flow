@@ -263,10 +263,10 @@ class ModelUncertainty(JsonSerializable):
             all_nodes_idx = epanet_api.getNodeIndex()
             for node_idx in all_nodes_idx:
                 n_demand_categories = epanet_api.getNodeDemandCategoriesNumber(node_idx)
-                for demand_category in range(1, n_demand_categories):
-                    base_demand = epanet_api.getNodeBaseDemands(node_idx)[demand_category]
+                for demand_category in range(n_demand_categories):
+                    base_demand = epanet_api.getNodeBaseDemands(node_idx)[demand_category + 1]
                     base_demand = self.__demand_base.apply(base_demand)
-                    epanet_api.setNodeBaseDemands(node_idx, demand_category, base_demand)
+                    epanet_api.setNodeBaseDemands(node_idx, demand_category + 1, base_demand)
 
         if self.__demand_pattern is not None:
             demand_patterns_idx = epanet_api.getNodeDemandPatternIndex()
