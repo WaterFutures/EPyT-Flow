@@ -817,7 +817,7 @@ class ScenarioSimulator():
         for valve_id in valves_id:
             link_idx = links_id.index(valve_id)
             link = links_data[link_idx]
-            valve_type = link_type[link_idx]
+            valve_type = links_type[link_idx]
             valves[valve_id] = {"type": valve_type, "end_points": link}
 
         return NetworkTopology(f_inp=self.f_inp_in, nodes=nodes, links=links, pumps=pumps,
