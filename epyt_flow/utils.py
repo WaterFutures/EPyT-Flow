@@ -214,8 +214,8 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
                         y_pred - confidence_interval[0],
                         y_pred + confidence_interval[1],
                         alpha=0.5)
-    ax.plot(y_pred, ".-", label="Prediction")
     ax.plot(y, ".-", label="Ground truth")
+    ax.plot(y_pred, ".-", label="Prediction")
     ax.legend()
 
     if show is True and fig is not None:
