@@ -298,6 +298,7 @@ class ScenarioSimulator():
 
         return deepcopy(list(filter(lambda e: isinstance(e, Leakage), self.__system_events)))
 
+    @property
     def actuator_events(self) -> list[ActuatorEvent]:
         """
         Gets all actuator events.
