@@ -543,7 +543,7 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
 
     my_uncertainties = {"pipe_length_uncertainty": MyUniformUncertainty(low=0, high=0.25),
                         "pipe_roughness_uncertainty": MyUniformUncertainty(low=0, high=0.25),
-                        "demand_base_uncertainty": MyUniformUncertainty(low=0, high=0.25)}
+                        "base_demand_uncertainty": MyUniformUncertainty(low=0, high=0.25)}
     model_uncertainty = ModelUncertainty(**my_uncertainties)
 
     # Create sensor config (place pressure and flow sensors everywhere)
