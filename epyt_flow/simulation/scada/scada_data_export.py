@@ -109,7 +109,7 @@ class ScadaDataExport():
 
         def __get_sensor_unit(sensor_type):
             if sensor_type == "pressure":
-                if is_flowunit_simetric(scada_data.sensor_config.flow_unit):
+                if not is_flowunit_simetric(scada_data.sensor_config.flow_unit):
                     return "psi"
                 else:
                     return "meter"
