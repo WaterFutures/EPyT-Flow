@@ -4,6 +4,7 @@ Module provides a class for specifying scenario configurations.
 from typing import Any
 from copy import deepcopy
 import json
+import numpy as np
 
 from ..uncertainty import AbsoluteGaussianUncertainty, RelativeGaussianUncertainty, \
     AbsoluteUniformUncertainty, RelativeUniformUncertainty, ModelUncertainty, \
@@ -350,10 +351,11 @@ class ScenarioConfig(Serializable):
         return self.__f_inp_in == other.f_inp_in and self.__f_msx_in == other.f_msx_in \
             and self.__general_params == other.general_params \
             and self.__memory_consumption_estimate == other.memory_consumption_estimate \
-            and self.__sensor_config == other.sensor_config and self.__controls == other.controls \
+            and self.__sensor_config == other.sensor_config \
+            and np.all(self.__controls == other.controls) \
             and self.__model_uncertainty == other.model_uncertainty \
-            and self.__system_events == other.system_events \
-            and self.__sensor_reading_events == other.sensor_reading_events
+            and np.all(self.__system_events == other.system_events) \
+            and np.all(self.__sensor_reading_events == other.sensor_reading_events)
 
     def __str__(self) -> str:
         return f"f_inp_in: {self.f_inp_in} f_msx_in: {self.f_msx_in} " + \
