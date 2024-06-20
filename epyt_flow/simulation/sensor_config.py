@@ -1719,7 +1719,7 @@ class SensorConfig(JsonSerializable):
             f"pump_id_to_idx: {self.__pump_id_to_idx} tank_id_to_idx: {self.__tank_id_to_idx} " +\
             f"valve_id_to_idx: {self.__valve_id_to_idx} " +\
             f"bulkspecies_id_to_idx: {self.__bulkspecies_id_to_idx} " +\
-            f"surfacespecies_id_to_idx: {self.__surfacespecies_id_to_idx}" +\
+            f"surfacespecies_id_to_idx: {self.__surfacespecies_id_to_idx} " +\
             f"pressure_sensors: {self.__pressure_sensors} flow_sensors: {self.__flow_sensors} " +\
             f"demand_sensors: {self.__demand_sensors} " +\
             f"quality_node_sensors: {self.__quality_node_sensors} " +\
