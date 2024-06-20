@@ -153,8 +153,10 @@ def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, x_axis_labe
 
 
 def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
-                               confidence_interval: np.ndarray = None, show: bool = True,
-                               ax: matplotlib.axes.Axes = None) -> matplotlib.axes.Axes:
+                               confidence_interval: np.ndarray = None,
+                               x_axis_label: str = None, y_axis_label: str = None,
+                               show: bool = True, ax: matplotlib.axes.Axes = None
+                               ) -> matplotlib.axes.Axes:
     """
     Plots the prediction (e.g. forecast) of *single* time series together with the
     ground truth time series. In addition, confidence intervals can be plotted as well.
@@ -168,6 +170,14 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
     confidence_interval : `numpy.ndarray`, optional
         Confidence interval (upper and lower value) for each prediction in `y_pred`.
         If not None, the confidence interval is plotted as well.
+
+        The default is None.
+    x_axis_label : `str`, optional
+        X axis label.
+
+        The default is None.
+    y_axis_label : `str`, optional
+        Y axis label.
 
         The default is None.
     show : `bool`, optional
@@ -198,6 +208,14 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
         raise ValueError("'y_pred' must be a 1d array")
     if len(y.shape) != 1:
         raise ValueError("'y' must be a 1d array")
+    if x_axis_label is not None:
+        if not isinstance(x_axis_label, str):
+            raise TypeError("'x_axis_label' must be an instance of 'str' " +
+                            f"but not of '{type(x_axis_label)}'")
+    if y_axis_label is not None:
+        if not isinstance(y_axis_label, str):
+            raise TypeError("'y_axis_label' must be an instance of 'str' " +
+                            f"but not of '{type(y_axis_label)}'")
     if not isinstance(show, bool):
         raise TypeError(f"'show' must be an instance of 'bool' but not of '{type(show)}'")
     if ax is not None:
@@ -217,6 +235,11 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
     ax.plot(y, ".-", label="Ground truth")
     ax.plot(y_pred, ".-", label="Prediction")
     ax.legend()
+
+    if x_axis_label is not None:
+        ax.set_xlabel(x_axis_label)
+    if y_axis_label is not None:
+        ax.set_ylabel(y_axis_label)
 
     if show is True and fig is not None:
         plt.show()
