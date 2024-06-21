@@ -34,8 +34,12 @@ autodoc_mock_imports = ["epyt", "pandas", "numpy", "scipy", "matplotlib", "sklea
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
     'nbsphinx'
 ]
+
+# Show line numbers in the source code
+viewcode_line_numbers = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
