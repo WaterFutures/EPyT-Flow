@@ -1647,6 +1647,42 @@ class SensorConfig(JsonSerializable):
         """
         return deepcopy(self.__sensors_id_to_idx)
 
+    def get_as_dict(self) -> dict:
+        """
+        Gets the sensor configuration as a dictionary.
+
+        Returns
+        -------
+        `dict`
+            Dictionary of set sensors -- the keys are the sensor types.
+        """
+        r = {}
+
+        if self.__pressure_sensors != []:
+            r["pressure"] = self.__pressure_sensors
+        if self.__flow_sensors != []:
+            r["flow"] = self.__flow_sensors
+        if self.__demand_sensors != []:
+            r["demand"] = self.__demand_sensors
+        if self.__tank_volume_sensors != []:
+            r["tank_volume"] = self.__tank_volume_sensors
+        if self.__valve_state_sensors != []:
+            r["valve_state"] = self.__valve_state_sensors
+        if self.__pump_state_sensors != []:
+            r["pump_state"] = self.__pump_state_sensors
+        if self.__quality_node_sensors != []:
+            r["node_quality"] = self.__quality_node_sensors
+        if self.__quality_link_sensors != []:
+            r["link_quality"] = self.__quality_link_sensors
+        if self.__bulk_species_node_sensors != {}:
+            r["node_bulk_species"] = self.__bulk_species_node_sensors
+        if self.__bulk_species_link_sensors != {}:
+            r["link_bulk_species"] = self.__bulk_species_link_sensors
+        if self.__surface_species_sensors != {}:
+            r["surface_species"] = self.__surface_species_sensors
+
+        return r
+
     def get_attributes(self) -> dict:
         attr = {"nodes": self.__nodes, "links": self.__links,
                 "valves": self.__valves, "pumps": self.__pumps,

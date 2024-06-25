@@ -19,6 +19,8 @@ def test_randomize_demands():
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
         sim.randomize_demands()
 
+        assert sim.sensor_config.get_as_dict() is not None
+
         sim.estimate_memory_consumption()
         res = sim.run_simulation()
 
