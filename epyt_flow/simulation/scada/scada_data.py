@@ -1163,6 +1163,9 @@ class ScadaData(Serializable):
             :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data` --
             calling this function is the only way of accessing the energy usage of each pump.
 
+            The odering in the returned NumPy array corresponds to the ordering
+            of the pumps in EPANET.
+
         Returns
         -------
         `numpy.ndarray`
@@ -1179,6 +1182,9 @@ class ScadaData(Serializable):
             This attribute is NOT included in
             :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data` --
             calling this function is the only way of accessing the pumps' efficiency.
+
+            The odering in the returned NumPy array corresponds to the ordering
+            of the pumps in EPANET.
 
         Returns
         -------
