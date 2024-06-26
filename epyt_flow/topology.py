@@ -108,7 +108,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
     def convert_units(self, units: int) -> Any:
         """
-        Converts this instance to a :class:`epyt_flow.topology.NetworkTopology` instance
+        Converts this instance to a :class:`~epyt_flow.topology.NetworkTopology` instance
         where everything is measured in given measurement units category
         (US Customary or SI Metric).
 
@@ -124,7 +124,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
         Returns
         -------
-        :class:`epyt_flow.topology.NetworkTopology`
+        :class:`~epyt_flow.topology.NetworkTopology`
             Network topology with the new measurements units.
         """
         if self.__units is None:
