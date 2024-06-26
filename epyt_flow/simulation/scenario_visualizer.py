@@ -12,7 +12,7 @@ class ScenarioVisualizer():
 
     Parameters
     ----------
-    scenario : :class:`epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
+    scenario : :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
         Scenario to be visualized.
     """
     def __init__(self, scenario: ScenarioSimulator):
