@@ -199,6 +199,76 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         """
         return [(link_id, end_points) for link_id, end_points, _ in self.__links]
 
+    def get_all_junctions(self) -> list[str]:
+        """
+        Gets all junctions -- i.e. nodes that are not tanks or reservoirs.
+
+        Returns
+        -------
+        `list[str]`
+            List of all junctions.
+        """
+        r = []
+
+        for node_id in self.get_all_nodes():
+            if self.get_node_info(node_id)["type"] == "JUNCTION":
+                r.append(node_id)
+
+        return r
+
+    def get_all_tanks(self) -> list[str]:
+        """
+        Gets all tanks -- i.e. nodes that are not junctions or reservoirs.
+
+        Returns
+        -------
+        `list[str]`
+            List of all tanks.
+        """
+        r = []
+
+        for node_id in self.get_all_nodes():
+            if self.get_node_info(node_id)["type"] == "TANK":
+                r.append(node_id)
+
+        return r
+
+    def get_all_reservoirs(self) -> list[str]:
+        """
+        Gets all reservoirs -- i.e. nodes that are not junctions or tanks.
+
+        Returns
+        -------
+        `list[str]`
+            List of all reservoirs.
+        """
+        r = []
+
+        for node_id in self.get_all_nodes():
+            if self.get_node_info(node_id)["type"] == "RESERVOIR":
+                r.append(node_id)
+
+        return r
+
+    def get_all_pipes(self) -> list[tuple[str, tuple[str, str]]]:
+        """
+        Gets all pipes -- i.e. links that not valves or pumps.
+
+        Returns
+        -------
+        `list[tuple[str, tuple[str, str]]]`
+            List of all pipes -- (link ID, (left node ID, right node ID)).
+        """
+        r = []
+
+        for link_id, link_nodes in self.get_all_links():
+            link_info = self.get_link_info(link_id)
+
+            if link_info["type"] == "PIPE":
+                r.append((link_id, link_nodes))
+
+        return r
+
     def get_all_pumps(self) -> list[str]:
         """
         Gets the IDs of all pumps.
