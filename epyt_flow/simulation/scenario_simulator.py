@@ -21,8 +21,9 @@ from .sensor_config import SensorConfig, areaunit_to_id, massunit_to_id, quality
     qualityunit_to_str, MASS_UNIT_MG, \
     SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY, SENSOR_TYPE_NODE_DEMAND, \
     SENSOR_TYPE_NODE_PRESSURE, SENSOR_TYPE_NODE_QUALITY, \
-    SENSOR_TYPE_PUMP_STATE, SENSOR_TYPE_TANK_VOLUME, SENSOR_TYPE_VALVE_STATE, \
-    SENSOR_TYPE_NODE_BULK_SPECIES, SENSOR_TYPE_LINK_BULK_SPECIES, SENSOR_TYPE_SURFACE_SPECIES
+    SENSOR_TYPE_PUMP_STATE, SENSOR_TYPE_PUMP_EFFICIENCY, SENSOR_TYPE_PUMP_ENERGYCONSUMPTION, \
+    SENSOR_TYPE_TANK_VOLUME, SENSOR_TYPE_VALVE_STATE, SENSOR_TYPE_NODE_BULK_SPECIES, \
+    SENSOR_TYPE_LINK_BULK_SPECIES, SENSOR_TYPE_SURFACE_SPECIES
 from ..uncertainty import ModelUncertainty, SensorNoise
 from .events import SystemEvent, Leakage, ActuatorEvent, SensorFault, SensorReadingAttack, \
     SensorReadingEvent
@@ -393,6 +394,9 @@ class ScenarioSimulator():
         new_sensor_config.quality_node_sensors = self.__sensor_config.quality_node_sensors
         new_sensor_config.quality_link_sensors = self.__sensor_config.quality_link_sensors
         new_sensor_config.pump_state_sensors = self.__sensor_config.pump_state_sensors
+        new_sensor_config.pump_efficiecy_sensors = self.__sensor_config.pump_efficiency_sensors
+        new_sensor_config.pump_energyconsumption_sensors = self.__sensor_config.\
+            pump_energyconsumption_sensors
         new_sensor_config.valve_state_sensors = self.__sensor_config.valve_state_sensors
         new_sensor_config.tank_volume_sensors = self.__sensor_config.tank_volume_sensors
         new_sensor_config.bulk_species_node_sensors = self.__sensor_config.bulk_species_node_sensors
@@ -1027,16 +1031,18 @@ class ScenarioSimulator():
         ----------
         sensor_type : `int`
             Sensor type. Must be one of the following:
-                - SENSOR_TYPE_NODE_PRESSURE   = 1
-                - SENSOR_TYPE_NODE_QUALITY    = 2
-                - SENSOR_TYPE_NODE_DEMAND     = 3
-                - SENSOR_TYPE_LINK_FLOW       = 4
-                - SENSOR_TYPE_LINK_QUALITY    = 5
-                - SENSOR_TYPE_VALVE_STATE     = 6
-                - SENSOR_TYPE_PUMP_STATE      = 7
-                - SENSOR_TYPE_TANK_VOLUME     = 8
-                - SENSOR_TYPE_BULK_SPECIES    = 9
-                - SENSOR_TYPE_SURFACE_SPECIES = 10
+                - SENSOR_TYPE_NODE_PRESSURE          = 1
+                - SENSOR_TYPE_NODE_QUALITY           = 2
+                - SENSOR_TYPE_NODE_DEMAND            = 3
+                - SENSOR_TYPE_LINK_FLOW              = 4
+                - SENSOR_TYPE_LINK_QUALITY           = 5
+                - SENSOR_TYPE_VALVE_STATE            = 6
+                - SENSOR_TYPE_PUMP_STATE             = 7
+                - SENSOR_TYPE_TANK_VOLUME            = 8
+                - SENSOR_TYPE_BULK_SPECIES           = 9
+                - SENSOR_TYPE_SURFACE_SPECIES        = 10
+                - SENSOR_TYPE_PUMP_EFFICIENCY        = 12
+                - SENSOR_TYPE_PUMP_ENERGYCONSUMPTION = 13
         sensor_locations : `list[str]` or `dict`
             Locations (IDs) of sensors either as a list or as a dict in the case of
             bulk and surface species.
@@ -1057,6 +1063,10 @@ class ScenarioSimulator():
             self.__sensor_config.valve_state_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_PUMP_STATE:
             self.__sensor_config.pump_state_sensors = sensor_locations
+        elif sensor_type == SENSOR_TYPE_PUMP_EFFICIENCY:
+            self.__sensor_config.pump_efficiency_sensors = sensor_locations
+        elif sensor_type == SENSOR_TYPE_PUMP_ENERGYCONSUMPTION:
+            self.__sensor_config.pump_energyconsumption_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_TANK_VOLUME:
             self.__sensor_config.tank_volume_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_NODE_BULK_SPECIES:
@@ -1138,7 +1148,7 @@ class ScenarioSimulator():
         """
         self.set_sensors(SENSOR_TYPE_VALVE_STATE, sensor_locations)
 
-    def set_pump_sensors(self, sensor_locations: list[str]) -> None:
+    def set_pump_state_sensors(self, sensor_locations: list[str]) -> None:
         """
         Sets the pump state sensors -- i.e. retrieving the state of some pumps in the network.
 
@@ -1148,6 +1158,44 @@ class ScenarioSimulator():
             Locations (IDs) of sensors.
         """
         self.set_sensors(SENSOR_TYPE_PUMP_STATE, sensor_locations)
+
+    def set_pump_efficiency_sensors(self, sensor_locations: list[str]) -> None:
+        """
+        Sets the pump efficiency sensors -- i.e. retrieving the efficiency of
+        some pumps in the network.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`
+            Locations (IDs) of sensors.
+        """
+        self.set_sensors(SENSOR_TYPE_PUMP_EFFICIENCY, sensor_locations)
+
+    def set_pump_energyconsumption_sensors(self, sensor_locations: list[str]) -> None:
+        """
+        Sets the pump energy consumption sensors -- i.e. retrieving the energy consumption of
+        some pumps in the network.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`
+            Locations (IDs) of sensors.
+        """
+        self.set_sensors(SENSOR_TYPE_PUMP_ENERGYCONSUMPTION, sensor_locations)
+
+    def set_pump_sensors(self, sensor_locations: list[str]) -> None:
+        """
+        Sets the pump sensors -- i.e. retrieving the state, efficiency, and energy consumption
+        of some pumps in the network.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`
+            Locations (IDs) of sensors.
+        """
+        self.set_sensors(SENSOR_TYPE_PUMP_STATE, sensor_locations)
+        self.set_sensors(SENSOR_TYPE_PUMP_EFFICIENCY, sensor_locations)
+        self.set_sensors(SENSOR_TYPE_PUMP_ENERGYCONSUMPTION, sensor_locations)
 
     def set_tank_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1781,8 +1829,8 @@ class ScenarioSimulator():
                 tanks_volume_data = self.epanet_api.getNodeTankVolume().reshape(1, -1)
 
                 pump_idx = self.epanet_api.getLinkPumpIndex()
-                pump_energy_usage_data = self.epanet_api.getLinkEnergy(pump_idx).reshape(1, -1)
-                pump_efficiency_data = self.epanet_api.getLinkPumpEfficiency().reshape(1, -1)
+                pumps_energy_usage_data = self.epanet_api.getLinkEnergy(pump_idx).reshape(1, -1)
+                pumps_efficiency_data = self.epanet_api.getLinkPumpEfficiency().reshape(1, -1)
 
                 link_valve_idx = self.epanet_api.getLinkValveIndex()
                 valves_state_data = self.epanet_api.getLinkStatus(link_valve_idx).reshape(1, -1)
@@ -1796,8 +1844,8 @@ class ScenarioSimulator():
                                        pumps_state_data_raw=pumps_state_data,
                                        valves_state_data_raw=valves_state_data,
                                        tanks_volume_data_raw=tanks_volume_data,
-                                       pump_energy_usage_data=pump_energy_usage_data,
-                                       pump_efficiency_data=pump_efficiency_data,
+                                       pumps_energy_usage_data_raw=pumps_energy_usage_data,
+                                       pumps_efficiency_data_raw=pumps_efficiency_data,
                                        sensor_readings_time=np.array([total_time]),
                                        sensor_reading_events=self.__sensor_reading_events,
                                        sensor_noise=self.__sensor_noise,
@@ -1814,8 +1862,8 @@ class ScenarioSimulator():
                                "pumps_state_data_raw": pumps_state_data,
                                "valves_state_data_raw": valves_state_data,
                                "tanks_volume_data_raw": tanks_volume_data,
-                               "pump_energy_usage_data": pump_energy_usage_data,
-                               "pump_efficiency_data": pump_efficiency_data,
+                               "pumps_energy_usage_data_raw": pumps_energy_usage_data,
+                               "pumps_efficiency_data_raw": pumps_efficiency_data,
                                "sensor_readings_time": np.array([total_time])}
                     else:
                         yield scada_data

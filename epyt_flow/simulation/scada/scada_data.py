@@ -12,6 +12,7 @@ from ..sensor_config import SensorConfig, is_flowunit_simetric, massunit_to_str,
     AREA_UNIT_CM2, AREA_UNIT_FT2, AREA_UNIT_M2, \
     SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY,  SENSOR_TYPE_NODE_DEMAND, \
     SENSOR_TYPE_NODE_PRESSURE, SENSOR_TYPE_NODE_QUALITY, SENSOR_TYPE_PUMP_STATE, \
+    SENSOR_TYPE_PUMP_EFFICIENCY, SENSOR_TYPE_PUMP_ENERGYCONSUMPTION, \
     SENSOR_TYPE_TANK_VOLUME, SENSOR_TYPE_VALVE_STATE, SENSOR_TYPE_NODE_BULK_SPECIES, \
     SENSOR_TYPE_LINK_BULK_SPECIES, SENSOR_TYPE_SURFACE_SPECIES
 from ..events import SensorFault, SensorReadingAttack, SensorReadingEvent
@@ -92,11 +93,11 @@ class ScadaData(Serializable):
         third dimension denotes species concentrations at nodes.
 
         The default is None.
-    pump_energy_usage_data : `numpy.ndarray`, optional
+    pumps_energy_usage_data_raw : `numpy.ndarray`, optional
         Energy usage data of each pump.
 
         The default is None.
-    pump_efficiency_data : `numpy.ndarray`, optional
+    pumps_efficiency_data_raw : `numpy.ndarray`, optional
         Pump efficiency data of each pump.
 
         The default is None.
@@ -130,8 +131,10 @@ class ScadaData(Serializable):
                  surface_species_concentration_raw: np.ndarray = None,
                  bulk_species_node_concentration_raw: np.ndarray = None,
                  bulk_species_link_concentration_raw: np.ndarray = None,
-                 pump_energy_usage_data: np.ndarray = None,
-                 pump_efficiency_data: np.ndarray = None,
+                 pump_energy_usage_data = None,
+                 pump_efficiency_data = None,
+                 pumps_energy_usage_data_raw: np.ndarray = None,
+                 pumps_efficiency_data_raw: np.ndarray = None,
                  sensor_faults: list[SensorFault] = [],
                  sensor_reading_attacks: list[SensorReadingAttack] = [],
                  sensor_reading_events: list[SensorReadingEvent] = [],
@@ -195,14 +198,14 @@ class ScadaData(Serializable):
                 raise TypeError("'bulk_species_link_concentration_raw' must be an instance of " +
                                 "'numpy.ndarray' but not of " +
                                 f"'{type(bulk_species_link_concentration_raw)}'")
-        if pump_energy_usage_data is not None:
-            if not isinstance(pump_energy_usage_data, np.ndarray):
-                raise TypeError("'pump_energy_usage_data' must be an instance of 'numpy.ndarray' " +
-                                f"but not of '{type(pump_energy_usage_data)}'")
-        if pump_efficiency_data is not None:
-            if not isinstance(pump_efficiency_data, np.ndarray):
-                raise TypeError("'pump_efficiency_data' must be an instance of 'numpy.ndarray' " +
-                                f"but not of '{type(pump_efficiency_data)}'")
+        if pumps_energy_usage_data_raw is not None:
+            if not isinstance(pumps_energy_usage_data_raw, np.ndarray):
+                raise TypeError("'pumps_energy_usage_data_raw' must be an instance of 'numpy.ndarray' " +
+                                f"but not of '{type(pumps_energy_usage_data_raw)}'")
+        if pumps_efficiency_data_raw is not None:
+            if not isinstance(pumps_efficiency_data_raw, np.ndarray):
+                raise TypeError("'pumps_efficiency_data_raw' must be an instance of 'numpy.ndarray' " +
+                                f"but not of '{type(pumps_efficiency_data_raw)}'")
         if len(sensor_faults) != 0:
             if any(not isinstance(f, SensorFault) for f in sensor_faults):
                 raise TypeError("'sensor_faults' must be a list of " +
@@ -222,6 +225,11 @@ class ScadaData(Serializable):
         if not isinstance(frozen_sensor_config, bool):
             raise TypeError("'frozen_sensor_config' must be an instance of 'bool' " +
                             f"but not of '{type(frozen_sensor_config)}'")
+
+        if pump_efficiency_data is not None or pump_energy_usage_data is not None:
+            warnings.warn("Loading a file that was created with an outdated version of EPyT-Flow" +
+                          " -- support of such old files will be removed in the next release!",
+                          DeprecationWarning)
 
         def __raise_shape_mismatch(var_name: str) -> None:
             raise ValueError(f"Shape mismatch in '{var_name}' -- " +
@@ -271,12 +279,12 @@ class ScadaData(Serializable):
         if surface_species_concentration_raw is not None:
             if surface_species_concentration_raw.shape[0] != n_time_steps:
                 __raise_shape_mismatch("surface_species_concentration_raw")
-        if pump_energy_usage_data is not None:
-            if pump_energy_usage_data.shape[0] != n_time_steps:
-                __raise_shape_mismatch("pump_energy_usage_data")
-        if pump_efficiency_data is not None:
-            if pump_efficiency_data.shape[0] != n_time_steps:
-                __raise_shape_mismatch("pump_efficiency_data")
+        if pumps_energy_usage_data_raw is not None:
+            if pumps_energy_usage_data_raw.shape[0] != n_time_steps:
+                __raise_shape_mismatch("pumps_energy_usage_data_raw")
+        if pumps_efficiency_data_raw is not None:
+            if pumps_efficiency_data_raw.shape[0] != n_time_steps:
+                __raise_shape_mismatch("pumps_efficiency_data_raw")
 
         self.__sensor_config = sensor_config
         self.__sensor_noise = sensor_noise
@@ -286,8 +294,6 @@ class ScadaData(Serializable):
         self.__sensor_readings = None
         self.__frozen_sensor_config = frozen_sensor_config
         self.__sensor_readings_time = sensor_readings_time
-        self.__pump_energy_usage_data = pump_energy_usage_data
-        self.__pump_efficiency_data = pump_efficiency_data
 
         if self.__frozen_sensor_config is False:
             self.__pressure_data_raw = pressure_data_raw
@@ -301,6 +307,8 @@ class ScadaData(Serializable):
             self.__surface_species_concentration_raw = surface_species_concentration_raw
             self.__bulk_species_node_concentration_raw = bulk_species_node_concentration_raw
             self.__bulk_species_link_concentration_raw = bulk_species_link_concentration_raw
+            self.__pumps_energy_usage_data_raw = pumps_energy_usage_data_raw
+            self.__pumps_efficiency_data_raw = pumps_efficiency_data_raw
         else:
             sensor_config = self.__sensor_config
 
@@ -338,6 +346,14 @@ class ScadaData(Serializable):
             self.__pumps_state_data_raw = __reduce_data(data=pumps_state_data_raw,
                                                         item_to_idx=pump_to_idx,
                                                         sensors=sensor_config.pump_state_sensors)
+            self.__pumps_energy_usage_data_raw = \
+                __reduce_data(data=pumps_energy_usage_data_raw,
+                              item_to_idx=pump_to_idx,
+                              sensors=sensor_config.pump_enegeryconsumption_sensors)
+            self.__pumps_efficiency_data_raw = \
+                __reduce_data(data=pumps_efficiency_data_raw,
+                              item_to_idx=pump_to_idx,
+                              sensors=sensor_config.pump_efficiency_sensors)
             self.__valves_state_data_raw = __reduce_data(data=valves_state_data_raw,
                                                          item_to_idx=valve_to_idx,
                                                          sensors=sensor_config.valve_state_sensors)
@@ -881,6 +897,10 @@ class ScadaData(Serializable):
                                      quality_link_sensors=self.__sensor_config.quality_link_sensors,
                                      valve_state_sensors=self.__sensor_config.valve_state_sensors,
                                      pump_state_sensors=self.__sensor_config.pump_state_sensors,
+                                     pump_efficiency_sensors=
+                                     self.__sensor_config.pump_efficiency_sensors,
+                                     pump_energyconsumption_sensors=
+                                     self.__sensor_config.pump_energyconsumption_sensors,
                                      tank_volume_sensors=self.__sensor_config.tank_volume_sensors,
                                      bulk_species_node_sensors=
                                      self.__sensor_config.bulk_species_node_sensors,
@@ -906,8 +926,8 @@ class ScadaData(Serializable):
                          pumps_state_data_raw=self.pumps_state_data_raw,
                          valves_state_data_raw=self.valves_state_data_raw,
                          tanks_volume_data_raw=tanks_volume_data,
-                         pump_energy_usage_data=self.pump_energy_usage_data,
-                         pump_efficiency_data=self.pump_efficiency_data,
+                         pumps_energy_usage_data_raw=self.pumps_energyconsumption_data_raw,
+                         pumps_efficiency_data_raw=self.pumps_efficiency_data_raw,
                          bulk_species_node_concentration_raw=bulk_species_node_concentrations,
                          bulk_species_link_concentration_raw=bulk_species_link_concentrations,
                          surface_species_concentration_raw=surface_species_concentrations)
@@ -1154,44 +1174,28 @@ class ScadaData(Serializable):
         return deepcopy(self.__bulk_species_link_concentration_raw)
 
     @property
-    def pump_energy_usage_data(self) -> np.ndarray:
+    def pumps_energyconsumption_data_raw(self) -> np.ndarray:
         """
-        Gets the energy usage of each pump.
-
-        .. note::
-            This attribute is NOT included in
-            :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data` --
-            calling this function is the only way of accessing the energy usage of each pump.
-
-            The odering in the returned NumPy array corresponds to the ordering
-            of the pumps in EPANET.
+        Gets the raw energy consumption of each pump.
 
         Returns
         -------
         `numpy.ndarray`
-            Energy usage of each pump.
+            Energy consumption of each pump.
         """
-        return deepcopy(self.__pump_energy_usage_data)
+        return deepcopy(self.__pumps_energy_usage_data_raw)
 
     @property
-    def pump_efficiency_data(self) -> np.ndarray:
+    def pumps_efficiency_data_raw(self) -> np.ndarray:
         """
-        Gets the pumps' efficiency.
-
-        .. note::
-            This attribute is NOT included in
-            :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data` --
-            calling this function is the only way of accessing the pumps' efficiency.
-
-            The odering in the returned NumPy array corresponds to the ordering
-            of the pumps in EPANET.
+        Gets the raw efficiency of each pump.
 
         Returns
         -------
         `numpy.ndarray`
             Pumps' efficiency.
         """
-        return deepcopy(self.__pump_efficiency_data)
+        return deepcopy(self.__pumps_efficiency_data_raw)
 
     def __init(self):
         self.__apply_sensor_noise = lambda x: x
@@ -1222,6 +1226,12 @@ class ScadaData(Serializable):
             elif sensor_event.sensor_type == SENSOR_TYPE_PUMP_STATE:
                 idx = self.__sensor_config.get_index_of_reading(
                     pump_state_sensor=sensor_event.sensor_id)
+            elif sensor_event.sensor_type == SENSOR_TYPE_PUMP_EFFICIENCY:
+                idx = self.__sensor_config.get_index_of_reading(
+                    pump_efficiency_sensor=sensor_event.sensor_id)
+            elif sensor_event.sensor_type == SENSOR_TYPE_PUMP_ENERGYCONSUMPTION:
+                idx = self.__sensor_config.get_index_of_reading(
+                    pump_energyconsumption_sensor=sensor_event.sensor_id)
             elif sensor_event.sensor_type == SENSOR_TYPE_TANK_VOLUME:
                 idx = self.__sensor_config.get_index_of_reading(
                     tank_volume_sensor=sensor_event.sensor_id)
@@ -1256,8 +1266,8 @@ class ScadaData(Serializable):
                 "surface_species_concentration_raw": self.__surface_species_concentration_raw,
                 "bulk_species_node_concentration_raw": self.__bulk_species_node_concentration_raw,
                 "bulk_species_link_concentration_raw": self.__bulk_species_link_concentration_raw,
-                "pump_energy_usage_data": self.__pump_energy_usage_data,
-                "pump_efficiency_data": self.__pump_efficiency_data}
+                "pumps_energy_usage_data_raw": self.__pumps_energy_usage_data_raw,
+                "pumps_efficiency_data_raw": self.__pumps_efficiency_data_raw}
 
         return super().get_attributes() | attr
 
@@ -1286,8 +1296,9 @@ class ScadaData(Serializable):
                            other.bulk_species_node_concentration_raw) \
                 and np.all(self.__bulk_species_link_concentration_raw ==
                            other.bulk_species_link_concentration_raw) \
-                and np.all(self.__pump_energy_usage_data == other.pump_energy_usage_data) \
-                and np.all(self.__pump_efficiency_data == other.pump_efficiency_data)
+                and np.all(self.__pumps_energy_usage_data_raw ==
+                           other.pumps_energyconsumption_data_raw) \
+                and np.all(self.__pumps_efficiency_data_raw == other.pumps_efficiency_data_raw)
         except Exception as ex:
             warnings.warn(ex.__str__())
             return False
@@ -1308,8 +1319,8 @@ class ScadaData(Serializable):
             f"surface_species_concentration_raw: {self.__surface_species_concentration_raw} " + \
             f"bulk_species_node_concentration_raw: {self.__bulk_species_node_concentration_raw}" +\
             f" bulk_species_link_concentration_raw: {self.__bulk_species_link_concentration_raw}" +\
-            f" pump_efficiency_data: {self.__pump_efficiency_data} " + \
-            f"pump_energy_usage_data: {self.__pump_energy_usage_data}"
+            f" pumps_efficiency_data_raw: {self.__pumps_efficiency_data_raw} " + \
+            f"pumps_energy_usage_data_raw: {self.__pumps_energy_usage_data_raw}"
 
     def change_sensor_config(self, sensor_config: SensorConfig) -> None:
         """
@@ -1491,11 +1502,13 @@ class ScadaData(Serializable):
             self.__sensor_config.surface_species_sensors = \
                 other.sensor_config.surface_species_sensors
 
-        if self.__pump_energy_usage_data is None and other.pump_energy_usage_data is not None:
-            self.__pump_energy_usage_data = other.pump_energy_usage_data
+        if self.__pumps_energy_usage_data_raw is None and \
+                other.pumps_energy_usage_data_raw is not None:
+            self.__pumps_energy_usage_data_raw = other.pumps_energy_usage_data_raw
 
-        if self.__pump_efficiency_data is None and other.pump_efficiency_data is not None:
-            self.__pump_efficiency_data = other.pump_efficiency_data
+        if self.__pumps_efficiency_data_raw is None and \
+                other.pumps_efficiency_data_raw is not None:
+            self.__pumps_efficiency_data_raw = other.pumps_efficiency_data_raw
 
         self.__init()
 
@@ -1581,14 +1594,14 @@ class ScadaData(Serializable):
                  other.bulk_species_link_concentration_raw),
                 axis=0)
 
-        if self.__pump_energy_usage_data is not None:
-            self.__pump_energy_usage_data = np.concatenate(
-                (self.__pump_energy_usage_data, other.pump_energy_usage_data),
+        if self.__pumps_energy_usage_data_raw is not None:
+            self.__pumps_energy_usage_data_raw = np.concatenate(
+                (self.__pumps_energy_usage_data_raw, other.pumps_energy_usage_data_raw),
                 axis=0)
 
-        if self.__pump_efficiency_data is not None:
-            self.__pump_efficiency_data = np.concatenate(
-                (self.__pump_efficiency_data, other.pump_efficiency_data),
+        if self.__pumps_efficiency_data_raw is not None:
+            self.__pumps_efficiency_data_raw = np.concatenate(
+                (self.__pumps_efficiency_data_raw, other.pumps_efficiency_data_raw),
                 axis=0)
 
     def get_data(self) -> np.ndarray:
@@ -1609,6 +1622,8 @@ class ScadaData(Serializable):
                     "nodes_quality": self.__node_quality_data_raw,
                     "links_quality": self.__link_quality_data_raw,
                     "pumps_state": self.__pumps_state_data_raw,
+                    "pumps_efficiency": self.__pumps_efficiency_data_raw,
+                    "pumps_energyconsumption": self.__pumps_energy_usage_data_raw,
                     "valves_state": self.__valves_state_data_raw,
                     "tanks_volume": self.__tanks_volume_data_raw,
                     "bulk_species_node_concentrations": self.__bulk_species_node_concentration_raw,
@@ -1632,6 +1647,10 @@ class ScadaData(Serializable):
                 data.append(self.__valves_state_data_raw)
             if self.__pumps_state_data_raw is not None:
                 data.append(self.__pumps_state_data_raw)
+            if self.__pumps_efficiency_data_raw is not None:
+                data.append(self.__pumps_efficiency_data_raw)
+            if self.__pumps_energy_usage_data_raw is not None:
+                data.append(self.__pumps_energy_usage_data_raw)
             if self.__tanks_volume_data_raw is not None:
                 data.append(self.__tanks_volume_data_raw)
             if self.__surface_species_concentration_raw is not None:
@@ -1893,6 +1912,85 @@ class ScadaData(Serializable):
             self.get_data()
 
         idx = [self.__sensor_config.get_index_of_reading(pump_state_sensor=s_id)
+               for s_id in sensor_locations]
+        return self.__sensor_readings[:, idx]
+
+    def get_data_pumps_efficiency(self, sensor_locations: list[str] = None) -> np.ndarray:
+        """
+        Gets the final pump efficiency sensor readings -- note that those might be subject to
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing pump efficiency sensor locations for which the sensor readings are requested.
+            If None, the readings from all pump efficiency sensors are returned.
+
+            The default is None.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Pump efficiency sensor readings.
+        """
+        if self.__sensor_config.pump_efficiency_sensors == []:
+            raise ValueError("No pump efficiency sensors set")
+        if sensor_locations is not None:
+            if not isinstance(sensor_locations, list):
+                raise TypeError("'sensor_locations' must be an instance of 'list[str]' " +
+                                f"but not of '{type(sensor_locations)}'")
+            if any(s_id not in self.__sensor_config.pump_efficiency_sensors
+                   for s_id in sensor_locations):
+                raise ValueError("Invalid sensor ID in 'sensor_locations' -- note that all " +
+                                 "sensors in 'sensor_locations' must be set in the current " +
+                                 "pump efficiency sensor configuration")
+        else:
+            sensor_locations = self.__sensor_config.pump_efficiency_sensors
+
+        if self.__sensor_readings is None:
+            self.get_data()
+
+        idx = [self.__sensor_config.get_index_of_reading(pump_efficiency_sensor=s_id)
+               for s_id in sensor_locations]
+        return self.__sensor_readings[:, idx]
+
+    def get_data_pumps_energyconsumption(self, sensor_locations: list[str] = None) -> np.ndarray:
+        """
+        Gets the final pump energy consumption sensor readings -- note that those might be subject
+        to given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing pump energy consumption sensor locations for which
+            the sensor readings are requested.
+            If None, the readings from all pump energy consumption sensors are returned.
+
+            The default is None.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            Pump energy consumption sensor readings.
+        """
+        if self.__sensor_config.pump_energyconsumption_sensors == []:
+            raise ValueError("No pump energy consumption sensors set")
+        if sensor_locations is not None:
+            if not isinstance(sensor_locations, list):
+                raise TypeError("'sensor_locations' must be an instance of 'list[str]' " +
+                                f"but not of '{type(sensor_locations)}'")
+            if any(s_id not in self.__sensor_config.pump_energyconsumption_sensors
+                   for s_id in sensor_locations):
+                raise ValueError("Invalid sensor ID in 'sensor_locations' -- note that all " +
+                                 "sensors in 'sensor_locations' must be set in the current " +
+                                 "pump efficiency sensor configuration")
+        else:
+            sensor_locations = self.__sensor_config.pump_energyconsumption_sensors
+
+        if self.__sensor_readings is None:
+            self.get_data()
+
+        idx = [self.__sensor_config.get_index_of_reading(pump_energyconsumption_sensor=s_id)
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
 

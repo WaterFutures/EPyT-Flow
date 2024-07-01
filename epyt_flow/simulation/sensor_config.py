@@ -11,17 +11,19 @@ from epyt.epanet import ToolkitConstants
 from ..serialization import SENSOR_CONFIG_ID, JsonSerializable, serializable
 
 
-SENSOR_TYPE_NODE_PRESSURE     = 1
-SENSOR_TYPE_NODE_QUALITY      = 2
-SENSOR_TYPE_NODE_DEMAND       = 3
-SENSOR_TYPE_LINK_FLOW         = 4
-SENSOR_TYPE_LINK_QUALITY      = 5
-SENSOR_TYPE_VALVE_STATE       = 6
-SENSOR_TYPE_PUMP_STATE        = 7
-SENSOR_TYPE_TANK_VOLUME       = 8
-SENSOR_TYPE_NODE_BULK_SPECIES = 9
-SENSOR_TYPE_LINK_BULK_SPECIES = 10
-SENSOR_TYPE_SURFACE_SPECIES   = 11
+SENSOR_TYPE_NODE_PRESSURE          = 1
+SENSOR_TYPE_NODE_QUALITY           = 2
+SENSOR_TYPE_NODE_DEMAND            = 3
+SENSOR_TYPE_LINK_FLOW              = 4
+SENSOR_TYPE_LINK_QUALITY           = 5
+SENSOR_TYPE_VALVE_STATE            = 6
+SENSOR_TYPE_PUMP_STATE             = 7
+SENSOR_TYPE_TANK_VOLUME            = 8
+SENSOR_TYPE_NODE_BULK_SPECIES      = 9
+SENSOR_TYPE_LINK_BULK_SPECIES      = 10
+SENSOR_TYPE_SURFACE_SPECIES        = 11
+SENSOR_TYPE_PUMP_EFFICIENCY        = 12
+SENSOR_TYPE_PUMP_ENERGYCONSUMPTION = 13
 
 AREA_UNIT_FT2 = 1
 AREA_UNIT_M2 = 2
@@ -462,6 +464,8 @@ class SensorConfig(JsonSerializable):
                  quality_link_sensors: list[str] = [],
                  valve_state_sensors: list[str] = [],
                  pump_state_sensors: list[str] = [],
+                 pump_efficiency_sensors: list[str] = [],
+                 pump_energyconsumption_sensors: list[str] = [],
                  tank_volume_sensors: list[str] = [],
                  bulk_species_node_sensors: dict = {},
                  bulk_species_link_sensors: dict = {},
@@ -570,6 +574,20 @@ class SensorConfig(JsonSerializable):
                             f"but not of '{type(pump_state_sensors)}'")
         if any(link not in pumps for link in pump_state_sensors):
             raise ValueError("Each item in 'pump_state_sensors' must be in 'pumps' -- cannot " +
+                             "place a sensor at a non-existing pump.")
+
+        if not isinstance(pump_efficiency_sensors, list):
+            raise TypeError("'pump_efficiency_sensors' must be an instance of 'list[str]' " +
+                            f"but not of '{type(pump_efficiency_sensors)}'")
+        if any(link not in pumps for link in pump_efficiency_sensors):
+            raise ValueError("Each item in 'pump_efficiency_sensors' must be in 'pumps' -- cannot " +
+                             "place a sensor at a non-existing pump.")
+
+        if not isinstance(pump_energyconsumption_sensors, list):
+            raise TypeError("'pump_energyconsumption_sensors' must be an instance of 'list[str]' " +
+                            f"but not of '{type(pump_energyconsumption_sensors)}'")
+        if any(link not in pumps for link in pump_energyconsumption_sensors):
+            raise ValueError("Each item in 'pump_energyconsumption_sensors' must be in 'pumps' -- cannot " +
                              "place a sensor at a non-existing pump.")
 
         if not isinstance(tank_volume_sensors, list):
@@ -714,6 +732,8 @@ class SensorConfig(JsonSerializable):
         self.__quality_link_sensors = quality_link_sensors
         self.__valve_state_sensors = valve_state_sensors
         self.__pump_state_sensors = pump_state_sensors
+        self.__pump_energyconsumption_sensors = pump_energyconsumption_sensors
+        self.__pump_efficiency_sensors = pump_efficiency_sensors
         self.__tank_volume_sensors = tank_volume_sensors
         self.__bulk_species_node_sensors = bulk_species_node_sensors
         self.__bulk_species_link_sensors = bulk_species_link_sensors
@@ -1032,6 +1052,12 @@ class SensorConfig(JsonSerializable):
                                            for v in self.__valve_state_sensors], dtype=np.int32)
         self.__pump_state_idx = np.array([self.map_pump_id_to_idx(p)
                                           for p in self.__pump_state_sensors], dtype=np.int32)
+        self.__pump_efficiency_idx = np.array([self.map_pump_id_to_idx(p)
+                                               for p in self.__pump_efficiency_sensors],
+                                               dtype=np.int32)
+        self.__pump_energyconsumption_idx = np.array([self.map_pump_id_to_idx(p)
+                                                      for p in self.__pump_energyconsumption_sensors],
+                                                      dtype=np.int32)
         self.__tank_volume_idx = np.array([self.map_tank_id_to_idx(t)
                                            for t in self.__tank_volume_sensors], dtype=np.int32)
         self.__bulk_species_node_idx = np.array([(self.map_bulkspecies_id_to_idx(s),
@@ -1057,6 +1083,8 @@ class SensorConfig(JsonSerializable):
         n_link_quality_sensors = len(self.__quality_link_sensors)
         n_valve_state_sensors = len(self.__valve_state_sensors)
         n_pump_state_sensors = len(self.__pump_state_sensors)
+        n_pump_efficiency_sensors = len(self.__pump_efficiency_sensors)
+        n_pump_energyconsumption_sensors = len(self.__pump_energyconsumption_sensors)
         n_tank_volume_sensors = len(self.__tank_volume_sensors)
         n_bulk_species_node_sensors = len(list(itertools.chain(
             *self.__bulk_species_node_sensors.values())))
@@ -1070,7 +1098,9 @@ class SensorConfig(JsonSerializable):
         link_quality_idx_shift = node_quality_idx_shift + n_node_quality_sensors
         valve_state_idx_shift = link_quality_idx_shift + n_link_quality_sensors
         pump_state_idx_shift = valve_state_idx_shift + n_valve_state_sensors
-        tank_volume_idx_shift = pump_state_idx_shift + n_pump_state_sensors
+        pump_efficiency_idx_shift = pump_state_idx_shift + n_pump_state_sensors
+        pump_energyconsumption_idx_shift = pump_efficiency_idx_shift + n_pump_efficiency_sensors
+        tank_volume_idx_shift = pump_energyconsumption_idx_shift + n_pump_energyconsumption_sensors
         bulk_species_node_idx_shift = tank_volume_idx_shift + n_tank_volume_sensors
         bulk_species_link_idx_shift = bulk_species_node_idx_shift + n_bulk_species_node_sensors
         surface_species_idx_shift = bulk_species_link_idx_shift + n_bulk_species_link_sensors
@@ -1103,6 +1133,11 @@ class SensorConfig(JsonSerializable):
                                                             valve_state_idx_shift),
                    "pump_state": __build_sensors_id_to_idx(self.__pump_state_sensors,
                                                            pump_state_idx_shift),
+                   "pump_efficiency": __build_sensors_id_to_idx(self.__pump_efficiency_sensors,
+                                                                pump_efficiency_idx_shift),
+                   "pump_energyconsumption":
+                   __build_sensors_id_to_idx(self.__pump_energyconsumption_sensors,
+                                             pump_energyconsumption_idx_shift),
                    "tank_volume": __build_sensors_id_to_idx(self.__tank_volume_sensors,
                                                             tank_volume_idx_shift),
                    "bulk_species_node":
@@ -1527,6 +1562,58 @@ class SensorConfig(JsonSerializable):
         self.__compute_indices()
 
     @property
+    def pump_energyconsumption_sensors(self) -> list[str]:
+        """
+        Gets all pump energy consumption sensors
+        (i.e. IDs of pumps at which the energy consumption is monitored).
+
+        Returns
+        -------
+        `list[str]`
+            All pump IDs with an energy consumption sensor.
+        """
+        return self.__pump_energyconsumption_sensors.copy()
+
+    @pump_energyconsumption_sensors.setter
+    def pump_energyconsumption_sensors(self, pump_energyconsumption_sensors: list[str]) -> None:
+        if not isinstance(pump_energyconsumption_sensors, list):
+            raise TypeError("'pump_energyconsumption_sensors' must be an instance of 'list[str]' " +
+                            f"but not of '{type(pump_energyconsumption_sensors)}'")
+        if any(link not in self.__pumps for link in pump_energyconsumption_sensors):
+            raise ValueError("Each item in 'pump_energyconsumption_sensors' must be in 'pumps' " +
+                             "-- cannot place a sensor at a non-existing pump.")
+
+        self.__pump_energyconsumption_sensors = pump_energyconsumption_sensors
+
+        self.__compute_indices()
+
+    @property
+    def pump_efficiency_sensors(self) -> list[str]:
+        """
+        Gets all pump efficiency sensors
+        (i.e. IDs of pumps at which the efficiency is monitored).
+
+        Returns
+        -------
+        `list[str]`
+            All pump IDs with an efficiency sensor.
+        """
+        return self.__pump_efficiency_sensors.copy()
+
+    @pump_efficiency_sensors.setter
+    def pump_efficiency_sensors(self, pump_efficiency_sensors: list[str]) -> None:
+        if not isinstance(pump_efficiency_sensors, list):
+            raise TypeError("'pump_efficiency_sensors' must be an instance of 'list[str]' " +
+                            f"but not of '{type(pump_efficiency_sensors)}'")
+        if any(link not in self.__pumps for link in pump_efficiency_sensors):
+            raise ValueError("Each item in 'pump_efficiency_sensors' must be in 'pumps' " +
+                             "-- cannot place a sensor at a non-existing pump.")
+
+        self.__pump_efficiency_sensors = pump_efficiency_sensors
+
+        self.__compute_indices()
+
+    @property
     def tank_volume_sensors(self) -> list[str]:
         """
         Gets all tank volume sensors (i.e. IDs of tanks at which a tank volume sensor is placed).
@@ -1670,6 +1757,10 @@ class SensorConfig(JsonSerializable):
             r["valve_state"] = self.__valve_state_sensors
         if self.__pump_state_sensors != []:
             r["pump_state"] = self.__pump_state_sensors
+        if self.__pump_efficiency_sensors != []:
+            r["pump_efficiency"] = self.__pump_efficiency_sensors
+        if self.__pump_energyconsumption_sensors != []:
+            r["pump_energyconsumption"] = self.__pump_energyconsumption_sensors
         if self.__quality_node_sensors != []:
             r["node_quality"] = self.__quality_node_sensors
         if self.__quality_link_sensors != []:
@@ -1695,6 +1786,8 @@ class SensorConfig(JsonSerializable):
                 "quality_link_sensors": self.__quality_link_sensors,
                 "valve_state_sensors": self.__valve_state_sensors,
                 "pump_state_sensors": self.__pump_state_sensors,
+                "pump_efficiency_sensors": self.__pump_efficiency_sensors,
+                "pump_energyconsumption_sensors": self.__pump_energyconsumption_sensors,
                 "tank_volume_sensors": self.__tank_volume_sensors,
                 "bulk_species_node_sensors": self.__bulk_species_node_sensors,
                 "bulk_species_link_sensors": self.__bulk_species_link_sensors,
@@ -1730,6 +1823,8 @@ class SensorConfig(JsonSerializable):
             and self.__quality_link_sensors == other.quality_link_sensors \
             and self.__valve_state_sensors == other.valve_state_sensors \
             and self.__pump_state_sensors == other.pump_state_sensors \
+            and self.__pump_efficiency_sensors == other.pump_efficiency_sensors \
+            and self.__pump_energyconsumption_sensors == other.pump_energyconsumption_sensors \
             and self.__tank_volume_sensors == other.tank_volume_sensors \
             and self.__bulk_species_node_sensors == other.bulk_species_node_sensors \
             and self.__bulk_species_link_sensors == other.bulk_species_link_sensors \
@@ -1762,6 +1857,8 @@ class SensorConfig(JsonSerializable):
             f"quality_link_sensors: {self.__quality_link_sensors} " +\
             f"valve_state_sensors: {self.__valve_state_sensors} " +\
             f"pump_state_sensors: {self.__pump_state_sensors} " +\
+            f"pump_efficiency_sensors: {self.__pump_efficiency_sensors} " +\
+            f"pump_energyconsumption_sensors: {self.__pump_energyconsumption_sensors} " +\
             f"tank_volume_sensors: {self.__tank_volume_sensors} " +\
             f"bulk_species_node_sensors: {self.__bulk_species_node_sensors} " +\
             f"bulk_species_link_sensors: {self.__bulk_species_link_sensors} " +\
@@ -1776,7 +1873,8 @@ class SensorConfig(JsonSerializable):
 
     def compute_readings(self, pressures: np.ndarray, flows: np.ndarray, demands: np.ndarray,
                          nodes_quality: np.ndarray, links_quality: np.ndarray,
-                         pumps_state: np.ndarray, valves_state: np.ndarray,
+                         pumps_state: np.ndarray, pumps_efficiency: np.ndarray,
+                         pumps_energyconsumption: np.ndarray, valves_state: np.ndarray,
                          tanks_volume: np.ndarray, bulk_species_node_concentrations: np.ndarray,
                          bulk_species_link_concentrations: np.ndarray,
                          surface_species_concentrations: np.ndarray) -> np.ndarray:
@@ -1798,6 +1896,10 @@ class SensorConfig(JsonSerializable):
             Quality values at all links/pipes.
         pumps_state : `numpy.ndarray`
             States of all pumps.
+        pumps_efficiency : `numpy.ndarray`
+            Efficiency of all pumps.
+        pumps_energyconsumption : `numpy.ndarray`
+            Energy consumption of all pumps.
         valves_state : `numpy.ndarray`
             States of all valves.
         tanks_volume : `numpy.ndarray`
@@ -1874,6 +1976,20 @@ class SensorConfig(JsonSerializable):
                 raise ValueError("Pump states readings requested " +
                                  "but no pump state data is given")
 
+        if pumps_efficiency is not None:
+            data.append(pumps_efficiency[:, self.__pump_efficiency_idx])
+        else:
+            if len(self.__pump_efficiency_sensors) != 0:
+                raise ValueError("Pump efficiency readings requested " +
+                                 "but no pump efficiency data is given")
+
+        if pumps_energyconsumption is not None:
+            data.append(pumps_energyconsumption[:, self.__pump_energyconsumption_idx])
+        else:
+            if len(self.__pump_energyconsumption_sensors) != 0:
+                raise ValueError("Pump energy consumption readings requested " +
+                                 "but no pump energy consumption data is given")
+
         if tanks_volume is not None:
             data.append(tanks_volume[:, self.__tank_volume_idx])
         else:
@@ -1913,7 +2029,9 @@ class SensorConfig(JsonSerializable):
     def get_index_of_reading(self, pressure_sensor: str = None, flow_sensor: str = None,
                              demand_sensor: str = None, node_quality_sensor: str = None,
                              link_quality_sensor: str = None, valve_state_sensor: str = None,
-                             pump_state_sensor: str = None, tank_volume_sensor: str = None,
+                             pump_state_sensor: str = None, pump_efficiency_sensor: str = None,
+                             pump_energyconsumption_sensor: str = None,
+                             tank_volume_sensor: str = None,
                              bulk_species_node_sensor: tuple[str, str] = None,
                              bulk_species_link_sensor: tuple[str, str] = None,
                              surface_species_sensor: tuple[str, str] = None) -> int:
@@ -1943,6 +2061,10 @@ class SensorConfig(JsonSerializable):
             ID of the state sensor (at a valve).
         pump_state_sensor : `str`
             ID of the state sensor (at a pump).
+        pump_efficiency_sensor : `str`
+            ID of the efficiency sensor (at a pump).
+        pump_energyconsumption_sensor : `str`
+            ID of the energy consumption sensor (at a pump).
         tank_volume_sensor : `str`
             ID of the water volume sensor (at a tank)
         bulk_species_node_sensor : `tuple[str, str]`
@@ -1966,6 +2088,10 @@ class SensorConfig(JsonSerializable):
             return self.__sensors_id_to_idx["valve_state"][valve_state_sensor]
         elif pump_state_sensor is not None:
             return self.__sensors_id_to_idx["pump_state"][pump_state_sensor]
+        elif pump_efficiency_sensor is not None:
+            return self.__sensors_id_to_idx["pump_efficiency"][pump_efficiency_sensor]
+        elif pump_energyconsumption_sensor is not None:
+            return self.__sensors_id_to_idx["pump_energyconsumption"][pump_energyconsumption_sensor]
         elif tank_volume_sensor is not None:
             return self.__sensors_id_to_idx["tank_volume"][tank_volume_sensor]
         elif surface_species_sensor is not None:

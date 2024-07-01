@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
         # Monitor states of tank "2" and pump "9"
         sim.set_tank_sensors(sensor_locations=["2"])
-        sim.set_pump_sensors(sensor_locations=["9"])
+        sim.set_pump_state_sensors(sensor_locations=["9"])
 
         # Remove all existing controls
         sim.epanet_api.deleteControls()
