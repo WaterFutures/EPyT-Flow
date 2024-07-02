@@ -176,35 +176,35 @@ Alternatively, one can use sensor type-specific function for retrieving the read
 or some sensors of that type - note that the ordering of the columns (i.e. sensors) in the
 returned array depends on the ordering of the specified sensors:
 
-+---------------------------------+-------------------------------------------------------------------------------------------------+
-| Sensor type                     | Function for getting sensor readings                                                            |
-+=================================+=================================================================================================+
-| Pressure                        | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pressures`                     |
-+---------------------------------+-------------------------------------------------------------------------------------------------+
-| Flow                            | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_flows`                         |
-+---------------------------------+-------------------------------------------------------------------------------------------------+
-| Demand                          | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_demands`                       |
-+---------------------------------+-------------------------------------------------------------------------------------------------+
-| Node quality                    | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_nodes_quality`                 |
-+---------------------------------+-------------------------------------------------------------------------------------------------+
-| Link quality                    | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_links_quality`                 |
-+---------------------------------+-------------------------------------------------------------------------------------------------+
-| Valve state                     | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_valves_state`                  |
-+---------------------------------+-------------------------------------------------------------------------------------------------+
-| Pump state                      | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pumps_state`                   |
-+---------------------------------+-------------------------------------------------------------------------------------------------+
-| Pump efficiency                 | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pumps_efficiency`              |
-+---------------------------------+-------------------------------------------------------------------------------------------------+
-| Pump energy consumption         | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pumps_energyconsumption`       |
-+---------------------------------+-------------------------------------------------------------------------------------------------+
-| Tank water volume               | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_tanks_water_volume`            |
-+---------------------------------+-------------------------------------------------------------------------------------------------+
-| Bulk species node concentration |                                                                                                 |
-+---------------------------------+-------------------------------------------------------------------------------------------------+
-| Bulk species link concentration |                                                                                                 |
-+---------------------------------+-------------------------------------------------------------------------------------------------+
-| Surface species concentration   | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_surface_species_concentration` |
-+---------------------------------+-------------------------------------------------------------------------------------------------+
++---------------------------------+---------------------------------------------------------------------------------------------------+
+| Sensor type                     | Function for getting sensor readings                                                              |
++=================================+===================================================================================================+
+| Pressure                        | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pressures`                       |
++---------------------------------+---------------------------------------------------------------------------------------------------+
+| Flow                            | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_flows`                           |
++---------------------------------+---------------------------------------------------------------------------------------------------+
+| Demand                          | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_demands`                         |
++---------------------------------+---------------------------------------------------------------------------------------------------+
+| Node quality                    | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_nodes_quality`                   |
++---------------------------------+---------------------------------------------------------------------------------------------------+
+| Link quality                    | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_links_quality`                   |
++---------------------------------+---------------------------------------------------------------------------------------------------+
+| Valve state                     | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_valves_state`                    |
++---------------------------------+---------------------------------------------------------------------------------------------------+
+| Pump state                      | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pumps_state`                     |
++---------------------------------+---------------------------------------------------------------------------------------------------+
+| Pump efficiency                 | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pumps_efficiency`                |
++---------------------------------+---------------------------------------------------------------------------------------------------+
+| Pump energy consumption         | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pumps_energyconsumption`         |
++---------------------------------+---------------------------------------------------------------------------------------------------+
+| Tank water volume               | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_tanks_water_volume`              |
++---------------------------------+---------------------------------------------------------------------------------------------------+
+| Bulk species node concentration | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_bulk_species_node_concentration` |
++---------------------------------+---------------------------------------------------------------------------------------------------+
+| Bulk species link concentration | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_bulk_species_link_concentration` |
++---------------------------------+---------------------------------------------------------------------------------------------------+
+| Surface species concentration   | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_surface_species_concentration`   |
++---------------------------------+---------------------------------------------------------------------------------------------------+
 
 Example for getting the pressure readings at node "5":
 
