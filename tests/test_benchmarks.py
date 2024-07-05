@@ -87,7 +87,7 @@ def test_battledim():
 
 
 def test_gecco_water_quality():
-    # Load as Numpy arrays
+    # 2017 version
     X, y = load_gecco2017_water_quality_data(download_dir=get_temp_folder(), return_X_y=True)
     assert X is not None
     assert y is not None
@@ -96,6 +96,7 @@ def test_gecco_water_quality():
     df_data = load_gecco2017_water_quality_data(download_dir=get_temp_folder(), return_X_y=False)
     assert df_data is not None
 
+    # 2018 version
     X, y = load_gecco2018_water_quality_data(download_dir=get_temp_folder(), return_X_y=True)
     assert X is not None
     assert y is not None
@@ -104,7 +105,7 @@ def test_gecco_water_quality():
     df_data = load_gecco2018_water_quality_data(download_dir=get_temp_folder(), return_X_y=False)
     assert df_data is not None
 
-    # Load as ScadaData instance
+    # 2019 version
     data = load_gecco2019_water_quality_data(download_dir=get_temp_folder(), return_X_y=True)
     X, y = data["train"]
     assert X is not None
@@ -146,7 +147,7 @@ def test_water_usage():
     assert y is not None
     assert water_usage_evaluation_score(np.random.choice([0, 1], size=y.shape), y) is not None
 
-    # Load as ScadaData instance
+    # Load as pandas.DataFrame instances
     data = load_water_usage(return_X_y=False)
     df_data = data["train"]
     assert df_data is not None
