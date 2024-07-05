@@ -791,6 +791,51 @@ class SensorConfig(JsonSerializable):
                             bulkspecies_id_to_idx=sensor_config.bulkspecies_id_to_idx,
                             surfacespecies_id_to_idx=sensor_config.surfacespecies_id_to_idx)
 
+    def is_empty(self) -> bool:
+        """
+        Checks if the sensor configuration is empty -- i.e. no sensors are placed.
+
+        Returns
+        -------
+        `bool`
+            True if no sensors are placed, False otherwise.
+        """
+        if self.__pressure_sensors == [] and self.__flow_sensors == [] \
+                and self.__demand_sensors == [] and self.__quality_node_sensors == [] \
+                and self.__quality_link_sensors == [] and self.__valve_state_sensors == [] \
+                and self.__pump_state_sensors == [] \
+                and self.__pump_energyconsumption_sensors == [] \
+                and self.__pump_efficiency_sensors == [] and self.__tank_volume_sensors == [] \
+                and self.__bulk_species_node_sensors == [] \
+                and self.__bulk_species_link_sensors == [] \
+                and self.__surface_species_sensors == []:
+            return True
+        else:
+            return False
+
+    def place_sensors_everywhere(self) -> None:
+        """
+        Places sensors everywhere -- i.e. every possible quantity is monitored
+        at every position in the network.
+        """
+        self.__pressure_sensors = self.__nodes[:]
+        self.__demand_sensors = self.__nodes[:]
+        self.__flow_sensors = self.__links[:]
+        self.__quality_node_sensors = self.__nodes[:]
+        self.__quality_link_sensors = self.__links[:]
+        self.__pump_state_sensors = self.__pumps[:]
+        self.__pump_energyconsumption_sensors = self.__pumps[:]
+        self.__pump_efficiency_sensors = self.__pumps[:]
+        self.__tank_volume_sensors = self.__tanks[:]
+        self.__bulk_species_node_sensors = {species_id: self.__nodes[:]
+                                            for species_id in self.__bulk_species}
+        self.__bulk_species_link_sensors = {species_id: self.__links[:]
+                                            for species_id in self.__bulk_species}
+        self.__surface_species_sensors = {species_id: self.__links[:]
+                                          for species_id in self.__surface_species}
+
+        self.__compute_indices()
+
     @property
     def node_id_to_idx(self) -> dict:
         """

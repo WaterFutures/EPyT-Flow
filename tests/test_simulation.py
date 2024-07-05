@@ -20,6 +20,21 @@ def test_randomize_demands():
         sim.randomize_demands()
 
         assert sim.sensor_config.get_as_dict() is not None
+        assert sim.sensor_config.is_empty() is False
+
+        sim.estimate_memory_consumption()
+        res = sim.run_simulation()
+
+        res.get_data()
+
+
+def test_sensor_config():
+    hanoi_network_config = load_hanoi(download_dir=get_temp_folder())
+    with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
+        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
+        sim.place_sensors_everywhere()
+
+        assert sim.sensor_config.is_empty() is False
 
         sim.estimate_memory_consumption()
         res = sim.run_simulation()
