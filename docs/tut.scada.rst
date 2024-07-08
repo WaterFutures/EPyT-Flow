@@ -51,6 +51,9 @@ EPyT-Flow supports different types of sensors:
 | SENSOR_TYPE_SURFACE_SPECIES        | Surface species concentrations at a link/pipe.                               |
 +------------------------------------+------------------------------------------------------------------------------+
 
+Before the simulation run
+-------------------------
+
 Example for specifying a sensor placement BEFORE the simulation is run:
 
 .. code-block:: python
@@ -114,6 +117,52 @@ BEFORE the simulation is run:
         # Run simulation
         # ....
 
+
+Besides specifying sensors manually, it is also possible to easily place sensors everywhere --
+e.g. placing a pressure sensors at all nodes in the network.
+This can be done by calling the following functions before BEFORE the simulation is run:
+
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| Sensor type                      | Function for specifying sensors                                                                                    |
++==================================+====================================================================================================================+
+| Pressure                         | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.place_pressure_sensors_everywhere`               |
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| Flow                             | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.place_flow_sensors_everywhere`                   |
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| Demand                           | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.place_demand_sensors_everywhere`                 |
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| Link quality                     | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.place_link_quality_sensors_everywhere`           |
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| Node quality                     | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.place_node_quality_sensors_everywhere`           |
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| Valve state                      | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.place_valve_sensors_everywhere`                  |
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| Pump state                       | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.place_pump_state_sensors_everywhere`             |
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| Pump efficiency                  | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.place_pump_efficiency_sensors_everywhere`        |
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| Pump energy consumption          | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.place_pump_energyconsumption_sensors_everywhere` |
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| All pump quantities              | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.place_pump_sensors_everywhere`                   |
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| Tank water volume                | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.place_tank_sensors_everywhere`                   |
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| Bulk species node concentrations | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.place_bulk_species_node_sensors_everywhere`      |
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| Bulk species link concentrations | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.place_bulk_species_link_sensors_everywhere`      |
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| Surface species concentrations   | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.place_surface_species_sensors_everywhere`        |
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| All quantities                   | :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.place_sensors_everywhere`                        |
++----------------------------------+--------------------------------------------------------------------------------------------------------------------+
+
+
+After the simulation run
+------------------------
+
+Besides specifying a sensor placement before the simulation is run, it is also possible to change
+the sensor configuration of a :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances
+if the simulation was run with `frozen_sensor_config=False` (default).
 
 Example of specifying a sensor placement AFTER the simulation is run by calling 
 :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.change_sensor_config` 
@@ -249,6 +298,20 @@ The units can be changed (i.e. measurements are converted) by calling the functi
 :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.convert_units` of a
 :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
 instances.
+
+Example of getting and changing the measurement units:
+
+.. code-block:: python
+
+    # Running a simulation of loading a ScadaData instance
+    # ...
+
+    # Show current hydraulic (i.e. flow) unit in a human-readable format
+    print(flowunit_to_str(scada_data.sensor_config.flow_unit))
+
+    # Change flow units to gal/min -- note that this changes the hydraulic units to US CUSTOM
+    scada_data_new = scada_data.convert_units(ToolkitConstants.EN_GPM)
+    print(flowunit_to_str(scada_data_new.sensor_config.flow_unit))
 
 
 Importing and Exporting
