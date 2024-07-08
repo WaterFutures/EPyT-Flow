@@ -1091,6 +1091,12 @@ class ScenarioSimulator():
         """
         self.set_sensors(SENSOR_TYPE_NODE_PRESSURE, sensor_locations)
 
+    def place_pressure_sensors_everywhere(self) -> None:
+        """
+        Places a pressure sensor at every node in the network.
+        """
+        self.set_pressure_sensors(self.__sensor_config.nodes)
+
     def set_flow_sensors(self, sensor_locations: list[str]) -> None:
         """
         Sets the flow sensors -- i.e. measuring flows at some links/pipes in the network.
@@ -1102,6 +1108,12 @@ class ScenarioSimulator():
         """
         self.set_sensors(SENSOR_TYPE_LINK_FLOW, sensor_locations)
 
+    def place_flow_sensors_everywhere(self) -> None:
+        """
+        Places a flow sensors at every link/pipe in the network.
+        """
+        self.set_flow_sensors(self.__sensor_config.links)
+
     def set_demand_sensors(self, sensor_locations: list[str]) -> None:
         """
         Sets the demand sensors -- i.e. measuring demands at some nodes in the network.
@@ -1112,6 +1124,12 @@ class ScenarioSimulator():
             Locations (IDs) of sensors.
         """
         self.set_sensors(SENSOR_TYPE_NODE_DEMAND, sensor_locations)
+
+    def place_demand_sensors_everywhere(self) -> None:
+        """
+        Places a demand sensor at every node in the network.
+        """
+        self.set_demand_sensors(self.__sensor_config.nodes)
 
     def set_node_quality_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1125,6 +1143,12 @@ class ScenarioSimulator():
         """
         self.set_sensors(SENSOR_TYPE_NODE_QUALITY, sensor_locations)
 
+    def place_node_quality_sensors_everywhere(self) -> None:
+        """
+        Places a water quality sensor at every node in the network.
+        """
+        self.set_node_quality_sensors(self.__sensor_config.nodes)
+
     def set_link_quality_sensors(self, sensor_locations: list[str]) -> None:
         """
         Sets the link quality sensors -- i.e. measuring the water quality
@@ -1137,6 +1161,12 @@ class ScenarioSimulator():
         """
         self.set_sensors(SENSOR_TYPE_LINK_QUALITY, sensor_locations)
 
+    def place_link_quality_sensors_everywhere(self) -> None:
+        """
+        Places a water quality sensor at every link/pipe in the network.
+        """
+        self.set_link_quality_sensors(self.__sensor_config.links)
+
     def set_valve_sensors(self, sensor_locations: list[str]) -> None:
         """
         Sets the valve state sensors -- i.e. retrieving the state of some valves in the network.
@@ -1148,6 +1178,15 @@ class ScenarioSimulator():
         """
         self.set_sensors(SENSOR_TYPE_VALVE_STATE, sensor_locations)
 
+    def place_valve_sensors_everywhere(self) -> None:
+        """
+        Places a valve state sensor at every valve in the network.
+        """
+        if len(self.__sensor_config.valves) == 0:
+            warnings.warn("Network does not contain any valves", UserWarning)
+
+        self.set_valve_sensors(self.__sensor_config.valves)
+
     def set_pump_state_sensors(self, sensor_locations: list[str]) -> None:
         """
         Sets the pump state sensors -- i.e. retrieving the state of some pumps in the network.
@@ -1158,6 +1197,15 @@ class ScenarioSimulator():
             Locations (IDs) of sensors.
         """
         self.set_sensors(SENSOR_TYPE_PUMP_STATE, sensor_locations)
+
+    def place_pump_state_sensors_everywhere(self) -> None:
+        """
+        Places a pump state sensor at every pump in the network.
+        """
+        if len(self.__sensor_config.pumps) == 0:
+            warnings.warn("Network does not contain any pumps", UserWarning)
+
+        self.set_pump_state_sensors(self.__sensor_config.pumps)
 
     def set_pump_efficiency_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1171,6 +1219,15 @@ class ScenarioSimulator():
         """
         self.set_sensors(SENSOR_TYPE_PUMP_EFFICIENCY, sensor_locations)
 
+    def place_pump_efficiency_sensors_everywhere(self) -> None:
+        """
+        Places a pump efficiency sensor at every pump in the network.
+        """
+        if len(self.__sensor_config.pumps) == 0:
+            warnings.warn("Network does not contain any pumps", UserWarning)
+
+        self.set_pump_efficiency_sensors(self.__sensor_config.pumps)
+
     def set_pump_energyconsumption_sensors(self, sensor_locations: list[str]) -> None:
         """
         Sets the pump energy consumption sensors -- i.e. retrieving the energy consumption of
@@ -1182,6 +1239,15 @@ class ScenarioSimulator():
             Locations (IDs) of sensors.
         """
         self.set_sensors(SENSOR_TYPE_PUMP_ENERGYCONSUMPTION, sensor_locations)
+
+    def place_pump_energyconsumption_sensors_everywhere(self) -> None:
+        """
+        Places a pump energy consumption sensor at every pump in the network.
+        """
+        if len(self.__sensor_config.pumps) == 0:
+            warnings.warn("Network does not contain any pumps", UserWarning)
+
+        self.set_pump_energyconsumption_sensors(self.__sensor_config.pumps)
 
     def set_pump_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1197,6 +1263,16 @@ class ScenarioSimulator():
         self.set_sensors(SENSOR_TYPE_PUMP_EFFICIENCY, sensor_locations)
         self.set_sensors(SENSOR_TYPE_PUMP_ENERGYCONSUMPTION, sensor_locations)
 
+    def place_pump_sensors_everywhere(self) -> None:
+        """
+        Palces pump sensors at every pump in the network -- i.e. retrieving the state, efficiency,
+        and energy consumption of all pumps in the network.
+        """
+        if len(self.__sensor_config.pumps) == 0:
+            warnings.warn("Network does not contain any pumps", UserWarning)
+
+        self.set_pump_sensors(self.__sensor_config.pumps)
+
     def set_tank_sensors(self, sensor_locations: list[str]) -> None:
         """
         Sets the tank volume sensors -- i.e. measuring water volumes in some tanks in the network.
@@ -1207,6 +1283,15 @@ class ScenarioSimulator():
             Locations (IDs) of sensors.
         """
         self.set_sensors(SENSOR_TYPE_TANK_VOLUME, sensor_locations)
+
+    def place_tank_sensors_everywhere(self) -> None:
+        """
+        Places a water tank volume sensor at every tank in the network.
+        """
+        if len(self.__sensor_config.tanks) == 0:
+            warnings.warn("Network does not contain any tanks", UserWarning)
+
+        self.set_tank_sensors(self.__sensor_config.tanks)
 
     def set_bulk_species_node_sensors(self, sensor_info: dict) -> None:
         """
@@ -1220,6 +1305,14 @@ class ScenarioSimulator():
         """
         self.set_sensors(SENSOR_TYPE_NODE_BULK_SPECIES, sensor_info)
 
+    def place_bulk_species_node_sensors_everywhere(self) -> None:
+        """
+        Places bulk species concentration sensors at every node in the network for
+        every bulk species.
+        """
+        self.set_bulk_species_node_sensors({species_id: self.__sensor_config.nodes
+                                            for species_id in self.__sensor_config.bulk_species})
+
     def set_bulk_species_link_sensors(self, sensor_info: dict) -> None:
         """
         Sets the bulk species link/pipe sensors -- i.e. measuring bulk species concentrations
@@ -1232,6 +1325,14 @@ class ScenarioSimulator():
         """
         self.set_sensors(SENSOR_TYPE_LINK_BULK_SPECIES, sensor_info)
 
+    def place_bulk_species_link_sensors_everywhere(self) -> None:
+        """
+        Places bulk species concentration sensors at every link/pipe in the network
+        for every bulk species.
+        """
+        self.set_bulk_species_link_sensors({species_id: self.__sensor_config.links
+                                            for species_id in self.__sensor_config.bulk_species})
+
     def set_surface_species_sensors(self, sensor_info: dict) -> None:
         """
         Sets the surface species sensors -- i.e. measuring surface species concentrations
@@ -1243,6 +1344,22 @@ class ScenarioSimulator():
             Surface species sensors -- keys: surface species IDs, values: link/pipe IDs.
         """
         self.set_sensors(SENSOR_TYPE_SURFACE_SPECIES, sensor_info)
+
+    def place_surface_species_sensors_everywhere(self) -> None:
+        """
+        Places surface species concentration sensors at every link/pipe in the network
+        for every surface species.
+        """
+        self.set_bulk_species_node_sensors({species_id: self.__sensor_config.links
+                                            for species_id in
+                                            self.__sensor_config.surface_species})
+
+    def place_sensors_everywhere(self) -> None:
+        """
+        Places sensors everywhere -- i.e. every possible quantity is monitored
+        at every position in the network.
+        """
+        self.__sensor_config.place_sensors_everywhere()
 
     def __prepare_simulation(self) -> None:
         self.__adapt_to_network_changes()
