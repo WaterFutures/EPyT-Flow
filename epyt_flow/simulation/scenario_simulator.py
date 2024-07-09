@@ -1910,11 +1910,6 @@ class ScenarioSimulator():
             tstep = 1
             first_itr = True
             while tstep > 0:
-                if support_abort is True:  # Can the simulation be aborted? If so, handle it.
-                    abort = yield
-                    if abort is not False:
-                        break
-
                 if first_itr is True:  # Fix current time in the first iteration
                     tstep = 0
                     first_itr = False
@@ -1971,19 +1966,26 @@ class ScenarioSimulator():
                 # Yield results in a regular time interval only!
                 if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
                     if return_as_dict is True:
-                        yield {"pressure_data_raw": pressure_data,
-                               "flow_data_raw": flow_data,
-                               "demand_data_raw": demand_data,
-                               "node_quality_data_raw": quality_node_data,
-                               "link_quality_data_raw": quality_link_data,
-                               "pumps_state_data_raw": pumps_state_data,
-                               "valves_state_data_raw": valves_state_data,
-                               "tanks_volume_data_raw": tanks_volume_data,
-                               "pumps_energy_usage_data_raw": pumps_energy_usage_data,
-                               "pumps_efficiency_data_raw": pumps_efficiency_data,
-                               "sensor_readings_time": np.array([total_time])}
+                        data = {"pressure_data_raw": pressure_data,
+                                "flow_data_raw": flow_data,
+                                "demand_data_raw": demand_data,
+                                "node_quality_data_raw": quality_node_data,
+                                "link_quality_data_raw": quality_link_data,
+                                "pumps_state_data_raw": pumps_state_data,
+                                "valves_state_data_raw": valves_state_data,
+                                "tanks_volume_data_raw": tanks_volume_data,
+                                "pumps_energy_usage_data_raw": pumps_energy_usage_data,
+                                "pumps_efficiency_data_raw": pumps_efficiency_data,
+                                "sensor_readings_time": np.array([total_time])}
                     else:
-                        yield scada_data
+                        data = scada_data
+
+                    if support_abort is True:  # Can the simulation be aborted? If so, handle it.
+                        abort = yield
+                        if abort is not False:
+                            break
+
+                    yield data
 
                 # Apply control modules
                 for control in self.__controls:
