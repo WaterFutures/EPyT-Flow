@@ -2,7 +2,7 @@
 Module provides a base class for control environments.
 """
 from abc import abstractmethod, ABC
-from copy import deepcopy
+from typing import Union
 
 from ..simulation import ScenarioSimulator, ScenarioConfig, ScadaData
 
@@ -32,8 +32,13 @@ class ScenarioControlEnv(ABC):
     def autoreset(self) -> bool:
         """
         True, if environment automatically resets after it terminated.
+
+        Returns
+        -------
+        `bool`
+            True, if environment automatically resets after it terminated.
         """
-        return deepcopy(self.__autoreset)
+        return self.__autoreset
 
     def __enter__(self):
         return self
@@ -58,6 +63,11 @@ class ScenarioControlEnv(ABC):
     def reset(self) -> ScadaData:
         """
         Resets the environment (i.e. simulation).
+
+        Returns
+        -------
+        :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
+            Current SCADA data (i.e. sensor readings).
         """
         if self._scenario_sim is not None:
             self._scenario_sim.close()
@@ -84,18 +94,18 @@ class ScenarioControlEnv(ABC):
                 return None, True
 
     @abstractmethod
-    def step(self) -> tuple[ScadaData, float, bool]:
+    def step(self) -> Union[tuple[ScadaData, float, bool], tuple[ScadaData, float]]:
         """
         Performs the next step by applying an action and observing
         the consequences (SCADA data, reward, terminated).
 
         Note that `terminated` is only returned if `autoreset=False` otherwise
-        only SCADA data and reward are returned.
+        only the current SCADA data and reward are returned.
 
         Returns
         -------
-        `(ScadaData, float, bool)`
-            Triple of observations (:class:`~epyt_flow.simuation.scada.scada_data.ScadaData`),
+        `(` :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` `, float, bool)` or `(` :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` `, float)`
+            Triple or tuple of observations (:class:`~epyt_flow.simulation.scada.scada_data.ScadaData`),
             reward (`float`), and terminated (`bool`).
         """
         raise NotImplementedError()
