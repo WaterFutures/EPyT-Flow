@@ -278,7 +278,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         `list[str]`
             Pump IDs.
         """
-        return self.__pumps.keys()
+        return list(self.__pumps.keys())
 
     def get_all_valves(self) -> list[str]:
         """
@@ -289,7 +289,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         `list[str]`
             Valve IDs.
         """
-        return self.__valves.keys()
+        return list(self.__valves.keys())
 
     def get_node_info(self, node_id: str) -> dict:
         """
