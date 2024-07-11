@@ -56,8 +56,7 @@ def get_default_hydraulic_options(flow_units_id: int = None) -> dict:
         Dictionary with default hydraulics options that can be passed to
         :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_general_parameters`.
     """
-    params = {"demand_model": {"type": "PDA", "pressure_min": 0, "pressure_required": 0.1,
-                               "pressure_exponent": 0.5}}
+    params = {}
     if flow_units_id is not None:
         params |= {"flow_units_id": flow_units_id}
 

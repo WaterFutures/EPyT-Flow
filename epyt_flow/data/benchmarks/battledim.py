@@ -458,10 +458,14 @@ def load_scenario(return_test_scenario: bool, download_dir: str = None,
         ltown_config = load_ltown(use_realistic_demands=True, include_default_sensor_placement=True,
                                   verbose=verbose)
 
-    # Set simulation duration
+    # Set simulation duration and other general parameters such as the demand model
     general_params = {"simulation_duration": to_seconds(days=365),    # One year
                       "hydraulic_time_step": to_seconds(minutes=5),   # 5min time steps
-                      "reporting_time_step": to_seconds(minutes=5)} | ltown_config.general_params
+                      "reporting_time_step": to_seconds(minutes=5),
+                      "demand_model": {"type": "PDA", "pressure_min": 0,
+                                       "pressure_required": 0.1,
+                                       "pressure_exponent": 0.5}
+                      } | ltown_config.general_params
 
     # Add events
     start_time = START_TIME_TEST if return_test_scenario is True else START_TIME_TRAIN

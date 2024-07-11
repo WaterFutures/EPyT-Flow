@@ -66,7 +66,8 @@ chemical reactions (e.g. pipe wall reactions) and injections
 
 Also, there exist two different types of demand models that can be used for simulating
 the hydraulics: Demand-driven analysis (DDA) and a pressure-driven analysis (PDA) --
-note that EPyT-Flow uses pressure-driven analysis (PDA) as a default.
+note that pressure-driven analysis (PDA) is more robust in extreme situations but requires
+specifying additiona parameters such as the minimum pressure and the pressure exponent.
 
 The units of measurement are set globally and are either in *US customary* or *SI metric*.
 The units are set by settings the flow units -- more details can be found in the

@@ -30,7 +30,7 @@ from .leakdb_data import NET1_LEAKAGES, HANOI_LEAKAGES
 from ...utils import get_temp_folder, to_seconds, unpack_zip_archive, create_path_if_not_exist, \
     download_if_necessary
 from ...metrics import f1_score, true_positive_rate, true_negative_rate
-from ...simulation import ScenarioSimulator
+from ...simulation import ScenarioSimulator, ToolkitConstants
 from ...simulation.events import AbruptLeakage, IncipientLeakage
 from ...simulation import ScenarioConfig
 from ...simulation.scada import ScadaData
@@ -424,14 +424,19 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
     download_dir = download_dir if download_dir is not None else get_temp_folder()
     network_config = load_network(download_dir)
 
-    # Set simulation duration
+    # Set simulation duration and other general parameters such as the demand model and flow units
     hydraulic_time_step = to_seconds(minutes=30)    # 30min time steps
     general_params = {"simulation_duration": to_seconds(days=365),   # One year
                       "hydraulic_time_step": hydraulic_time_step,
-                      "reporting_time_step": hydraulic_time_step} | network_config.general_params
+                      "reporting_time_step": hydraulic_time_step,
+                      "flow_units_id": ToolkitConstants.EN_CMH,
+                      "demand_model": {"type": "PDA", "pressure_min": 0,
+                                       "pressure_required": 0.1,
+                                       "pressure_exponent": 0.5}
+                      } | network_config.general_params
 
     # Add demand patterns
-    def gen_dem(download_dir, use_net1):
+    def gen_dem(download_dir):
         # Taken from https://github.com/KIOS-Research/LeakDB/blob/master/CCWI-WDSA2018/Dataset_Generator_Py3/demandGenerator.py
         week_pat = scipy.io.loadmat(os.path.join(download_dir, "weekPat_30min.mat"))
         a_w = week_pat['Aw']
@@ -503,10 +508,7 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
 
         if not os.path.exists(f_inp_in):
             with ScenarioSimulator(f_inp_in=network_config.f_inp_in) as wdn:
-                wdn.epanet_api.setTimeHydraulicStep(general_params["hydraulic_time_step"])
-                wdn.epanet_api.setTimeSimulationDuration(general_params["simulation_duration"])
-                wdn.epanet_api.setTimePatternStep(general_params["hydraulic_time_step"])
-                wdn.epanet_api.setFlowUnitsCMH()
+                wdn.set_general_parameters(**general_params)
 
                 wdn.epanet_api.deletePatternsAll()
 
@@ -519,7 +521,7 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
                     node_idx = wdn.epanet_api.getNodeIndex(node_id)
                     base_demand = wdn.epanet_api.getNodeBaseDemands(node_idx)[1][0]
 
-                    my_demand_pattern = np.array(gen_dem(download_dir, use_net1))
+                    my_demand_pattern = np.array(gen_dem(download_dir))
 
                     wdn.set_node_demand_pattern(node_id=node_id, base_demand=base_demand,
                                                 demand_pattern_id=f"demand_{node_id}",
