@@ -2114,6 +2114,30 @@ class ScenarioSimulator():
         """
         self.__adapt_to_network_changes()
 
+        if flow_units_id is not None:
+            if flow_units_id == ToolkitConstants.EN_CFS:
+                self.epanet_api.setFlowUnitsCFS()
+            elif flow_units_id == ToolkitConstants.EN_GPM:
+                self.epanet_api.setFlowUnitsGPM()
+            elif flow_units_id == ToolkitConstants.EN_MGD:
+                self.epanet_api.setFlowUnitsMGD()
+            elif flow_units_id == ToolkitConstants.EN_IMGD:
+                self.epanet_api.setFlowUnitsIMGD()
+            elif flow_units_id == ToolkitConstants.EN_AFD:
+                self.epanet_api.setFlowUnitsAFD()
+            elif flow_units_id == ToolkitConstants.EN_LPS:
+                self.epanet_api.setFlowUnitsLPS()
+            elif flow_units_id == ToolkitConstants.EN_LPM:
+                self.epanet_api.setFlowUnitsLPM()
+            elif flow_units_id == ToolkitConstants.EN_MLD:
+                self.epanet_api.setFlowUnitsMLD()
+            elif flow_units_id == ToolkitConstants.EN_CMH:
+                self.epanet_api.setFlowUnitsCMH()
+            elif flow_units_id == ToolkitConstants.EN_CMD:
+                self.epanet_api.setFlowUnitsCMD()
+            else:
+                raise ValueError(f"Unknown flow units '{flow_units_id}'")
+
         if demand_model is not None:
             self.epanet_api.setDemandModel(demand_model["type"], demand_model["pressure_min"],
                                            demand_model["pressure_required"],
@@ -2157,30 +2181,6 @@ class ScenarioSimulator():
                 raise ValueError("'quality_time_step' must be a positive integer that is not " +
                                  "greater than the hydraulic time step")
             self.epanet_api.setTimeQualityStep(quality_time_step)
-
-        if flow_units_id is not None:
-            if flow_units_id == ToolkitConstants.EN_CFS:
-                self.epanet_api.setFlowUnitsCFS()
-            elif flow_units_id == ToolkitConstants.EN_GPM:
-                self.epanet_api.setFlowUnitsGPM()
-            elif flow_units_id == ToolkitConstants.EN_MGD:
-                self.epanet_api.setFlowUnitsMGD()
-            elif flow_units_id == ToolkitConstants.EN_IMGD:
-                self.epanet_api.setFlowUnitsIMGD()
-            elif flow_units_id == ToolkitConstants.EN_AFD:
-                self.epanet_api.setFlowUnitsAFD()
-            elif flow_units_id == ToolkitConstants.EN_LPS:
-                self.epanet_api.setFlowUnitsLPS()
-            elif flow_units_id == ToolkitConstants.EN_LPM:
-                self.epanet_api.setFlowUnitsLPM()
-            elif flow_units_id == ToolkitConstants.EN_MLD:
-                self.epanet_api.setFlowUnitsMLD()
-            elif flow_units_id == ToolkitConstants.EN_CMH:
-                self.epanet_api.setFlowUnitsCMH()
-            elif flow_units_id == ToolkitConstants.EN_CMD:
-                self.epanet_api.setFlowUnitsCMD()
-            else:
-                raise ValueError(f"Unknown flow units '{flow_units_id}'")
 
         if quality_model is not None:
             if quality_model["type"] == "NONE":
