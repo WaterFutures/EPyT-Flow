@@ -42,15 +42,17 @@ def test_leakdb():
             assert res is not None
 
     X, y, y_leak_loc = load_leakdb_scada_data(scenarios_id=[3], use_net1=True, return_X_y=True,
+                                              download_dir=get_temp_folder(),
                                               return_leak_locations=True)[0]
     assert X is not None
     assert y is not None
     assert y_leak_loc is not None
 
-    data = load_leakdb_data(scenarios_id=range(1, 5), use_net1=True)
+    data = load_leakdb_data(scenarios_id=range(1, 5), use_net1=True, download_dir=get_temp_folder())
     assert data is not None
 
     data = load_leakdb_data(scenarios_id=range(1, 5), use_net1=True, return_X_y=True,
+                            download_dir=get_temp_folder(),
                             return_features_desc=True, return_leak_locations=True)
     assert data is not None
 
@@ -63,15 +65,17 @@ def test_leakdb():
             assert res is not None
 
     X, y, y_leak_loc = load_leakdb_scada_data(scenarios_id=[3], use_net1=False, return_X_y=True,
+                                              download_dir=get_temp_folder(),
                                               return_leak_locations=True)[0]
     assert X is not None
     assert y is not None
     assert y_leak_loc is not None
 
-    data = load_leakdb_data(scenarios_id=range(1, 5), use_net1=False)
+    data = load_leakdb_data(scenarios_id=range(1, 5), use_net1=False, download_dir=get_temp_folder())
     assert data is not None
 
     data = load_leakdb_data(scenarios_id=range(1, 5), use_net1=False, return_X_y=True,
+                            download_dir=get_temp_folder(),
                             return_features_desc=True, return_leak_locations=True)
     assert data is not None
 
@@ -133,7 +137,7 @@ def test_gecco_water_quality():
 
 def test_water_usage():
     # Load as Numpy arrays
-    data = load_water_usage(return_X_y=True)
+    data = load_water_usage(return_X_y=True, download_dir=get_temp_folder())
     X, y = data["train"]
     assert X is not None
     assert y is not None
@@ -148,7 +152,7 @@ def test_water_usage():
     assert water_usage_evaluation_score(np.random.choice([0, 1], size=y.shape), y) is not None
 
     # Load as pandas.DataFrame instances
-    data = load_water_usage(return_X_y=False)
+    data = load_water_usage(return_X_y=False, download_dir=get_temp_folder())
     df_data = data["train"]
     assert df_data is not None
 
