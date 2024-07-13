@@ -110,12 +110,16 @@ class ScenarioSimulator():
             if os.path.isfile(os.path.join(path_to_custom_libs, libepanetmsx_name)):
                 custom_epanetmsx_lib = os.path.join(path_to_custom_libs, libepanetmsx_name)
 
-        self.epanet_api = epanet(self.__f_inp_in, ph=self.__f_msx_in is None,
-                                 customlib=custom_epanet_lib, loadfile=True,
-                                 display_msg=epanet_verbose)
+        with warnings.catch_warnings():
+            # Treat all warnings as exceptions when trying to load .inp and .msx files
+            warnings.simplefilter('error')
 
-        if self.__f_msx_in is not None:
-            self.epanet_api.loadMSXFile(self.__f_msx_in, customMSXlib=custom_epanetmsx_lib)
+            self.epanet_api = epanet(self.__f_inp_in, ph=self.__f_msx_in is None,
+                                     customlib=custom_epanet_lib, loadfile=True,
+                                     display_msg=epanet_verbose)
+
+            if self.__f_msx_in is not None:
+                self.epanet_api.loadMSXFile(self.__f_msx_in, customMSXlib=custom_epanetmsx_lib)
 
         self.__sensor_config = self.__get_empty_sensor_config()
         if scenario_config is not None:
