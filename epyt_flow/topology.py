@@ -188,6 +188,17 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         """
         return [node_id for node_id, _ in self.__nodes]
 
+    def get_number_of_nodes(self) -> int:
+        """
+        Returns the number of nodes.
+
+        Returns
+        -------
+        `int`
+            Number of nodes.
+        """
+        return len(self.get_all_nodes())
+
     def get_all_links(self) -> list[tuple[str, tuple[str, str]]]:
         """
         Gets a list of all links/pipes (incl. their end points).
@@ -198,6 +209,17 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             List of links -- (link ID, (left node ID, right node ID)).
         """
         return [(link_id, end_points) for link_id, end_points, _ in self.__links]
+
+    def get_number_of_links(self) -> int:
+        """
+        Returns the number of links.
+
+        Returns
+        -------
+        `int`
+            Number of links.
+        """
+        return len(self.get_all_links())
 
     def get_all_junctions(self) -> list[str]:
         """
@@ -216,6 +238,17 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
         return r
 
+    def get_number_of_junctions(self) -> int:
+        """
+        Returns the number of junctions.
+
+        Returns
+        -------
+        `int`
+            Number of junctions.
+        """
+        return len(self.get_all_junctions())
+
     def get_all_tanks(self) -> list[str]:
         """
         Gets all tanks -- i.e. nodes that are not junctions or reservoirs.
@@ -233,6 +266,17 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
         return r
 
+    def get_number_of_tanks(self) -> int:
+        """
+        Returns the number of tanks.
+
+        Returns
+        -------
+        `int`
+            Number of tanks.
+        """
+        return len(self.get_all_tanks())
+
     def get_all_reservoirs(self) -> list[str]:
         """
         Gets all reservoirs -- i.e. nodes that are not junctions or tanks.
@@ -249,6 +293,17 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                 r.append(node_id)
 
         return r
+
+    def get_number_of_reservoirs(self) -> int:
+        """
+        Returns the number of reservoirs.
+
+        Returns
+        -------
+        `int`
+            Number of reservoirs.
+        """
+        return len(self.get_all_reservoirs())
 
     def get_all_pipes(self) -> list[tuple[str, tuple[str, str]]]:
         """
@@ -269,6 +324,17 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
         return r
 
+    def get_number_of_pipes(self) -> int:
+        """
+        Returns the number of pipes.
+
+        Returns
+        -------
+        `int`
+            Number of pipes.
+        """
+        return len(self.get_all_pipes())
+
     def get_all_pumps(self) -> list[str]:
         """
         Gets the IDs of all pumps.
@@ -280,6 +346,17 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         """
         return list(self.__pumps.keys())
 
+    def get_number_of_pumps(self) -> int:
+        """
+        Returns the number of pumps.
+
+        Returns
+        -------
+        `int`
+            Number of pumps.
+        """
+        return len(self.get_all_pumps())
+
     def get_all_valves(self) -> list[str]:
         """
         Gets the IDs of all valves.
@@ -290,6 +367,17 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             Valve IDs.
         """
         return list(self.__valves.keys())
+
+    def get_number_of_valves(self) -> int:
+        """
+        Returns the number of valves.
+
+        Returns
+        -------
+        `int`
+            Number of valves.
+        """
+        return len(self.get_all_valves())
 
     def get_node_info(self, node_id: str) -> dict:
         """
