@@ -98,7 +98,7 @@ class AdvancedControlModule(ABC):
                 - EN_OPEN    = 1
         """
         valve_idx = self._epanet_api.getLinkValveNameID().index(valve_id)
-        valve_link_idx = self._epanet_api.getLinkValveIndex(valve_idx + 1)
+        valve_link_idx = self._epanet_api.getLinkValveIndex()[valve_idx]
         self._epanet_api.setLinkStatus(valve_link_idx, status)
 
     def set_node_quality_source_value(self, node_id: str, pattern_id: str,
