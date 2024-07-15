@@ -764,7 +764,7 @@ class ScenarioSimulator():
 
         Returns
         -------
-        `epyt_flow.topology.NetworkTopology`
+        :class:`~epyt_flow.topology.NetworkTopology`
             Topology of this WDN as a graph.
         """
         self.__adapt_to_network_changes()
