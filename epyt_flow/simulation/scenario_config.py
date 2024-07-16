@@ -3,6 +3,7 @@ Module provides a class for specifying scenario configurations.
 """
 from typing import Any
 from copy import deepcopy
+import os
 import json
 import numpy as np
 
@@ -219,7 +220,7 @@ class ScenarioConfig(Serializable):
         `str`
             Path to the .inp file.
         """
-        return self.__f_inp_in
+        return os.path.join(self._parent_path, self.__f_inp_in)
 
     @property
     def f_msx_in(self) -> str:
@@ -231,7 +232,10 @@ class ScenarioConfig(Serializable):
         `str`
             Path to the .msx file.
         """
-        return self.__f_msx_in
+        if self.__f_msx_in is None:
+            return None
+        else:
+            return os.path.join(self._parent_path, self.__f_msx_in)
 
     @property
     def general_params(self) -> dict:

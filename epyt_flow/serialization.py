@@ -4,6 +4,7 @@ Module provides functions and classes for serialization.
 from typing import Any, Union
 from abc import abstractmethod, ABC
 from io import BufferedIOBase
+import pathlib
 import importlib
 import json
 import gzip
@@ -97,7 +98,9 @@ class Serializable(ABC):
     Base class for a serializable class -- must be used in conjunction with the
     :func:`~epyt_flow.serialization.serializable` decorator.
     """
-    def __init__(self, **kwds):
+    def __init__(self, _parent_path: str = "", **kwds):
+        self._parent_path = _parent_path
+
         super().__init__(**kwds)
 
     @abstractmethod
@@ -376,12 +379,19 @@ def load_from_file(f_in: str, use_compression: bool = True) -> Any:
     `Any`
         Deserialized data.
     """
+    inst = None
+
     if use_compression is False:
         with open(f_in, "rb") as f:
-            return umsgpack.unpack(f, ext_handlers=ext_handler_unpack)
+            inst = load(f.read())
     else:
         with gzip.open(f_in, "rb") as f:
-            return load(f.read())
+            inst = load(f.read())
+
+    if isinstance(inst, Serializable):
+        inst._parent_path = pathlib.Path(f_in).parent.resolve()
+
+    return inst
 
 
 def save_to_file(f_out: str, data: Any, use_compression: bool = True) -> None:
