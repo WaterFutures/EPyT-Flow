@@ -46,16 +46,16 @@ bibliography: paper.bib
 
 # Summary
 
-This work introduces `EPyT-Flow`, an open-source Python package building on top of [EPyT](https://github.com/OpenWaterAnalytics/EPyT) for facilitating water distribution network (WDN) simulations.
+This work introduces [`EPyT-Flow`](https://github.com/WaterFutures/EPyT-Flow), an open-source Python package building on top of [EPyT](https://github.com/OpenWaterAnalytics/EPyT) for facilitating water distribution network (WDN) simulations.
 `EPyT-Flow` provides a high-level interface for the easy generation of hydraulic and water quality scenario data.
 Additionally, it provides access to low-level functions of [EPANET](https://github.com/USEPA/EPANET2.2) and [EPANET-MSX](https://github.com/USEPA/EPANETMSX/).
 To accelerate research in WDN management, `EPyT-Flow` provides easy access to popular benchmark data sets for event detection and localization, and an environment for developing and testing control algorithms.
 
 # Statement of need 
 
-Water Distribution Networks (WDNs) are designed to ensure a reliable supply of drinking water. These systems are operated and monitored by humans, who are supported by software tools, including basic control algorithms and event detectors that rely on a limited number of sensors within the WDN. However, given the rapid population growth of urban areas, WDNs are becoming more complex to manage. Key tasks such as event (e.g., leakage) detection and isolation, and pump scheduling and control, are becoming more challenging due to the increasing and time-varying system uncertainty. Moreover, modeling and predicting water quality in the distribution network are becoming more challenging due to changing environmental conditions. Traditionally, model-based methods were used for planning and management of WDN. However, these may no longer be sufficient, and new AI and data-driven methods provide promising tools for tackling current and future challenges.
+Water Distribution Networks (WDNs) are designed to ensure a reliable supply of drinking water. These systems are operated and monitored by humans, who are supported by software tools, including basic control algorithms and event detectors that rely on a limited number of sensors within the WDN. However, given the rapid population growth of urban areas, WDNs are becoming more complex to manage. Key tasks such as event detection (e.g., leakage) and isolation, and pump scheduling and control, are becoming more challenging due to the increasing and time-varying system uncertainty. Moreover, modeling and predicting water quality in the distribution network are becoming more challenging due to changing environmental conditions. Traditionally, model-based methods were used for planning and management of WDN. However, these methods may no longer be sufficient. New AI and data-driven methods provide promising tools for tackling current and future challenges.
 
-However, currently, non-water experts such as AI researchers face several challenges when devising practical solutions for water system applications, such as the unavailability tools for easy scenario/data generation and easy access to benchmarks, that hinder the progress of applying AI to this domain. 
+However, currently, non-water experts such as AI researchers face several challenges when devising practical solutions for water system applications, such as the unavailability of tools for easy scenario/data generation and easy access to benchmarks, which hinder the progress of applying AI to this domain. 
 Easy-to-use toolboxes and access to benchmark data sets are extremely important for boosting and accelerating research, as well as for supporting reproducible research, as it was, for instance, the case in deep learning and machine learning where toolboxes such as [TensorFlow](https://www.tensorflow.org/) and [scikit-learn](https://scikit-learn.org/stable/) had a significant impact on boosting research.
 
 
@@ -98,7 +98,7 @@ The toolbox currently includes $16$ Water Distribution Networks (WDNs) that can 
 It goes beyond pure scenario generation by providing access to $7$ popular and widely adopted
 benchmarks on event detection and localization (including their evaluation metrics) -- ready to be
 utilized for building and evaluating algorithms.
-Furthermore, it also provides an environment (inspired by the former [OpenAI Gym](https://gymnasium.farama.org/index.html))
+Furthermore, it also provides an environment, inspired by the modular and extensible design of [OpenAI Gym](https://gymnasium.farama.org/index.html))
 for developing and implementing control algorithms for tasks such as energy efficient pump scheduling.
 
 To support modeling of a wide variety of scenarios, the toolbox comes with $4$ different event types
@@ -111,8 +111,7 @@ $11$ pre-defined types of uncertainties ranging from classic Gaussian noise to d
 (very) deep uncertainties that can be applied to hydraulic parameters such as pipe length, diameter,
 and roughness, water quality parameters, such as reaction coefficients, and sensor noise.
 
-
-More information can be found in the comprehensive ($190$+ pages) [documentation](https://epytflow.readthedocs.io/en/latest/)
+More information can be found in the comprehensive ($190$+ pages) [EPyT-Flow Documentation](https://epyt-flow.readthedocs.io/en/latest/)
 and $14$ fully working examples that demonstrate how `EPyT-Flow` can be utilized in different tasks.
 
 # Conclusions
@@ -123,8 +122,8 @@ in various real-world challenges.
 
 Our long-term vision for this toolbox is to split it into three parts to further facilitate the progress of research in this area:
 
-1) A core part for data generation (i.e., scenario simulation);
-2) A `BenchmarkHub` as a platform for accessing and sharing WDN benchmarks;
+1) A core part for data generation (i.e., scenario simulation).
+2) A `BenchmarkHub` as a platform for accessing and sharing WDN benchmarks.
 3) A `ModelHub` as a platform for accessing and sharing AI & classic models and algorithms for different tasks in WDNs.
 
 # Acknowledgments
