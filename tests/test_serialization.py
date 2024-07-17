@@ -5,7 +5,8 @@ import os
 import scipy
 import numpy as np
 from epyt_flow.data.networks import load_hanoi, load_net1
-from epyt_flow.simulation import ScenarioSimulator, SensorConfig, ScenarioConfig, ScadaData, ToolkitConstants
+from epyt_flow.simulation import ScenarioSimulator, SensorConfig, ScenarioConfig, ScadaData, \
+    ToolkitConstants
 from epyt_flow.utils import to_seconds
 from epyt_flow.serialization import load, dump
 
@@ -13,7 +14,8 @@ from .utils import get_temp_folder
 
 
 def test_sensorconfig():
-    sensor_config = SensorConfig(nodes=["0", "1", "2"], links=["0", "1"], flow_unit=ToolkitConstants.EN_GPM,
+    sensor_config = SensorConfig(nodes=["0", "1", "2"], links=["0", "1"],
+                                 flow_unit=ToolkitConstants.EN_GPM,
                                  valves=[], pumps=[], tanks=[], pressure_sensors=["2"],
                                  bulk_species=[], surface_species=[])
     sensor_config_restored = SensorConfig.load(sensor_config.dump())
@@ -55,7 +57,7 @@ def test_scadadata():
 
 def test_topology():
     # Load Net1 network
-    network_config = load_net1()
+    network_config = load_net1(download_dir=get_temp_folder())
 
     # Create scenario
     with ScenarioSimulator(scenario_config=network_config) as sim:

@@ -43,7 +43,7 @@ def test_sensor_config():
 
 
 def test_parallel_simulation():
-    scenarios = load_leakdb_scenarios(range(5), use_net1=True)
+    scenarios = load_leakdb_scenarios(range(5), use_net1=True, download_dir=get_temp_folder())
 
     folder_out = os.path.join(get_temp_folder(), "my_leakdb_results")
     create_path_if_not_exist(folder_out)
@@ -54,7 +54,7 @@ def test_parallel_simulation():
 def test_export_to_epanet_files_1():
     f_inp_out = os.path.join(get_temp_folder(), "ctown_water-age.inp")
 
-    network_config = load_ctown()
+    network_config = load_ctown(download_dir=get_temp_folder())
     with ScenarioSimulator(scenario_config=network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
         sim.enable_waterage_analysis()

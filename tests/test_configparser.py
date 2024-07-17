@@ -5,7 +5,8 @@ instance from text data.
 import os
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import ScenarioConfig, ScenarioSimulator
-from epyt_flow.utils import get_temp_folder
+
+from .utils import get_temp_folder
 
 
 def test_configparser():
