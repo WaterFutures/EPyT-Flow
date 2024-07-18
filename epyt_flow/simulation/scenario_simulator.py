@@ -4,6 +4,7 @@ Module provides a class for scenario simulations.
 import sys
 import os
 import pathlib
+import time
 from typing import Generator, Union
 from copy import deepcopy
 import shutil
@@ -114,12 +115,45 @@ class ScenarioSimulator():
             # Treat all warnings as exceptions when trying to load .inp and .msx files
             warnings.simplefilter('error')
 
-            self.epanet_api = epanet(self.__f_inp_in, ph=self.__f_msx_in is None,
+            # Workaround for EPyT bug concerning parallel simulations (see EPyT issue #54):
+            # 1. Create random tmp folder (make sure it is unique!)
+            # 2. Copy .inp and .msx file there
+            # 3. Use those copies  when loading EPyT
+            tmp_folder_path = os.path.join(get_temp_folder(), f"{random.randint(int(1e5), int(1e7))}{time.time()}")
+            pathlib.Path(tmp_folder_path).mkdir(parents=True, exist_ok=False)
+
+            def __file_exists(file_in: str) -> bool:
+                try:
+                    return pathlib.Path(file_in).is_file()
+                except Exception:
+                    return False
+
+            if not __file_exists(self.__f_inp_in):
+                my_f_inp_in = self.__f_inp_in
+                self.__my_f_inp_in = None
+            else:
+                my_f_inp_in = os.path.join(tmp_folder_path, pathlib.Path(self.__f_inp_in).name)
+                shutil.copyfile(self.__f_inp_in, my_f_inp_in)
+                self.__my_f_inp_in = my_f_inp_in
+
+            if self.__f_msx_in is not None:
+                if not __file_exists(self.__f_msx_in):
+                    my_f_msx_in = self.__f_msx_in
+                    self.__my_f_msx_in = None
+                else:
+                    my_f_msx_in = os.path.join(tmp_folder_path, pathlib.Path(self.__f_msx_in).name)
+                    shutil.copyfile(self.__f_msx_in, my_f_msx_in)
+                    self.__my_f_msx_in = my_f_msx_in
+            else:
+                my_f_msx_in = None
+                self.__my_f_msx_in = None
+
+            self.epanet_api = epanet(my_f_inp_in, ph=self.__f_msx_in is None,
                                      customlib=custom_epanet_lib, loadfile=True,
                                      display_msg=epanet_verbose)
 
             if self.__f_msx_in is not None:
-                self.epanet_api.loadMSXFile(self.__f_msx_in, customMSXlib=custom_epanetmsx_lib)
+                self.epanet_api.loadMSXFile(my_f_msx_in, customMSXlib=custom_epanetmsx_lib)
 
         self.__sensor_config = self.__get_empty_sensor_config()
         if scenario_config is not None:
@@ -419,6 +453,11 @@ class ScenarioSimulator():
             self.epanet_api.unloadMSX()
 
         self.epanet_api.unload()
+
+        if self.__my_f_inp_in is not None:
+            shutil.rmtree(pathlib.Path(self.__my_f_inp_in).parent)
+        if self.__my_f_msx_in is not None:
+            shutil.rmtree(pathlib.Path(self.__my_f_msx_in).parent)
 
     def __enter__(self):
         return self
