@@ -432,7 +432,7 @@ class ScenarioSimulator():
         new_sensor_config.quality_node_sensors = self.__sensor_config.quality_node_sensors
         new_sensor_config.quality_link_sensors = self.__sensor_config.quality_link_sensors
         new_sensor_config.pump_state_sensors = self.__sensor_config.pump_state_sensors
-        new_sensor_config.pump_efficiecy_sensors = self.__sensor_config.pump_efficiency_sensors
+        new_sensor_config.pump_efficiency_sensors = self.__sensor_config.pump_efficiency_sensors
         new_sensor_config.pump_energyconsumption_sensors = self.__sensor_config.\
             pump_energyconsumption_sensors
         new_sensor_config.valve_state_sensors = self.__sensor_config.valve_state_sensors
