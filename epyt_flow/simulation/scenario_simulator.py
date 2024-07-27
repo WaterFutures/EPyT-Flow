@@ -1134,11 +1134,21 @@ class ScenarioSimulator():
         """
         self.set_sensors(SENSOR_TYPE_NODE_PRESSURE, sensor_locations)
 
-    def place_pressure_sensors_everywhere(self) -> None:
+    def place_pressure_sensors_everywhere(self, junctions_only: bool = False) -> None:
         """
         Places a pressure sensor at every node in the network.
+
+        Parameters
+        ----------
+        junctions_only : `bool`, optional
+            If True, pressure sensors are only placed at junctions but not at tanks and reservoirs.
+
+            The default is False.
         """
-        self.set_pressure_sensors(self.__sensor_config.nodes)
+        if junctions_only is True:
+            self.set_pressure_sensors(self.epanet_api.getNodeJunctionNameID())
+        else:
+            self.set_pressure_sensors(self.__sensor_config.nodes)
 
     def set_flow_sensors(self, sensor_locations: list[str]) -> None:
         """
