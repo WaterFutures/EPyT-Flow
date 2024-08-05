@@ -150,7 +150,8 @@ class ScenarioSimulator():
 
             self.epanet_api = epanet(my_f_inp_in, ph=self.__f_msx_in is None,
                                      customlib=custom_epanet_lib, loadfile=True,
-                                     display_msg=epanet_verbose)
+                                     display_msg=epanet_verbose,
+                                     display_warnings=False)
 
             if self.__f_msx_in is not None:
                 self.epanet_api.loadMSXFile(my_f_msx_in, customMSXlib=custom_epanetmsx_lib)
