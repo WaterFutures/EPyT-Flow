@@ -94,6 +94,7 @@ class ScenarioSimulator():
         self.__controls = []
         self.__system_events = []
         self.__sensor_reading_events = []
+        self.__running_simulation = False
 
         custom_epanet_lib = None
         custom_epanetmsx_lib = None
@@ -875,6 +876,9 @@ class ScenarioSimulator():
         """
         Randomizes all demand patterns.
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("Can not change general parameters when simulation is running.")
+
         self.__adapt_to_network_changes()
 
         # Get all demand patterns
@@ -997,6 +1001,9 @@ class ScenarioSimulator():
         event : :class:`~epyt_flow.simulation.events.system_event.SystemEvent`
             System event.
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("Can not add events when simulation is running.")
+
         self.__adapt_to_network_changes()
 
         if not isinstance(event, SystemEvent):
@@ -1016,6 +1023,9 @@ class ScenarioSimulator():
         sensor_fault_event : :class:`~epyt_flow.simulation.events.sensor_faults.SensorFault`
             Sensor fault specifications.
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("Can not add events when simulation is running.")
+
         self.__adapt_to_network_changes()
 
         sensor_fault_event.validate(self.__sensor_config)
@@ -1036,6 +1046,9 @@ class ScenarioSimulator():
         sensor_reading_attack : :class:`~epyt_flow.simulation.events.sensor_reading_attack.SensorReadingAttack`
             Sensor fault specifications.
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("Can not add events when simulation is running.")
+
         self.__adapt_to_network_changes()
 
         sensor_reading_attack.validate(self.__sensor_config)
@@ -1056,6 +1069,9 @@ class ScenarioSimulator():
         event : :class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent`
             Sensor reading event.
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("Can not add events when simulation is running.")
+
         self.__adapt_to_network_changes()
 
         event.validate(self.__sensor_config)
@@ -1453,6 +1469,9 @@ class ScenarioSimulator():
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             Quality simulation results as SCADA data.
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("A simulation is already running.")
+
         if self.__f_msx_in is None:
             raise ValueError("No .msx file specified")
 
@@ -1517,6 +1536,9 @@ class ScenarioSimulator():
             Generator containing the current EPANET-MSX simulation results as SCADA data
             (i.e. species concentrations).
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("A simulation is already running.")
+
         if self.__f_msx_in is None:
             raise ValueError("No .msx file specified")
 
@@ -1532,6 +1554,8 @@ class ScenarioSimulator():
         hyd_time_step = self.epanet_api.getTimeHydraulicStep()
 
         self.epanet_api.initializeMSXQualityAnalysis(ToolkitConstants.EN_NOSAVE)
+
+        self.__running_simulation = True
 
         bulk_species_idx = self.epanet_api.getMSXSpeciesIndex(self.__sensor_config.bulk_species)
         surface_species_idx = self.epanet_api.getMSXSpeciesIndex(
@@ -1667,6 +1691,8 @@ class ScenarioSimulator():
                                         sensor_noise=self.__sensor_noise,
                                         frozen_sensor_config=frozen_sensor_config)
 
+        self.__running_simulation = False
+
     def run_basic_quality_simulation(self, hyd_file_in: str, verbose: bool = False,
                                      frozen_sensor_config: bool = False) -> ScadaData:
         """
@@ -1692,6 +1718,9 @@ class ScenarioSimulator():
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             Quality simulation results as SCADA data.
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("A simulation is already running.")
+
         result = None
 
         # Run simulation step-by-step
@@ -1752,6 +1781,9 @@ class ScenarioSimulator():
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             Generator with the current simulation results/states as SCADA data.
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("A simulation is already running.")
+
         requested_time_step = self.epanet_api.getTimeHydraulicStep()
         reporting_time_start = self.epanet_api.getTimeReportingStart()
         reporting_time_step = self.epanet_api.getTimeReportingStep()
@@ -1845,6 +1877,9 @@ class ScenarioSimulator():
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             Simulation results as SCADA data (i.e. sensor readings).
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("A simulation is already running.")
+
         self.__adapt_to_network_changes()
 
         result = None
@@ -1939,9 +1974,14 @@ class ScenarioSimulator():
             Generator with the current simulation results/states as SCADA data
             (i.e. sensor readings).
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("A simulation is already running.")
+
         self.__adapt_to_network_changes()
 
         self.__prepare_simulation()
+
+        self.__running_simulation = True
 
         self.epanet_api.openHydraulicAnalysis()
         self.epanet_api.openQualityAnalysis()
@@ -2052,9 +2092,12 @@ class ScenarioSimulator():
             self.epanet_api.closeQualityAnalysis()
             self.epanet_api.closeHydraulicAnalysis()
 
+            self.__running_simulation = False
+
             if hyd_export is not None:
                 self.epanet_api.saveHydraulicFile(hyd_export)
         except Exception as ex:
+            self.__running_simulation = False
             raise ex
 
     def set_model_uncertainty(self, model_uncertainty: ModelUncertainty) -> None:
@@ -2066,6 +2109,9 @@ class ScenarioSimulator():
         model_uncertainty : :class:`~epyt_flow.uncertainty.model_uncertainty.ModelUncertainty`
             Model uncertainty specifications.
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("Can not set uncertainties when simulation is running.")
+
         self.__adapt_to_network_changes()
 
         if not isinstance(model_uncertainty, ModelUncertainty):
@@ -2084,6 +2130,9 @@ class ScenarioSimulator():
         sensor_noise : :class:`~epyt_flow.uncertainties.sensor_noise.SensorNoise`
             Sensor noise specification.
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("Can not set sensor noise when simulation is running.")
+
         self.__adapt_to_network_changes()
 
         if not isinstance(sensor_noise, SensorNoise):
@@ -2166,6 +2215,9 @@ class ScenarioSimulator():
 
             The default is None.
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("Can not change general parameters when simulation is running.")
+
         self.__adapt_to_network_changes()
 
         if flow_units_id is not None:
@@ -2288,6 +2340,9 @@ class ScenarioSimulator():
         Sets water age analysis -- i.e. estimates the water age (in hours) at
         all places in the network.
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("Can not change general parameters when simulation is running.")
+
         self.__adapt_to_network_changes()
 
         self.__warn_if_quality_set()
@@ -2316,6 +2371,9 @@ class ScenarioSimulator():
 
             The default is MASS_UNIT_MG.
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("Can not change general parameters when simulation is running.")
+
         self.__adapt_to_network_changes()
 
         self.__warn_if_quality_set()
@@ -2360,6 +2418,9 @@ class ScenarioSimulator():
 
             The default is 1.
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("Can not change general parameters when simulation is running.")
+
         self.__adapt_to_network_changes()
 
         if self.epanet_api.getQualityInfo().QualityCode != ToolkitConstants.EN_CHEM:
@@ -2396,6 +2457,9 @@ class ScenarioSimulator():
         trace_node_id : `str`
             ID of the node traced in the source tracing analysis.
         """
+        if self.__running_simulation is True:
+            raise RuntimeError("Can not change general parameters when simulation is running.")
+
         self.__adapt_to_network_changes()
 
         if trace_node_id not in self.__sensor_config.nodes:
