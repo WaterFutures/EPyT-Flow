@@ -135,6 +135,14 @@ If you use this software, please cite it as follows:
     }
 ```
 
+## How to get Support?
+
+If you come across any bug or need assistance please feel free to open a new
+[issue](https://github.com/WaterFutures/EPyT-Flow/issues/)
+if non of the existing issues answers your questions.
+
 ## How to Contribute?
 
-Contributions (e.g. creating issues, pull-requests, etc.) are welcome -- please make sure to read the [code of conduct](CODE_OF_CONDUCT.md) and follow the [developers' guidelines](DEVELOPERS.md).
+Contributions (e.g. creating issues, pull-requests, etc.) are welcome --
+please make sure to read the [code of conduct](CODE_OF_CONDUCT.md) and
+follow the [developers' guidelines](DEVELOPERS.md).
