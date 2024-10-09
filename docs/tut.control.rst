@@ -5,6 +5,9 @@ Control
 *******
 
 EPyT-Flow supports the implementation of custom control modules & algorithms in Python code.
+Note that those controls can go beyond simple IF-THEN-ELSE controls as supported by EPANET --
+i.e. arbitrary control logic can be implemented by the user, incl. AI-based controls where
+for instance a neural network is utlized to make control decisions.
 
 All controls must be derived from
 :class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule` 

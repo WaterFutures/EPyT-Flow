@@ -76,7 +76,8 @@ custom control modules, and other events such as changes in water quality caused
 A first step towards such software for scenario creation is the `Water Network Tool for Resilience (WNTR)` [@klise2017software],
 which facilitates the simulation of hydraulic dynamics, and in addition, it allows the simulation of various events
 such as pipe breaks, disasters such as earthquakes, power outages, and fires. However, it currently does not support
-quality dynamics and also misses other crucial modules such as sensor configurations, and considerations of industrial controls.
+quality dynamics and also misses other crucial modules such as sensor configurations, and considerations of industrial controls
+(i.e. controls that go beyond simple IF-THEN-ELSE controls as supported by EPANET).
 
 The transition to Python-based open-source software [@kyriakou2023epyt],[@klise2017software], underscores a broader trend
 towards open-source, community-driven development in the water industry, aligning with the need for transparency,
