@@ -10,6 +10,33 @@ It aims to provide a high-level interface for the easy generation of hydraulic a
 However, it also provides access to low-level functions by `EPANET <https://github.com/USEPA/EPANET2.2>`_ 
 and `EPANET-MSX <https://github.com/USEPA/EPANETMSX/>`_.
 
+Statement of need 
+-----------------
+
+Water Distribution Networks (WDNs) are designed to ensure a reliable supply of drinking water.
+These systems are operated and monitored by humans, supported by software tools,
+including basic control algorithms and event detectors that rely on a limited number of sensors
+within the WDN. These sensors measure hydraulic (e.g., pressure, flow) and water quality
+(e.g., chemical concentrations) states. However, given the rapid population growth of urban areas,
+WDNs are becoming more complex to manage due to the resulting time-varying system uncertainty.
+Consequently, key tasks such as event detection (e.g., leakage) and isolation, pump scheduling,
+and control are becoming more challenging. Moreover, modeling and predicting water quality in the
+distribution network is becoming more difficult due to changing environmental conditions.
+This is why water utilities are now driven to install even more sensors to gather data on their
+changing systems. Traditionally, model-based methods were used for planning and managing WDNs;
+however, due to rapid changes, these methods may no longer be sufficient. New AI and data-driven
+methods can now take advantage of big data and are promising tools for tackling challenges in
+water management.
+
+Currently, non-water experts such as AI researchers face several challenges when devising
+practical solutions for water system applications, such as the unavailability of tools for
+easy scenario/data generation and easy access to benchmarks, which hinder the progress of
+applying AI to this domain. 
+Easy-to-use toolboxes and access to benchmark data sets are extremely important for boosting and
+accelerating research, as well as for supporting reproducible research, as it was, for instance,
+the case in deep learning and machine learning where toolboxes such as TensorFlow and
+scikit-learn had a significant impact on boosting research.
+
 EPyT-Flow provides easy access to popular benchmark data sets for event detection and localization.
 Furthermore, it also provides an environment for developing and testing control algorithms.
 
@@ -28,6 +55,8 @@ Unique features of EPyT-Flow that make it superior to other (Python) toolboxes a
 - Serialization module for easy exchange of data and (scenario) configurations
 - REST API to make EPyT-Flow accessible in other applications
 - Access to many WDNs and popular benchmarks (incl. their evaluation)
+
+
 
 .. toctree::
     :maxdepth: 2
