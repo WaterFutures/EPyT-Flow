@@ -4,7 +4,7 @@ Example on the implementation of an abrupt leakage.
 from epyt.epanet import ToolkitConstants
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import ScenarioSimulator, AbruptLeakage
-from epyt_flow.utils import to_seconds
+from epyt_flow.utils import to_seconds, plot_timeseries_data
 
 
 if __name__ == "__main__":
@@ -33,3 +33,5 @@ if __name__ == "__main__":
 
         # Retrieve and show pressure at node "13" over time
         print(f"Pressure at node '13': {scada_data.get_data_pressures(sensor_locations=['13'])}")
+        plot_timeseries_data(scada_data.get_data_pressures(sensor_locations=['13']).T,
+                             x_axis_label="Time (30min steps)", y_axis_label="Pressure in $m$")

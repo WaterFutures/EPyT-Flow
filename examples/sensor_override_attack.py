@@ -5,7 +5,7 @@ import numpy as np
 from epyt_flow.data.benchmarks import load_leakdb_scenarios
 from epyt_flow.simulation import ScenarioSimulator, SENSOR_TYPE_LINK_FLOW
 from epyt_flow.simulation.events import SensorOverrideAttack
-from epyt_flow.utils import to_seconds
+from epyt_flow.utils import to_seconds, plot_timeseries_data
 
 
 if __name__ == "__main__":
@@ -29,3 +29,14 @@ if __name__ == "__main__":
 
         flow_readings = scada_data.get_data_flows(sensor_locations=["1"])
         print(flow_readings)
+        plot_timeseries_data(flow_readings.T,
+                             x_axis_label="Time (30min steps)",
+                             y_axis_label="Flow rate in $m^3/h$")
+
+        # Remove attack and recompute and show final sensor readings
+        scada_data.sensor_reading_events = []
+
+        flow_readings = scada_data.get_data_flows(sensor_locations=["1"])
+        plot_timeseries_data(flow_readings.T,
+                             x_axis_label="Time (30min steps)",
+                             y_axis_label="Flow rate in $m^3/h$")

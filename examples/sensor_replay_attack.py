@@ -4,7 +4,7 @@ Example of implementing a sensor replay attack.
 from epyt_flow.data.benchmarks import load_leakdb_scenarios
 from epyt_flow.simulation import ScenarioSimulator, SENSOR_TYPE_NODE_PRESSURE
 from epyt_flow.simulation.events import SensorReplayAttack
-from epyt_flow.utils import to_seconds
+from epyt_flow.utils import to_seconds, plot_timeseries_data
 
 
 if __name__ == "__main__":
@@ -32,3 +32,17 @@ if __name__ == "__main__":
         print(pressure_readings[:5])
         print(pressure_readings[10:15])     # The same as the first 5 readings!
         print(pressure_readings[16:])
+
+        plot_timeseries_data(pressure_readings.T,
+                             x_axis_label="Time (30min steps)",
+                             y_axis_label="Pressure in $m$")
+        plot_timeseries_data(pressure_readings[:20].T,    # The same as the first 5 readings!
+                             x_axis_label="Time (30min steps)",
+                             y_axis_label="Pressure in $m$")
+
+        # Remove sensor replay attack Recompute and show final sensor readings
+        scada_data.sensor_reading_events = []
+        pressure_readings = scada_data.get_data_pressures(sensor_locations=["13"])
+        plot_timeseries_data(pressure_readings[:20].T,
+                             x_axis_label="Time (30min steps)",
+                             y_axis_label="Pressure in $m$")

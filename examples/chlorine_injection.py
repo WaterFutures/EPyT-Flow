@@ -4,7 +4,7 @@ Example of adding a chlorine injection to a scenario.
 import numpy
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import ScenarioSimulator, ToolkitConstants
-from epyt_flow.utils import to_seconds
+from epyt_flow.utils import to_seconds, plot_timeseries_data
 
 
 if __name__ == "__main__":
@@ -34,3 +34,5 @@ if __name__ == "__main__":
         # Retrieve and show the simulated chemical concentrations at all nodes
         nodes_quality = scada_data.get_data_nodes_quality()
         print(nodes_quality)
+        plot_timeseries_data(scada_data.get_data_nodes_quality().T,
+                             x_axis_label="Time (30min steps)", y_axis_label="Cl in $mg/L$")

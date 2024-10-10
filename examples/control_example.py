@@ -4,7 +4,7 @@ Example of implementing a simple pump control strategy.
 from epyt_flow.data.networks import load_net1
 from epyt_flow.simulation import ScenarioSimulator
 from epyt_flow.simulation import AdvancedControlModule, ScadaData
-from epyt_flow.utils import to_seconds, volume_to_level
+from epyt_flow.utils import to_seconds, volume_to_level, plot_timeseries_data
 from epyt_flow.simulation.events import ActuatorConstants
 
 
@@ -56,4 +56,8 @@ if __name__ == "__main__":
 
         # Run simulation and show sensor readings over time
         scada_data_res = sim.run_simulation()
-        print(scada_data_res.get_data())
+        plot_timeseries_data(scada_data_res.get_data_pumps_state().T,
+                             x_axis_label="Time (30min steps)", y_axis_label="Pump state")
+        plot_timeseries_data(scada_data_res.get_data_tanks_water_volume().T,
+                             x_axis_label="Time (30min steps)",
+                             y_axis_label="Water volume in $m^3$")

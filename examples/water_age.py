@@ -3,7 +3,7 @@ Example on water age analysis.
 """
 from epyt_flow.data.networks import load_ctown
 from epyt_flow.simulation import ScenarioSimulator
-from epyt_flow.utils import to_seconds
+from epyt_flow.utils import to_seconds, plot_timeseries_data
 
 
 if __name__ == "__main__":
@@ -24,3 +24,5 @@ if __name__ == "__main__":
 
         # Retrieve and show simulated water age at all nodes
         print(f"Water age: {scada_data.get_data_nodes_quality()}")
+        plot_timeseries_data(scada_data.get_data_nodes_quality().T[:2,:],
+                             x_axis_label="Time (30min steps)", y_axis_label="Age in $h$")
