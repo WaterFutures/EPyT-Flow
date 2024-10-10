@@ -120,7 +120,7 @@ if __name__ == "__main__":
 ```
 ### Generated plots
 
-<div align"center">
+<div>
     <img src="https://github.com/WaterFutures/EPyT-Flow/blob/dev/docs/_static/examples_basic_usage_pressure.png?raw=true" width="49%"/>
     <img src="https://github.com/WaterFutures/EPyT-Flow/blob/dev/docs/_static/examples_basic_usage_flow.png?raw=true" width="49%"/>
 </div>
