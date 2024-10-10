@@ -73,10 +73,13 @@ in WDN resilience and response to various operational challenges.
 These tools, however, do not support the creation of realistic (benchmark) scenarios with
 essential aspects such as realistic fault models (of leakages and sensor faults), various sensor configurations,
 custom control modules, and other events such as changes in water quality caused by external factors.
+However, such a data creation mechanisms are important for supporting and enabling research on the application of
+Machine Learning (ML) and Artifical Intelligence (AI) in WDNs.
 A first step towards such software for scenario creation is the `Water Network Tool for Resilience (WNTR)` [@klise2017software],
 which facilitates the simulation of hydraulic dynamics, and in addition, it allows the simulation of various events
-such as pipe breaks, disasters such as earthquakes, power outages, and fires. However, it currently does not support
-quality dynamics and also misses other crucial modules such as sensor configurations, and considerations of industrial controls
+such as pipe breaks, disasters such as earthquakes, power outages, and fires. However, it currently does not fully integrate
+(advanced) quality dynamics with scenarios such as pipe leaks and also misses other crucial modules such as
+sensor configurations, and considerations of industrial controls
 (i.e. controls that go beyond simple IF-THEN-ELSE controls as supported by EPANET).
 
 The transition to Python-based open-source software [@kyriakou2023epyt],[@klise2017software], underscores a broader trend
@@ -88,6 +91,8 @@ reproducibility, and innovation in the sector.
 Our Python toolbox `EPyT-Flow` provides a high-level interface for the easy generation of WDN scenario data,
 but also provides access to low-level functions for maximum flexibility as needed by domain experts --
 by this we aim to satisfy different needs and make it a toolbox for "everybody".
+A special focus of EPyT-Flow is on data generation to enable and support research on the application of
+ML and AI in WDNs.
 In addition, its design and object-orientated implementation makes it easy to customize existing
 functionalities and implement new ones.
 `EPyT-Flow` builds upon `EPyT` which itself provides a Python interface to `EPANET` 
@@ -100,7 +105,7 @@ It goes beyond pure scenario generation by providing access to $7$ popular and w
 benchmarks on event detection and localization (including their evaluation metrics) -- ready to be
 utilized for building and evaluating algorithms.
 Furthermore, it provides an environment, inspired by the modular and extensible design of [OpenAI Gym](https://gymnasium.farama.org/index.html)
-for developing and implementing control algorithms for tasks such as energy efficient pump scheduling.
+for developing and implementing (AI-based) algorithms for tasks such as energy efficient pump scheduling.
 
 To support modeling of a wide variety of scenarios, the toolbox comes with $4$ different event types
 and a total number of $13$ pre-defined and implemented events ready to be utilized in custom scenarios:
