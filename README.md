@@ -118,9 +118,12 @@ if __name__ == "__main__":
                              x_axis_label="Time (30min steps)",
                              y_axis_label="Flow rate in $m^3/h$")
 ```
-<img src="https://github.com/WaterFutures/EPyT-Flow/blob/dev/docs/_static/examples_basic_usage_pressure.png?raw=true" align="left" width="49%"/>
-<img src="https://github.com/WaterFutures/EPyT-Flow/blob/dev/docs/_static/examples_basic_usage_flow.png?raw=true" align="right" width="49%"/>
+### Generated plots
 
+<div align"center">
+    <img src="https://github.com/WaterFutures/EPyT-Flow/blob/dev/docs/_static/examples_basic_usage_pressure.png?raw=true" width="49%"/>
+    <img src="https://github.com/WaterFutures/EPyT-Flow/blob/dev/docs/_static/examples_basic_usage_flow.png?raw=true" width="49%"/>
+</div>
 
 ## Documentation
 
