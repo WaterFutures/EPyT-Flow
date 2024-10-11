@@ -127,7 +127,27 @@ if __name__ == "__main__":
 
 ## Documentation
 
-Documentation is available on readthedocs:[https://epyt-flow.readthedocs.io/en/latest/](https://epyt-flow.readthedocs.io/en/stable)
+Documentation is available on readthedocs: [https://epyt-flow.readthedocs.io/en/latest/](https://epyt-flow.readthedocs.io/en/stable)
+
+## How to Get Started?
+
+EPyT-Flow is accompanied by an extensive documentation
+[https://epyt-flow.readthedocs.io/en/latest/](https://epyt-flow.readthedocs.io/en/stable)
+(including many [examples](https://epyt-flow.readthedocs.io/en/stable/#examples)).
+
+If you are new to water distribution networks, we recommend first to read the chapter on
+[Modeling of Water Distribution Networks](https://epyt-flow.readthedocs.io/en/stable/tut.intro.html).
+You might also want to check out some lecture notes on
+[Smart Water Systems](https://github.com/KIOS-Research/ece808-smart-water-systems).
+
+If you are already familiar with WDNs (and software such as EPANET), we recommend checking out
+our [WDSA CCWI 2024 tutorial](https://github.com/WaterFutures/EPyT-and-EPyT-Flow-Tutorial) which
+not only teaches you how to use EPyT and EPyT-Flow but also contains some examples of applying
+Machine Learning in WDNs.
+Besides that, you can read in-depth about the different functionalities of EPyT-Flow in the
+[In-depth Tutorial](https://epyt-flow.readthedocs.io/en/stable/tutorial.html) of the documentation --
+we recommend reading the chapters in the order in which they are presented;
+you might decide to skip some of the last chapters if their content is not relevant to you.
 
 ## License
 
