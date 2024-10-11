@@ -28,7 +28,8 @@ describing and precisely specifying the scenario to be simulated.
 
 .. note::
     When using the :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` class, 
-    it is important to close it afterward so that EPANET is unloaded correctly.
+    it is important to close it afterward so that EPANET is unloaded correctly and all temporary
+    files are removed.
 
 Closing a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` 
 instance can done automatically by using a ``with`` statement:
