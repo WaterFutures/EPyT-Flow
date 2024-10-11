@@ -41,6 +41,12 @@ EPyT-Flow also provides some pre-defined helper functions:
 | :func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.set_node_quality_source_value`   | Sets the quality source (e.g. chemical injection amount) at a particular node to a specific value.      |
 +------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------+
 
+.. note::
+    
+    Note that control rules such as time-based rules specified in the .inp file will be prioritized.
+    Other than that, EPyT-Flow first applies events and then controls --
+    i.e. events are always prioritized over controls.
+
 Example of implementing a simple pump control strategy where pump "9" is activated or deactivated
 based on the water level in tank "2":
 
