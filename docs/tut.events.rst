@@ -28,6 +28,10 @@ Custom leakages can be implemented by deriving a sub-class from :class:`~epyt_fl
 
     - EN_CMH  (cubic meter per hour)
     - EN_CFS  (cubic feet per second)
+     
+    Leakages can be placed on nodes or edges -- in the case of edges, the edge is split into
+    half and a new node (with no demand) is placed in the middle of the old edge,
+    finally, a node leakage is placed on this new node.
 
     More details on the computation of emitter coefficients can be found in the documentation of
     :func:`~epyt_flow.simulation.events.leakages.Leakage.compute_leak_emitter_coefficient` --
