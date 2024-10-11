@@ -26,7 +26,7 @@ roughness coefficient, etc. There exist different types of links:
 +===========+==================================================================================================+
 | Link/Pipe | Transporting water                                                                               | 
 +-----------+--------------------------------------------------------------------------------------------------+
-| Pump      | Moving water from one segment to another                                                         |
+| Pump      | Moving water from one segment (i.e. node) to another by adding hydraulic head to the system      |
 +-----------+--------------------------------------------------------------------------------------------------+
 | Valve     | Blocking or letting water pass through -- can also control (i.e. reduce) pressure in the network |
 +-----------+--------------------------------------------------------------------------------------------------+
