@@ -19,6 +19,13 @@ or after when post-processing the results a
 where multiple sensor configurations have to be evaluated without  having to re-run the
 simulation every time.
 
+.. note::
+
+    The default, when loading an .inp file and specifying anything else, is an empty sensor config
+    -- i.e. no sensors anywhere. However, note that some networks and scenarios included in
+    EPyT-Flow do come with a default sensor placement -- please refer to the documentation for
+    the specific network/scenario.
+
 EPyT-Flow supports different types of sensors:
 
 +------------------------------------+------------------------------------------------------------------------------+
