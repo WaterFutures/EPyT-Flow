@@ -68,7 +68,8 @@ def volume_to_level(tank_volume: float, tank_diameter: float) -> float:
 
 
 def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, x_axis_label: str = None,
-                         y_axis_label: str = None, show: bool = True,
+                         y_axis_label: str = None, y_ticks: tuple[list[float], list[str]] = None,
+                         show: bool = True,
                          ax: matplotlib.axes.Axes = None) -> matplotlib.axes.Axes:
     """
     Plots a single or multiple time series.
@@ -88,6 +89,10 @@ def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, x_axis_labe
         The default is None.
     y_axis_label : `str`, optional
         Y axis label.
+
+        The default is None.
+    y_ticks: `(list[float], list[str])`, optional
+        Tuple of ticks (numbers) and labels (strings) for the y-axis.
 
         The default is None.
     show : `bool`, optional
@@ -122,6 +127,9 @@ def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, x_axis_labe
         if not isinstance(y_axis_label, str):
             raise TypeError("'y_axis_label' must be an instance of 'str' " +
                             f"but not of '{type(y_axis_label)}'")
+    if y_ticks is not None:
+        if len(y_ticks) != 2:
+            raise ValueError("'y_ticks' must be a tuple ticks (numbers) and labels (strings)")
     if not isinstance(show, bool):
         raise TypeError(f"'show' must be an instance of 'bool' but not of '{type(show)}'")
     if ax is not None:
@@ -145,6 +153,9 @@ def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, x_axis_labe
         ax.set_xlabel(x_axis_label)
     if y_axis_label is not None:
         ax.set_ylabel(y_axis_label)
+    if y_ticks is not None:
+        yticks_pos, yticks_labels = y_ticks
+        ax.set_yticks(yticks_pos, labels=yticks_labels)
 
     if show is True and fig is not None:
         plt.show()
@@ -155,6 +166,7 @@ def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, x_axis_labe
 def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
                                confidence_interval: np.ndarray = None,
                                x_axis_label: str = None, y_axis_label: str = None,
+                               y_ticks: tuple[list[float], list[str]] = None,
                                show: bool = True, ax: matplotlib.axes.Axes = None
                                ) -> matplotlib.axes.Axes:
     """
@@ -178,6 +190,10 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
         The default is None.
     y_axis_label : `str`, optional
         Y axis label.
+
+        The default is None.
+    y_ticks: `(list[float], list[str])`, optional
+        Tuple of ticks (numbers) and labels (strings) for the y-axis.
 
         The default is None.
     show : `bool`, optional
@@ -216,6 +232,9 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
         if not isinstance(y_axis_label, str):
             raise TypeError("'y_axis_label' must be an instance of 'str' " +
                             f"but not of '{type(y_axis_label)}'")
+    if y_ticks is not None:
+        if len(y_ticks) != 2:
+            raise ValueError("'y_ticks' must be a tuple ticks (numbers) and labels (strings)")
     if not isinstance(show, bool):
         raise TypeError(f"'show' must be an instance of 'bool' but not of '{type(show)}'")
     if ax is not None:
@@ -240,6 +259,9 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
         ax.set_xlabel(x_axis_label)
     if y_axis_label is not None:
         ax.set_ylabel(y_axis_label)
+    if y_ticks is not None:
+        yticks_pos, yticks_labels = y_ticks
+        ax.set_yticks(yticks_pos, labels=yticks_labels)
 
     if show is True and fig is not None:
         plt.show()
