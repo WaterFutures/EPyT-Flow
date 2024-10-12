@@ -284,7 +284,7 @@ def is_flowunit_simetric(unit_id: int) -> bool:
     `bool`
         True if the fiven unit is a SI metric unit, False otherwise.
     """
-    return unit_id in [ToolkitConstants.EN_LPM, ToolkitConstants.EN_MLD,
+    return unit_id in [ToolkitConstants.EN_LPS, ToolkitConstants.EN_LPM, ToolkitConstants.EN_MLD,
                        ToolkitConstants.EN_CMH, ToolkitConstants.EN_CMD]
 
 
