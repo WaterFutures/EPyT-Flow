@@ -57,7 +57,8 @@ if __name__ == "__main__":
         # Run simulation and show sensor readings over time
         scada_data_res = sim.run_simulation()
         plot_timeseries_data(scada_data_res.get_data_pumps_state().T,
-                             x_axis_label="Time (30min steps)", y_axis_label="Pump state")
+                             x_axis_label="Time (30min steps)", y_axis_label="Pump state",
+                             y_ticks=([2.0, 3.0], ["Closed", "Open"]))
         plot_timeseries_data(scada_data_res.get_data_tanks_water_volume().T,
                              x_axis_label="Time (30min steps)",
-                             y_axis_label="Water volume in $m^3$")
+                             y_axis_label="Tank water volume in $m^3$")

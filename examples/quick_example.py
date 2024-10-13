@@ -33,6 +33,8 @@ if __name__ == "__main__":
         print(f"Flow readings: {scada_data.get_data_flows()}")
 
         plot_timeseries_data(scada_data.get_data_pressures().T,
+                             labels=[f"Node {n_id}" for n_id in
+                                     scada_data.sensor_config.pressure_sensors],
                              x_axis_label="Time (30min steps)", y_axis_label="Pressure in $m$")
         plot_timeseries_data(scada_data.get_data_flows().T,
                              x_axis_label="Time (30min steps)", y_axis_label="Flow rate in $m^3/h$")

@@ -31,4 +31,5 @@ if __name__ == "__main__":
                                 flatten().tolist())
         print(np.mean(measurements, axis=0), np.var(measurements, axis=0))
         plot_timeseries_data(np.array(measurements),
+                             labels=[f"Scenario {s_id}" for s_id in range(len(measurements))],
                              x_axis_label="Time (5min steps)", y_axis_label="Pressure in $m$")

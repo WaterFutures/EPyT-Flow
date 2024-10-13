@@ -35,4 +35,6 @@ if __name__ == "__main__":
         nodes_quality = scada_data.get_data_nodes_quality()
         print(nodes_quality)
         plot_timeseries_data(scada_data.get_data_nodes_quality().T,
+                             labels=[f"Node {n_id}"
+                                     for n_id in scada_data.sensor_config.quality_node_sensors],
                              x_axis_label="Time (30min steps)", y_axis_label="Cl in $mg/L$")

@@ -22,7 +22,9 @@ if __name__ == "__main__":
         # Run simulation
         scada_data = sim.run_simulation()
 
-        # Retrieve and show simulated water age at all nodes
+        # Retrieve and show simulated water age at the first two nodes
         print(f"Water age: {scada_data.get_data_nodes_quality()}")
         plot_timeseries_data(scada_data.get_data_nodes_quality().T[:2,:],
+                             labels=[f"Node {n_id}"
+                                     for n_id in scada_data.sensor_config.quality_node_sensors],
                              x_axis_label="Time (30min steps)", y_axis_label="Age in $h$")
