@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
         # Add an abrupt leakage at link/pipe "14" -- the leakage is active for 18 hours and
         # starts at 10 hours after simulation begin -- recall that the time arguments are seconds!
-        leak = AbruptLeakage(link_id="14", diameter=0.001,
+        leak = AbruptLeakage(link_id="14", diameter=0.1,
                              start_time=to_seconds(hours=10),
                              end_time=to_seconds(hours=28))
         sim.add_leakage(leak)
