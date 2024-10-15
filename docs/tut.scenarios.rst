@@ -44,8 +44,8 @@ instance can done automatically by using a ``with`` statement:
 
 Alternatively, you can close and unload everything manually by calling 
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.close`.
-Beware of any potential exceptions that might occur during the process of setting up and running
-the simulation.
+Beware of any potential exceptions (e.g. raised by EPyT-Flow in case of incorrect parameters or
+simulation errors) that might occur during the process of setting up and running the simulation.
 
 .. code-block:: python
 
