@@ -204,6 +204,11 @@ of a given :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
         # ...
 
 
+.. note::
+
+    It is possible to have multiple sensor faults acting on a sensor.
+    In this case, the order in which the sensor faults were added is relevant.
+
 .. _sensors_attacks:
 
 Sensor Reading Attacks
