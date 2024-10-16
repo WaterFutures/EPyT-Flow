@@ -10,6 +10,8 @@ Besides the network itself, a scenario usually contains a sensor configuration a
 might also contain some events such as leakages, sensor faults, actuator events, etc.
 Furthermore, a scenario might also include some control modules.
 
+.. _scenarios_basics:
+
 Basics
 ++++++
 
@@ -76,6 +78,11 @@ In the latter case, the result is provided as a generator.
 More details on :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` are given
 :ref:`here <tut.scada>`.
 
+
+.. _scenarios_parallel_simulation:
+
+Parallel Simulation
+-------------------
 
 EPyT-Flow also supports the parallel simulation of scenarios. This becomes handy in cases where
 many scenarios have to be simulated at once and multiple CPU cores are available.
@@ -302,6 +309,9 @@ Example of obtaining and storing the current scenario configuration:
         # ....
 
 
+.. _networks:
+
+
 Predefined networks
 -------------------
 
@@ -361,6 +371,8 @@ Example of loading the Hanoi network:
         # Set any additional parameters and finalize the scenario configuration ....
         # Run simulation ...
 
+
+.. _benchmarks:
 
 Benchmarks scenarios
 --------------------

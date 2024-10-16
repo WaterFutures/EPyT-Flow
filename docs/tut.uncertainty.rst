@@ -45,6 +45,8 @@ A complete list of pre-defined and implemented uncertainties is given in the fol
     :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`.
 
 
+.. _model_uncertainty:
+
 Model Uncertainty
 +++++++++++++++++
 
@@ -75,6 +77,8 @@ corresponds to a uniform deviation of up to 10%:
         # Run the simulation
         # ...
 
+
+.. _sensor_uncertainty:
 
 Sensor Uncertainty
 ++++++++++++++++++
