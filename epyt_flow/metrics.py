@@ -6,7 +6,7 @@ from sklearn.metrics import roc_auc_score as skelarn_roc_auc_score, f1_score as 
     mean_absolute_error
 
 
-def running_mse(y_pred: np.ndarray, y: np.ndarray):
+def running_mse(y_pred: np.ndarray, y: np.ndarray) -> list[float]:
     """
     Computes the running Mean Squared Error (MSE).
 
@@ -39,7 +39,7 @@ def running_mse(y_pred: np.ndarray, y: np.ndarray):
     r_mse = list(esq for esq in e_sq)
 
     for i in range(1, len(y)):
-        r_mse[i] = ((i * r_mse[i - 1]) / (i + 1)) + (r_mse[i] / (i + 1))
+        r_mse[i] = float((i * r_mse[i - 1]) / (i + 1)) + (r_mse[i] / (i + 1))
 
     return r_mse
 
