@@ -3,12 +3,74 @@ This module provides different metrics for evaluation.
 """
 import numpy as np
 from sklearn.metrics import roc_auc_score as skelarn_roc_auc_score, f1_score as skelarn_f1_scpre, \
-    mean_absolute_error
+    mean_absolute_error, root_mean_squared_error, r2_score as sklearn_r2_score
+
+
+def r2_score(y_pred: np.ndarray, y: np.ndarray) -> float:
+    """
+    Computes the R^2 score (also called the coefficient of determination).
+
+    Parameters
+    ----------
+    y_pred : `numpy.ndarray`
+        Predicted outputs.
+    y : `numpy.ndarray`
+        Ground truth outputs.
+
+    Returns
+    -------
+    `float`
+        R^2 score.
+    """
+    return sklearn_r2_score(y, y_pred)
+
+
+def running_r2_score(y_pred: np.ndarray, y: np.ndarray) -> list[float]:
+    """
+    Computes and returns the running R^2 score -- i.e. the R^2 score for every point in time.
+
+    Parameters
+    ----------
+    y_pred : `numpy.ndarray`
+        Predicted outputs.
+    y : `numpy.ndarray`
+        Ground truth outputs.
+
+    Returns
+    -------
+    `list[float]`
+        The running R^2 score.
+    """
+    r = []
+
+    for t in range(2, len(y_pred)):
+        r.append(r2_score(y_pred[:t], y[:t]))
+
+    return r
+
+
+def mean_squared_error(y_pred: np.ndarray, y: np.ndarray) -> float:
+    """
+    Computes the Mean Squared Error (MSE).
+
+    Parameters
+    ----------
+    y_pred : `numpy.ndarray`
+        Predicted outputs.
+    y : `numpy.ndarray`
+        Ground truth outputs.
+
+    Returns
+    -------
+    `float`
+        MSE.
+    """
+    return root_mean_squared_error(y, y_pred)**2
 
 
 def running_mse(y_pred: np.ndarray, y: np.ndarray) -> list[float]:
     """
-    Computes the running Mean Squared Error (MSE).
+    Computes the running Mean Squared Error (MSE) -- i.e. the MSE for every point in time.
 
     Parameters
     ----------
