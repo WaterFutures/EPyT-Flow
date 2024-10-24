@@ -69,7 +69,7 @@ def volume_to_level(tank_volume: float, tank_diameter: float) -> float:
 
 def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, x_axis_label: str = None,
                          y_axis_label: str = None, y_ticks: tuple[list[float], list[str]] = None,
-                         show: bool = True,
+                         show: bool = True, save_to_file: str = None,
                          ax: matplotlib.axes.Axes = None) -> matplotlib.axes.Axes:
     """
     Plots a single or multiple time series.
@@ -101,6 +101,13 @@ def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, x_axis_labe
         Only considered when 'ax' is None.
 
         The default is True.
+    save_to_file : `str`, optional
+        File to which the plot is saved.
+
+        If specified, 'show' must be set to False --
+        i.e. a plot can not be shown and saved to a file at the same time!
+
+        The default is None.
     ax : `matplotlib.axes.Axes`, optional
         If not None, 'ax' is used for plotting.
 
@@ -132,6 +139,13 @@ def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, x_axis_labe
             raise ValueError("'y_ticks' must be a tuple ticks (numbers) and labels (strings)")
     if not isinstance(show, bool):
         raise TypeError(f"'show' must be an instance of 'bool' but not of '{type(show)}'")
+    if save_to_file is not None:
+        if show is True:
+            raise ValueError("'show' must be False if 'save_to_file' is set")
+
+        if not isinstance(save_to_file, str):
+            raise TypeError("'save_to_file' must be an instance of 'str' but not of " +
+                            f"'{type(save_to_file)}'")
     if ax is not None:
         if not isinstance(ax, matplotlib.axes.Axes):
             raise TypeError("ax' must be an instance of 'matplotlib.axes.Axes'" +
@@ -159,6 +173,14 @@ def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, x_axis_labe
 
     if show is True and fig is not None:
         plt.show()
+    if save_to_file is not None:
+        folder_path = str(Path(save_to_file).parent.absolute())
+        create_path_if_not_exist(folder_path)
+
+        if fig is None:
+            plt.savefig(save_to_file, bbox_inches='tight')
+        else:
+            fig.savefig(save_to_file, bbox_inches='tight')
 
     return ax
 
@@ -167,7 +189,8 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
                                confidence_interval: np.ndarray = None,
                                x_axis_label: str = None, y_axis_label: str = None,
                                y_ticks: tuple[list[float], list[str]] = None,
-                               show: bool = True, ax: matplotlib.axes.Axes = None
+                               show: bool = True, save_to_file: str = None,
+                               ax: matplotlib.axes.Axes = None
                                ) -> matplotlib.axes.Axes:
     """
     Plots the prediction (e.g. forecast) of *single* time series together with the
@@ -202,6 +225,13 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
         Only considered when 'ax' is None.
 
         The default is True.
+    save_to_file : `str`, optional
+        File to which the plot is saved.
+
+        If specified, 'show' must be set to False --
+        i.e. a plot can not be shown and saved to a file at the same time!
+
+        The default is None.
     ax : `matplotlib.axes.Axes`, optional
         If not None, 'axes' is used for plotting.
 
@@ -237,6 +267,13 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
             raise ValueError("'y_ticks' must be a tuple ticks (numbers) and labels (strings)")
     if not isinstance(show, bool):
         raise TypeError(f"'show' must be an instance of 'bool' but not of '{type(show)}'")
+    if save_to_file is not None:
+        if show is True:
+            raise ValueError("'show' must be False if 'save_to_file' is set")
+
+        if not isinstance(save_to_file, str):
+            raise TypeError("'save_to_file' must be an instance of 'str' but not of " +
+                            f"'{type(save_to_file)}'")
     if ax is not None:
         if not isinstance(ax, matplotlib.axes.Axes):
             raise TypeError("ax' must be an instance of 'matplotlib.axes.Axes'" +
@@ -265,6 +302,14 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
 
     if show is True and fig is not None:
         plt.show()
+    if save_to_file is not None:
+        folder_path = str(Path(save_to_file).parent.absolute())
+        create_path_if_not_exist(folder_path)
+
+        if fig is None:
+            plt.savefig(save_to_file, bbox_inches='tight')
+        else:
+            fig.savefig(save_to_file, bbox_inches='tight')
 
     return ax
 
