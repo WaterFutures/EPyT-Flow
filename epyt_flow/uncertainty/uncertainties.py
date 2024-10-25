@@ -334,7 +334,15 @@ class PercentageDeviationUncertainty(UniformUncertainty, JsonSerializable):
         if not 0 < deviation_percentage < 1:
             raise ValueError("'deviation_percentage' must be in (0,1)")
 
+        if "low" in kwds:
+            del kwds["low"]
+        if "high" in kwds:
+            del kwds["high"]
+
         super().__init__(low=1. - deviation_percentage, high=1. + deviation_percentage, **kwds)
+
+    def get_attributes(self) -> dict:
+        return super().get_attributes() | {"deviation_percentage": self.high - 1.}
 
     def apply(self, data: float) -> float:
         data *= np.random.uniform(low=self.low, high=self.high)
