@@ -309,6 +309,39 @@ class JsonSerializable(Serializable):
         """
         return my_load_from_json(data)
 
+    @staticmethod
+    def load_from_json_file(f_in: str) -> Any:
+        """
+        Deserializes an instance of this class from a JSON file.
+
+        Parameters
+        ----------
+        f_in : `str`
+            Path to the JSON file from which to deserialize the object.
+
+        Returns
+        -------
+        `Any`
+            Deserialized object.
+        """
+        with open(f_in, "r", encoding="utf-8") as f:
+            return my_load_from_json(f.read())
+
+    def save_to_json_file(self, f_out: str) -> None:
+        """
+        Serializes this instance and stores it in a JSON file.
+
+        Parameters
+        ----------
+        f_in : `str`
+            Path to the JSON file where this serialized object will be stored.
+        """
+        if not f_out.endswith(self.file_ext()):
+            f_out += self.file_ext()
+
+        with open(f_out, "w", encoding="utf-8") as f:
+            f.write(self.to_json())
+
 
 def load(data: Union[bytes, BufferedIOBase]) -> Any:
     """
