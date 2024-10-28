@@ -507,11 +507,11 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
         return super().__eq__(other) and \
             self.get_all_nodes() == other.get_all_nodes() \
-            and all(link_a[0] == link_b[0] and all(link_a[1] == link_b[1])
+            and all(link_a[0] == link_b[0] and link_a[1] == link_b[1]
                     for link_a, link_b in zip(self.get_all_links(), other.get_all_links())) \
             and self.__units == other.units \
-            and self.__pumps == other.pumps \
-            and self.__valves == other.valves
+            and self.get_all_pumps() == other.get_all_pumps() \
+            and self.get_all_valves() == other.get_all_valves()
 
     def __str__(self) -> str:
         return f"f_inp: {self.name} nodes: {self.__nodes} links: {self.__links} " +\
