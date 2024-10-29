@@ -73,13 +73,17 @@ sub-clas of :class:`~epyt_flow.serialization.Serializable`.
 
 Classes supporting JSON serialization provide the following additional methods:
 
-+-------------------------------------------------------------------+-----------------------------------------+
-| Function                                                          | Description                             |
-+===================================================================+=========================================+
-| :func:`~epyt_flow.serialization.JsonSerializable.to_json`         | Exports this instance to JSON           |
-+-------------------------------------------------------------------+-----------------------------------------+
-| :func:`~epyt_flow.serialization.JsonSerializable.load_from_json`  | Creates instance from JSON              |
-+-------------------------------------------------------------------+-----------------------------------------+
++-----------------------------------------------------------------------+-----------------------------------------+
+| Function                                                              | Description                             |
++=======================================================================+=========================================+
+| :func:`~epyt_flow.serialization.JsonSerializable.to_json`             | Exports this instance to JSON           |
++-----------------------------------------------------------------------+-----------------------------------------+
+| :func:`~epyt_flow.serialization.JsonSerializable.load_from_json`      | Creates instance from JSON              |
++-----------------------------------------------------------------------+-----------------------------------------+
+| :func:`~epyt_flow.serialization.JsonSerializable.load_from_json_file` | Creates instance from a JSON files      |
++-----------------------------------------------------------------------+-----------------------------------------+
+| :func:`~epyt_flow.serialization.JsonSerializable.save_to_json_file`   | Exports instance into a JSON file       |
++-----------------------------------------------------------------------+-----------------------------------------+
 
 
 Advanced
