@@ -458,8 +458,6 @@ class ScenarioSimulator():
 
         if self.__my_f_inp_in is not None:
             shutil.rmtree(pathlib.Path(self.__my_f_inp_in).parent)
-        if self.__my_f_msx_in is not None:
-            shutil.rmtree(pathlib.Path(self.__my_f_msx_in).parent)
 
     def __enter__(self):
         return self
@@ -1662,6 +1660,7 @@ class ScenarioSimulator():
 
         # Run step-by-step simulation
         tleft = 1
+        total_time = 0
         while tleft > 0:
             if support_abort is True:  # Can the simulation be aborted? If so, handle it.
                 abort = yield
