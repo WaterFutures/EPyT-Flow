@@ -746,6 +746,19 @@ class ScenarioSimulator():
                 "units": qualityunit_to_id(qual_info.QualityChemUnits),
                 "trace_node_id": qual_info.TraceNode}
 
+    def get_reporting_time_step(self) -> int:
+        """
+        Gets the reporting time steps -- i.e. time steps at which sensor readings are provided.
+
+        Is always a multiple of the hydraulic time step.
+
+        Returns
+        -------
+        `int`
+            Reporting time steps in seconds.
+        """
+        return self.epanet_api.getTimeReportingStep()
+
     def get_scenario_config(self) -> ScenarioConfig:
         """
         Gets the configuration of this scenario -- i.e. all information & elements
@@ -760,7 +773,7 @@ class ScenarioSimulator():
 
         general_params = {"hydraulic_time_step": self.get_hydraulic_time_step(),
                           "quality_time_step": self.get_quality_time_step(),
-                          "reporting_time_step": self.epanet_api.getTimeReportingStep(),
+                          "reporting_time_step": self.get_reporting_time_step(),
                           "simulation_duration": self.get_simulation_duration(),
                           "flow_units_id": self.get_flow_units(),
                           "quality_model": self.get_quality_model(),
