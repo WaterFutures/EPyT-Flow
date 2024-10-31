@@ -2150,7 +2150,7 @@ class ScadaData(Serializable):
                 raise TypeError("'bulk_species_sensor_locations' must be an instance of 'dict'" +
                                 f" but not of '{type(bulk_species_sensor_locations)}'")
             for species_id in bulk_species_sensor_locations:
-                if species_id not in self.__sensor_config.bulk_species_sensors:
+                if species_id not in self.__sensor_config.bulk_species_node_sensors:
                     raise ValueError(f"Species '{species_id}' is not included in the " +
                                      "sensor configuration")
 
