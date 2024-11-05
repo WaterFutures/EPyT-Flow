@@ -509,6 +509,7 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
         if not os.path.exists(f_inp_in):
             with ScenarioSimulator(f_inp_in=network_config.f_inp_in) as wdn:
                 wdn.set_general_parameters(**general_params)
+                wdn.epanet_api.setTimePatternStep(hydraulic_time_step)
 
                 wdn.epanet_api.deletePatternsAll()
 
