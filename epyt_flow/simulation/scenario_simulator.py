@@ -2480,3 +2480,65 @@ class ScenarioSimulator():
         self.__warn_if_quality_set()
         self.set_general_parameters(quality_model={"type": "TRACE",
                                                    "trace_node_id": trace_node_id})
+
+    def add_species_injection_source(self, species_id: str, node_id: str, pattern: np.ndarray,
+                                     source_type: int, pattern_id: str = None,
+                                     source_strength: int = 1.) -> None:
+        """
+        Adds a new external (bulk or surface) species injection source at a particular node.
+
+        Parameters
+        ----------
+        species_id : `str`
+            ID of the (bulk or surface) species.
+        node_id : `str`
+            ID of the node at which this external (bulk or surface) species injection source
+            is placed.
+        pattern : `numpy.ndarray`
+            1d source pattern.
+        source_type : `int`,
+            Type of the external (bulk or surface) species injection source -- must be one of
+            the following EPANET toolkit constants:
+
+                - EN_CONCEN     = 0
+                - EN_MASS       = 1
+                - EN_SETPOINT   = 2
+                - EN_FLOWPACED  = 3
+
+            Description:
+
+                - E_CONCEN Sets the concentration of external inflow entering a node
+                - EN_MASS Injects a given mass/minute into a node
+                - EN_SETPOINT Sets the concentration leaving a node to a given value
+                - EN_FLOWPACED Adds a given value to the concentration leaving a node
+        pattern_id : `str`, optional
+            ID of the source pattern.
+
+            If None, a pattern_id will be generated automatically -- be aware that this
+            could conflict with existing pattern IDs (in this case, an exception is raised).
+
+            The default is None.
+        source_strength : `int`, optional
+            Injection source strength -- i.e. injection = source_strength * pattern.
+
+            The default is 1.
+        """
+        source_type_ = "None"
+        if source_type == ToolkitConstants.EN_CONCEN:
+            source_type_ = "CONCEN"
+        elif source_type == ToolkitConstants.EN_MASS:
+            source_type_ = "MASS"
+        elif source_type == ToolkitConstants.EN_SETPOINT:
+            source_type_ = "SETPOINT"
+        elif source_type == ToolkitConstants.EN_FLOWPACED:
+            source_type_ = "FLOWPACED"
+
+        if pattern_id is None:
+            pattern_id = f"{species_id}_{node_id}"
+        if pattern_id in self.epanet_api.getMSXPatternsNameID():
+            raise ValueError("Invalid 'pattern_id' -- " +
+                             f"there already exists a pattern with ID '{pattern_id}'")
+
+        self.epanet_api.addMSXPattern(pattern_id, pattern)
+        self.epanet_api.setMSXSources(node_id, species_id, source_type_, source_strength,
+                                      pattern_id)
