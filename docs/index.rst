@@ -89,6 +89,7 @@ Examples
    examples/chlorine_injection
    examples/net2-cl2_example
    examples/event_detection
+   examples/visualization
 
 
 API Reference
