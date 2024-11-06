@@ -5,9 +5,11 @@ import warnings
 from typing import Callable, Any
 from copy import deepcopy
 import numpy as np
+import matplotlib
 from epyt.epanet import ToolkitConstants
 
-from ..sensor_config import SensorConfig, is_flowunit_simetric, massunit_to_str, \
+from ..sensor_config import SensorConfig, is_flowunit_simetric, massunit_to_str, flowunit_to_str,\
+    qualityunit_to_str, areaunit_to_str,\
     MASS_UNIT_MG, MASS_UNIT_UG, TIME_UNIT_HRS, MASS_UNIT_MOL, MASS_UNIT_MMOL, \
     AREA_UNIT_CM2, AREA_UNIT_FT2, AREA_UNIT_M2, \
     SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY,  SENSOR_TYPE_NODE_DEMAND, \
@@ -18,6 +20,7 @@ from ..sensor_config import SensorConfig, is_flowunit_simetric, massunit_to_str,
 from ..events import SensorFault, SensorReadingAttack, SensorReadingEvent
 from ...uncertainty import SensorNoise
 from ...serialization import serializable, Serializable, SCADA_DATA_ID
+from ...utils import plot_timeseries_data
 
 
 @serializable(SCADA_DATA_ID, ".epytflow_scada_data")
@@ -1684,6 +1687,19 @@ class ScadaData(Serializable):
 
         return sensor_readings
 
+    def __get_x_axis_label(self) -> str:
+        if len(self.__sensor_readings_time) > 1:
+            time_step = self.__sensor_readings_time[1] - self.__sensor_readings_time[0]
+            if time_step > 60:
+                time_steps_desc = f"{int(time_step / 60)}min"
+                if time_step > 60*60:
+                    time_steps_desc = f"{int(time_step / 60)}hr"
+            else:
+                time_steps_desc = f"{time_step}s"
+            return f"Time ({time_steps_desc} steps)"
+        else:
+            return "Time"
+
     def get_data_pressures(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
         Gets the final pressure sensor readings -- note that those might be subject to
@@ -1721,6 +1737,55 @@ class ScadaData(Serializable):
         idx = [self.__sensor_config.get_index_of_reading(pressure_sensor=s_id)
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
+
+    def plot_pressures(self, sensor_locations: list[str] = None, show: bool = True,
+                       save_to_file: str = None, ax: matplotlib.axes.Axes = None
+                       ) -> matplotlib.axes.Axes:
+        """
+        Plots the final pressure sensor readings -- note that those might be subject to
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing pressure sensor locations for which the sensor readings have to be plotted.
+            If None, the readings from all pressure sensors are plotted.
+
+            The default is None.
+        show : `bool`, optional
+            If True, the plot/figure is shown in a window.
+
+            Only considered when 'ax' is None.
+
+            The default is True.
+        save_to_file : `str`, optional
+            File to which the plot is saved.
+
+            If specified, 'show' must be set to False --
+            i.e. a plot can not be shown and saved to a file at the same time!
+
+            The default is None.
+        ax : `matplotlib.axes.Axes`, optional
+            If not None, 'ax' is used for plotting.
+
+            The default is None.
+
+        Returns
+        -------
+        `matplotlib.axes.Axes`
+            Plot.
+        """
+        data = self.get_data_pressures(sensor_locations)
+        pressure_sensors = sensor_locations if sensor_locations is not None else \
+            self.__sensor_config.pressure_sensors
+
+        pressure_unit = "m" if is_flowunit_simetric(self.__sensor_config.flow_unit) else "psi"
+        y_axis_label = f"Pressure in ${pressure_unit}$"
+
+        return plot_timeseries_data(data.T, labels=[f"Node {n_id}" for n_id in pressure_sensors],
+                                    x_axis_label=self.__get_x_axis_label(),
+                                    y_axis_label=y_axis_label,
+                                    show=show, save_to_file=save_to_file, ax=ax)
 
     def get_data_flows(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
@@ -1760,6 +1825,54 @@ class ScadaData(Serializable):
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
 
+    def plot_flows(self, sensor_locations: list[str] = None, show: bool = True,
+                   save_to_file: str = None, ax: matplotlib.axes.Axes = None
+                   ) -> matplotlib.axes.Axes:
+        """
+        Plots the final flow sensor readings -- note that those might be subject to
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing flow sensor locations for which the sensor readings have to be plotted.
+            If None, the readings from all flow sensors are plotted.
+
+            The default is None.
+        show : `bool`, optional
+            If True, the plot/figure is shown in a window.
+
+            Only considered when 'ax' is None.
+
+            The default is True.
+        save_to_file : `str`, optional
+            File to which the plot is saved.
+
+            If specified, 'show' must be set to False --
+            i.e. a plot can not be shown and saved to a file at the same time!
+
+            The default is None.
+        ax : `matplotlib.axes.Axes`, optional
+            If not None, 'ax' is used for plotting.
+
+            The default is None.
+
+        Returns
+        -------
+        `matplotlib.axes.Axes`
+            Plot.
+        """
+        data = self.get_data_flows(sensor_locations)
+        flow_sensors = sensor_locations if sensor_locations is not None else \
+            self.__sensor_config.flow_sensors
+
+        y_axis_label = f"Flow rate in ${flowunit_to_str(self.__sensor_config.flow_unit)}$"
+
+        return plot_timeseries_data(data.T, labels=[f"Link {n_id}" for n_id in flow_sensors],
+                                    x_axis_label=self.__get_x_axis_label(),
+                                    y_axis_label=y_axis_label,
+                                    show=show, save_to_file=save_to_file, ax=ax)
+
     def get_data_demands(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
         Gets the final demand sensor readings -- note that those might be subject to
@@ -1797,6 +1910,54 @@ class ScadaData(Serializable):
         idx = [self.__sensor_config.get_index_of_reading(demand_sensor=s_id)
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
+
+    def plot_demands(self, sensor_locations: list[str] = None, show: bool = True,
+                     save_to_file: str = None, ax: matplotlib.axes.Axes = None
+                     ) -> matplotlib.axes.Axes:
+        """
+        Plots the final demand sensor readings -- note that those might be subject to
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing demand sensor locations for which the sensor readings have to be plotted.
+            If None, the readings from all demand sensors are plotted.
+
+            The default is None.
+        show : `bool`, optional
+            If True, the plot/figure is shown in a window.
+
+            Only considered when 'ax' is None.
+
+            The default is True.
+        save_to_file : `str`, optional
+            File to which the plot is saved.
+
+            If specified, 'show' must be set to False --
+            i.e. a plot can not be shown and saved to a file at the same time!
+
+            The default is None.
+        ax : `matplotlib.axes.Axes`, optional
+            If not None, 'ax' is used for plotting.
+
+            The default is None.
+
+        Returns
+        -------
+        `matplotlib.axes.Axes`
+            Plot.
+        """
+        data = self.get_data_demands(sensor_locations)
+        demand_sensors = sensor_locations if sensor_locations is not None else \
+            self.__sensor_config.demand_sensors
+
+        y_axis_label = f"Demand in ${flowunit_to_str(self.__sensor_config.flow_unit)}$"
+
+        return plot_timeseries_data(data.T, labels=[f"Node {n_id}" for n_id in demand_sensors],
+                                    x_axis_label=self.__get_x_axis_label(),
+                                    y_axis_label=y_axis_label,
+                                    show=show, save_to_file=save_to_file, ax=ax)
 
     def get_data_nodes_quality(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
@@ -1837,6 +1998,56 @@ class ScadaData(Serializable):
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
 
+    def plot_nodes_quality(self, sensor_locations: list[str] = None, show: bool = True,
+                           save_to_file: str = None, ax: matplotlib.axes.Axes = None
+                           ) -> matplotlib.axes.Axes:
+        """
+        Plots the final node quality sensor readings -- note that those might be subject to
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing node quality sensor locations for which the sensor readings
+            have to be plotted.
+            If None, the readings from all node quality sensors are plotted.
+
+            The default is None.
+        show : `bool`, optional
+            If True, the plot/figure is shown in a window.
+
+            Only considered when 'ax' is None.
+
+            The default is True.
+        save_to_file : `str`, optional
+            File to which the plot is saved.
+
+            If specified, 'show' must be set to False --
+            i.e. a plot can not be shown and saved to a file at the same time!
+
+            The default is None.
+        ax : `matplotlib.axes.Axes`, optional
+            If not None, 'ax' is used for plotting.
+
+            The default is None.
+
+        Returns
+        -------
+        `matplotlib.axes.Axes`
+            Plot.
+        """
+        data = self.get_data_nodes_quality(sensor_locations)
+        nodes_quality_sensors = sensor_locations if sensor_locations is not None else \
+            self.__sensor_config.quality_node_sensors
+
+        y_axis_label = f"${qualityunit_to_str(self.__sensor_config.quality_unit)}$"
+
+        return plot_timeseries_data(data.T, labels=[f"Node {n_id}"
+                                                    for n_id in nodes_quality_sensors],
+                                    x_axis_label=self.__get_x_axis_label(),
+                                    y_axis_label=y_axis_label,
+                                    show=show, save_to_file=save_to_file, ax=ax)
+
     def get_data_links_quality(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
         Gets the final link quality sensor readings -- note that those might be subject to
@@ -1875,6 +2086,56 @@ class ScadaData(Serializable):
         idx = [self.__sensor_config.get_index_of_reading(link_quality_sensor=s_id)
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
+
+    def plot_links_quality(self, sensor_locations: list[str] = None, show: bool = True,
+                           save_to_file: str = None, ax: matplotlib.axes.Axes = None
+                           ) -> matplotlib.axes.Axes:
+        """
+        Plots the final link/pipe quality sensor readings -- note that those might be subject to
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing link quality sensor locations for which the sensor readings
+            have to be plotted.
+            If None, the readings from all link quality sensors are plotted.
+
+            The default is None.
+        show : `bool`, optional
+            If True, the plot/figure is shown in a window.
+
+            Only considered when 'ax' is None.
+
+            The default is True.
+        save_to_file : `str`, optional
+            File to which the plot is saved.
+
+            If specified, 'show' must be set to False --
+            i.e. a plot can not be shown and saved to a file at the same time!
+
+            The default is None.
+        ax : `matplotlib.axes.Axes`, optional
+            If not None, 'ax' is used for plotting.
+
+            The default is None.
+
+        Returns
+        -------
+        `matplotlib.axes.Axes`
+            Plot.
+        """
+        data = self.get_data_links_quality(sensor_locations)
+        links_quality_sensors = sensor_locations if sensor_locations is not None else \
+            self.__sensor_config.quality_link_sensors
+
+        y_axis_label = f"${qualityunit_to_str(self.__sensor_config.quality_unit)}$"
+
+        return plot_timeseries_data(data.T, labels=[f"Link {n_id}"
+                                                    for n_id in links_quality_sensors],
+                                    x_axis_label=self.__get_x_axis_label(),
+                                    y_axis_label=y_axis_label,
+                                    show=show, save_to_file=save_to_file, ax=ax)
 
     def get_data_pumps_state(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
@@ -1915,6 +2176,54 @@ class ScadaData(Serializable):
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
 
+    def plot_pumps_state(self, sensor_locations: list[str] = None, show: bool = True,
+                         save_to_file: str = None, ax: matplotlib.axes.Axes = None
+                         ) -> matplotlib.axes.Axes:
+        """
+        Plots the final pump state sensor readings -- note that those might be subject to
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing pump state sensor locations for which the sensor readings have to be plotted.
+            If None, the readings from all pump state sensors are plotted.
+
+            The default is None.
+        show : `bool`, optional
+            If True, the plot/figure is shown in a window.
+
+            Only considered when 'ax' is None.
+
+            The default is True.
+        save_to_file : `str`, optional
+            File to which the plot is saved.
+
+            If specified, 'show' must be set to False --
+            i.e. a plot can not be shown and saved to a file at the same time!
+
+            The default is None.
+        ax : `matplotlib.axes.Axes`, optional
+            If not None, 'ax' is used for plotting.
+
+            The default is None.
+
+        Returns
+        -------
+        `matplotlib.axes.Axes`
+            Plot.
+        """
+        data = self.get_data_pumps_state(sensor_locations)
+        pump_state_sensors = sensor_locations if sensor_locations is not None else \
+            self.__sensor_config.pump_state_sensors
+
+        return plot_timeseries_data(data.T, labels=[f"Pump {n_id}"
+                                                    for n_id in pump_state_sensors],
+                                    x_axis_label=self.__get_x_axis_label(),
+                                    y_axis_label="Pump state",
+                                    y_ticks=([2.0, 3.0], ["Off", "On"]),
+                                    show=show, save_to_file=save_to_file, ax=ax)
+
     def get_data_pumps_efficiency(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
         Gets the final pump efficiency sensor readings -- note that those might be subject to
@@ -1953,6 +2262,54 @@ class ScadaData(Serializable):
         idx = [self.__sensor_config.get_index_of_reading(pump_efficiency_sensor=s_id)
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
+
+    def plot_pumps_efficiency(self, sensor_locations: list[str] = None, show: bool = True,
+                              save_to_file: str = None, ax: matplotlib.axes.Axes = None
+                              ) -> matplotlib.axes.Axes:
+        """
+        Plots the final pump efficiency sensor readings -- note that those might be subject to
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing pump efficiency sensor locations for which the sensor readings
+            have to be plotted.
+            If None, the readings from all pump efficiency sensors are plotted.
+
+            The default is None.
+        show : `bool`, optional
+            If True, the plot/figure is shown in a window.
+
+            Only considered when 'ax' is None.
+
+            The default is True.
+        save_to_file : `str`, optional
+            File to which the plot is saved.
+
+            If specified, 'show' must be set to False --
+            i.e. a plot can not be shown and saved to a file at the same time!
+
+            The default is None.
+        ax : `matplotlib.axes.Axes`, optional
+            If not None, 'ax' is used for plotting.
+
+            The default is None.
+
+        Returns
+        -------
+        `matplotlib.axes.Axes`
+            Plot.
+        """
+        data = self.get_data_pumps_efficiency(sensor_locations)
+        pump_efficiency_sensors = sensor_locations if sensor_locations is not None else \
+            self.__sensor_config.pump_efficiency_sensors
+
+        return plot_timeseries_data(data.T, labels=[f"Pump {n_id}"
+                                                    for n_id in pump_efficiency_sensors],
+                                    x_axis_label=self.__get_x_axis_label(),
+                                    y_axis_label="Efficiency in $\%$",
+                                    show=show, save_to_file=save_to_file, ax=ax)
 
     def get_data_pumps_energyconsumption(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
@@ -1994,6 +2351,54 @@ class ScadaData(Serializable):
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
 
+    def plot_pumps_energyconsumption(self, sensor_locations: list[str] = None, show: bool = True,
+                                     save_to_file: str = None, ax: matplotlib.axes.Axes = None
+                                     ) -> matplotlib.axes.Axes:
+        """
+        Plots the final pump energy consumption sensor readings -- note that those might be
+        subject to given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing pump energy consumption sensor locations for which the sensor readings
+            have to be plotted.
+            If None, the readings from all pump energy consumption sensors are plotted.
+
+            The default is None.
+        show : `bool`, optional
+            If True, the plot/figure is shown in a window.
+
+            Only considered when 'ax' is None.
+
+            The default is True.
+        save_to_file : `str`, optional
+            File to which the plot is saved.
+
+            If specified, 'show' must be set to False --
+            i.e. a plot can not be shown and saved to a file at the same time!
+
+            The default is None.
+        ax : `matplotlib.axes.Axes`, optional
+            If not None, 'ax' is used for plotting.
+
+            The default is None.
+
+        Returns
+        -------
+        `matplotlib.axes.Axes`
+            Plot.
+        """
+        data = self.get_data_pumps_energyconsumption(sensor_locations)
+        pump_energyconsumption_sensors = sensor_locations if sensor_locations is not None else \
+            self.__sensor_config.pump_energyconsumption_sensors
+
+        return plot_timeseries_data(data.T, labels=[f"Pump {n_id}"
+                                                    for n_id in pump_energyconsumption_sensors],
+                                    x_axis_label=self.__get_x_axis_label(),
+                                    y_axis_label="Energy consumption in $kilowatt - hour$",
+                                    show=show, save_to_file=save_to_file, ax=ax)
+
     def get_data_valves_state(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
         Gets the final valve state sensor readings -- note that those might be subject to
@@ -2033,6 +2438,54 @@ class ScadaData(Serializable):
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
 
+    def plot_valves_state(self, sensor_locations: list[str] = None, show: bool = True,
+                          save_to_file: str = None, ax: matplotlib.axes.Axes = None
+                          ) -> matplotlib.axes.Axes:
+        """
+        Plots the final valve state sensor readings -- note that those might be subject to
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing valve state sensor locations for which the sensor readings have to be plotted.
+            If None, the readings from all valve state sensors are plotted.
+
+            The default is None.
+        show : `bool`, optional
+            If True, the plot/figure is shown in a window.
+
+            Only considered when 'ax' is None.
+
+            The default is True.
+        save_to_file : `str`, optional
+            File to which the plot is saved.
+
+            If specified, 'show' must be set to False --
+            i.e. a plot can not be shown and saved to a file at the same time!
+
+            The default is None.
+        ax : `matplotlib.axes.Axes`, optional
+            If not None, 'ax' is used for plotting.
+
+            The default is None.
+
+        Returns
+        -------
+        `matplotlib.axes.Axes`
+            Plot.
+        """
+        data = self.get_data_valves_state(sensor_locations)
+        valve_state_sensors = sensor_locations if sensor_locations is not None else \
+            self.__sensor_config.valve_state_sensors
+
+        return plot_timeseries_data(data.T, labels=[f"Valve {n_id}"
+                                                    for n_id in valve_state_sensors],
+                                    x_axis_label=self.__get_x_axis_label(),
+                                    y_axis_label="Valve state",
+                                    y_ticks=([2.0, 3.0], ["Closed", "Open"]),
+                                    show=show, save_to_file=save_to_file, ax=ax)
+
     def get_data_tanks_water_volume(self, sensor_locations: list[str] = None) -> np.ndarray:
         """
         Gets the final water tanks volume sensor readings -- note that those might be subject to
@@ -2071,6 +2524,56 @@ class ScadaData(Serializable):
         idx = [self.__sensor_config.get_index_of_reading(tank_volume_sensor=s_id)
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
+
+    def plot_tanks_water_volume(self, sensor_locations: list[str] = None, show: bool = True,
+                                save_to_file: str = None, ax: matplotlib.axes.Axes = None
+                                ) -> matplotlib.axes.Axes:
+        """
+        Plots the final water tanks volume sensor readings -- note that those might be subject to
+        given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        sensor_locations : `list[str]`, optional
+            Existing flow sensor locations for which the sensor readings have to be plotted.
+            If None, the readings from all water tanks volume sensors are plotted.
+
+            The default is None.
+        show : `bool`, optional
+            If True, the plot/figure is shown in a window.
+
+            Only considered when 'ax' is None.
+
+            The default is True.
+        save_to_file : `str`, optional
+            File to which the plot is saved.
+
+            If specified, 'show' must be set to False --
+            i.e. a plot can not be shown and saved to a file at the same time!
+
+            The default is None.
+        ax : `matplotlib.axes.Axes`, optional
+            If not None, 'ax' is used for plotting.
+
+            The default is None.
+
+        Returns
+        -------
+        `matplotlib.axes.Axes`
+            Plot.
+        """
+        data = self.get_data_tanks_water_volume(sensor_locations)
+        tank_volume_sensors = sensor_locations if sensor_locations is not None else \
+            self.__sensor_config.tank_volume_sensors
+
+        volume_unit = "m^3" if is_flowunit_simetric(self.__sensor_config.flow_unit) else "feet^3"
+        y_axis_label = f"Water volume in ${volume_unit}$"
+
+        return plot_timeseries_data(data.T, labels=[f"Tank {n_id}"
+                                                    for n_id in tank_volume_sensors],
+                                    x_axis_label=self.__get_x_axis_label(),
+                                    y_axis_label=y_axis_label,
+                                    show=show, save_to_file=save_to_file, ax=ax)
 
     def get_data_surface_species_concentration(self,
                                                surface_species_sensor_locations: dict = None
@@ -2122,6 +2625,72 @@ class ScadaData(Serializable):
                 for link_id in surface_species_sensor_locations[species_id]]
         return self.__sensor_readings[:, idx]
 
+    def plot_surface_species_concentration(self, surface_species_sensor_locations: dict = None,
+                                           show: bool = True, save_to_file: str = None,
+                                           ax: matplotlib.axes.Axes = None
+                                           ) -> matplotlib.axes.Axes:
+        """
+        Plots the final surface species concentration sensor readings -- note that those might be
+        subject to given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        surface_species_sensor_locations : `dict`, optional
+            Existing surface species concentration sensors (species ID and link/pipe IDs) for which
+            the sensor readings have to be plotted.
+            If None, the readings from all surface species concentration sensors are plotted.
+
+            The default is None.
+        show : `bool`, optional
+            If True, the plot/figure is shown in a window.
+
+            Only considered when 'ax' is None.
+
+            The default is True.
+        save_to_file : `str`, optional
+            File to which the plot is saved.
+
+            If specified, 'show' must be set to False --
+            i.e. a plot can not be shown and saved to a file at the same time!
+
+            The default is None.
+        ax : `matplotlib.axes.Axes`, optional
+            If not None, 'ax' is used for plotting.
+
+            The default is None.
+
+        Returns
+        -------
+        `matplotlib.axes.Axes`
+            Plot.
+        """
+        data = self.get_data_surface_species_concentration(surface_species_sensor_locations)
+        if surface_species_sensor_locations is None:
+            surface_species_sensor_locations = self.__sensor_config.surface_species_sensors
+
+        area_unit = self.__sensor_config.surface_species_area_unit
+        concentration_unit = None
+        labels = []
+        for species_id in surface_species_sensor_locations:
+            mass_unit = self.__sensor_config.get_surface_species_mass_unit_id(species_id)
+            if concentration_unit is not None:
+                if concentration_unit != mass_unit:
+                    raise ValueError("Can not plot species with different mass units")
+                concentration_unit = mass_unit
+            else:
+                concentration_unit = mass_unit
+
+            for link_id in surface_species_sensor_locations[species_id]:
+                labels.append(f"{species_id} @ link {link_id}")
+
+        y_axis_label = f"Concentration in ${massunit_to_str(concentration_unit)}/" +\
+            f"{areaunit_to_str(area_unit)}$"
+
+        return plot_timeseries_data(data.T, labels=labels,
+                                    x_axis_label=self.__get_x_axis_label(),
+                                    y_axis_label=y_axis_label,
+                                    show=show, save_to_file=save_to_file, ax=ax)
+
     def get_data_bulk_species_node_concentration(self,
                                                  bulk_species_sensor_locations: dict = None
                                                  ) -> np.ndarray:
@@ -2171,6 +2740,70 @@ class ScadaData(Serializable):
                 for species_id in bulk_species_sensor_locations
                 for node_id in bulk_species_sensor_locations[species_id]]
         return self.__sensor_readings[:, idx]
+
+    def plot_bulk_species_node_concentration(self, bulk_species_node_sensors: dict = None,
+                                             show: bool = True, save_to_file: str = None,
+                                             ax: matplotlib.axes.Axes = None
+                                             ) -> matplotlib.axes.Axes:
+        """
+        Plots the final bulk species node concentration sensor readings --
+        note that those might be subject to given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        bulk_species_node_sensors : `dict`, optional
+            Existing bulk species concentration sensors (species ID and node IDs) for which
+            the sensor readings are requested.
+            If None, the readings from all bulk species node concentration sensors are returned.
+
+            The default is None.
+        show : `bool`, optional
+            If True, the plot/figure is shown in a window.
+
+            Only considered when 'ax' is None.
+
+            The default is True.
+        save_to_file : `str`, optional
+            File to which the plot is saved.
+
+            If specified, 'show' must be set to False --
+            i.e. a plot can not be shown and saved to a file at the same time!
+
+            The default is None.
+        ax : `matplotlib.axes.Axes`, optional
+            If not None, 'ax' is used for plotting.
+
+            The default is None.
+
+        Returns
+        -------
+        `matplotlib.axes.Axes`
+            Plot.
+        """
+        data = self.get_data_bulk_species_node_concentration(bulk_species_node_sensors)
+        if bulk_species_node_sensors is None:
+            bulk_species_node_sensors = self.__sensor_config.bulk_species_node_sensors
+
+        concentration_unit = None
+        labels = []
+        for species_id in bulk_species_node_sensors:
+            mass_unit = self.__sensor_config.get_bulk_species_mass_unit_id(species_id)
+            if concentration_unit is not None:
+                if concentration_unit != mass_unit:
+                    raise ValueError("Can not plot species with different mass units")
+                concentration_unit = mass_unit
+            else:
+                concentration_unit = mass_unit
+
+            for node_id in bulk_species_node_sensors[species_id]:
+                labels.append(f"{species_id} @ node {node_id}")
+
+        y_axis_label = f"Concentration in ${massunit_to_str(concentration_unit)}/L$"
+
+        return plot_timeseries_data(data.T, labels=labels,
+                                    x_axis_label=self.__get_x_axis_label(),
+                                    y_axis_label=y_axis_label,
+                                    show=show, save_to_file=save_to_file, ax=ax)
 
     def get_data_bulk_species_link_concentration(self,
                                                  bulk_species_sensor_locations: dict = None
@@ -2222,3 +2855,69 @@ class ScadaData(Serializable):
                 for species_id in bulk_species_sensor_locations
                 for node_id in bulk_species_sensor_locations[species_id]]
         return self.__sensor_readings[:, idx]
+
+    def plot_bulk_species_link_concentration(self, bulk_species_link_sensors: dict = None,
+                                             show: bool = True, save_to_file: str = None,
+                                             ax: matplotlib.axes.Axes = None
+                                             ) -> matplotlib.axes.Axes:
+        """
+        Plots the final bulk species link concentration sensor readings -- note that those might be
+        subject to given sensor faults and sensor noise/uncertainty.
+
+        Parameters
+        ----------
+        bulk_species_link_sensors : `dict`, optional
+            Existing bulk species link concentration sensors (species ID and link/pipe IDs) for which
+            the sensor readings have to be plotted.
+            If None, the readings from all bulk species link concentration sensors are plotted.
+
+            The default is None.
+        show : `bool`, optional
+            If True, the plot/figure is shown in a window.
+
+            Only considered when 'ax' is None.
+
+            The default is True.
+        save_to_file : `str`, optional
+            File to which the plot is saved.
+
+            If specified, 'show' must be set to False --
+            i.e. a plot can not be shown and saved to a file at the same time!
+
+            The default is None.
+        ax : `matplotlib.axes.Axes`, optional
+            If not None, 'ax' is used for plotting.
+
+            The default is None.
+
+        Returns
+        -------
+        `matplotlib.axes.Axes`
+            Plot.
+        """
+        data = self.get_data_bulk_species_link_concentration(bulk_species_link_sensors)
+        if bulk_species_link_sensors is None:
+            bulk_species_link_sensors = self.__sensor_config.bulk_species_link_sensors
+
+        area_unit = self.__sensor_config.surface_species_area_unit
+        concentration_unit = None
+        labels = []
+        for species_id in bulk_species_link_sensors:
+            mass_unit = self.__sensor_config.get_bulk_species_mass_unit_id(species_id)
+            if concentration_unit is not None:
+                if concentration_unit != mass_unit:
+                    raise ValueError("Can not plot species with different mass units")
+                concentration_unit = mass_unit
+            else:
+                concentration_unit = mass_unit
+
+            for link_id in bulk_species_link_sensors[species_id]:
+                labels.append(f"{species_id} @ link {link_id}")
+
+        y_axis_label = f"Concentration in ${massunit_to_str(concentration_unit)}/" +\
+            f"{areaunit_to_str(area_unit)}$"
+
+        return plot_timeseries_data(data.T, labels=labels,
+                                    x_axis_label=self.__get_x_axis_label(),
+                                    y_axis_label=y_axis_label,
+                                    show=show, save_to_file=save_to_file, ax=ax)
