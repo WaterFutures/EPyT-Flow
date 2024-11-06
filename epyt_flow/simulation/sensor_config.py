@@ -112,7 +112,7 @@ def massunit_to_str(unit_id: int) -> str:
     Parameters
     ----------
     unit_id : `int`
-        ID of the flow unit.
+        ID of the mass unit.
 
         Must be one of the following constant:
 
@@ -1915,6 +1915,53 @@ class SensorConfig(JsonSerializable):
             "surface_species_mass_unit: " +\
             f"{list(map(massunit_to_str, self.__surface_species_mass_unit))} " +\
             f"surface_species_area_unit: {areaunit_to_str(self.__surface_species_area_unit)}"
+
+    def get_bulk_species_mass_unit_id(self, bulk_species_id: str) -> int:
+        """
+        Returns the mass unit of a given bulk species.
+
+        Parameters
+        ----------
+        bulk_species_id : `str`
+            ID of the bulk species.
+
+        Returns
+        -------
+        `int`
+            ID of the mass unit.
+
+            Will be one of the following constant:
+
+                - MASS_UNIT_MG   = 4
+                - MASS_UNIT_UG   = 5
+                - MASS_UNIT_MOL  = 6
+                - MASS_UNIT_MMOL = 7
+        """
+        return self.__bulk_species_mass_unit[self.map_bulkspecies_id_to_idx(bulk_species_id)]
+
+    def get_surface_species_mass_unit_id(self, surface_species_id: str) -> int:
+        """
+        Returns the mass unit of a given surface species.
+
+        Parameters
+        ----------
+        surface_species_id : `str`
+            ID of the surface species.
+
+        Returns
+        -------
+        `int`
+            ID of the mass unit.
+
+            Will be one of the following constant:
+
+                - MASS_UNIT_MG   = 4
+                - MASS_UNIT_UG   = 5
+                - MASS_UNIT_MOL  = 6
+                - MASS_UNIT_MMOL = 7
+        """
+        return self.__surface_species_mass_unit[self.map_surfacespecies_id_to_idx(
+            surface_species_id)]
 
     def compute_readings(self, pressures: np.ndarray, flows: np.ndarray, demands: np.ndarray,
                          nodes_quality: np.ndarray, links_quality: np.ndarray,
