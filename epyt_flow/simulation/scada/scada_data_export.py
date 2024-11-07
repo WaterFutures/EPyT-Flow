@@ -142,7 +142,11 @@ class ScadaDataExport():
                     unit_desc = massunit_to_str(sensor_config.
                                                 bulk_species_mass_unit[surface_species_idx])
 
-                col_desc[col_id] = [sensor_type, item_id, unit_desc]
+                if sensor_type not in ["bulk_species_node", "bulk_species_link", "surface_species"]:
+                    col_desc[col_id] = [sensor_type, item_id, unit_desc]
+                else:
+                    for location_id, c_id in col_id.items():
+                        col_desc[c_id] = [sensor_type, f"{item_id} @ {location_id}", unit_desc]
 
         return np.array(col_desc, dtype=object)
 
