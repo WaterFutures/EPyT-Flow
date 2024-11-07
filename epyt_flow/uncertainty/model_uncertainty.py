@@ -293,17 +293,23 @@ class ModelUncertainty(JsonSerializable):
             epanet_api.setNodeElevations(elevations)
 
         if self.__constants is not None:
-            constants = epanet_api.getMSXConstantsValue()
+            constants = np.array(epanet_api.getMSXConstantsValue())
             constants = self.__constants.apply_batch(constants)
             epanet_api.setMSXConstantsValue(constants)
 
         if self.__parameters is not None:
             parameters_pipes = epanet_api.getMSXParametersPipesValue()
             for i, pipe_idx in enumerate(epanet_api.getLinkPipeIndex()):
-                parameters_pipes[i] = self.__parameters.apply_batch(parameters_pipes[i])
-                epanet_api.setMSXParametersPipesValue(pipe_idx, parameters_pipes[i])
+                if len(parameters_pipes[i]) == 0:
+                    continue
+
+                parameters_pipes_val = self.__parameters.apply_batch(np.array(parameters_pipes[i]))
+                epanet_api.setMSXParametersPipesValue(pipe_idx, parameters_pipes_val)
 
             parameters_tanks = epanet_api.getMSXParametersTanksValue()
             for i, tank_idx in enumerate(epanet_api.getNodeTankIndex()):
-                parameters_tanks[i] = self.__parameters.apply_batch(parameters_tanks[i])
-                epanet_api.setMSXParametersTanksValue(tank_idx, parameters_tanks[i])
+                if parameters_tanks[i] is None or len(parameters_tanks[i]) == 0:
+                    continue
+
+                parameters_tanks_val = self.__parameters.apply_batch(np.array(parameters_tanks[i]))
+                epanet_api.setMSXParametersTanksValue(tank_idx, parameters_tanks_val)
