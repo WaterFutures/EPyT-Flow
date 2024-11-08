@@ -1644,64 +1644,73 @@ class ScenarioSimulator():
 
         if reporting_time_start == 0:
             if return_as_dict is True:
-                yield {"bulk_species_node_concentration_raw": bulk_species_node_concentrations,
-                       "bulk_species_link_concentration_raw": bulk_species_link_concentrations,
-                       "surface_species_concentration_raw": surface_species_concentrations,
-                       "sensor_readings_time": np.array([0])}
+                data = {"bulk_species_node_concentration_raw": bulk_species_node_concentrations,
+                        "bulk_species_link_concentration_raw": bulk_species_link_concentrations,
+                        "surface_species_concentration_raw": surface_species_concentrations,
+                        "sensor_readings_time": np.array([0])}
             else:
-                yield ScadaData(sensor_config=self.__sensor_config,
-                                bulk_species_node_concentration_raw=bulk_species_node_concentrations,
-                                bulk_species_link_concentration_raw=bulk_species_link_concentrations,
-                                surface_species_concentration_raw=surface_species_concentrations,
-                                sensor_readings_time=np.array([0]),
-                                sensor_reading_events=self.__sensor_reading_events,
-                                sensor_noise=self.__sensor_noise,
-                                frozen_sensor_config=frozen_sensor_config)
+                data = ScadaData(sensor_config=self.__sensor_config,
+                                 bulk_species_node_concentration_raw=bulk_species_node_concentrations,
+                                 bulk_species_link_concentration_raw=bulk_species_link_concentrations,
+                                 surface_species_concentration_raw=surface_species_concentrations,
+                                 sensor_readings_time=np.array([0]),
+                                 sensor_reading_events=self.__sensor_reading_events,
+                                 sensor_noise=self.__sensor_noise,
+                                 frozen_sensor_config=frozen_sensor_config)
+
+            if support_abort is True:  # Can the simulation be aborted? If so, handle it.
+                abort = yield
+                if abort is True:
+                    return None
+
+            yield data
 
         # Run step-by-step simulation
         tleft = 1
         total_time = 0
         while tleft > 0:
-            if support_abort is True:  # Can the simulation be aborted? If so, handle it.
-                abort = yield
-                if abort is not False:
-                    break
-
             # Compute current time step
             total_time, tleft = self.epanet_api.stepMSXQualityAnalysisTimeLeft()
 
-            if verbose is True:
-                try:
-                    next(progress_bar)
-                except StopIteration:
-                    pass
-
             # Fetch data at regular time intervals
             if total_time % hyd_time_step == 0:
+                if verbose is True:
+                    try:
+                        next(progress_bar)
+                    except StopIteration:
+                        pass
+
                 bulk_species_node_concentrations, bulk_species_link_concentrations, \
                     surface_species_concentrations = __get_concentrations()
 
                 # Report results in a regular time interval only!
                 if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
                     if return_as_dict is True:
-                        yield {"bulk_species_node_concentration_raw":
-                                   bulk_species_node_concentrations,
-                               "bulk_species_link_concentration_raw":
-                                   bulk_species_link_concentrations,
-                               "surface_species_concentration_raw": surface_species_concentrations,
-                               "sensor_readings_time": np.array([total_time])}
+                        data = {"bulk_species_node_concentration_raw":
+                                    bulk_species_node_concentrations,
+                                "bulk_species_link_concentration_raw":
+                                    bulk_species_link_concentrations,
+                                "surface_species_concentration_raw": surface_species_concentrations,
+                                "sensor_readings_time": np.array([total_time])}
                     else:
-                        yield ScadaData(sensor_config=self.__sensor_config,
-                                        bulk_species_node_concentration_raw=
-                                        bulk_species_node_concentrations,
-                                        bulk_species_link_concentration_raw=
-                                        bulk_species_link_concentrations,
-                                        surface_species_concentration_raw=
-                                        surface_species_concentrations,
-                                        sensor_readings_time=np.array([total_time]),
-                                        sensor_reading_events=self.__sensor_reading_events,
-                                        sensor_noise=self.__sensor_noise,
-                                        frozen_sensor_config=frozen_sensor_config)
+                        data = ScadaData(sensor_config=self.__sensor_config,
+                                         bulk_species_node_concentration_raw=
+                                            bulk_species_node_concentrations,
+                                         bulk_species_link_concentration_raw=
+                                            bulk_species_link_concentrations,
+                                         surface_species_concentration_raw=
+                                            surface_species_concentrations,
+                                         sensor_readings_time=np.array([total_time]),
+                                         sensor_reading_events=self.__sensor_reading_events,
+                                         sensor_noise=self.__sensor_noise,
+                                         frozen_sensor_config=frozen_sensor_config)
+
+                    if support_abort is True:  # Can the simulation be aborted? If so, handle it.
+                        abort = yield
+                        if abort is not False:
+                            break
+
+                    yield data
 
         self.__running_simulation = False
 
@@ -1816,11 +1825,6 @@ class ScenarioSimulator():
         tstep = 1
         first_itr = True
         while tstep > 0:
-            if support_abort is True:  # Can the simulation be aborted? If so, handle it.
-                abort = yield
-                if abort is not False:
-                    break
-
             if first_itr is True:  # Fix current time in the first iteration
                 tstep = 0
                 first_itr = False
@@ -1843,27 +1847,36 @@ class ScenarioSimulator():
             # Yield results in a regular time interval only!
             if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
                 if return_as_dict is True:
-                    yield {"node_quality_data_raw": quality_node_data,
-                           "link_quality_data_raw": quality_link_data,
-                           "sensor_readings_time": np.array([total_time])}
+                    data = {"node_quality_data_raw": quality_node_data,
+                            "link_quality_data_raw": quality_link_data,
+                            "sensor_readings_time": np.array([total_time])}
                 else:
-                    yield ScadaData(sensor_config=self.__sensor_config,
-                                    node_quality_data_raw=quality_node_data,
-                                    link_quality_data_raw=quality_link_data,
-                                    sensor_readings_time=np.array([total_time]),
-                                    sensor_reading_events=self.__sensor_reading_events,
-                                    sensor_noise=self.__sensor_noise,
-                                    frozen_sensor_config=frozen_sensor_config)
+                    data = ScadaData(sensor_config=self.__sensor_config,
+                                     node_quality_data_raw=quality_node_data,
+                                     link_quality_data_raw=quality_link_data,
+                                     sensor_readings_time=np.array([total_time]),
+                                     sensor_reading_events=self.__sensor_reading_events,
+                                     sensor_noise=self.__sensor_noise,
+                                     frozen_sensor_config=frozen_sensor_config)
+
+                if support_abort is True:  # Can the simulation be aborted? If so, handle it.
+                    abort = yield
+                    if abort is True:
+                        break
+
+                yield data
 
             # Next
             tstep = self.epanet_api.nextQualityAnalysisStep()
 
         self.epanet_api.closeHydraulicAnalysis()
 
-    def run_simulation(self, hyd_export: str = None, verbose: bool = False,
-                       frozen_sensor_config: bool = False) -> ScadaData:
+    def run_hydraulic_simulation(self, hyd_export: str = None, verbose: bool = False,
+                                 frozen_sensor_config: bool = False) -> ScadaData:
         """
-        Runs the simulation of this scenario.
+        Runs the hydraulic simulation of this scenario (incl. basic quality if set).
+
+        Note that this function does not call EPANET-MSX even if an .msx file was provided.
 
         Parameters
         ----------
@@ -1896,12 +1909,8 @@ class ScenarioSimulator():
 
         result = None
 
-        hyd_export_old = hyd_export
-        if self.__f_msx_in is not None:
-            hyd_export = os.path.join(get_temp_folder(), f"epytflow_MSX_{uuid.uuid4()}.hyd")
-
         # Run hydraulic simulation step-by-step
-        gen = self.run_simulation_as_generator
+        gen = self.run_hydraulic_simulation_as_generator
         for scada_data in gen(hyd_export=hyd_export,
                               verbose=verbose,
                               return_as_dict=True,
@@ -1923,32 +1932,18 @@ class ScenarioSimulator():
                            sensor_noise=self.__sensor_noise,
                            frozen_sensor_config=frozen_sensor_config)
 
-        # If necessary, run advanced quality simulation utilizing the computed hydraulics
-        if self.f_msx_in is not None:
-            gen = self.run_advanced_quality_simulation
-            result_msx = gen(hyd_file_in=hyd_export,
-                             verbose=verbose,
-                             frozen_sensor_config=frozen_sensor_config)
-            result.join(result_msx)
-
-            if hyd_export_old is not None:
-                shutil.copyfile(hyd_export, hyd_export_old)
-
-            try:
-                # temp solution
-                os.remove(hyd_export)
-            except:
-                warnings.warn(f"Failed to remove temporary file '{hyd_export}'")
-
         return result
 
-    def run_simulation_as_generator(self, hyd_export: str = None, verbose: bool = False,
-                                    support_abort: bool = False,
-                                    return_as_dict: bool = False,
-                                    frozen_sensor_config: bool = False,
-                                    ) -> Generator[Union[ScadaData, dict], bool, None]:
+    def run_hydraulic_simulation_as_generator(self, hyd_export: str = None, verbose: bool = False,
+                                              support_abort: bool = False,
+                                              return_as_dict: bool = False,
+                                              frozen_sensor_config: bool = False,
+                                              ) -> Generator[Union[ScadaData, dict], bool, None]:
         """
-        Runs the simulation of this scenario and provides the results as a generator.
+        Runs the hydraulic simulation of this scenario (incl. basic quality if set) and
+        provides the results as a generator.
+
+        Note that this function does not run EPANET-MSX, even if an .msx file was provided.
 
         Parameters
         ----------
@@ -2021,11 +2016,11 @@ class ScenarioSimulator():
                     first_itr = False
 
                 if verbose is True:
-                    #if (total_time + tstep) % requested_time_step == 0:
-                    try:
-                        next(progress_bar)
-                    except StopIteration:
-                        pass
+                    if (total_time + tstep) % requested_time_step == 0:
+                        try:
+                            next(progress_bar)
+                        except StopIteration:
+                            pass
 
                 # Apply system events in a regular time interval only!
                 if (total_time + tstep) % requested_time_step == 0:
@@ -2088,7 +2083,7 @@ class ScenarioSimulator():
 
                     if support_abort is True:  # Can the simulation be aborted? If so, handle it.
                         abort = yield
-                        if abort is not False:
+                        if abort is True:
                             break
 
                     yield data
@@ -2111,6 +2106,69 @@ class ScenarioSimulator():
         except Exception as ex:
             self.__running_simulation = False
             raise ex
+
+    def run_simulation(self, hyd_export: str = None, verbose: bool = False,
+                       frozen_sensor_config: bool = False) -> ScadaData:
+        """
+        Runs the simulation of this scenario.
+
+        Parameters
+        ----------
+        hyd_export : `str`, optional
+            Path to an EPANET .hyd file for storing the simulated hydraulics -- these hydraulics
+            can be used later for an advanced quality analysis using EPANET-MSX.
+
+            If None, the simulated hydraulics will NOT be exported to an EPANET .hyd file.
+
+            The default is None.
+        verbose : `bool`, optional
+            If True, method will be verbose (e.g. showing a progress bar).
+
+            The default is False.
+        frozen_sensor_config : `bool`, optional
+            If True, the sensor config can not be changed and only the required sensor nodes/links
+            will be stored -- this usually leads to a significant reduction in memory consumption.
+
+            The default is False.
+
+        Returns
+        -------
+        :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
+            Simulation results as SCADA data (i.e. sensor readings).
+        """
+        if self.__running_simulation is True:
+            raise RuntimeError("A simulation is already running.")
+
+        self.__adapt_to_network_changes()
+
+        result = None
+
+        hyd_export_old = hyd_export
+        if self.__f_msx_in is not None:
+            hyd_export = os.path.join(get_temp_folder(), f"epytflow_MSX_{uuid.uuid4()}.hyd")
+
+        # Run hydraulic simulation step-by-step
+        result = self.run_hydraulic_simulation(hyd_export=hyd_export, verbose=verbose,
+                                               frozen_sensor_config=frozen_sensor_config)
+
+        # If necessary, run advanced quality simulation utilizing the computed hydraulics
+        if self.f_msx_in is not None:
+            gen = self.run_advanced_quality_simulation
+            result_msx = gen(hyd_file_in=hyd_export,
+                             verbose=verbose,
+                             frozen_sensor_config=frozen_sensor_config)
+            result.join(result_msx)
+
+            if hyd_export_old is not None:
+                shutil.copyfile(hyd_export, hyd_export_old)
+
+            try:
+                # temp solution
+                os.remove(hyd_export)
+            except:
+                warnings.warn(f"Failed to remove temporary file '{hyd_export}'")
+
+        return result
 
     def set_model_uncertainty(self, model_uncertainty: ModelUncertainty) -> None:
         """
