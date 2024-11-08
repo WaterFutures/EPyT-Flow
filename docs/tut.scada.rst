@@ -276,6 +276,42 @@ Example for getting the pressure readings at node "5":
     pressure_at_node_5 = scada_data.get_data_pressures(sensor_locations=["5"])
 
 
+Similar to the functions for retrieving the final sensor reading, there also exist
+dedicated functions for plotting the final sensor readings:
+
++---------------------------------+-----------------------------------------------------------------------------------------------+
+| Sensor type                     | Plot function                                                                                 |
++=================================+===============================================================================================+
+| Pressure                        | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.plot_pressures`                       |
++---------------------------------+-----------------------------------------------------------------------------------------------+
+| Flow                            | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.plot_flows`                           |
++---------------------------------+-----------------------------------------------------------------------------------------------+
+| Demand                          | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.plot_demands`                         |
++---------------------------------+-----------------------------------------------------------------------------------------------+
+| Node quality                    | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.plot_nodes_quality`                   |
++---------------------------------+-----------------------------------------------------------------------------------------------+
+| Link quality                    | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.plot_links_quality`                   |
++---------------------------------+-----------------------------------------------------------------------------------------------+
+| Valve state                     | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.plot_valves_state`                    |
++---------------------------------+-----------------------------------------------------------------------------------------------+
+| Pump state                      | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.plot_pumps_state`                     |
++---------------------------------+-----------------------------------------------------------------------------------------------+
+| Pump efficiency                 | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.plot_pumps_efficiency`                |
++---------------------------------+-----------------------------------------------------------------------------------------------+
+| Pump energy consumption         | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.plot_pumps_energyconsumption`         |
++---------------------------------+-----------------------------------------------------------------------------------------------+
+| Tank water volume               | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.plot_tanks_water_volume`              |
++---------------------------------+-----------------------------------------------------------------------------------------------+
+| Bulk species node concentration | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.plot_bulk_species_node_concentration` |
++---------------------------------+-----------------------------------------------------------------------------------------------+
+| Bulk species link concentration | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.plot_bulk_species_link_concentration` |
++---------------------------------+-----------------------------------------------------------------------------------------------+
+| Surface species concentration   | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.plot_surface_species_concentration`   |
++---------------------------------+-----------------------------------------------------------------------------------------------+
+
+For more advanced plotting, the function :func:`~epyt_flow.utils.plot_timeseries_data` might be used.
+
+
 .. _scada_change_units:
 
 Units of Measurement
