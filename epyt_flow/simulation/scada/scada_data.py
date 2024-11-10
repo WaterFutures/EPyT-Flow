@@ -315,11 +315,11 @@ class ScadaData(Serializable):
         else:
             sensor_config = self.__sensor_config
 
-            node_to_idx = sensor_config.node_id_to_idx
-            link_to_idx = sensor_config.link_id_to_idx
-            pump_to_idx = sensor_config.pump_id_to_idx
-            valve_to_idx = sensor_config.valve_id_to_idx
-            tank_to_idx = sensor_config.tank_id_to_idx
+            node_to_idx = sensor_config.map_node_id_to_idx
+            link_to_idx = sensor_config.map_link_id_to_idx
+            pump_to_idx = sensor_config.map_pump_id_to_idx
+            valve_to_idx = sensor_config.map_valve_id_to_idx
+            tank_to_idx = sensor_config.map_tank_id_to_idx
 
             # EPANET quantities
             def __reduce_data(data: np.ndarray, sensors: list[str],
@@ -352,7 +352,7 @@ class ScadaData(Serializable):
             self.__pumps_energy_usage_data_raw = \
                 __reduce_data(data=pumps_energy_usage_data_raw,
                               item_to_idx=pump_to_idx,
-                              sensors=sensor_config.pump_enegeryconsumption_sensors)
+                              sensors=sensor_config.pump_energyconsumption_sensors)
             self.__pumps_efficiency_data_raw = \
                 __reduce_data(data=pumps_efficiency_data_raw,
                               item_to_idx=pump_to_idx,
@@ -376,24 +376,24 @@ class ScadaData(Serializable):
 
                     return np.concatenate(r, axis=1)
 
-            node_bulk_species_idx = [(sensor_config.bulkspecies_id_to_idx(s),
-                                      [sensor_config.node_id_to_idx(node_id)
+            node_bulk_species_idx = [(sensor_config.map_bulkspecies_id_to_idx(s),
+                                      [sensor_config.map_node_id_to_idx(node_id)
                                        for node_id in sensor_config.bulk_species_node_sensors[s]
                                        ]) for s in sensor_config.bulk_species_node_sensors.keys()]
             self.__bulk_species_node_concentration_raw = \
                 __reduce_msx_data(data=bulk_species_node_concentration_raw,
                                   sensors=node_bulk_species_idx)
 
-            bulk_species_link_idx = [(sensor_config.bulkspecies_id_to_idx(s),
-                                      [sensor_config.link_id_to_idx(link_id)
+            bulk_species_link_idx = [(sensor_config.map_bulkspecies_id_to_idx(s),
+                                      [sensor_config.map_link_id_to_idx(link_id)
                                        for link_id in sensor_config.bulk_species_link_sensors[s]
                                        ]) for s in sensor_config.bulk_species_link_sensors.keys()]
             self.__bulk_species_link_concentration_raw = \
                 __reduce_msx_data(data=bulk_species_link_concentration_raw,
                                   sensors=bulk_species_link_idx)
 
-            surface_species_idx = [(sensor_config.surfacespecies_id_to_idx(s),
-                                    [sensor_config.link_id_to_idx(link_id)
+            surface_species_idx = [(sensor_config.map_surfacespecies_id_to_idx(s),
+                                    [sensor_config.map_link_id_to_idx(link_id)
                                      for link_id in sensor_config.surface_species_sensors[s]
                                      ]) for s in sensor_config.surface_species_sensors.keys()]
             self.__surface_species_concentration_raw = \
@@ -1506,8 +1506,8 @@ class ScadaData(Serializable):
                 other.sensor_config.surface_species_sensors
 
         if self.__pumps_energy_usage_data_raw is None and \
-                other.pumps_energy_usage_data_raw is not None:
-            self.__pumps_energy_usage_data_raw = other.pumps_energy_usage_data_raw
+                other.pumps_energyconsumption_data_raw is not None:
+            self.__pumps_energy_usage_data_raw = other.pumps_energyconsumption_data_raw
 
         if self.__pumps_efficiency_data_raw is None and \
                 other.pumps_efficiency_data_raw is not None:
