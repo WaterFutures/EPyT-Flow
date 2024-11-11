@@ -32,18 +32,18 @@ class Marker:
     """
     The Marker class provides svg representations of hydraulic components
     (pump, reservoir, tank and valve), which are loaded from their respective
-    svg paths and transformed into matplotlib.path.Path objects in order to be
-    used with the matplotlib library.
+    svg paths and transformed into :class:`~matplotlib.path.Path` objects in
+    order to be used with the matplotlib library.
 
     Attributes
     ----------
-    pump : matplotlib.path.Path object
+    pump : :class:`~matplotlib.path.Path` object
         Marker for the pump, loaded from PUMP_PATH.
-    reservoir : matplotlib.path.Path object
+    reservoir : :class:`~matplotlib.path.Path` object
         Marker for the reservoir, loaded from RESERVOIR_PATH.
-    tank : matplotlib.path.Path object
+    tank : :class:`~matplotlib.path.Path` object
         Marker for the tank, loaded from TANK_PATH.
-    valve : matplotlib.path.Path object
+    valve : :class:`~matplotlib.path.Path` object
         Marker for the valve, loaded from VALVE_PATH.
 
     Methods
@@ -54,8 +54,8 @@ class Marker:
     """
     def __init__(self):
         """
-        Initializes the Marker class and assigns matplotlib.path.Path markers
-        for pump, reservoir, tank, and valve components.
+        Initializes the Marker class and assigns :class:`~matplotlib.path.Path`
+        markers for pump, reservoir, tank, and valve components.
         """
         self.pump = self.__marker_from_path(PUMP_PATH, 2)
         self.reservoir = self.__marker_from_path(RESERVOIR_PATH)
@@ -63,21 +63,21 @@ class Marker:
         self.valve = self.__marker_from_path(VALVE_PATH)
 
     @staticmethod
-    def __marker_from_path(path, scale_p=1):
+    def __marker_from_path(path: str, scale_p: int = 1) -> mpl.path.Path:
         """
         Loads the marker from the specified path and adjusts it representation
         by aligning, rotating and scaling it.
 
         Parameters
         ----------
-        path : str
+        path : `str`
             The svg path describing the marker shape.
-        scale_p : float, optional
+        scale_p : `float`, optional
             Scaling factor for the marker (default is 1).
 
         Returns
         -------
-        marker_tmp : matplotlib.path.Path object
+        marker_tmp : :class:`~matplotlib.path.Path` object
             The transformed marker object after loading and adjusting it.
         """
         marker_tmp = parse_path(path)
@@ -94,47 +94,48 @@ class ScenarioVisualizer:
     This class provides the necessary function to generate visualizations in
     the form of plots or animations from water network data.
 
-    Given a ScenarioSimulator object, this class provides the necessary
-    functions to plot the network topology and to color hydraulic elements
-    according to simulation data.
-    The resulting plot can then either be displayed or saved.
+    Given a :class:`~epyt_flow.simulation.ScenarioSimulator` object, this class
+    provides the necessary functions to plot the network topology and to color
+    hydraulic elements according to simulation data. The resulting plot can
+    then either be displayed or saved.
 
     Attributes
     ----------
-    __scenario : epyt_flow.simulation.ScenarioSimulator
+    __scenario : :class:`~epyt_flow.simulation.ScenarioSimulator`
         ScenarioSimulator object containing the network topology and
         configurations to obtain the simulation data which should be displayed.
-    fig : matplotlib.pyplot.Figure or None
+    fig : :class:`~matplotlib.pyplot.Figure` or None
         Figure object used for plotting, created and customized by calling the
         methods of this class, initialized as None.
-    ax : matplotlib.axes.Axes or None
+    ax : :class:`~matplotlib.axes.Axes` or None
         The axes for plotting, initialized as None.
-    scada_data : epyt_flow.simulation.scada.scada_data.ScadaData or None
+    scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or
+    None
         SCADA data created by the ScenarioSimulator object, initialized as
         None.
-    topology : epyt_flow.topology.NetworkTopology
+    topology : :class:`~epyt_flow.topology.NetworkTopology`
         Topology object retrieved from the scenario, containing the structure
         of the water distribution network.
-    pos_dict : dict
+    pos_dict : `dict`
         A dictionary mapping nodes to their coordinates in the correct format
         for drawing.
-    pipe_parameters : dict
+    pipe_parameters : `dict`
         Parameters for visualizing pipes in the correct format for drawing.
-    junction_parameters : dict
+    junction_parameters : `dict`
         Parameters for visualizing junctions in the correct format for drawing.
-    tank_parameters : dict
+    tank_parameters : `dict`
         Parameters for visualizing tanks in the correct format for drawing.
-    reservoir_parameters : dict
+    reservoir_parameters : `dict`
         Parameters for visualizing reservoirs in the correct format for
         drawing.
-    valve_parameters : dict
+    valve_parameters : `dict`
         Parameters for visualizing valves in the correct format for drawing.
-    pump_parameters : dict
+    pump_parameters : `dict`
         Parameters for visualizing pumps in the correct format for drawing.
-    animation_dict : dict
+    animation_dict : `dict`
         A dictionary containing frame by frame data for the animated
         components.
-    colorbars : dict
+    colorbars : `dict`
         A dictionary containing the necessary data for drawing the required
         colorbars.
 
@@ -164,8 +165,8 @@ class ScenarioVisualizer:
     show_animation(export_to_file, return_animation)
         Displays, exports, or returns an animation of a water distribution
         network over time. This method generates an animation of a network and
-        either shows it or returns the FuncAnimation object. Optionally, the
-        animation is saved to a file.
+        either shows it or returns the :class:`~FuncAnimation` object.
+        Optionally, the animation is saved to a file.
     show_plot(export_to_file)
         Displays a static plot of the water distribution network.
     color_nodes(scada_data, parameter, statistic, pit, colormap, intervals,
@@ -195,10 +196,14 @@ class ScenarioVisualizer:
         Hides all nodes (junctions) in the water distribution network
         visualization.
     highlight_sensor_config()
-        Highlights nodes and links that have sensors in the sensor_config in
-        the water distribution network visualization.
+        Highlights nodes and links that have sensors in the
+        :class:`~epyt_flow.sensor_config.SensorConfig` of the
+        :class:`~epyt_flow.simulation.ScenarioSimulator`.
+    plot_topology()
+        Plots the topology of the water distribution network in the given
+        scenario using the Epanet API
     """
-    def __init__(self, scenario: ScenarioSimulator):
+    def __init__(self, scenario: ScenarioSimulator) -> None:
         """
         Initializes the class with a given scenario, sets up the topology,
         SCADA data, and parameters for visualizing various hydraulic components
@@ -206,7 +211,7 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scenario : epyt_flow.simulation.ScenarioSimulator
+        scenario : :class:`epyt_flow.simulation.ScenarioSimulator`
             An instance of the `ScenarioSimulator` class, used to simulate and
             retrieve the system topology.
 
@@ -214,7 +219,7 @@ class ScenarioVisualizer:
         ------
         TypeError
             If `scenario` is not an instance of
-            `epyt_flow.simulation.ScenarioSimulator`.
+            :class:`epyt_flow.simulation.ScenarioSimulator`.
 
         """
         if not isinstance(scenario, ScenarioSimulator):
@@ -261,13 +266,13 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        elements : list[str]
+        elements : `list[str]`
             A list of element IDs (e.g., pump IDs, valve IDs) for which to
             compute the midpoints.
 
         Returns
         -------
-        elements_dict : dict
+        elements_dict : `dict`
             A dictionary where the keys are element IDs and the values are the
             corresponding midpoints, represented as 2D coordinates [x, y].
         """
@@ -282,7 +287,7 @@ class ScenarioVisualizer:
             elements_pos_dict[element] = pos
         return elements_pos_dict
 
-    def __get_next_frame(self, frame_number: int):
+    def __get_next_frame(self, frame_number: int) -> None:
         """
         Draws the next frame of a water distribution network animation.
 
@@ -292,7 +297,7 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        frame_number : int
+        frame_number : `int`
             The current frame number used to retrieve the data corresponding to
             that frame
         """
@@ -356,33 +361,34 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : ScadaData, optional
+        scada_data : :class:`~epyt_flow.scada.scada_data.ScadaData`, optional
             The SCADA data object to retrieve link data from. If `None`, a
             simulation is run to generate the SCADA data. Default is `None`.
-        parameter : str, optional
+        parameter : `str`, optional
             The type of link data to retrieve. Must be either 'flow_rate',
             'link_quality', or 'diameter'. Default is 'flow_rate'.
-        statistic : str, optional
+        statistic : `str`, optional
             The statistic to calculate for the link data. Can be 'mean', 'min',
             'max', or 'time_step'. Default is 'mean'.
-        pit : int or tuple of int, optional
+        pit : `int` or `tuple(int, int)`, optional
             Point in time for the 'time_step' statistic. Can be either one
             point or a tuple setting a range. Required if 'time_step' is
             selected as the statistic. Default is `None`.
-        intervals : int, float, or list of int or float, optional
+        intervals : `int`, `float`, or `list` of `int` or `float`, optional
             If specified, the link data will be grouped into intervals. This
-            can either be an integer specifying the number of groups or a list
-            of boundary points defining the intervals. Default is `None`.
-        conversion : dict, optional
+            can either be an integer specifying the number of groups or a
+            `list` of boundary points defining the intervals. Default is
+            `None`.
+        conversion : `dict`, optional
             A dictionary of conversion parameters to convert SCADA data units.
             Default is `None`.
 
         Returns
         -------
-        sorted_values : list
+        sorted_values : `list`
             A list of processed and sorted values for each link in the water
             distribution network.
-        sim_length : int
+        sim_length : `int`
             The length of the simulation or SCADA data used.
 
         Raises
@@ -472,29 +478,29 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        statistic : str
+        statistic : `str`
             The statistical operation to apply to the data. Must be one of
             'mean', 'min', 'max', or 'time_step'.
-        values : np.ndarray
+        values : :class:`~np.ndarray`
             A 2D NumPy array of shape (timesteps, junctions) containing the
             data for all junctions over time.
-        pit : int or tuple of int
+        pit : `int` or `tuple` of `int`
             The point in time or range of points in time for which to retrieve
             data, required if 'time_step' is selected as the statistic. If an
             integer is provided, it selects a single point in time.
-        intervals : int, float, or list of int or float
+        intervals : `int`, `float`, or `list[int]` or `list[float]`
             If specified, divides the data into intervals. Can be an integer
             representing the number of groups, or a list of boundary points
             defining the intervals.
-        all_junctions : list of str
+        all_junctions : `list` of `str`
             A list of all junction IDs in the network, corresponding to the
             data  in the `values` array.
-        junction_sorting : list of str
+        junction_sorting : `list` of `str`
             The order in which to sort the junctions for the return value.
 
         Returns
         -------
-        sorted_values : list
+        sorted_values : `list`
             A list of statistical values for the junctions, sorted according to
             `junction_sorting`.
 
@@ -554,19 +560,19 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        values : np.ndarray
+        values : :class:`~np.ndarray`
             The array of numerical values to be rescaled.
-        scale_min_max : list
+        scale_min_max : `list`
             A list containing two elements: the minimum and maximum values
             of the desired output range.
-        values_min_max : list, optional
+        values_min_max : `list`, optional
             A list containing two elements: the minimum and maximum values
             of the input data. If not provided, they are computed from the
             input `values`. Default is `None`.
 
         Returns
         -------
-        rescaled_values : list
+        rescaled_values : `list`
             A list of values rescaled to the range specified by
             `scale_min_max`.
 
@@ -592,21 +598,21 @@ class ScenarioVisualizer:
         network over time.
 
         This method generates an animation of a network and either shows it or
-        returns the FuncAnimation object. Optionally, the animation is saved to
-        a file.
+        returns the :class:`~FuncAnimation` object. Optionally, the animation
+        is saved to a file.
 
         Parameters
         ----------
-        export_to_file : str, optional
+        export_to_file : `str`, optional
             The file path where the animation should be saved, if provided.
             Default is `None`.
-        return_animation : bool, optional
+        return_animation : `bool`, optional
             If `True`, the animation object is returned. If `False`, the
             animation will be shown, but not returned. Default is `False`.
 
         Returns
         -------
-        anim : FuncAnimation or None
+        anim : :class:`~FuncAnimation` or None
             Returns the animation object if `return_animation` is `True`.
             Otherwise, returns `None`.
 
@@ -633,7 +639,7 @@ class ScenarioVisualizer:
         plt.show()
         return None
 
-    def show_plot(self, export_to_file: str = None):
+    def show_plot(self, export_to_file: str = None) -> None:
         """
         Displays a static plot of the water distribution network.
 
@@ -643,7 +649,7 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        export_to_file : str, optional
+        export_to_file : `str`, optional
             The file path where the plot should be saved, if provided.
             Default is `None`.
 
@@ -684,7 +690,8 @@ class ScenarioVisualizer:
             pit: Optional[Union[int, Tuple[int]]] = None,
             colormap: str = 'viridis',
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            conversion: Optional[dict] = None, show_colorbar: bool = False):
+            conversion: Optional[dict] = None, show_colorbar: bool = False) ->\
+            None:
         """
         Colors the nodes (junctions) in the water distribution network based on
         the SCADA data and the specified parameters.
@@ -695,32 +702,32 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : ScadaData, optional
+        scada_data : :class:`~epyt_flow.scada.scad_data.ScadaData`, optional
             The SCADA data object containing node data. If `None`, a simulation
             will be run to generate SCADA data. Default is `None`.
-        parameter : str, optional
+        parameter : `str`, optional
             The node data to visualize. Must be 'pressure', 'demand', or
             'node_quality'. Default is 'pressure'.
-        statistic : str, optional
+        statistic : `str`, optional
             The statistic to calculate for the data. Can be 'mean', 'min',
             'max', or 'time_step'. Default is 'mean'.
-        pit : int, tuple of int, optional
+        pit : `int`, `tuple(int, int)`, optional
             The point in time or range of time steps for the 'time_step'
             statistic. If a tuple is provided, it should contain two integers
             representing the start and end time steps. A tuple is necessary to
-            process the data for the show_animation() method. Default is
-            `None`.
-        colormap : str, optional
+            process the data for the :meth:`~ScenarioVisualizer.show_animation`
+            method. Default is `None`.
+        colormap : `str`, optional
             The colormap to use for visualizing node values. Default is
             'viridis'.
-        intervals : int, list of int or float, optional
+        intervals : `int`, `list[int]` or `list[float]`, optional
             If provided, the data will be grouped into intervals. It can be an
             integer specifying the number of groups or a list of boundary
             points. Default is `None`.
-        conversion : dict, optional
+        conversion : `dict`, optional
             A dictionary of conversion parameters to convert SCADA data units.
             Default is `None`.
-        show_colorbar : bool, optional
+        show_colorbar : `bool`, optional
             If `True`, a colorbar will be displayed on the plot to indicate the
             range of node values. Default is `False`.
 
@@ -800,7 +807,8 @@ class ScenarioVisualizer:
             pit: Optional[Union[int, Tuple[int]]] = None,
             colormap: str = 'coolwarm',
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            conversion: Optional[dict] = None, show_colorbar: bool = False):
+            conversion: Optional[dict] = None, show_colorbar: bool = False) ->\
+            None:
         """
         Colors the links (pipes) in the water distribution network based on the
         SCADA data and the specified parameters.
@@ -811,32 +819,32 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : ScadaData, optional
+        scada_data : :class:`~epyt_flow.scada.scada_data.ScadaData`, optional
             The SCADA data object. If `None`, the method will run a simulation.
             Default is `None`.
-        parameter : str, optional
+        parameter : `str`, optional
             The link data to visualize. Options are 'flow_rate', 'velocity', or
             'status'. Default is 'flow_rate'.
-        statistic : str, optional
+        statistic : `str`, optional
             The statistic to calculate for the data. Can be 'mean', 'min',
             'max', or 'time_step'. Default is 'mean'.
-        pit : int or tuple of int, optional
+        pit : `int` or `tuple(int, int)`, optional
             The point in time or range of time steps for the 'time_step'
             statistic. If a tuple is provided, it should contain two integers
             representing the start and end time steps. A tuple is necessary to
-            process the data for the show_animation() method. Default is
-            `None`.
-        colormap : str, optional
+            process the data for the :meth:`~ScenarioVisualizer.show_animation`
+            method. Default is `None`.
+        colormap : `str`, optional
             The colormap to use for visualizing link values. Default is
             'coolwarm'.
-        intervals : int, list of int or float, optional
+        intervals : `int`, `list[int]`, `list[float]`, optional
             If provided, the data will be grouped into intervals. It can be an
             integer specifying the number of groups or a list of boundary
             points. Default is `None`.
-        conversion : dict, optional
+        conversion : `dict`, optional
             A dictionary of conversion parameters to convert SCADA data units.
             Default is `None`.
-        show_colorbar : bool, optional
+        show_colorbar : `bool`, optional
             If `True`, a colorbar will be displayed on the plot to indicate the
             range of values. Default is `False`.
 
@@ -900,7 +908,7 @@ class ScenarioVisualizer:
             parameter: str = 'efficiency', statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            colormap: str = 'viridis', show_colorbar: bool = False):
+            colormap: str = 'viridis', show_colorbar: bool = False) -> None:
         """
         Colors the pumps in the water distribution network based on SCADA data
         and the specified parameters.
@@ -911,29 +919,29 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : ScadaData, optional
+        scada_data : :class:`~epyt_flow.scada.scada_data.ScadaData`, optional
             The SCADA data object containing the pump data. If `None`, a
             simulation will be run to generate SCADA data. Default is `None`.
-        parameter : str, optional
+        parameter : `str`, optional
             The pump data to visualize. Must be 'efficiency',
             'energy_consumption', or 'state'. Default is 'efficiency'.
-        statistic : str, optional
+        statistic : `str`, optional
             The statistic to calculate for the data. Can be 'mean', 'min',
             'max', or 'time_step'. Default is 'mean'.
-        pit : int, tuple of int, optional
+        pit : `int`, `tuple(int, int)`, optional
             The point in time or range of time steps for the 'time_step'
             statistic. If a tuple is provided, it should contain two integers
             representing the start and end time steps. A tuple is necessary to
-            process the data for the show_animation() method. Default is
-            `None`.
-        intervals : int, list of int or float, optional
+            process the data for the :meth:`~ScenarioVisualizer.show_animation`
+            method. Default is `None`.
+        intervals : `int`, `list[int]`, `list[float]`, optional
             If provided, the data will be grouped into intervals. It can be an
             integer specifying the number of groups or a list of boundary
             points. Default is `None`.
-        colormap : str, optional
+        colormap : `str`, optional
             The colormap to use for visualizing pump values. Default is
             'viridis'.
-        show_colorbar : bool, optional
+        show_colorbar : `bool`, optional
             If `True`, a colorbar will be displayed on the plot to indicate the
             range of pump values. Default is `False`.
 
@@ -1010,7 +1018,7 @@ class ScenarioVisualizer:
             statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            colormap: str = 'viridis', show_colorbar: bool = False):
+            colormap: str = 'viridis', show_colorbar: bool = False) -> None:
         """
         Colors the tanks in the water distribution network based on the SCADA
         tank volume data and the specified statistic.
@@ -1021,27 +1029,27 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : ScadaData, optional
+        scada_data : :class:`~epyt_flow.scada.scada_data.ScadaData`, optional
             The SCADA data object containing tank volume data.
             If `None`, a simulation will be run to generate it.
             Default is `None`.
-        statistic : str, optional
+        statistic : `str`, optional
             The statistic to calculate for the data. Can be 'mean', 'min',
             'max', or 'time_step'. Default is 'mean'.
-        pit : int, tuple of int, optional
+        pit : `int`, `tuple(int, int)`, optional
             The point in time or range of time steps for the 'time_step'
             statistic. If a tuple is provided, it should contain two integers
             representing the start and end time steps. A tuple is necessary to
-            process the data for the show_animation() method. Default is
-            `None`.
-        intervals : int, list of int or float, optional
+            process the data for the :meth:`~ScenarioVisualizer.show_animation`
+            method. Default is `None`.
+        intervals : `int`, `list[int]`, `list[float]`, optional
             If provided, the data will be grouped into intervals. It can be an
             integer specifying the number of groups or a list of boundary
             points. Default is `None`.
-        colormap : str, optional
+        colormap : `str`, optional
             The colormap to use for visualizing tank values. Default is
             'viridis'.
-        show_colorbar : bool, optional
+        show_colorbar : `bool`, optional
             If `True`, a colorbar will be displayed on the plot to indicate the
             range of tank volume values. Default is `False`.
 
@@ -1105,7 +1113,7 @@ class ScenarioVisualizer:
             statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            colormap: str = 'viridis', show_colorbar: bool = False):
+            colormap: str = 'viridis', show_colorbar: bool = False) -> None:
         """
         Colors the valves in the water distribution network based on SCADA
         valve state data and the specified statistic.
@@ -1116,26 +1124,26 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : ScadaData, optional
+        scada_data : :class:`~epyt_flow.scada.scada_data.ScadaData`, optional
             The SCADA data object containing valve state data. If `None`, a
             simulation is run to generate SCADA data. Default is `None`.
-        statistic : str, optional
+        statistic : `str`, optional
             The statistic to calculate for the data. Can be 'mean', 'min',
             'max', or 'time_step'. Default is 'mean'.
-        pit : int, tuple of int, optional
+        pit : `int`, `tuple(int)`, optional
             The point in time or range of time steps for the 'time_step'
             statistic. If a tuple is provided, it should contain two integers
             representing the start and end time steps. A tuple is necessary to
-            process the data for the show_animation() method. Default is
-            `None`.
-        intervals : int, list of int or float, optional
+            process the data for the :meth:`~ScenarioVisualizer.show_animation`
+            method. Default is `None`.
+        intervals : `int`, `list[int]`, `list[float]`, optional
             If provided, the data will be grouped into intervals. It can be an
             integer specifying the number of groups or a list of
             boundary points. Default is `None`.
-        colormap : str, optional
+        colormap : `str`, optional
             The colormap to use for visualizing valve state values. Default is
             'viridis'.
-        show_colorbar : bool, optional
+        show_colorbar : `bool`, optional
             If `True`, a colorbar will be displayed on the plot to indicate the
             range of valve state values. Default is `False`.
 
@@ -1201,7 +1209,7 @@ class ScenarioVisualizer:
             line_widths: Tuple[int] = (1, 2),
             pit: Optional[Union[int, Tuple[int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            conversion: Optional[dict] = None):
+            conversion: Optional[dict] = None) -> None:
         """
         Resizes the width of the links (pipes) in the water distribution
         network based on SCADA data and the specified parameters.
@@ -1212,28 +1220,28 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : ScadaData, optional
+        scada_data : :class:`~epyt_flow.scada.scada_data.ScadaData`, optional
             The SCADA data object. If `None`, a simulation will be run to
             generate it. Default is `None`.
-        parameter : str, optional
+        parameter : `str`, optional
             The data used to resize to. Default is 'flow_rate'.
-        statistic : str, optional
+        statistic : `str`, optional
             The statistic to calculate for the data. Can be 'mean', 'min',
             'max', or 'time_step'. Default is 'mean'.
-        line_widths : tuple of int, optional
+        line_widths : `tuple(int, int)`, optional
             A tuple specifying the range of line widths to use when resizing
             links based on the data. Default is (1, 2).
-        pit : int or tuple of int, optional
+        pit : `int` or `tuple(int, int)`, optional
             The point in time or range of time steps for the 'time_step'
             statistic. If a tuple is provided, it should contain two integers
             representing the start and end time steps. A tuple is necessary to
-            process the data for the show_animation() method. Default is
-            `None`.
-        intervals : int or list of int or float, optional
+            process the data for the :meth:`~ScenarioVisualizer.show_animation`
+            method. Default is `None`.
+        intervals : `int` or `list[int]` or `list[float]`, optional
             If provided, the data will be grouped into intervals. It can be an
             integer specifying the number of groups or a list of boundary
             points. Default is `None`.
-        conversion : dict, optional
+        conversion : `dict`, optional
             A dictionary of conversion parameters to convert SCADA data units.
             Default is `None`.
         """
@@ -1269,7 +1277,7 @@ class ScenarioVisualizer:
             self.pipe_parameters.update(
                 {'width': self.__rescale(sorted_values, line_widths)})
 
-    def hide_nodes(self):
+    def hide_nodes(self) -> None:
         """
         Hides all nodes (junctions) in the water distribution network
         visualization.
@@ -1280,15 +1288,16 @@ class ScenarioVisualizer:
         """
         self.junction_parameters['nodelist'] = []
 
-    def highlight_sensor_config(self):
+    def highlight_sensor_config(self) -> None:
         """
         Highlights nodes and links that have sensors in the sensor_config in
         the water distribution network visualization.
 
         This method identifies nodes and links equipped with different types of
-        sensors from the SCADA sensor configuration and updates their visual
-        appearance. Nodes with sensors are highlighted with an orange border,
-        while links with sensors are displayed with a dashed line style.
+        sensors from the :class:`~epyt_flow.sensor_config.SensorConfig` and
+        updates their visual appearance. Nodes with sensors are highlighted
+        with an orange border, while links with sensors are displayed with a
+        dashed line style.
         """
         highlighted_nodes = []
         highlighted_links = []
@@ -1311,9 +1320,11 @@ class ScenarioVisualizer:
         self.pipe_parameters.update({'style': pipe_style})
 
     @deprecated
-    def plot_topology(self, show_sensor_config: bool = False, export_to_file: str = None) -> None:
+    def plot_topology(self, show_sensor_config: bool = False,
+                      export_to_file: str = None) -> None:
         """
-        Plots the topology of the water distribution network in the given scenario.
+        Plots the topology of the water distribution network in the given
+        scenario.
 
         Parameters
         ----------
@@ -1323,7 +1334,8 @@ class ScenarioVisualizer:
             The default is False.
         export_to_file : `str`, optional
             Path to the file where the visualization will be stored.
-            If None, visualization will be just shown but NOT be stored anywhere.
+            If None, visualization will be just shown but NOT be stored
+            anywhere.
 
             The default is None.
         """
@@ -1336,12 +1348,15 @@ class ScenarioVisualizer:
             highlighted_links = []
 
             sensor_config = self.__scenario.sensor_config
-            highlighted_nodes += sensor_config.pressure_sensors \
-                + sensor_config.demand_sensors + sensor_config.quality_node_sensors
-            highlighted_links += sensor_config.flow_sensors + sensor_config.quality_link_sensors
+            highlighted_nodes += (sensor_config.pressure_sensors
+                                  + sensor_config.demand_sensors
+                                  + sensor_config.quality_node_sensors)
+            highlighted_links += (sensor_config.flow_sensors
+                                  + sensor_config.quality_link_sensors)
 
         self.__scenario.epanet_api.plot(highlightlink=highlighted_links,
-                                        highlightnode=highlighted_nodes, figure=False)
+                                        highlightnode=highlighted_nodes,
+                                        figure=False)
 
         if export_to_file is not None:
             plt.savefig(export_to_file, transparent=True, bbox_inches='tight')
