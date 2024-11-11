@@ -82,20 +82,20 @@ pipe breaks, disasters such as earthquakes, power outages, and fires. However, i
 sensor configurations, and considerations of industrial controls
 (i.e. controls that go beyond simple IF-THEN-ELSE controls as supported by EPANET).
 
-The transition to PYTHON-based open-source software [@kyriakou2023epyt; @klise2017software], underscores a broader trend
+The transition to Python-based open-source software [@kyriakou2023epyt; @klise2017software], underscores a broader trend
 towards open-source, community-driven development in the water industry, aligning with the need for transparency,
 reproducibility, and innovation in the sector.
 
 # Functionality
 
-Our PYTHON toolbox `EPyT-Flow` provides a high-level interface for easy generation of WDN scenario data,
+Our Python toolbox `EPyT-Flow` provides a high-level interface for easy generation of WDN scenario data,
 but also provides access to low-level functions for maximum flexibility as needed by domain experts.
 By this we aim to satisfy different needs and make it a toolbox for "everybody".
 A special focus of EPyT-Flow is on data generation to enable and support research on the application of
 ML and AI in WDNs.
 In addition, its design and object-orientated implementation makes it easy to customize existing
 functionalities and implement new ones.
-`EPyT-Flow` builds upon `EPyT` which itself provides a PYTHON interface to `EPANET` 
+`EPyT-Flow` builds upon `EPyT` which itself provides a Python interface to `EPANET` 
 and `EPANET-MSX` -- see Figure \ref{fig:toolbox:structure} for an illustration.
 
 ![Illustration of the functionality of the proposed toolbox *`EPyT-Flow`*.\label{fig:toolbox:structure}](figures/structure.drawio.png){ width=50% heigth=50%}
@@ -122,7 +122,7 @@ and $14$ fully working examples that demonstrate how `EPyT-Flow` can be utilized
 
 # Conclusions
 
-In this work, we introduced a PYTHON toolbox called `EPyT-Flow` for realistic scenario data generation and
+In this work, we introduced a Python toolbox called `EPyT-Flow` for realistic scenario data generation and
 access to benchmarks of WDNs, that researchers can utilize to develop methods to support human WDN operators
 in various real-world challenges.
 
