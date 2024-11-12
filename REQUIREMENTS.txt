@@ -12,3 +12,5 @@ geopandas>=0.14.4
 psutil
 matplotlib
 svgpath2mpl
+deprecated
+numpy
