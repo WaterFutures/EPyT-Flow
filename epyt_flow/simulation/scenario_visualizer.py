@@ -2,6 +2,7 @@
 Module provides a class for visualizing scenarios.
 """
 from typing import Optional, Union, List, Tuple, Iterable
+from deprecated import deprecated
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -432,7 +433,7 @@ class ScenarioVisualizer:
         elif statistic == 'max':
             stat_values = np.max(values, axis=0)
         elif statistic == 'time_step':
-            if not pit:
+            if not pit and pit != 0:
                 raise ValueError(
                     'Please input point in time (pit) parameter when selecting'
                     ' time_step statistic')
@@ -520,7 +521,7 @@ class ScenarioVisualizer:
         elif statistic == 'max':
             stat_values = np.max(values, axis=0)
         elif statistic == 'time_step':
-            if not pit:
+            if not pit and pit != 0:
                 raise ValueError(
                     'Please input point in time (pit) parameter when selecting'
                     ' time_step statistic')
@@ -1319,7 +1320,8 @@ class ScenarioVisualizer:
             {'linewidths': 1, 'edgecolors': node_edges})
         self.pipe_parameters.update({'style': pipe_style})
 
-    @deprecated
+    @deprecated(reason="This function will be removed in feature versions, "
+                       "please use show_plot() instead.")
     def plot_topology(self, show_sensor_config: bool = False,
                       export_to_file: str = None) -> None:
         """
