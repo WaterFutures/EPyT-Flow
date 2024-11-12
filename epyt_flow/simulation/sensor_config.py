@@ -33,6 +33,7 @@ MASS_UNIT_UG = 5
 MASS_UNIT_MOL = 6
 MASS_UNIT_MMOL = 7
 TIME_UNIT_HRS = 8
+MASS_UNIT_CUSTOM = 9
 
 
 def areaunit_to_id(unit_desc: str) -> int:
@@ -68,10 +69,15 @@ def massunit_to_id(unit_desc: str) -> int:
     `int`
         Corresponding mass unit ID.
     """
-    return {"MG": MASS_UNIT_MG,
-            "UG": MASS_UNIT_UG,
-            "MOL": MASS_UNIT_MOL,
-            "MMOL": MASS_UNIT_MMOL}[unit_desc]
+    mass_unit_dict = {"MG": MASS_UNIT_MG,
+                      "UG": MASS_UNIT_UG,
+                      "MOL": MASS_UNIT_MOL,
+                      "MMOL": MASS_UNIT_MMOL}
+
+    if unit_desc in mass_unit_dict:
+        return mass_unit_dict[unit_desc]
+    else:
+        return MASS_UNIT_CUSTOM
 
 
 def qualityunit_to_id(unit_desc: str) -> int:
@@ -116,10 +122,11 @@ def massunit_to_str(unit_id: int) -> str:
 
         Must be one of the following constant:
 
-            - MASS_UNIT_MG   = 4
-            - MASS_UNIT_UG   = 5
-            - MASS_UNIT_MOL  = 6
-            - MASS_UNIT_MMOL = 7
+            - MASS_UNIT_MG     = 4
+            - MASS_UNIT_UG     = 5
+            - MASS_UNIT_MOL    = 6
+            - MASS_UNIT_MMOL   = 7
+            - MASS_UNIT_CUSTOM = 9
 
     Returns
     -------
@@ -136,6 +143,8 @@ def massunit_to_str(unit_id: int) -> str:
         return "MOL"
     elif unit_id == MASS_UNIT_MMOL:
         return "MMOL"
+    elif unit_id == MASS_UNIT_CUSTOM:
+        return "CUSTOM UNIT"
     else:
         raise ValueError(f"Unknown mass unit ID '{unit_id}'")
 
@@ -698,7 +707,8 @@ class SensorConfig(JsonSerializable):
             raise ValueError("Inconsistency between 'bulk_species_mass_unit' and 'bulk_species'")
         if any(not isinstance(mass_unit, int) for mass_unit in bulk_species_mass_unit):
             raise TypeError("All items in 'bulk_species_mass_unit' must be an instance of 'int'")
-        if any(mass_unit not in [MASS_UNIT_MG, MASS_UNIT_UG, MASS_UNIT_MOL, MASS_UNIT_MMOL]
+        if any(mass_unit not in [MASS_UNIT_MG, MASS_UNIT_UG, MASS_UNIT_MOL, MASS_UNIT_MMOL,
+                                 MASS_UNIT_CUSTOM]
                for mass_unit in bulk_species_mass_unit):
             raise ValueError("Invalid mass unit in 'bulk_species_mass_unit'")
 
@@ -707,7 +717,8 @@ class SensorConfig(JsonSerializable):
                              "and 'surface_species'")
         if any(not isinstance(mass_unit, int) for mass_unit in surface_species_mass_unit):
             raise TypeError("All items in 'surface_species_mass_unit' must be an instance of 'int'")
-        if any(mass_unit not in [MASS_UNIT_MG, MASS_UNIT_UG, MASS_UNIT_MOL, MASS_UNIT_MMOL]
+        if any(mass_unit not in [MASS_UNIT_MG, MASS_UNIT_UG, MASS_UNIT_MOL, MASS_UNIT_MMOL,
+                                 MASS_UNIT_CUSTOM]
                for mass_unit in surface_species_mass_unit):
             raise ValueError("Invalid mass unit in 'surface_species_mass_unit'")
 
