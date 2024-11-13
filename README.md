@@ -5,6 +5,7 @@
 [![Documentation Status](https://readthedocs.org/projects/epyt-flow/badge/?version=stable)](https://epyt-flow.readthedocs.io/en/stable/?badge=stable)
 [![Downloads](https://static.pepy.tech/badge/epyt-flow)](https://pepy.tech/project/epyt-flow)
 [![Downloads](https://static.pepy.tech/badge/epyt-flow/month)](https://pepy.tech/project/epyt-flow)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.07104/status.svg)](https://doi.org/10.21105/joss.07104)
 
 # EPyT-Flow -- EPANET Python Toolkit - Flow
 
@@ -159,15 +160,19 @@ MIT license -- see [LICENSE](LICENSE)
 
 If you use this software, please cite it as follows:
 
-```
-@misc{github:epytflow,
-        author = {André Artelt, Marios S. Kyriakou, Stelios G. Vrachimis, Demetrios G. Eliades, Barbara Hammer, Marios M. Polycarpou},
-        title = {EPyT-Flow -- EPANET Python Toolkit - Flow},
-        year = {2024},
-        publisher = {GitHub},
-        journal = {GitHub repository},
-        howpublished = {\url{https://github.com/WaterFutures/EPyT-Flow}}
-    }
+```bibtex
+@article{Artelt2024,
+    doi = {10.21105/joss.07104},
+    url = {https://doi.org/10.21105/joss.07104},
+    year = {2024},
+    publisher = {The Open Journal},
+    volume = {9},
+    number = {103},
+    pages = {7104},
+    author = {André Artelt and Marios S. Kyriakou and Stelios G. Vrachimis and Demetrios G. Eliades and Barbara Hammer and Marios M. Polycarpou},
+    title = {EPyT-Flow: A Toolkit for Generating Water Distribution Network Data},
+    journal = {Journal of Open Source Software}
+}
 ```
 
 ## How to get Support?
