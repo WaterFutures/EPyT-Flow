@@ -1412,6 +1412,120 @@ class ScadaData(Serializable):
         self.__sensor_reading_events = sensor_reading_events
         self.__init()
 
+    def extract_time_window(self, start_time: int, end_time: int):
+        """
+        Extracts a time window of SCADA data from this SCADA data instance --
+        i.e. creating a new SCADA data instance containing data from the requested
+        time period only.
+
+        Parameters
+        ----------
+        start_time : `int`
+            Start time -- i.e. beginning of the time window.
+        end_time : `int`, optional
+            End time -- i.e. end of the time window.
+            If None, all sensor readings from the start time onward are included
+
+            The default is None.
+
+        Returns
+        -------
+        :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
+            New SCADA data instance containing data from the requested time period only.
+        """
+        if not isinstance(start_time, int):
+            raise TypeError("'start_time' must be an instance of `int` but not of " +
+                            f"'{type(start_time)}'")
+        if start_time not in self.__sensor_readings_time:
+            raise ValueError("No data found for 'start_time'")
+        if end_time is not None:
+            if not isinstance(end_time, int):
+                raise TypeError("'end_time' must be an instance of `int` but not of " +
+                                f"'{type(end_time)}'")
+            if end_time not in self.__sensor_readings_time:
+                raise ValueError("No data found for 'end_time'")
+        else:
+            end_time = self.__sensor_readings_time[-1]
+
+        start_idx = self.__sensor_readings_time.tolist().index(start_time)
+        end_idx = self.__sensor_readings_time.tolist().index(end_time) + 1
+
+        pressure_data_raw = None
+        if self.__pressure_data_raw is not None:
+            pressure_data_raw = self.__pressure_data_raw[start_idx:end_idx, :]
+
+        flow_data_raw = None
+        if self.__flow_data_raw is not None:
+            flow_data_raw = self.__flow_data_raw[start_idx:end_idx, :]
+
+        demand_data_raw = None
+        if self.__demand_data_raw is not None:
+            demand_data_raw = self.__demand_data_raw[start_idx:end_idx, :]
+
+        node_quality_data_raw = None
+        if self.__node_quality_data_raw is not None:
+            node_quality_data_raw = self.__node_quality_data_raw[start_idx:end_idx, :]
+
+        link_quality_data_raw = None
+        if self.__link_quality_data_raw is not None:
+            link_quality_data_raw = self.__link_quality_data_raw[start_idx:end_idx, :]
+
+        pumps_state_data_raw = None
+        if self.__pumps_state_data_raw is not None:
+            pumps_state_data_raw = self.__pumps_state_data_raw[start_idx:end_idx, :]
+
+        valves_state_data_raw = None
+        if self.__valves_state_data_raw is not None:
+            valves_state_data_raw = self.__valves_state_data_raw[start_idx:end_idx, :]
+
+        tanks_volume_data_raw = None
+        if self.__tanks_volume_data_raw is not None:
+            tanks_volume_data_raw = self.__tanks_volume_data_raw[start_idx:end_idx, :]
+
+        surface_species_concentration_raw = None
+        if self.__surface_species_concentration_raw is not None:
+            surface_species_concentration_raw = \
+                self.__surface_species_concentration_raw[start_idx:end_idx, :]
+
+        bulk_species_node_concentration_raw = None
+        if self.__bulk_species_node_concentration_raw is not None:
+            bulk_species_node_concentration_raw = \
+                self.__bulk_species_node_concentration_raw[start_idx:end_idx, :]
+
+        bulk_species_link_concentration_raw = None
+        if self.__bulk_species_link_concentration_raw is not None:
+            bulk_species_link_concentration_raw = \
+                self.__bulk_species_link_concentration_raw[start_idx:end_idx, :]
+
+        pumps_energy_usage_data_raw = None
+        if self.__pumps_energy_usage_data_raw is not None:
+            pumps_energy_usage_data_raw = self.__pumps_energy_usage_data_raw[start_idx:end_idx, :]
+
+        pumps_efficiency_data_raw = None
+        if self.__pumps_efficiency_data_raw is not None:
+            pumps_efficiency_data_raw = self.__pumps_efficiency_data_raw[start_idx:end_idx, :]
+
+        return ScadaData(sensor_config=self.sensor_config,
+                         sensor_readings_time=self.sensor_readings_time[start_idx:end_idx],
+                         frozen_sensor_config=self.frozen_sensor_config,
+                         sensor_noise=self.sensor_noise,
+                         sensor_reading_events=self.sensor_reading_events,
+                         sensor_reading_attacks=self.sensor_reading_attacks,
+                         sensor_faults=self.sensor_faults,
+                         pressure_data_raw=pressure_data_raw,
+                         flow_data_raw=flow_data_raw,
+                         demand_data_raw=demand_data_raw,
+                         node_quality_data_raw=node_quality_data_raw,
+                         link_quality_data_raw=link_quality_data_raw,
+                         valves_state_data_raw=valves_state_data_raw,
+                         pumps_state_data_raw=pumps_state_data_raw,
+                         tanks_volume_data_raw=tanks_volume_data_raw,
+                         surface_species_concentration_raw=surface_species_concentration_raw,
+                         bulk_species_node_concentration_raw=bulk_species_node_concentration_raw,
+                         bulk_species_link_concentration_raw=bulk_species_link_concentration_raw,
+                         pumps_energy_usage_data_raw=pumps_energy_usage_data_raw,
+                         pumps_efficiency_data_raw=pumps_efficiency_data_raw)
+
     def join(self, other) -> None:
         """
         Joins two :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances based
