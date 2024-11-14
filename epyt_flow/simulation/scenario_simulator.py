@@ -69,6 +69,8 @@ class ScenarioSimulator():
             raise ValueError("'f_inp_in' must be set if 'f_msx_in' is set.")
         if f_inp_in is None and scenario_config is None:
             raise ValueError("Either 'f_inp_in' or 'scenario_config' must be set.")
+        if scenario_config is not None and f_inp_in is not None:
+            raise ValueError("'f_inp_in' or 'scenario_config' can not be used at the same time")
         if f_inp_in is not None:
             if not isinstance(f_inp_in, str):
                 raise TypeError("'f_inp_in' must be an instance of 'str' but not of " +
@@ -140,14 +142,11 @@ class ScenarioSimulator():
             if self.__f_msx_in is not None:
                 if not __file_exists(self.__f_msx_in):
                     my_f_msx_in = self.__f_msx_in
-                    self.__my_f_msx_in = None
                 else:
                     my_f_msx_in = os.path.join(tmp_folder_path, pathlib.Path(self.__f_msx_in).name)
                     shutil.copyfile(self.__f_msx_in, my_f_msx_in)
-                    self.__my_f_msx_in = my_f_msx_in
             else:
                 my_f_msx_in = None
-                self.__my_f_msx_in = None
 
             self.epanet_api = epanet(my_f_inp_in, ph=self.__f_msx_in is None,
                                      customlib=custom_epanet_lib, loadfile=True,
