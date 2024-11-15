@@ -78,6 +78,24 @@ In the latter case, the result is provided as a generator.
 More details on :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` are given
 :ref:`here <tut.scada>`.
 
+Customize the Simulator
+-----------------------
+
+The behavior of the :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` class can
+be customized by deriving a child class and overriding or adding some methods.
+
+Example of adding a method for removing all controls -- smth. that
+:class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` can not do because it viloates
+EPyT-Flow's design principle of immutability:
+
+.. code-block:: python
+
+    class MyScenarioSimulator(ScenarioSimulator):
+        def remove_all_custom_controls(self) -> None:
+            """
+            Removes all controls from the scenario.
+            """
+            self._controls = []
 
 .. _scenarios_parallel_simulation:
 

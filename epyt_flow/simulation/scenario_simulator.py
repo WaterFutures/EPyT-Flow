@@ -61,6 +61,18 @@ class ScenarioSimulator():
     ----------
     epanet_api : `epyt.epanet`
         API to EPANET and EPANET-MSX.
+    _model_uncertainty : :class:`~epyt_flow.uncertainty.model_uncertainty.ModelUncertainty`, protected
+        Model uncertainty.
+    _sensor_noise : :class:`~epyt_flow.uncertainty.sensor_noise.SensorNoise`, protected
+        Sensor noise.
+    _sensor_config : :class:`~epyt_flow.simulation.sensor_config.SensorConfig`, protected
+        Sensor configuration.
+    _controls : list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`], protected
+        List of custom control modules.
+    _system_events : list[:class:`~epyt_flow.simulation.events.system_event.SystemEvent`], protected
+        Lsit of system events such as leakages.
+    _sensor_reading_events : list[:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent`], protected
+        List of sensor reading events such as sensor override attacks.
     """
 
     def __init__(self, f_inp_in: str = None, f_msx_in: str = None,
@@ -90,12 +102,12 @@ class ScenarioSimulator():
 
         self.__f_inp_in = f_inp_in if scenario_config is None else scenario_config.f_inp_in
         self.__f_msx_in = f_msx_in if scenario_config is None else scenario_config.f_msx_in
-        self.__model_uncertainty = ModelUncertainty()
-        self.__sensor_noise = None
-        self.__sensor_config = None
-        self.__controls = []
-        self.__system_events = []
-        self.__sensor_reading_events = []
+        self._model_uncertainty = ModelUncertainty()
+        self._sensor_noise = None
+        self._sensor_config = None
+        self._controls = []
+        self._system_events = []
+        self._sensor_reading_events = []
         self.__running_simulation = False
 
         custom_epanet_lib = None
@@ -156,14 +168,14 @@ class ScenarioSimulator():
             if self.__f_msx_in is not None:
                 self.epanet_api.loadMSXFile(my_f_msx_in, customMSXlib=custom_epanetmsx_lib)
 
-        self.__sensor_config = self.__get_empty_sensor_config()
+        self._sensor_config = self._get_empty_sensor_config()
         if scenario_config is not None:
             if scenario_config.general_params is not None:
                 self.set_general_parameters(**scenario_config.general_params)
 
-            self.__model_uncertainty = scenario_config.model_uncertainty
-            self.__sensor_noise = scenario_config.sensor_noise
-            self.__sensor_config = scenario_config.sensor_config
+            self._model_uncertainty = scenario_config.model_uncertainty
+            self._sensor_noise = scenario_config.sensor_noise
+            self._sensor_config = scenario_config.sensor_config
 
             for control in scenario_config.controls:
                 self.add_control(control)
@@ -172,10 +184,10 @@ class ScenarioSimulator():
             for event in scenario_config.sensor_reading_events:
                 self.add_sensor_reading_event(event)
 
-    def __get_empty_sensor_config(self, node_id_to_idx: dict = None, link_id_to_idx: dict = None,
-                                  valve_id_to_idx: dict = None, pump_id_to_idx: dict = None,
-                                  tank_id_to_idx: dict = None, bulkspecies_id_to_idx: dict = None,
-                                  surfacespecies_id_to_idx: dict = None) -> SensorConfig:
+    def _get_empty_sensor_config(self, node_id_to_idx: dict = None, link_id_to_idx: dict = None,
+                                 valve_id_to_idx: dict = None, pump_id_to_idx: dict = None,
+                                 tank_id_to_idx: dict = None, bulkspecies_id_to_idx: dict = None,
+                                 surfacespecies_id_to_idx: dict = None) -> SensorConfig:
         flow_unit = self.epanet_api.api.ENgetflowunits()
         quality_unit = qualityunit_to_id(self.epanet_api.getQualityInfo().QualityChemUnits)
         bulk_species = []
@@ -227,7 +239,7 @@ class ScenarioSimulator():
         `str`
             Path to the .inp file.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         return self.__f_inp_in
 
@@ -241,7 +253,7 @@ class ScenarioSimulator():
         `str`
             Path to the .msx file.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         return self.__f_msx_in
 
@@ -255,13 +267,13 @@ class ScenarioSimulator():
         :class:`~epyt_flow.uncertainty.model_uncertainty.ModelUncertainty`
             Model uncertainty.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
-        return deepcopy(self.__model_uncertainty)
+        return deepcopy(self._model_uncertainty)
 
     @model_uncertainty.setter
     def model_uncertainty(self, model_uncertainty: ModelUncertainty) -> None:
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         self.set_model_uncertainty(model_uncertainty)
 
@@ -275,13 +287,13 @@ class ScenarioSimulator():
         :class:`~epyt_flow.uncertainty.sensor_noise.SensorNoise`
             Sensor noise.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
-        return deepcopy(self.__sensor_noise)
+        return deepcopy(self._sensor_noise)
 
     @sensor_noise.setter
     def sensor_noise(self, sensor_noise: SensorNoise) -> None:
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         self.set_sensor_noise(sensor_noise)
 
@@ -295,9 +307,9 @@ class ScenarioSimulator():
         :class:`~epyt_flow.simulation.sensor_config.SensorConfig`
             Sensor configuration.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
-        return deepcopy(self.__sensor_config)
+        return deepcopy(self._sensor_config)
 
     @sensor_config.setter
     def sensor_config(self, sensor_config: SensorConfig) -> None:
@@ -308,7 +320,7 @@ class ScenarioSimulator():
 
         sensor_config.validate(self.epanet_api)
 
-        self.__sensor_config = sensor_config
+        self._sensor_config = sensor_config
 
     @property
     def controls(self) -> list[AdvancedControlModule]:
@@ -320,9 +332,9 @@ class ScenarioSimulator():
         list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`]
             All control modules.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
-        return deepcopy(self.__controls)
+        return deepcopy(self._controls)
 
     @property
     def leakages(self) -> list[Leakage]:
@@ -334,9 +346,9 @@ class ScenarioSimulator():
         list[:class:`~epyt_flow.simulation.events.leakages.Leakage`]
             All leakages.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
-        return deepcopy(list(filter(lambda e: isinstance(e, Leakage), self.__system_events)))
+        return deepcopy(list(filter(lambda e: isinstance(e, Leakage), self._system_events)))
 
     @property
     def actuator_events(self) -> list[ActuatorEvent]:
@@ -348,9 +360,9 @@ class ScenarioSimulator():
         list[:class:`~epyt_flow.simulation.events.actuator_event.ActuatorEvent`]
             All actuator events.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
-        return deepcopy(list(filter(lambda e: isinstance(e, ActuatorEvent), self.__system_events)))
+        return deepcopy(list(filter(lambda e: isinstance(e, ActuatorEvent), self._system_events)))
 
     @property
     def system_events(self) -> list[SystemEvent]:
@@ -362,9 +374,9 @@ class ScenarioSimulator():
         list[:class:`~epyt_flow.simulation.events.system_event.SystemEvent`]
             All system events.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
-        return deepcopy(self.__system_events)
+        return deepcopy(self._system_events)
 
     @property
     def sensor_faults(self) -> list[SensorFault]:
@@ -376,10 +388,10 @@ class ScenarioSimulator():
         list[:class:`~epyt_flow.simulation.events.sensor_faults.SensorFault`]
             All sensor faults.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         return deepcopy(list(filter(lambda e: isinstance(e, SensorFault),
-                                    self.__sensor_reading_events)))
+                                    self._sensor_reading_events)))
 
     @property
     def sensor_reading_attacks(self) -> list[SensorReadingAttack]:
@@ -391,10 +403,10 @@ class ScenarioSimulator():
         list[:class:`~epyt_flow.simulation.events.sensor_reading_attacks.SensorReadingAttack`]
             All sensor reading attacks.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         return deepcopy(list(filter(lambda e: isinstance(e, SensorReadingAttack)),
-                             self.__sensor_reading_events))
+                             self._sensor_reading_events))
 
     @property
     def sensor_reading_events(self) -> list[SensorReadingEvent]:
@@ -406,11 +418,11 @@ class ScenarioSimulator():
         list[:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent`]
             All sensor reading events.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
-        return deepcopy(self.__sensor_reading_events)
+        return deepcopy(self._sensor_reading_events)
 
-    def __adapt_to_network_changes(self):
+    def _adapt_to_network_changes(self):
         nodes = self.epanet_api.getNodeNameID()
         links = self.epanet_api.getLinkNameID()
 
@@ -423,26 +435,26 @@ class ScenarioSimulator():
         surfacespecies_id_to_idx = None
 
         # Adapt sensor configuration to potential cahnges in the network's topology
-        new_sensor_config = self.__get_empty_sensor_config(node_id_to_idx, link_id_to_idx,
-                                                           valve_id_to_idx, pump_id_to_idx,
-                                                           tank_id_to_idx, bulkspecies_id_to_idx,
-                                                           surfacespecies_id_to_idx)
-        new_sensor_config.pressure_sensors = self.__sensor_config.pressure_sensors
-        new_sensor_config.flow_sensors = self.__sensor_config.flow_sensors
-        new_sensor_config.demand_sensors = self.__sensor_config.demand_sensors
-        new_sensor_config.quality_node_sensors = self.__sensor_config.quality_node_sensors
-        new_sensor_config.quality_link_sensors = self.__sensor_config.quality_link_sensors
-        new_sensor_config.pump_state_sensors = self.__sensor_config.pump_state_sensors
-        new_sensor_config.pump_efficiency_sensors = self.__sensor_config.pump_efficiency_sensors
-        new_sensor_config.pump_energyconsumption_sensors = self.__sensor_config.\
+        new_sensor_config = self._get_empty_sensor_config(node_id_to_idx, link_id_to_idx,
+                                                          valve_id_to_idx, pump_id_to_idx,
+                                                          tank_id_to_idx, bulkspecies_id_to_idx,
+                                                          surfacespecies_id_to_idx)
+        new_sensor_config.pressure_sensors = self._sensor_config.pressure_sensors
+        new_sensor_config.flow_sensors = self._sensor_config.flow_sensors
+        new_sensor_config.demand_sensors = self._sensor_config.demand_sensors
+        new_sensor_config.quality_node_sensors = self._sensor_config.quality_node_sensors
+        new_sensor_config.quality_link_sensors = self._sensor_config.quality_link_sensors
+        new_sensor_config.pump_state_sensors = self._sensor_config.pump_state_sensors
+        new_sensor_config.pump_efficiency_sensors = self._sensor_config.pump_efficiency_sensors
+        new_sensor_config.pump_energyconsumption_sensors = self._sensor_config.\
             pump_energyconsumption_sensors
-        new_sensor_config.valve_state_sensors = self.__sensor_config.valve_state_sensors
-        new_sensor_config.tank_volume_sensors = self.__sensor_config.tank_volume_sensors
-        new_sensor_config.bulk_species_node_sensors = self.__sensor_config.bulk_species_node_sensors
-        new_sensor_config.bulk_species_link_sensors = self.__sensor_config.bulk_species_link_sensors
-        new_sensor_config.surface_species_sensors = self.__sensor_config.surface_species_sensors
+        new_sensor_config.valve_state_sensors = self._sensor_config.valve_state_sensors
+        new_sensor_config.tank_volume_sensors = self._sensor_config.tank_volume_sensors
+        new_sensor_config.bulk_species_node_sensors = self._sensor_config.bulk_species_node_sensors
+        new_sensor_config.bulk_species_link_sensors = self._sensor_config.bulk_species_link_sensors
+        new_sensor_config.surface_species_sensors = self._sensor_config.surface_species_sensors
 
-        self.__sensor_config = new_sensor_config
+        self._sensor_config = new_sensor_config
 
     def close(self):
         """
@@ -541,27 +553,27 @@ class ScenarioSimulator():
                 links = []
 
                 # Parse sensor config
-                pressure_sensors = self.__sensor_config.pressure_sensors
+                pressure_sensors = self._sensor_config.pressure_sensors
                 if len(pressure_sensors) != 0:
                     report_desc += "Pressure YES\n"
                     nodes += pressure_sensors
 
-                flow_sensors = self.__sensor_config.flow_sensors
+                flow_sensors = self._sensor_config.flow_sensors
                 if len(flow_sensors) != 0:
                     report_desc += "Flow YES\n"
                     links += flow_sensors
 
-                demand_sensors = self.__sensor_config.demand_sensors
+                demand_sensors = self._sensor_config.demand_sensors
                 if len(demand_sensors) != 0:
                     report_desc += "Demand YES\n"
                     nodes += demand_sensors
 
-                node_quality_sensors = self.__sensor_config.quality_node_sensors
+                node_quality_sensors = self._sensor_config.quality_node_sensors
                 if len(node_quality_sensors) != 0:
                     report_desc += "Quality YES\n"
                     nodes += node_quality_sensors
 
-                link_quality_sensors = self.__sensor_config.quality_link_sensors
+                link_quality_sensors = self._sensor_config.quality_link_sensors
                 if len(link_quality_sensors) != 0:
                     if len(node_quality_sensors) == 0:
                         report_desc += "Quality YES\n"
@@ -572,12 +584,12 @@ class ScenarioSimulator():
                 links = list(set(links))
 
                 if len(nodes) != 0:
-                    if set(nodes) == set(self.__sensor_config.nodes):
+                    if set(nodes) == set(self._sensor_config.nodes):
                         nodes = ["ALL"]
                     report_desc += f"NODES {' '.join(nodes)}\n"
 
                 if len(links) != 0:
-                    if set(links) == set(self.__sensor_config.links):
+                    if set(links) == set(self._sensor_config.links):
                         links = ["ALL"]
                     report_desc += f"LINKS {' '.join(links)}\n"
 
@@ -594,17 +606,17 @@ class ScenarioSimulator():
                 links = []
 
                 # Parse sensor config
-                bulk_species_node_sensors = self.__sensor_config.bulk_species_node_sensors
+                bulk_species_node_sensors = self._sensor_config.bulk_species_node_sensors
                 for bulk_species_id in bulk_species_node_sensors.keys():
                     species.append(bulk_species_id)
                     nodes += bulk_species_node_sensors[bulk_species_id]
 
-                bulk_species_link_sensors = self.__sensor_config.bulk_species_link_sensors
+                bulk_species_link_sensors = self._sensor_config.bulk_species_link_sensors
                 for bulk_species_id in bulk_species_link_sensors.keys():
                     species.append(bulk_species_id)
                     links += bulk_species_link_sensors[bulk_species_id]
 
-                surface_species_link_sensors = self.__sensor_config.surface_species_sensors
+                surface_species_link_sensors = self._sensor_config.surface_species_sensors
                 for surface_species_id in surface_species_link_sensors.keys():
                     species.append(surface_species_id)
                     links += surface_species_link_sensors[surface_species_id]
@@ -615,12 +627,12 @@ class ScenarioSimulator():
 
                 # Create REPORT section
                 if len(nodes) != 0:
-                    if set(nodes) == set(self.__sensor_config.nodes):
+                    if set(nodes) == set(self._sensor_config.nodes):
                         nodes = ["ALL"]
                     report_desc += f"NODES {' '.join(nodes)}\n"
 
                 if len(links) != 0:
-                    if set(links) == set(self.__sensor_config.links):
+                    if set(links) == set(self._sensor_config.links):
                         links = ["ALL"]
                     report_desc += f"LINKS {' '.join(links)}\n"
 
@@ -766,7 +778,7 @@ class ScenarioSimulator():
         :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
             Complete scenario specification.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         general_params = {"hydraulic_time_step": self.get_hydraulic_time_step(),
                           "quality_time_step": self.get_quality_time_step(),
@@ -794,7 +806,7 @@ class ScenarioSimulator():
         `float`
             Estimated memory consumption in MB.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         n_time_steps = int(self.epanet_api.getTimeSimulationDuration() /
                            self.epanet_api.getTimeReportingStep())
@@ -818,7 +830,7 @@ class ScenarioSimulator():
         :class:`~epyt_flow.topology.NetworkTopology`
             Topology of this WDN as a graph.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         # Collect information about the topology of the water distribution network
         nodes_id = self.epanet_api.getNodeNameID()
@@ -889,7 +901,7 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("Can not change general parameters when simulation is running.")
 
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         # Get all demand patterns
         demand_patterns_idx = self.epanet_api.getNodeDemandPatternIndex()
@@ -926,9 +938,9 @@ class ScenarioSimulator():
         demand_pattern : `numpy.ndarray`
             Demand pattern over time. Final demand over time = base_demand * demand_pattern
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
-        if node_id not in self.__sensor_config.nodes:
+        if node_id not in self._sensor_config.nodes:
             raise ValueError(f"Unknown node '{node_id}'")
         if not isinstance(base_demand, float):
             raise TypeError("'base_demand' must be an instance of 'float' " +
@@ -957,14 +969,14 @@ class ScenarioSimulator():
         control : :class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`
             Control module.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         if not isinstance(control, AdvancedControlModule):
             raise TypeError("'control' must be an instance of " +
                             "'epyt_flow.simulation.scada.AdvancedControlModule' not of " +
                             f"'{type(control)}'")
 
-        self.__controls.append(control)
+        self._controls.append(control)
 
     def add_leakage(self, leakage_event: Leakage) -> None:
         """
@@ -975,7 +987,7 @@ class ScenarioSimulator():
         event : :class:`~epyt_flow.simulation.events.leakages.Leakage`
             Leakage.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         if not isinstance(leakage_event, Leakage):
             raise TypeError("'leakage_event' must be an instance of " +
@@ -993,7 +1005,7 @@ class ScenarioSimulator():
         event : :class:`~epyt_flow.simulation.events.actuator_events.ActuatorEvent`
             Actuator event.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         if not isinstance(event, ActuatorEvent):
             raise TypeError("'event' must be an instance of " +
@@ -1014,7 +1026,7 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("Can not add events when simulation is running.")
 
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         if not isinstance(event, SystemEvent):
             raise TypeError("'event' must be an instance of " +
@@ -1022,7 +1034,7 @@ class ScenarioSimulator():
 
         event.init(self.epanet_api)
 
-        self.__system_events.append(event)
+        self._system_events.append(event)
 
     def add_sensor_fault(self, sensor_fault_event: SensorFault) -> None:
         """
@@ -1036,16 +1048,16 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("Can not add events when simulation is running.")
 
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
-        sensor_fault_event.validate(self.__sensor_config)
+        sensor_fault_event.validate(self._sensor_config)
 
         if not isinstance(sensor_fault_event, SensorFault):
             raise TypeError("'sensor_fault_event' must be an instance of " +
                             "'epyt_flow.simulation.events.SensorFault' not of " +
                             f"'{type(sensor_fault_event)}'")
 
-        self.__sensor_reading_events.append(sensor_fault_event)
+        self._sensor_reading_events.append(sensor_fault_event)
 
     def add_sensor_reading_attack(self, sensor_reading_attack: SensorReadingAttack) -> None:
         """
@@ -1059,16 +1071,16 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("Can not add events when simulation is running.")
 
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
-        sensor_reading_attack.validate(self.__sensor_config)
+        sensor_reading_attack.validate(self._sensor_config)
 
         if not isinstance(sensor_reading_attack, SensorReadingAttack):
             raise TypeError("'sensor_reading_attack' must be an instance of " +
                             "'epyt_flow.simulation.events.SensorReadingAttack' not of " +
                             f"'{type(sensor_reading_attack)}'")
 
-        self.__sensor_reading_events.append(sensor_reading_attack)
+        self._sensor_reading_events.append(sensor_reading_attack)
 
     def add_sensor_reading_event(self, event: SensorReadingEvent) -> None:
         """
@@ -1082,16 +1094,16 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("Can not add events when simulation is running.")
 
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
-        event.validate(self.__sensor_config)
+        event.validate(self._sensor_config)
 
         if not isinstance(event, SensorReadingEvent):
             raise TypeError("'event' must be an instance of " +
                             "'epyt_flow.simulation.events.SensorReadingEvent' not of " +
                             f"'{type(event)}'")
 
-        self.__sensor_reading_events.append(event)
+        self._sensor_reading_events.append(event)
 
     def set_sensors(self, sensor_type: int, sensor_locations: Union[list[str], dict]) -> None:
         """
@@ -1117,38 +1129,38 @@ class ScenarioSimulator():
             Locations (IDs) of sensors either as a list or as a dict in the case of
             bulk and surface species.
         """
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         if sensor_type == SENSOR_TYPE_NODE_PRESSURE:
-            self.__sensor_config.pressure_sensors = sensor_locations
+            self._sensor_config.pressure_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_LINK_FLOW:
-            self.__sensor_config.flow_sensors = sensor_locations
+            self._sensor_config.flow_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_NODE_DEMAND:
-            self.__sensor_config.demand_sensors = sensor_locations
+            self._sensor_config.demand_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_NODE_QUALITY:
-            self.__sensor_config.quality_node_sensors = sensor_locations
+            self._sensor_config.quality_node_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_LINK_QUALITY:
-            self.__sensor_config.quality_link_sensors = sensor_locations
+            self._sensor_config.quality_link_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_VALVE_STATE:
-            self.__sensor_config.valve_state_sensors = sensor_locations
+            self._sensor_config.valve_state_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_PUMP_STATE:
-            self.__sensor_config.pump_state_sensors = sensor_locations
+            self._sensor_config.pump_state_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_PUMP_EFFICIENCY:
-            self.__sensor_config.pump_efficiency_sensors = sensor_locations
+            self._sensor_config.pump_efficiency_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_PUMP_ENERGYCONSUMPTION:
-            self.__sensor_config.pump_energyconsumption_sensors = sensor_locations
+            self._sensor_config.pump_energyconsumption_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_TANK_VOLUME:
-            self.__sensor_config.tank_volume_sensors = sensor_locations
+            self._sensor_config.tank_volume_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_NODE_BULK_SPECIES:
-            self.__sensor_config.bulk_species_node_sensors = sensor_locations
+            self._sensor_config.bulk_species_node_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_LINK_BULK_SPECIES:
-            self.__sensor_config.bulk_species_link_sensors = sensor_locations
+            self._sensor_config.bulk_species_link_sensors = sensor_locations
         elif sensor_type == SENSOR_TYPE_SURFACE_SPECIES:
-            self.__sensor_config.surface_species_sensors = sensor_locations
+            self._sensor_config.surface_species_sensors = sensor_locations
         else:
             raise ValueError(f"Unknown sensor type '{sensor_type}'")
 
-        self.__sensor_config.validate(self.epanet_api)
+        self._sensor_config.validate(self.epanet_api)
 
     def set_pressure_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1175,7 +1187,7 @@ class ScenarioSimulator():
         if junctions_only is True:
             self.set_pressure_sensors(self.epanet_api.getNodeJunctionNameID())
         else:
-            self.set_pressure_sensors(self.__sensor_config.nodes)
+            self.set_pressure_sensors(self._sensor_config.nodes)
 
     def set_flow_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1192,7 +1204,7 @@ class ScenarioSimulator():
         """
         Places a flow sensors at every link/pipe in the network.
         """
-        self.set_flow_sensors(self.__sensor_config.links)
+        self.set_flow_sensors(self._sensor_config.links)
 
     def set_demand_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1209,7 +1221,7 @@ class ScenarioSimulator():
         """
         Places a demand sensor at every node in the network.
         """
-        self.set_demand_sensors(self.__sensor_config.nodes)
+        self.set_demand_sensors(self._sensor_config.nodes)
 
     def set_node_quality_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1227,7 +1239,7 @@ class ScenarioSimulator():
         """
         Places a water quality sensor at every node in the network.
         """
-        self.set_node_quality_sensors(self.__sensor_config.nodes)
+        self.set_node_quality_sensors(self._sensor_config.nodes)
 
     def set_link_quality_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1245,7 +1257,7 @@ class ScenarioSimulator():
         """
         Places a water quality sensor at every link/pipe in the network.
         """
-        self.set_link_quality_sensors(self.__sensor_config.links)
+        self.set_link_quality_sensors(self._sensor_config.links)
 
     def set_valve_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1262,10 +1274,10 @@ class ScenarioSimulator():
         """
         Places a valve state sensor at every valve in the network.
         """
-        if len(self.__sensor_config.valves) == 0:
+        if len(self._sensor_config.valves) == 0:
             warnings.warn("Network does not contain any valves", UserWarning)
 
-        self.set_valve_sensors(self.__sensor_config.valves)
+        self.set_valve_sensors(self._sensor_config.valves)
 
     def set_pump_state_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1282,10 +1294,10 @@ class ScenarioSimulator():
         """
         Places a pump state sensor at every pump in the network.
         """
-        if len(self.__sensor_config.pumps) == 0:
+        if len(self._sensor_config.pumps) == 0:
             warnings.warn("Network does not contain any pumps", UserWarning)
 
-        self.set_pump_state_sensors(self.__sensor_config.pumps)
+        self.set_pump_state_sensors(self._sensor_config.pumps)
 
     def set_pump_efficiency_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1303,10 +1315,10 @@ class ScenarioSimulator():
         """
         Places a pump efficiency sensor at every pump in the network.
         """
-        if len(self.__sensor_config.pumps) == 0:
+        if len(self._sensor_config.pumps) == 0:
             warnings.warn("Network does not contain any pumps", UserWarning)
 
-        self.set_pump_efficiency_sensors(self.__sensor_config.pumps)
+        self.set_pump_efficiency_sensors(self._sensor_config.pumps)
 
     def set_pump_energyconsumption_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1324,10 +1336,10 @@ class ScenarioSimulator():
         """
         Places a pump energy consumption sensor at every pump in the network.
         """
-        if len(self.__sensor_config.pumps) == 0:
+        if len(self._sensor_config.pumps) == 0:
             warnings.warn("Network does not contain any pumps", UserWarning)
 
-        self.set_pump_energyconsumption_sensors(self.__sensor_config.pumps)
+        self.set_pump_energyconsumption_sensors(self._sensor_config.pumps)
 
     def set_pump_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1348,10 +1360,10 @@ class ScenarioSimulator():
         Palces pump sensors at every pump in the network -- i.e. retrieving the state, efficiency,
         and energy consumption of all pumps in the network.
         """
-        if len(self.__sensor_config.pumps) == 0:
+        if len(self._sensor_config.pumps) == 0:
             warnings.warn("Network does not contain any pumps", UserWarning)
 
-        self.set_pump_sensors(self.__sensor_config.pumps)
+        self.set_pump_sensors(self._sensor_config.pumps)
 
     def set_tank_sensors(self, sensor_locations: list[str]) -> None:
         """
@@ -1368,10 +1380,10 @@ class ScenarioSimulator():
         """
         Places a water tank volume sensor at every tank in the network.
         """
-        if len(self.__sensor_config.tanks) == 0:
+        if len(self._sensor_config.tanks) == 0:
             warnings.warn("Network does not contain any tanks", UserWarning)
 
-        self.set_tank_sensors(self.__sensor_config.tanks)
+        self.set_tank_sensors(self._sensor_config.tanks)
 
     def set_bulk_species_node_sensors(self, sensor_info: dict) -> None:
         """
@@ -1399,15 +1411,15 @@ class ScenarioSimulator():
             The default is None.
         """
         if bulk_species is None:
-            self.set_bulk_species_node_sensors({species_id: self.__sensor_config.nodes
+            self.set_bulk_species_node_sensors({species_id: self._sensor_config.nodes
                                                 for species_id in
-                                                    self.__sensor_config.bulk_species})
+                                                    self._sensor_config.bulk_species})
         else:
-            if any(species_id not in self.__sensor_config.bulk_species
+            if any(species_id not in self._sensor_config.bulk_species
                    for species_id in bulk_species):
                 raise ValueError("Invalid bulk species ID in 'bulk_species'")
 
-            self.set_bulk_species_node_sensors({species_id: self.__sensor_config.nodes
+            self.set_bulk_species_node_sensors({species_id: self._sensor_config.nodes
                                                 for species_id in bulk_species})
 
     def set_bulk_species_link_sensors(self, sensor_info: dict) -> None:
@@ -1436,15 +1448,15 @@ class ScenarioSimulator():
             The default is None.
         """
         if bulk_species is None:
-            self.set_bulk_species_link_sensors({species_id: self.__sensor_config.links
+            self.set_bulk_species_link_sensors({species_id: self._sensor_config.links
                                                 for species_id in
-                                                self.__sensor_config.bulk_species})
+                                                self._sensor_config.bulk_species})
         else:
-            if any(species_id not in self.__sensor_config.bulk_species
+            if any(species_id not in self._sensor_config.bulk_species
                    for species_id in bulk_species):
                 raise ValueError("Invalid bulk species ID in 'bulk_species'")
 
-            self.set_bulk_species_link_sensors({species_id: self.__sensor_config.links
+            self.set_bulk_species_link_sensors({species_id: self._sensor_config.links
                                                 for species_id in bulk_species})
 
     def set_surface_species_sensors(self, sensor_info: dict) -> None:
@@ -1474,15 +1486,15 @@ class ScenarioSimulator():
             The default is None.
         """
         if surface_species_id is None:
-            self.set_bulk_species_node_sensors({species_id: self.__sensor_config.links
+            self.set_bulk_species_node_sensors({species_id: self._sensor_config.links
                                                 for species_id in
-                                                self.__sensor_config.surface_species})
+                                                self._sensor_config.surface_species})
         else:
-            if any(species_id not in self.__sensor_config.surface_species
+            if any(species_id not in self._sensor_config.surface_species
                    for species_id in surface_species_id):
                 raise ValueError("Invalid surface species ID in 'surface_species_id'")
 
-            self.set_bulk_species_node_sensors({species_id: self.__sensor_config.links
+            self.set_bulk_species_node_sensors({species_id: self._sensor_config.links
                                                 for species_id in surface_species_id})
 
     def place_sensors_everywhere(self) -> None:
@@ -1490,19 +1502,19 @@ class ScenarioSimulator():
         Places sensors everywhere -- i.e. every possible quantity is monitored
         at every position in the network.
         """
-        self.__sensor_config.place_sensors_everywhere()
+        self._sensor_config.place_sensors_everywhere()
 
-    def __prepare_simulation(self) -> None:
-        self.__adapt_to_network_changes()
+    def _prepare_simulation(self) -> None:
+        self._adapt_to_network_changes()
 
-        if self.__model_uncertainty is not None:
-            self.__model_uncertainty.apply(self.epanet_api)
+        if self._model_uncertainty is not None:
+            self._model_uncertainty.apply(self.epanet_api)
 
-        for event in self.__system_events:
+        for event in self._system_events:
             event.reset()
 
-        if self.__controls is not None:
-            for c in self.__controls:
+        if self._controls is not None:
+            for c in self._controls:
                 c.init(self.epanet_api)
 
     def run_advanced_quality_simulation(self, hyd_file_in: str, verbose: bool = False,
@@ -1559,9 +1571,9 @@ class ScenarioSimulator():
                 result[data_type] = None
 
         return ScadaData(**result,
-                         sensor_config=self.__sensor_config,
-                         sensor_reading_events=self.__sensor_reading_events,
-                         sensor_noise=self.__sensor_noise,
+                         sensor_config=self._sensor_config,
+                         sensor_reading_events=self._sensor_reading_events,
+                         sensor_noise=self._sensor_noise,
                          frozen_sensor_config=frozen_sensor_config)
 
     def run_advanced_quality_simulation_as_generator(self, hyd_file_in: str, verbose: bool = False,
@@ -1618,9 +1630,9 @@ class ScenarioSimulator():
 
         self.__running_simulation = True
 
-        bulk_species_idx = self.epanet_api.getMSXSpeciesIndex(self.__sensor_config.bulk_species)
+        bulk_species_idx = self.epanet_api.getMSXSpeciesIndex(self._sensor_config.bulk_species)
         surface_species_idx = self.epanet_api.getMSXSpeciesIndex(
-            self.__sensor_config.surface_species)
+            self._sensor_config.surface_species)
 
         if verbose is True:
             print("Running EPANET-MSX ...")
@@ -1699,13 +1711,13 @@ class ScenarioSimulator():
                         "surface_species_concentration_raw": surface_species_concentrations,
                         "sensor_readings_time": np.array([0])}
             else:
-                data = ScadaData(sensor_config=self.__sensor_config,
+                data = ScadaData(sensor_config=self._sensor_config,
                                  bulk_species_node_concentration_raw=bulk_species_node_concentrations,
                                  bulk_species_link_concentration_raw=bulk_species_link_concentrations,
                                  surface_species_concentration_raw=surface_species_concentrations,
                                  sensor_readings_time=np.array([0]),
-                                 sensor_reading_events=self.__sensor_reading_events,
-                                 sensor_noise=self.__sensor_noise,
+                                 sensor_reading_events=self._sensor_reading_events,
+                                 sensor_noise=self._sensor_noise,
                                  frozen_sensor_config=frozen_sensor_config)
 
             if support_abort is True:  # Can the simulation be aborted? If so, handle it.
@@ -1743,7 +1755,7 @@ class ScenarioSimulator():
                                 "surface_species_concentration_raw": surface_species_concentrations,
                                 "sensor_readings_time": np.array([total_time])}
                     else:
-                        data = ScadaData(sensor_config=self.__sensor_config,
+                        data = ScadaData(sensor_config=self._sensor_config,
                                          bulk_species_node_concentration_raw=
                                             bulk_species_node_concentrations,
                                          bulk_species_link_concentration_raw=
@@ -1751,8 +1763,8 @@ class ScenarioSimulator():
                                          surface_species_concentration_raw=
                                             surface_species_concentrations,
                                          sensor_readings_time=np.array([total_time]),
-                                         sensor_reading_events=self.__sensor_reading_events,
-                                         sensor_noise=self.__sensor_noise,
+                                         sensor_reading_events=self._sensor_reading_events,
+                                         sensor_noise=self._sensor_noise,
                                          frozen_sensor_config=frozen_sensor_config)
 
                     if support_abort is True:  # Can the simulation be aborted? If so, handle it.
@@ -1813,9 +1825,9 @@ class ScenarioSimulator():
             result[data_type] = np.concatenate(result[data_type], axis=0)
 
         return ScadaData(**result,
-                         sensor_config=self.__sensor_config,
-                         sensor_reading_events=self.__sensor_reading_events,
-                         sensor_noise=self.__sensor_noise,
+                         sensor_config=self._sensor_config,
+                         sensor_reading_events=self._sensor_reading_events,
+                         sensor_noise=self._sensor_noise,
                          frozen_sensor_config=frozen_sensor_config)
 
     def run_basic_quality_simulation_as_generator(self, hyd_file_in: str, verbose: bool = False,
@@ -1901,12 +1913,12 @@ class ScenarioSimulator():
                             "link_quality_data_raw": quality_link_data,
                             "sensor_readings_time": np.array([total_time])}
                 else:
-                    data = ScadaData(sensor_config=self.__sensor_config,
+                    data = ScadaData(sensor_config=self._sensor_config,
                                      node_quality_data_raw=quality_node_data,
                                      link_quality_data_raw=quality_link_data,
                                      sensor_readings_time=np.array([total_time]),
-                                     sensor_reading_events=self.__sensor_reading_events,
-                                     sensor_noise=self.__sensor_noise,
+                                     sensor_reading_events=self._sensor_reading_events,
+                                     sensor_noise=self._sensor_noise,
                                      frozen_sensor_config=frozen_sensor_config)
 
                 if support_abort is True:  # Can the simulation be aborted? If so, handle it.
@@ -1955,7 +1967,7 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("A simulation is already running.")
 
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         result = None
 
@@ -1977,9 +1989,9 @@ class ScenarioSimulator():
             result[data_type] = np.concatenate(result[data_type], axis=0)
 
         result = ScadaData(**result,
-                           sensor_config=self.__sensor_config,
-                           sensor_reading_events=self.__sensor_reading_events,
-                           sensor_noise=self.__sensor_noise,
+                           sensor_config=self._sensor_config,
+                           sensor_reading_events=self._sensor_reading_events,
+                           sensor_noise=self._sensor_noise,
                            frozen_sensor_config=frozen_sensor_config)
 
         return result
@@ -2034,9 +2046,9 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("A simulation is already running.")
 
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
-        self.__prepare_simulation()
+        self._prepare_simulation()
 
         self.__running_simulation = True
 
@@ -2074,7 +2086,7 @@ class ScenarioSimulator():
 
                 # Apply system events in a regular time interval only!
                 if (total_time + tstep) % requested_time_step == 0:
-                    for event in self.__system_events:
+                    for event in self._system_events:
                         event.step(total_time + tstep)
 
                 # Compute current time step
@@ -2098,7 +2110,7 @@ class ScenarioSimulator():
                 link_valve_idx = self.epanet_api.getLinkValveIndex()
                 valves_state_data = self.epanet_api.getLinkStatus(link_valve_idx).reshape(1, -1)
 
-                scada_data = ScadaData(sensor_config=self.__sensor_config,
+                scada_data = ScadaData(sensor_config=self._sensor_config,
                                        pressure_data_raw=pressure_data,
                                        flow_data_raw=flow_data,
                                        demand_data_raw=demand_data,
@@ -2110,8 +2122,8 @@ class ScenarioSimulator():
                                        pumps_energy_usage_data_raw=pumps_energy_usage_data,
                                        pumps_efficiency_data_raw=pumps_efficiency_data,
                                        sensor_readings_time=np.array([total_time]),
-                                       sensor_reading_events=self.__sensor_reading_events,
-                                       sensor_noise=self.__sensor_noise,
+                                       sensor_reading_events=self._sensor_reading_events,
+                                       sensor_noise=self._sensor_noise,
                                        frozen_sensor_config=frozen_sensor_config)
 
                 # Yield results in a regular time interval only!
@@ -2139,7 +2151,7 @@ class ScenarioSimulator():
                     yield data
 
                 # Apply control modules
-                for control in self.__controls:
+                for control in self._controls:
                     control.step(scada_data)
 
                 # Next
@@ -2189,7 +2201,7 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("A simulation is already running.")
 
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         result = None
 
@@ -2232,14 +2244,14 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("Can not set uncertainties when simulation is running.")
 
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         if not isinstance(model_uncertainty, ModelUncertainty):
             raise TypeError("'model_uncertainty' must be an instance of " +
                             "'epyt_flow.uncertainty.ModelUncertainty' but not of " +
                             f"'{type(model_uncertainty)}'")
 
-        self.__model_uncertainty = model_uncertainty
+        self._model_uncertainty = model_uncertainty
 
     def set_sensor_noise(self, sensor_noise: SensorNoise) -> None:
         """
@@ -2253,14 +2265,14 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("Can not set sensor noise when simulation is running.")
 
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         if not isinstance(sensor_noise, SensorNoise):
             raise TypeError("'sensor_noise' must be an instance of " +
                             "'epyt_flow.uncertainties.SensorNoise' but not of " +
                             f"'{type(sensor_noise)}'")
 
-        self.__sensor_noise = sensor_noise
+        self._sensor_noise = sensor_noise
 
     def set_general_parameters(self, demand_model: dict = None, simulation_duration: int = None,
                                hydraulic_time_step: int = None, quality_time_step: int = None,
@@ -2338,7 +2350,7 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("Can not change general parameters when simulation is running.")
 
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         if flow_units_id is not None:
             if flow_units_id == ToolkitConstants.EN_CFS:
@@ -2379,7 +2391,7 @@ class ScenarioSimulator():
             if not isinstance(hydraulic_time_step, int) or hydraulic_time_step <= 0:
                 raise ValueError("'hydraulic_time_step' must be a positive integer specifying " +
                                  "the time steps of the hydraulic simulation")
-            if len(self.__system_events) != 0:
+            if len(self._system_events) != 0:
                 raise RuntimeError("Hydraulic time step cannot be changed after system events " +
                                    "such as leakages have been added to the scenario")
             self.epanet_api.setTimeHydraulicStep(hydraulic_time_step)
@@ -2441,10 +2453,10 @@ class ScenarioSimulator():
                 events_times.append(cur_time)
                 cur_time += hyd_time_step
 
-        for event in self.__sensor_reading_events:
+        for event in self._sensor_reading_events:
             __process_event(event)
 
-        for event in self.__system_events:
+        for event in self._system_events:
             __process_event(event)
 
         return list(set(events_times))
@@ -2463,7 +2475,7 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("Can not change general parameters when simulation is running.")
 
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         self.__warn_if_quality_set()
         self.set_general_parameters(quality_model={"type": "AGE"})
@@ -2494,7 +2506,7 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("Can not change general parameters when simulation is running.")
 
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         self.__warn_if_quality_set()
         self.set_general_parameters(quality_model={"type": "CHEM", "chemical_name": chemical_name,
@@ -2541,12 +2553,12 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("Can not change general parameters when simulation is running.")
 
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
         if self.epanet_api.getQualityInfo().QualityCode != ToolkitConstants.EN_CHEM:
             raise RuntimeError("Chemical analysis is not enabled -- " +
                                "call 'enable_chemical_analysis()' before calling this function.")
-        if node_id not in self.__sensor_config.nodes:
+        if node_id not in self._sensor_config.nodes:
             raise ValueError(f"Unknown node '{node_id}'")
         if not isinstance(pattern, np.ndarray):
             raise TypeError("'pattern' must be an instance of 'numpy.ndarray' " +
@@ -2580,9 +2592,9 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("Can not change general parameters when simulation is running.")
 
-        self.__adapt_to_network_changes()
+        self._adapt_to_network_changes()
 
-        if trace_node_id not in self.__sensor_config.nodes:
+        if trace_node_id not in self._sensor_config.nodes:
             raise ValueError(f"Invalid node ID '{trace_node_id}'")
 
         self.__warn_if_quality_set()
