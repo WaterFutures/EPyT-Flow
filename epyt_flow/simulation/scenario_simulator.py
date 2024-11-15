@@ -1385,13 +1385,30 @@ class ScenarioSimulator():
         """
         self.set_sensors(SENSOR_TYPE_NODE_BULK_SPECIES, sensor_info)
 
-    def place_bulk_species_node_sensors_everywhere(self) -> None:
+    def place_bulk_species_node_sensors_everywhere(self, bulk_species: list[str] = None) -> None:
         """
         Places bulk species concentration sensors at every node in the network for
         every bulk species.
+
+        Parameters
+        ----------
+        bulk_species : `list[str]`, optional
+            List of bulk species IDs which we want to monitor at every node.
+            If None, every bulk species will be monitored at every node.
+
+            The default is None.
         """
-        self.set_bulk_species_node_sensors({species_id: self.__sensor_config.nodes
-                                            for species_id in self.__sensor_config.bulk_species})
+        if bulk_species is None:
+            self.set_bulk_species_node_sensors({species_id: self.__sensor_config.nodes
+                                                for species_id in
+                                                    self.__sensor_config.bulk_species})
+        else:
+            if any(species_id not in self.__sensor_config.bulk_species
+                   for species_id in bulk_species):
+                raise ValueError("Invalid bulk species ID in 'bulk_species'")
+
+            self.set_bulk_species_node_sensors({species_id: self.__sensor_config.nodes
+                                                for species_id in bulk_species})
 
     def set_bulk_species_link_sensors(self, sensor_info: dict) -> None:
         """
@@ -1405,13 +1422,30 @@ class ScenarioSimulator():
         """
         self.set_sensors(SENSOR_TYPE_LINK_BULK_SPECIES, sensor_info)
 
-    def place_bulk_species_link_sensors_everywhere(self) -> None:
+    def place_bulk_species_link_sensors_everywhere(self, bulk_species: list[str] = None) -> None:
         """
         Places bulk species concentration sensors at every link/pipe in the network
         for every bulk species.
+
+        Parameters
+        ----------
+        bulk_species : `list[str]`, optional
+            List of bulk species IDs which we want to monitor at every link/pipe.
+            If None, every bulk species will be monitored at every link/pipe.
+
+            The default is None.
         """
-        self.set_bulk_species_link_sensors({species_id: self.__sensor_config.links
-                                            for species_id in self.__sensor_config.bulk_species})
+        if bulk_species is None:
+            self.set_bulk_species_link_sensors({species_id: self.__sensor_config.links
+                                                for species_id in
+                                                self.__sensor_config.bulk_species})
+        else:
+            if any(species_id not in self.__sensor_config.bulk_species
+                   for species_id in bulk_species):
+                raise ValueError("Invalid bulk species ID in 'bulk_species'")
+
+            self.set_bulk_species_link_sensors({species_id: self.__sensor_config.links
+                                                for species_id in bulk_species})
 
     def set_surface_species_sensors(self, sensor_info: dict) -> None:
         """
@@ -1425,14 +1459,31 @@ class ScenarioSimulator():
         """
         self.set_sensors(SENSOR_TYPE_SURFACE_SPECIES, sensor_info)
 
-    def place_surface_species_sensors_everywhere(self) -> None:
+    def place_surface_species_sensors_everywhere(self, surface_species_id: list[str] = None
+                                                 ) -> None:
         """
         Places surface species concentration sensors at every link/pipe in the network
         for every surface species.
+
+        Parameters
+        ----------
+        surface_species_id : `list[str]`, optional
+            List of surface species IDs which we want to monitor at every link/pipe.
+            If None, every surface species will be monitored at every link/pipe.
+
+            The default is None.
         """
-        self.set_bulk_species_node_sensors({species_id: self.__sensor_config.links
-                                            for species_id in
-                                            self.__sensor_config.surface_species})
+        if surface_species_id is None:
+            self.set_bulk_species_node_sensors({species_id: self.__sensor_config.links
+                                                for species_id in
+                                                self.__sensor_config.surface_species})
+        else:
+            if any(species_id not in self.__sensor_config.surface_species
+                   for species_id in surface_species_id):
+                raise ValueError("Invalid surface species ID in 'surface_species_id'")
+
+            self.set_bulk_species_node_sensors({species_id: self.__sensor_config.links
+                                                for species_id in surface_species_id})
 
     def place_sensors_everywhere(self) -> None:
         """
