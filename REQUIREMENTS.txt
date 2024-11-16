@@ -11,3 +11,4 @@ multiprocess>=0.70.16
 geopandas>=0.14.4
 svgpath2mpl>=1.0.0
 Deprecated>=1.2.14
+psutil
