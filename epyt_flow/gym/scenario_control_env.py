@@ -1,12 +1,15 @@
 """
 Module provides a base class for control environments.
 """
+import os
+import uuid
 from abc import abstractmethod, ABC
 from typing import Union
 import warnings
 import numpy as np
 
-from ..simulation import ScenarioSimulator, ScenarioConfig, ScadaData
+from ..simulation import ScenarioSimulator, ScenarioConfig, ScadaData, ToolkitConstants
+from ..utils import get_temp_folder
 
 
 class ScenarioControlEnv(ABC):
@@ -21,12 +24,22 @@ class ScenarioControlEnv(ABC):
         If True, environment is automatically reset if terminated.
 
         The default is False.
+
+    Attributes
+    ----------
+    _scenario_sim : :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`, protected
+        Scenario simulator of the control scenario.
+    _sim_generator : Generator[Union[:class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, dict], bool, None], protected
+        Generator for running the step-wise simulation.
+    _hydraulic_scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, protected
+        SCADA data from the hydraulic simulation -- only used if EPANET-MSX is used in the control scenario.
     """
     def __init__(self, scenario_config: ScenarioConfig, autoreset: bool = False, **kwds):
         self.__scenario_config = scenario_config
         self._scenario_sim = None
         self._sim_generator = None
         self.__autoreset = autoreset
+        self._hydraulic_scada_data = None
 
         super().__init__(**kwds)
 
@@ -54,8 +67,8 @@ class ScenarioControlEnv(ABC):
         """
         try:
             if self._sim_generator is not None:
-                self._sim_generator.send(True)
                 next(self._sim_generator)
+                self._sim_generator.send(True)
         except StopIteration:
             pass
 
@@ -76,19 +89,37 @@ class ScenarioControlEnv(ABC):
 
         self._scenario_sim = ScenarioSimulator(
             scenario_config=self.__scenario_config)
-        self._sim_generator = self._scenario_sim.run_simulation_as_generator(support_abort=True)
+
+        if self._scenario_sim.f_msx_in is not None:
+            # Run hydraulic simulation first
+            hyd_export = os.path.join(get_temp_folder(), f"epytflow_env_MSX_{uuid.uuid4()}.hyd")
+            sim = self._scenario_sim.run_hydraulic_simulation
+            self._hydraulic_scada_data = sim(hyd_export=hyd_export)
+
+            # Run advanced quality analysis (EPANET-MSX) on top of the computed hydraulics
+            gen = self._scenario_sim.run_advanced_quality_simulation_as_generator
+            self._sim_generator = gen(hyd_export, support_abort=True)
+        else:
+            gen = self._scenario_sim.run_hydraulic_simulation_as_generator
+            self._sim_generator = gen(support_abort=True)
 
         return self._next_sim_itr()
 
     def _next_sim_itr(self) -> ScadaData:
         try:
             next(self._sim_generator)
-            r = self._sim_generator.send(False)
+            scada_data = self._sim_generator.send(False)
+
+            if self._scenario_sim.f_msx_in is not None:
+                cur_time = int(scada_data.sensor_readings_time[0])
+                cur_hyd_scada_data = self._hydraulic_scada_data.\
+                    extract_time_window(cur_time, cur_time)
+                scada_data.join(cur_hyd_scada_data)
 
             if self.autoreset is True:
-                return r
+                return scada_data
             else:
-                return r, False
+                return scada_data, False
         except StopIteration:
             if self.__autoreset is True:
                 return self.reset()
@@ -112,6 +143,10 @@ class ScenarioControlEnv(ABC):
                 - EN_CLOSED  = 0
                 - EN_OPEN    = 1
         """
+        if self._scenario_sim.f_msx_in is not None:
+            raise RuntimeError("Can not execute actions affecting the hydraulics "+
+                               "when running EPANET-MSX")
+
         pump_idx = self._scenario_sim.epanet_api.getLinkPumpNameID().index(pump_id)
         pump_link_idx = self._scenario_sim.epanet_api.getLinkPumpIndex(pump_idx + 1)
         self._scenario_sim.epanet_api.setLinkStatus(pump_link_idx, status)
@@ -127,6 +162,10 @@ class ScenarioControlEnv(ABC):
         speed : `float`
             New pump speed.
         """
+        if self._scenario_sim.f_msx_in is not None:
+            raise RuntimeError("Can not execute actions affecting the hydraulics "+
+                               "when running EPANET-MSX")
+
         pump_idx = self._scenario_sim.epanet_api.getLinkPumpNameID().index(pump_id)
         pattern_idx = self._scenario_sim.epanet_api.getLinkPumpPatternIndex(pump_idx + 1)
 
@@ -154,6 +193,10 @@ class ScenarioControlEnv(ABC):
                 - EN_CLOSED  = 0
                 - EN_OPEN    = 1
         """
+        if self._scenario_sim.f_msx_in is not None:
+            raise RuntimeError("Can not execute actions affecting the hydraulics "+
+                               "when running EPANET-MSX")
+
         valve_idx = self._scenario_sim.epanet_api.getLinkValveNameID().index(valve_id)
         valve_link_idx = self._scenario_sim.epanet_api.getLinkValveIndex()[valve_idx]
         self._scenario_sim.epanet_api.setLinkStatus(valve_link_idx, status)
@@ -173,10 +216,64 @@ class ScenarioControlEnv(ABC):
         qual_value : `float`
             New quality source value.
         """
+        if self._scenario_sim.f_msx_in is not None:
+            raise RuntimeError("Can not execute actions affecting the hydraulics "+
+                               "when running EPANET-MSX")
+
         node_idx = self._scenario_sim.epanet_api.getNodeIndex(node_id)
         pattern_idx = self._scenario_sim.epanet_api.getPatternIndex(pattern_id)
         self._scenario_sim.epanet_api.setNodeSourceQuality(node_idx, 1)
         self._scenario_sim.epanet_api.setPattern(pattern_idx, np.array([qual_value]))
+
+    def set_node_species_source_value(self, species_id: str, node_id: str, source_type: int,
+                                      pattern_id: str, source_strength: float) -> None:
+        """
+        Sets the species source at a particular node to a specific value -- i.e.
+        setting the species injection amount at a particular location.
+
+        Parameters
+        ----------
+        species_id : `str`
+            ID of the species.
+        node_id : `str`
+            ID of the node.
+        source_type : `int`
+            Type of the external species injection source -- must be one of
+            the following EPANET toolkit constants:
+
+                - EN_CONCEN     = 0
+                - EN_MASS       = 1
+                - EN_SETPOINT   = 2
+                - EN_FLOWPACED  = 3
+
+            Description:
+
+                - E_CONCEN Sets the concentration of external inflow entering a node
+                - EN_MASS Injects a given mass/minute into a node
+                - EN_SETPOINT Sets the concentration leaving a node to a given value
+                - EN_FLOWPACED Adds a given value to the concentration leaving a node
+        pattern_id : `str`
+            ID of the source pattern.
+        source_strength : `float`
+            Amount of the injected species (source strength) --
+            i.e. interpreation of this number depends on `source_type`
+        """
+        if self._scenario_sim.f_msx_in is None:
+            raise RuntimeError("You are not running EPANET-MSX")
+
+        source_type_ = "None"
+        if source_type == ToolkitConstants.EN_CONCEN:
+            source_type_ = "CONCEN"
+        elif source_type == ToolkitConstants.EN_MASS:
+            source_type_ = "MASS"
+        elif source_type == ToolkitConstants.EN_SETPOINT:
+            source_type_ = "SETPOINT"
+        elif source_type == ToolkitConstants.EN_FLOWPACED:
+            source_type_ = "FLOWPACED"
+
+        self._scenario_sim.epanet_api.setMSXPattern(pattern_id, [1])
+        self._scenario_sim.epanet_api.setMSXSources(node_id, species_id, source_type_,
+                                                    source_strength, pattern_id)
 
     @abstractmethod
     def step(self, *actions) -> Union[tuple[ScadaData, float, bool], tuple[ScadaData, float]]:
