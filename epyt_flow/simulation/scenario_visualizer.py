@@ -95,14 +95,14 @@ class ScenarioVisualizer:
     This class provides the necessary function to generate visualizations in
     the form of plots or animations from water network data.
 
-    Given a :class:`~epyt_flow.simulation.ScenarioSimulator` object, this class
+    Given a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` object, this class
     provides the necessary functions to plot the network topology and to color
     hydraulic elements according to simulation data. The resulting plot can
     then either be displayed or saved.
 
     Attributes
     ----------
-    __scenario : :class:`~epyt_flow.simulation.ScenarioSimulator`
+    __scenario : :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
         ScenarioSimulator object containing the network topology and
         configurations to obtain the simulation data which should be displayed.
     fig : :class:`~matplotlib.pyplot.Figure` or None
@@ -110,8 +110,7 @@ class ScenarioVisualizer:
         methods of this class, initialized as None.
     ax : :class:`~matplotlib.axes.Axes` or None
         The axes for plotting, initialized as None.
-    scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or
-    None
+    scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or None
         SCADA data created by the ScenarioSimulator object, initialized as
         None.
     topology : :class:`~epyt_flow.topology.NetworkTopology`
@@ -139,70 +138,6 @@ class ScenarioVisualizer:
     colorbars : `dict`
         A dictionary containing the necessary data for drawing the required
         colorbars.
-
-    Methods
-    -------
-    __get_midpoints(elements)
-        Computes and returns the midpoints for drawing either valves or pumps
-        in a water distribution network. For each element ID, the method
-        calculates the midpoint between its start and end nodes' coordinates.
-    __get_next_frame(frame_number)
-        Draws the next frame of a water distribution network animation. This
-        method updates a visualization animation with the hydraulic components
-        colored according to the SCADA data corresponding to the
-        current frame.
-    __get_link_data(scada_data, parameter, statistic, pit, intervals,
-    conversion)
-        Retrieves or generates SCADA data and processes it according to the
-        parameters. The method extracts SCADA data corresponding to links. The
-        given statistic is then applied and the data returned in a format
-        suitable for plotting.
-    __get_parameters_update(statistic, values, pit, intervals, all_junctions,
-    junction_sorting)
-        Computes and returns statistical values for junctions in a water
-        network.
-    __rescale(values, scale_min_max, values_min_max)
-        Rescales the given values to a new range.
-    show_animation(export_to_file, return_animation)
-        Displays, exports, or returns an animation of a water distribution
-        network over time. This method generates an animation of a network and
-        either shows it or returns the :class:`~FuncAnimation` object.
-        Optionally, the animation is saved to a file.
-    show_plot(export_to_file)
-        Displays a static plot of the water distribution network.
-    color_nodes(scada_data, parameter, statistic, pit, colormap, intervals,
-    conversion, show_colorbar)
-        Colors the nodes (junctions) in the water distribution network based on
-        the SCADA data and the specified parameters.
-    color_links(scada_data, parameter, statistic, pit, colormap, intervals,
-    conversion, show_colorbar)
-        Colors the links (pipes) in the water distribution network based on the
-        SCADA data and the specified parameters.
-    color_pumps(scada_data, parameter, statistic, pit, intervals, colormap,
-    show_colorbar)
-        Colors the pumps in the water distribution network based on SCADA data
-        and the specified parameters.
-    color_tanks(scada_data, statistic, pit, intervals, colormap, show_colorbar)
-        Colors the tanks in the water distribution network based on the SCADA
-        data and the specified parameters.
-    color_valves(scada_data, statistic, pit, intervals, colormap,
-    show_colorbar)
-        Colors the valves in the water distribution network based on SCADA
-        valve state data and the specified statistic.
-    resize_links(scada_data, parameter, statistic, line_widths, pit, intervals,
-    conversion)
-        Resizes the width of the links (pipes) in the water distribution
-        network based on SCADA data and the specified parameters.
-    hide_nodes()
-        Hides all nodes (junctions) in the water distribution network
-        visualization.
-    highlight_sensor_config()
-        Highlights nodes and links that have sensors in the
-        :class:`~epyt_flow.sensor_config.SensorConfig` of the
-        :class:`~epyt_flow.simulation.ScenarioSimulator`.
-    plot_topology()
-        Plots the topology of the water distribution network in the given
-        scenario using the Epanet API
     """
     def __init__(self, scenario: ScenarioSimulator) -> None:
         """
@@ -212,7 +147,7 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scenario : :class:`epyt_flow.simulation.ScenarioSimulator`
+        scenario : :class:`epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
             An instance of the `ScenarioSimulator` class, used to simulate and
             retrieve the system topology.
 
@@ -220,7 +155,7 @@ class ScenarioVisualizer:
         ------
         TypeError
             If `scenario` is not an instance of
-            :class:`epyt_flow.simulation.ScenarioSimulator`.
+            :class:`epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
 
         """
         if not isinstance(scenario, ScenarioSimulator):
@@ -257,7 +192,7 @@ class ScenarioVisualizer:
         self.animation_dict = {}
         self.colorbars = {}
 
-    def __get_midpoints(self, elements: List[str]) -> {}:
+    def __get_midpoints(self, elements: List[str]) -> dict[str, tuple[float, float]]:
         """
         Computes and returns the midpoints for drawing either valves or pumps
         in a water distribution network.
@@ -279,8 +214,14 @@ class ScenarioVisualizer:
         """
         elements_pos_dict = {}
         for element in elements:
-            start_node, end_node = self.topology.get_pump_info(element)[
-                'end_points']
+            if element in self.topology.pumps:
+                start_node, end_node = self.topology.get_pump_info(element)[
+                    'end_points']
+            elif element in self.topology.valves:
+                start_node, end_node = self.topology.get_valve_info(element)[
+                    'end_points']
+            else:
+                raise ValueError(f"Unknown element '{element}'")
             start_pos = self.topology.get_node_info(start_node)['coord']
             end_pos = self.topology.get_node_info(end_node)['coord']
             pos = [(start_pos[0] + end_pos[0]) / 2,
@@ -1295,7 +1236,7 @@ class ScenarioVisualizer:
         the water distribution network visualization.
 
         This method identifies nodes and links equipped with different types of
-        sensors from the :class:`~epyt_flow.sensor_config.SensorConfig` and
+        sensors from the :class:`~epyt_flow.simulation.sensor_config.SensorConfig` and
         updates their visual appearance. Nodes with sensors are highlighted
         with an orange border, while links with sensors are displayed with a
         dashed line style.
