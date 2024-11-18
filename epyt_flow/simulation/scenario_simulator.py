@@ -894,6 +894,22 @@ class ScenarioSimulator():
         return NetworkTopology(f_inp=self.f_inp_in, nodes=nodes, links=links, pumps=pumps,
                                valves=valves, units=self.get_units_category())
 
+    def plot_topology(self, export_to_file: str = None) -> None:
+        """
+        Plots the topology of the water distribution network.
+
+        Parameters
+        ----------
+        export_to_file : `str`, optional
+            Path to the file where the visualization will be stored.
+            If None, visualization will be just shown but NOT be stored
+            anywhere.
+
+            The default is None.
+        """
+        from .scenario_visualizer import ScenarioVisualizer
+        ScenarioVisualizer(self).show_plot(export_to_file)
+
     def randomize_demands(self) -> None:
         """
         Randomizes all demand patterns.
