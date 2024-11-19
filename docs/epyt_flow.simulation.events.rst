@@ -26,6 +26,14 @@ epyt_flow.simulation.events.leakages
    :show-inheritance:
 
 
+epyt_flow.simulation.events.quality_events
+------------------------------------------
+
+.. automodule:: epyt_flow.simulation.events.quality_events
+   :members:
+   :show-inheritance:
+
+
 epyt_flow.simulation.events.actuator_events
 -------------------------------------------
 

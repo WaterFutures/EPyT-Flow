@@ -36,6 +36,7 @@ This page gives an overview of the features and functionalities of EPyT-Flow.
       * Pump states
       * Pump speed
       * Valve state
+    - :ref:`Species Injection Events <msx_events>`
     - :ref:`Custom events <custom_events>`
 
 

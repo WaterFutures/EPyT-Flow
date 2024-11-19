@@ -286,6 +286,58 @@ Example of a sensor override attack on a flow sensor -- the flow readings are se
         print(flow_readings)
 
 
+.. _msx_events:
+
+Species Injection Events
+++++++++++++++++++++++++
+
+When performing an :ref:`advanced quality analysis (using EPANET-MSX) <advanced_quality>`,
+EPyT-Flow supports species injection events -- i.e. setting a source
+(incl. a concentration pattern) of a species that is active for a limited time only.
+Such injection events can be used to model contamination events.
+
+Species injection events are implemented in the
+:class:`~epyt_flow.simulation.events.quality_events.SpeciesInjectionEvent` class and can be added
+BEFORE running the simulation by calling 
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_system_event`
+of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
+
+Example of a simple arsenic contamination event -- assuming an arsenite called "AsIII":
+
+.. code-block:: python
+
+    # Create a new EPANET-MSX contamination scenario based on Net1
+    with ScenarioSimulator(f_inp_in="Net1-Scenario-1.inp",
+                           f_msx_in="net1_contamination.msx") as sim:
+        # Set simulation duration to 21 days
+        sim.set_general_parameters(simulation_duration=to_seconds(days=21))
+
+        # Keep track of the contaminant ("AsIII") at every node in the network
+        all_nodes = sim.sensor_config.nodes
+        sim.set_bulk_species_node_sensors({"AsIII": all_nodes})
+
+        # Create a 1-day contamination event (i.e. injection of 100 mg/day Arsenite) at node "22"
+        contamination_event = SpeciesInjectionEvent(species_id="AsIII", node_id="22",
+                                                    profile=np.array([100]),
+                                                    source_type=ToolkitConstants.EN_MASS,
+                                                    start_time=to_seconds(days=3),
+                                                    end_time=to_seconds(days=4))
+        sim.add_system_event(contamination_event)
+
+        # Run simulation ....
+
+
+.. _utils_events:
+
+Helpful functions
++++++++++++++++++
+
+The function :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.get_events_active_time_points`
+returns a list of time points (seconds after simulation start) at which at least one event is
+active. This list can be then passed on the :func:`~epyt_flow.utils.time_points_to_one_hot_encoding`
+for creating labeling each time point in the simulation -- useful for event detection.
+
+
 .. _custom_events:
 
 Custom Events
