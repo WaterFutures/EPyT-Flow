@@ -29,13 +29,15 @@ class ScenarioControlEnv(ABC):
     ----------
     _scenario_sim : :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`, protected
         Scenario simulator of the control scenario.
+    _scenario_config : :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig`
+        Scenario configuration.
     _sim_generator : Generator[Union[:class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, dict], bool, None], protected
         Generator for running the step-wise simulation.
     _hydraulic_scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, protected
         SCADA data from the hydraulic simulation -- only used if EPANET-MSX is used in the control scenario.
     """
     def __init__(self, scenario_config: ScenarioConfig, autoreset: bool = False, **kwds):
-        self.__scenario_config = scenario_config
+        self._scenario_config = scenario_config
         self._scenario_sim = None
         self._sim_generator = None
         self.__autoreset = autoreset
@@ -88,7 +90,7 @@ class ScenarioControlEnv(ABC):
             self._scenario_sim.close()
 
         self._scenario_sim = ScenarioSimulator(
-            scenario_config=self.__scenario_config)
+            scenario_config=self._scenario_config)
 
         if self._scenario_sim.f_msx_in is not None:
             # Run hydraulic simulation first
