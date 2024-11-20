@@ -60,8 +60,8 @@ class Leakage(SystemEvent, JsonSerializable):
         if area is None and diameter is None:
             raise ValueError("Either 'diameter' or 'area' must be given")
         if area is not None and diameter is not None:
-                raise ValueError("Either 'diameter' or 'area' must be given, " +
-                                 "but not both at the same time")
+            raise ValueError("Either 'diameter' or 'area' must be given, " +
+                             "but not both at the same time")
         if diameter is not None:
             if not isinstance(diameter, float):
                 raise TypeError("'diameter must be an instance of 'float' but " +
@@ -92,7 +92,7 @@ class Leakage(SystemEvent, JsonSerializable):
         self.__area = area
         self.__profile = profile
 
-        self.__leaky_node_id = None
+        self.__leaky_node_idx = None
         self.__leak_emitter_coef = None
         self.__time_pattern_idx = 0
 
@@ -174,7 +174,7 @@ class Leakage(SystemEvent, JsonSerializable):
     def get_attributes(self) -> dict:
         return super().get_attributes() | {"link_id": self.__link_id, "diameter": self.__diameter,
                                            "area": self.__area, "profile": self.__profile,
-                                           "node_id": self.__leaky_node_id
+                                           "node_id": self.__node_id
                                            if self.__link_id is None else None}
 
     def __eq__(self, other) -> bool:
@@ -258,14 +258,14 @@ class Leakage(SystemEvent, JsonSerializable):
                 raise ValueError(f"There is already a leak at pipe {self.link_id}")
 
             self._epanet_api.splitPipe(self.link_id, new_link_id, new_node_id)
-            self.__leaky_node_id = self._epanet_api.getNodeIndex(new_node_id)
+            self.__leaky_node_idx = self._epanet_api.getNodeIndex(new_node_id)
         else:
             if self.__node_id not in self._epanet_api.getNodeNameID():
                 raise ValueError(f"Unknown node '{self.__node_id}'")
 
-            self.__leaky_node_id = self._epanet_api.getNodeIndex(self.__node_id)
+            self.__leaky_node_idx = self._epanet_api.getNodeIndex(self.__node_id)
 
-        self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_id, 0.)
+        self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_idx, 0.)
 
         # Compute leak emitter coefficient
         self.__leak_emitter_coef = self.compute_leak_emitter_coefficient(
@@ -275,10 +275,10 @@ class Leakage(SystemEvent, JsonSerializable):
         self.__time_pattern_idx = 0
 
     def exit(self, cur_time) -> None:
-        self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_id, 0.)
+        self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_idx, 0.)
 
     def apply(self, cur_time: int) -> None:
-        self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_id,
+        self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_idx,
                                              self.__leak_emitter_coef *
                                              self.__profile[self.__time_pattern_idx])
         self.__time_pattern_idx += 1
