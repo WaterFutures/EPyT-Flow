@@ -453,9 +453,15 @@ def save_to_file(f_out: str, data: Any, use_compression: bool = True) -> None:
 def __encode_bsr_array(array: scipy.sparse.bsr_array
                        ) -> tuple[tuple[int, int], tuple[list[float], tuple[list[int], list[int]]]]:
     shape = array.shape
-    data = array.data.flatten().tolist()
-    rows = array.nonzero()[0].tolist()
-    cols = array.nonzero()[1].tolist()
+    data = []
+    rows = []
+    cols = []
+
+    array_ = array.tocsr()   # Bug workaround: BSR arrays do not implement __getitem__
+    for i, j in zip(*array_.nonzero()):
+        rows.append(int(i))
+        cols.append(int(j))
+        data.append(float(array_[i, j]))
 
     return shape, (data, (rows, cols))
 

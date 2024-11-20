@@ -2,9 +2,10 @@
 Module provides a class for storing and processing SCADA data.
 """
 import warnings
-from typing import Callable, Any
+from typing import Callable, Any, Union
 from copy import deepcopy
 import numpy as np
+from scipy.sparse import bsr_array
 import matplotlib
 from epyt.epanet import ToolkitConstants
 
@@ -127,13 +128,19 @@ class ScadaData(Serializable):
         The default is False.
     """
     def __init__(self, sensor_config: SensorConfig, sensor_readings_time: np.ndarray,
-                 pressure_data_raw: np.ndarray = None, flow_data_raw: np.ndarray = None,
-                 demand_data_raw: np.ndarray = None, node_quality_data_raw: np.ndarray = None,
-                 link_quality_data_raw: np.ndarray = None, pumps_state_data_raw: np.ndarray = None,
-                 valves_state_data_raw: np.ndarray = None, tanks_volume_data_raw: np.ndarray = None,
-                 surface_species_concentration_raw: np.ndarray = None,
-                 bulk_species_node_concentration_raw: np.ndarray = None,
-                 bulk_species_link_concentration_raw: np.ndarray = None,
+                 pressure_data_raw: Union[np.ndarray, bsr_array] = None,
+                 flow_data_raw: Union[np.ndarray, bsr_array] = None,
+                 demand_data_raw: Union[np.ndarray, bsr_array] = None,
+                 node_quality_data_raw: Union[np.ndarray, bsr_array] = None,
+                 link_quality_data_raw: Union[np.ndarray, bsr_array] = None,
+                 pumps_state_data_raw: Union[np.ndarray, bsr_array] = None,
+                 valves_state_data_raw: Union[np.ndarray, bsr_array] = None,
+                 tanks_volume_data_raw: Union[np.ndarray, bsr_array] = None,
+                 surface_species_concentration_raw: Union[np.ndarray, dict[int, bsr_array]] = None,
+                 bulk_species_node_concentration_raw: Union[np.ndarray,
+                                                            dict[int, bsr_array]] = None,
+                 bulk_species_link_concentration_raw: Union[np.ndarray,
+                                                            dict[int, bsr_array]] = None,
                  pump_energy_usage_data = None,
                  pump_efficiency_data = None,
                  pumps_energy_usage_data_raw: np.ndarray = None,
@@ -151,64 +158,116 @@ class ScadaData(Serializable):
             raise TypeError("'sensor_readings_time' must be an instance of 'numpy.ndarray' " +
                             f"but not of '{type(sensor_readings_time)}'")
         if pressure_data_raw is not None:
-            if not isinstance(pressure_data_raw, np.ndarray):
+            if not isinstance(pressure_data_raw, np.ndarray) and \
+                    not isinstance(pressure_data_raw, bsr_array):
                 raise TypeError("'pressure_data_raw' must be an instance of 'numpy.ndarray'" +
                                 f" but not of '{type(pressure_data_raw)}'")
+            if isinstance(pressure_data_raw, bsr_array) and not frozen_sensor_config:
+                raise ValueError("'pressure_data_raw' can only be an instance of " +
+                                 "'scipy.sparse.bsr_array' if 'frozen_sensor_config=True'")
         if flow_data_raw is not None:
-            if not isinstance(flow_data_raw, np.ndarray):
+            if not isinstance(flow_data_raw, np.ndarray) and \
+                    not isinstance(flow_data_raw, bsr_array):
                 raise TypeError("'flow_data_raw' must be an instance of 'numpy.ndarray' " +
                                 f"but not of '{type(flow_data_raw)}'")
+            if isinstance(flow_data_raw, bsr_array) and not frozen_sensor_config:
+                raise ValueError("'flow_data_raw' can only be an instance of " +
+                                 "'scipy.sparse.bsr_array' if 'frozen_sensor_config=True'")
         if demand_data_raw is not None:
-            if not isinstance(demand_data_raw, np.ndarray):
+            if not isinstance(demand_data_raw, np.ndarray) and \
+                    not isinstance(demand_data_raw, bsr_array):
                 raise TypeError("'demand_data_raw' must be an instance of 'numpy.ndarray' " +
                                 f"but not of '{type(demand_data_raw)}'")
+            if isinstance(demand_data_raw, bsr_array) and not frozen_sensor_config:
+                raise ValueError("'demand_data_raw' can only be an instance of " +
+                                 "'scipy.sparse.bsr_array' if 'frozen_sensor_config=True'")
         if node_quality_data_raw is not None:
-            if not isinstance(node_quality_data_raw, np.ndarray):
+            if not isinstance(node_quality_data_raw, np.ndarray) and \
+                    not isinstance(node_quality_data_raw, bsr_array):
                 raise TypeError("'node_quality_data_raw' must be an instance of 'numpy.ndarray'" +
                                 f" but not of '{type(node_quality_data_raw)}'")
+            if isinstance(node_quality_data_raw, bsr_array) and not frozen_sensor_config:
+                raise ValueError("'node_quality_data_raw' can only be an instance of " +
+                                 "'scipy.sparse.bsr_array' if 'frozen_sensor_config=True'")
         if link_quality_data_raw is not None:
-            if not isinstance(link_quality_data_raw, np.ndarray):
+            if not isinstance(link_quality_data_raw, np.ndarray) and \
+                    not isinstance(link_quality_data_raw, bsr_array):
                 raise TypeError("'link_quality_data_raw' must be an instance of 'numpy.ndarray'" +
                                 f" but not of '{type(link_quality_data_raw)}'")
+            if isinstance(link_quality_data_raw, bsr_array) and not frozen_sensor_config:
+                raise ValueError("'link_quality_data_raw' can only be an instance of " +
+                                 "'scipy.sparse.bsr_array' if 'frozen_sensor_config=True'")
         if pumps_state_data_raw is not None:
-            if not isinstance(pumps_state_data_raw, np.ndarray):
+            if not isinstance(pumps_state_data_raw, np.ndarray) and \
+                    not isinstance(pumps_state_data_raw, bsr_array):
                 raise TypeError("'pumps_state_data_raw' must be an instance of 'numpy.ndarray' " +
                                 f"but no of '{type(pumps_state_data_raw)}'")
+            if isinstance(pumps_state_data_raw, bsr_array) and not frozen_sensor_config:
+                raise ValueError("'pumps_state_data_raw' can only be an instance of " +
+                                 "'scipy.sparse.bsr_array' if 'frozen_sensor_config=True'")
         if valves_state_data_raw is not None:
-            if not isinstance(valves_state_data_raw, np.ndarray):
+            if not isinstance(valves_state_data_raw, np.ndarray) and \
+                    not isinstance(valves_state_data_raw, bsr_array):
                 raise TypeError("'valves_state_data_raw' must be an instance of 'numpy.ndarray' " +
                                 f"but no of '{type(valves_state_data_raw)}'")
+            if isinstance(valves_state_data_raw, bsr_array) and not frozen_sensor_config:
+                raise ValueError("'valves_state_data_raw' can only be an instance of " +
+                                 "'scipy.sparse.bsr_array' if 'frozen_sensor_config=True'")
         if tanks_volume_data_raw is not None:
-            if not isinstance(tanks_volume_data_raw, np.ndarray):
+            if not isinstance(tanks_volume_data_raw, np.ndarray) and \
+                    not isinstance(tanks_volume_data_raw, bsr_array):
                 raise TypeError("'tanks_volume_data_raw' must be an instance of 'numpy.ndarray'" +
                                 f" but not of '{type(tanks_volume_data_raw)}'")
+            if isinstance(tanks_volume_data_raw, bsr_array) and not frozen_sensor_config:
+                raise ValueError("'tanks_volume_data_raw' can only be an instance of " +
+                                 "'scipy.sparse.bsr_array' if 'frozen_sensor_config=True'")
         if sensor_faults is None or not isinstance(sensor_faults, list):
             raise TypeError("'sensor_faults' must be a list of " +
                             "'epyt_flow.simulation.events.SensorFault' instances but " +
                             f"'{type(sensor_faults)}'")
         if surface_species_concentration_raw is not None:
-            if not isinstance(surface_species_concentration_raw, np.ndarray):
+            if not isinstance(surface_species_concentration_raw, np.ndarray) and \
+                    not isinstance(surface_species_concentration_raw, dict):
                 raise TypeError("'surface_species_concentration_raw' must be an instance of " +
                                 "'numpy.ndarray' but not of " +
                                 f"'{type(surface_species_concentration_raw)}'")
+            if isinstance(surface_species_concentration_raw, dict) and not frozen_sensor_config:
+                raise TypeError("'surface_species_concentration_raw' can only be an instance of " +
+                                "'dict' if 'frozen_sensor_config=True'")
         if bulk_species_node_concentration_raw is not None:
-            if not isinstance(bulk_species_node_concentration_raw, np.ndarray):
+            if not isinstance(bulk_species_node_concentration_raw, np.ndarray) and \
+                    not isinstance(bulk_species_node_concentration_raw, dict):
                 raise TypeError("'bulk_species_node_concentration_raw' must be an instance of " +
                                 "'numpy.ndarray' but not of " +
                                 f"'{type(bulk_species_node_concentration_raw)}'")
+            if isinstance(bulk_species_node_concentration_raw, dict) and not frozen_sensor_config:
+                raise TypeError("'bulk_species_node_concentration_raw' can only be an instance of " +
+                                "'dict' if 'frozen_sensor_config=True'")
         if bulk_species_link_concentration_raw is not None:
-            if not isinstance(bulk_species_link_concentration_raw, np.ndarray):
+            if not isinstance(bulk_species_link_concentration_raw, np.ndarray) and \
+                    not isinstance(bulk_species_link_concentration_raw, dict):
                 raise TypeError("'bulk_species_link_concentration_raw' must be an instance of " +
                                 "'numpy.ndarray' but not of " +
                                 f"'{type(bulk_species_link_concentration_raw)}'")
+            if isinstance(bulk_species_link_concentration_raw, dict) and not frozen_sensor_config:
+                raise TypeError("'bulk_species_link_concentration_raw' can only be an instance of " +
+                                "'dict' if 'frozen_sensor_config=True'")
         if pumps_energy_usage_data_raw is not None:
-            if not isinstance(pumps_energy_usage_data_raw, np.ndarray):
+            if not isinstance(pumps_energy_usage_data_raw, np.ndarray) and \
+                    not isinstance(pumps_energy_usage_data_raw, bsr_array):
                 raise TypeError("'pumps_energy_usage_data_raw' must be an instance of 'numpy.ndarray' " +
                                 f"but not of '{type(pumps_energy_usage_data_raw)}'")
+            if isinstance(pumps_energy_usage_data_raw, bsr_array) and not frozen_sensor_config:
+                raise ValueError("'pumps_energy_usage_data_raw' can only be an instance of " +
+                                 "'scipy.sparse.bsr_array' if 'frozen_sensor_config=True'")
         if pumps_efficiency_data_raw is not None:
-            if not isinstance(pumps_efficiency_data_raw, np.ndarray):
+            if not isinstance(pumps_efficiency_data_raw, np.ndarray) and \
+                    not isinstance(pumps_efficiency_data_raw, bsr_array):
                 raise TypeError("'pumps_efficiency_data_raw' must be an instance of 'numpy.ndarray' " +
                                 f"but not of '{type(pumps_efficiency_data_raw)}'")
+            if isinstance(pumps_efficiency_data_raw, bsr_array) and not frozen_sensor_config:
+                raise ValueError("'pumps_efficiency_data_raw' can only be an instance of " +
+                                 "'scipy.sparse.bsr_array' if 'frozen_sensor_config=True'")
         if len(sensor_faults) != 0:
             if any(not isinstance(f, SensorFault) for f in sensor_faults):
                 raise TypeError("'sensor_faults' must be a list of " +
@@ -274,14 +333,17 @@ class ScadaData(Serializable):
             if not tanks_volume_data_raw.shape[0] == n_time_steps:
                 __raise_shape_mismatch("tanks_volume_data_raw")
         if bulk_species_node_concentration_raw is not None:
-            if bulk_species_node_concentration_raw.shape[0] != n_time_steps:
-                __raise_shape_mismatch("bulk_species_node_concentration_raw")
+            if isinstance(bulk_species_node_concentration_raw, np.ndarray):
+                if bulk_species_node_concentration_raw.shape[0] != n_time_steps:
+                    __raise_shape_mismatch("bulk_species_node_concentration_raw")
         if bulk_species_link_concentration_raw is not None:
-            if bulk_species_link_concentration_raw.shape[0] != n_time_steps:
-                __raise_shape_mismatch("bulk_species_link_concentration_raw")
+            if isinstance(bulk_species_link_concentration_raw, np.ndarray):
+                if bulk_species_link_concentration_raw.shape[0] != n_time_steps:
+                    __raise_shape_mismatch("bulk_species_link_concentration_raw")
         if surface_species_concentration_raw is not None:
-            if surface_species_concentration_raw.shape[0] != n_time_steps:
-                __raise_shape_mismatch("surface_species_concentration_raw")
+            if isinstance(surface_species_concentration_raw, np.ndarray):
+                if surface_species_concentration_raw.shape[0] != n_time_steps:
+                    __raise_shape_mismatch("surface_species_concentration_raw")
         if pumps_energy_usage_data_raw is not None:
             if pumps_energy_usage_data_raw.shape[0] != n_time_steps:
                 __raise_shape_mismatch("pumps_energy_usage_data_raw")
@@ -331,35 +393,64 @@ class ScadaData(Serializable):
                 else:
                     return data[:, idx]
 
+            if isinstance(pressure_data_raw, bsr_array):
+                pressure_data_raw = pressure_data_raw.todense()
             self.__pressure_data_raw = __reduce_data(data=pressure_data_raw,
                                                      item_to_idx=node_to_idx,
                                                      sensors=sensor_config.pressure_sensors)
+
+            if isinstance(flow_data_raw, bsr_array):
+                flow_data_raw = flow_data_raw.todense()
             self.__flow_data_raw = __reduce_data(data=flow_data_raw,
                                                  item_to_idx=link_to_idx,
                                                  sensors=sensor_config.flow_sensors)
+
+            if isinstance(demand_data_raw, bsr_array):
+                demand_data_raw = demand_data_raw.todense()
             self.__demand_data_raw = __reduce_data(data=demand_data_raw,
                                                    item_to_idx=node_to_idx,
                                                    sensors=sensor_config.demand_sensors)
+
+            if isinstance(node_quality_data_raw, bsr_array):
+                node_quality_data_raw = node_quality_data_raw.todense()
             self.__node_quality_data_raw = __reduce_data(data=node_quality_data_raw,
                                                          item_to_idx=node_to_idx,
                                                          sensors=sensor_config.quality_node_sensors)
+
+            if isinstance(link_quality_data_raw, bsr_array):
+                link_quality_data_raw = link_quality_data_raw.todense()
             self.__link_quality_data_raw = __reduce_data(data=link_quality_data_raw,
                                                          item_to_idx=link_to_idx,
                                                          sensors=sensor_config.quality_link_sensors)
+
+            if isinstance(pumps_state_data_raw, bsr_array):
+                pumps_state_data_raw = pumps_state_data_raw.todense()
             self.__pumps_state_data_raw = __reduce_data(data=pumps_state_data_raw,
                                                         item_to_idx=pump_to_idx,
                                                         sensors=sensor_config.pump_state_sensors)
+
+            if isinstance(pumps_energy_usage_data_raw, bsr_array):
+                pumps_energy_usage_data_raw = pumps_energy_usage_data_raw.todense()
             self.__pumps_energy_usage_data_raw = \
                 __reduce_data(data=pumps_energy_usage_data_raw,
                               item_to_idx=pump_to_idx,
                               sensors=sensor_config.pump_energyconsumption_sensors)
+
+            if isinstance(pumps_efficiency_data_raw, bsr_array):
+                pumps_efficiency_data_raw = pumps_efficiency_data_raw.todense()
             self.__pumps_efficiency_data_raw = \
                 __reduce_data(data=pumps_efficiency_data_raw,
                               item_to_idx=pump_to_idx,
                               sensors=sensor_config.pump_efficiency_sensors)
+
+            if isinstance(valves_state_data_raw, bsr_array):
+                valves_state_data_raw = valves_state_data_raw.todense()
             self.__valves_state_data_raw = __reduce_data(data=valves_state_data_raw,
                                                          item_to_idx=valve_to_idx,
                                                          sensors=sensor_config.valve_state_sensors)
+
+            if isinstance(tanks_volume_data_raw, bsr_array):
+                tanks_volume_data_raw = tanks_volume_data_raw.todense()
             self.__tanks_volume_data_raw = __reduce_data(data=tanks_volume_data_raw,
                                                          item_to_idx=tank_to_idx,
                                                          sensors=sensor_config.tank_volume_sensors)
@@ -376,29 +467,56 @@ class ScadaData(Serializable):
 
                     return np.concatenate(r, axis=1)
 
-            node_bulk_species_idx = [(sensor_config.map_bulkspecies_id_to_idx(s),
-                                      [sensor_config.map_node_id_to_idx(node_id)
-                                       for node_id in sensor_config.bulk_species_node_sensors[s]
-                                       ]) for s in sensor_config.bulk_species_node_sensors.keys()]
-            self.__bulk_species_node_concentration_raw = \
-                __reduce_msx_data(data=bulk_species_node_concentration_raw,
-                                  sensors=node_bulk_species_idx)
+            def __reduce_msx_dict_data(data: dict, species_senors: dict[str, list[str]],
+                                       map_sensor_id_to_idx: Callable[str, int]) -> np.ndarray:
+                r = []
 
-            bulk_species_link_idx = [(sensor_config.map_bulkspecies_id_to_idx(s),
-                                      [sensor_config.map_link_id_to_idx(link_id)
-                                       for link_id in sensor_config.bulk_species_link_sensors[s]
-                                       ]) for s in sensor_config.bulk_species_link_sensors.keys()]
-            self.__bulk_species_link_concentration_raw = \
-                __reduce_msx_data(data=bulk_species_link_concentration_raw,
-                                  sensors=bulk_species_link_idx)
+                for species_id in data:
+                    data_ = data[species_id].todense()
+                    for sensor_id in species_senors[species_id]:
+                        data_idx = map_sensor_id_to_idx(sensor_id)
+                        r.append(data_[:, data_idx].reshape(-1, 1))
 
-            surface_species_idx = [(sensor_config.map_surfacespecies_id_to_idx(s),
-                                    [sensor_config.map_link_id_to_idx(link_id)
-                                     for link_id in sensor_config.surface_species_sensors[s]
-                                     ]) for s in sensor_config.surface_species_sensors.keys()]
-            self.__surface_species_concentration_raw = \
-                __reduce_msx_data(data=surface_species_concentration_raw,
-                                  sensors=surface_species_idx)
+                return np.concatenate(r, axis=1)
+
+            if isinstance(bulk_species_node_concentration_raw, dict):
+                self.__bulk_species_node_concentration_raw = __reduce_msx_dict_data(
+                    bulk_species_node_concentration_raw, sensor_config.bulk_species_node_sensors,
+                    sensor_config.map_node_id_to_idx)
+            else:
+                node_bulk_species_idx = [(sensor_config.map_bulkspecies_id_to_idx(s),
+                                          [sensor_config.map_node_id_to_idx(node_id)
+                                           for node_id in sensor_config.bulk_species_node_sensors[s]])
+                                           for s in sensor_config.bulk_species_node_sensors.keys()]
+                self.__bulk_species_node_concentration_raw = \
+                    __reduce_msx_data(data=bulk_species_node_concentration_raw,
+                                      sensors=node_bulk_species_idx)
+
+            if isinstance(bulk_species_link_concentration_raw, dict):
+                self.__bulk_species_link_concentration_raw = __reduce_msx_dict_data(
+                    bulk_species_link_concentration_raw, sensor_config.bulk_species_link_sensors,
+                    sensor_config.map_link_id_to_idx)
+            else:
+                bulk_species_link_idx = [(sensor_config.map_bulkspecies_id_to_idx(s),
+                                          [sensor_config.map_link_id_to_idx(link_id)
+                                           for link_id in sensor_config.bulk_species_link_sensors[s]])
+                                           for s in sensor_config.bulk_species_link_sensors.keys()]
+                self.__bulk_species_link_concentration_raw = \
+                    __reduce_msx_data(data=bulk_species_link_concentration_raw,
+                                      sensors=bulk_species_link_idx)
+
+            if isinstance(surface_species_concentration_raw, dict):
+                self.__surface_species_concentration_raw = __reduce_msx_dict_data(
+                    surface_species_concentration_raw, sensor_config.surface_species_sensors,
+                    sensor_config.map_link_id_to_idx)
+            else:
+                surface_species_idx = [(sensor_config.map_surfacespecies_id_to_idx(s),
+                                        [sensor_config.map_link_id_to_idx(link_id)
+                                         for link_id in sensor_config.surface_species_sensors[s]])
+                                         for s in sensor_config.surface_species_sensors.keys()]
+                self.__surface_species_concentration_raw = \
+                    __reduce_msx_data(data=surface_species_concentration_raw,
+                                    sensors=surface_species_idx)
 
         self.__init()
 
@@ -1271,6 +1389,131 @@ class ScadaData(Serializable):
                 "bulk_species_link_concentration_raw": self.__bulk_species_link_concentration_raw,
                 "pumps_energy_usage_data_raw": self.__pumps_energy_usage_data_raw,
                 "pumps_efficiency_data_raw": self.__pumps_efficiency_data_raw}
+
+        if self.__frozen_sensor_config is True:
+            def __create_sparse_array(sensors: list[str], map_sensor_to_idx: Callable[str, int],
+                                      n_all_items: int,
+                                      get_data: Callable[list[str], np.ndarray]) -> bsr_array:
+                row = []
+                col = []
+                data = []
+
+                for sensor_id in sensors:
+                    idx = map_sensor_to_idx(sensor_id)
+                    data_ = get_data([sensor_id])
+
+                    data += data_.flatten().tolist()
+                    row += list(range(len(self.__sensor_readings_time)))
+                    col += [idx] * len(self.__sensor_readings_time)
+
+                return bsr_array((data, (row, col)),
+                                 shape=(len(self.__sensor_readings_time), n_all_items))
+
+            def __msx_create_sparse_array(sensors: list[str], map_sensor_to_idx: Callable[str, int],
+                                          species_id: str, n_all_items: int,
+                                          get_data: Callable[dict[str, list[str]], np.ndarray]
+                                          ) -> bsr_array:
+                row = []
+                col = []
+                data = []
+
+                for sensor_id in sensors:
+                    item_idx = map_sensor_to_idx(sensor_id)
+
+                    row += list(range(len(self.__sensor_readings_time)))
+                    col += [item_idx] * len(self.__sensor_readings_time)
+                    data += get_data({species_id: [sensor_id]}).flatten().tolist()
+
+                return bsr_array((data, (row, col)),
+                                 shape=(len(self.__sensor_readings_time), n_all_items))
+
+            if self.__pressure_data_raw is not None:
+                attr["pressure_data_raw"] = __create_sparse_array(
+                    self.__sensor_config.pressure_sensors,
+                    self.__sensor_config.map_node_id_to_idx,
+                    len(self.__sensor_config.nodes),
+                    self.get_data_pressures)
+            if self.__flow_data_raw is not None:
+                attr["flow_data_raw"] = __create_sparse_array(
+                    self.__sensor_config.flow_sensors,
+                    self.__sensor_config.map_link_id_to_idx,
+                    len(self.__sensor_config.links),
+                    self.get_data_flows)
+            if self.__demand_data_raw is not None:
+                attr["demand_data_raw"] = __create_sparse_array(
+                    self.__sensor_config.demand_sensors,
+                    self.__sensor_config.map_node_id_to_idx,
+                    len(self.__sensor_config.nodes),
+                    self.get_data_demands)
+            if self.__node_quality_data_raw is not None:
+                attr["node_quality_data_raw"] = __create_sparse_array(
+                    self.__sensor_config.quality_node_sensors,
+                    self.__sensor_config.map_node_id_to_idx,
+                    len(self.__sensor_config.nodes),
+                    self.get_data_nodes_quality)
+            if self.__link_quality_data_raw is not None:
+                attr["link_quality_data_raw"] = __create_sparse_array(
+                    self.__sensor_config.quality_link_sensors,
+                    self.__sensor_config.map_link_id_to_idx,
+                    len(self.__sensor_config.links),
+                    self.get_data_links_quality)
+            if self.__pumps_state_data_raw is not None:
+                attr["pumps_state_data_raw"] = __create_sparse_array(
+                    self.__sensor_config.pump_state_sensors,
+                    self.__sensor_config.map_pump_id_to_idx,
+                    len(self.__sensor_config.pumps),
+                    self.get_data_pumps_state)
+            if self.__valves_state_data_raw is not None:
+                attr["valves_state_data_raw"] = __create_sparse_array(
+                    self.__sensor_config.valve_state_sensors,
+                    self.__sensor_config.map_valve_id_to_idx,
+                    len(self.__sensor_config.valves),
+                    self.get_data_valves_state)
+            if self.__tanks_volume_data_raw is not None:
+                attr["tanks_volume_data_raw"] = __create_sparse_array(
+                    self.__sensor_config.tank_volume_sensors,
+                    self.__sensor_config.map_tank_id_to_idx,
+                    len(self.__sensor_config.tanks),
+                    self.get_data_tanks_water_volume)
+            if self.__pumps_energy_usage_data_raw is not None:
+                attr["pumps_energy_usage_data_raw"] = __create_sparse_array(
+                    self.__sensor_config.pump_energyconsumption_sensors,
+                    self.__sensor_config.map_pump_id_to_idx,
+                    len(self.__sensor_config.pumps),
+                    self.get_data_pumps_energyconsumption)
+            if self.__pumps_efficiency_data_raw is not None:
+                attr["pumps_efficiency_data_raw"] = __create_sparse_array(
+                    self.__sensor_config.pump_efficiency_sensors,
+                    self.__sensor_config.map_pump_id_to_idx,
+                    len(self.__sensor_config.pumps),
+                    self.get_data_pumps_efficiency)
+            if self.__surface_species_concentration_raw is not None:
+                data = {}
+                for s in self.__sensor_config.surface_species_sensors.keys():
+                    data[s] = __msx_create_sparse_array(self.__sensor_config.surface_species_sensors[s],
+                                                        self.__sensor_config.map_link_id_to_idx,
+                                                        s, len(self.__sensor_config.links),
+                                                        self.get_data_surface_species_concentration)
+
+                attr["surface_species_concentration_raw"] = data
+            if self.__bulk_species_node_concentration_raw is not None:
+                data = {}
+                for s in self.__sensor_config.bulk_species_node_sensors.keys():
+                    data[s] = __msx_create_sparse_array(self.__sensor_config.bulk_species_node_sensors[s],
+                                                        self.__sensor_config.map_node_id_to_idx,
+                                                        s, len(self.__sensor_config.nodes),
+                                                        self.get_data_bulk_species_node_concentration)
+
+                attr["bulk_species_node_concentration_raw"] = data
+            if self.__bulk_species_link_concentration_raw is not None:
+                data = {}
+                for s in self.__sensor_config.bulk_species_link_sensors.keys():
+                    data[s] = __msx_create_sparse_array(self.__sensor_config.bulk_species_link_sensors[s],
+                                                        self.__sensor_config.map_link_id_to_idx,
+                                                        s, len(self.__sensor_config.links),
+                                                        self.get_data_bulk_species_link_concentration)
+
+                attr["bulk_species_node_concentration_raw"] = data
 
         return super().get_attributes() | attr
 
