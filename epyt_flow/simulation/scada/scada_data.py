@@ -873,15 +873,17 @@ class ScadaData(Serializable):
                     return 5.450992969
 
         # Convert units
-        pressure_data = self.pressure_data_raw
-        flow_data = self.flow_data_raw
-        demand_data = self.demand_data_raw
-        quality_node_data = self.node_quality_data_raw
-        quality_link_data = self.link_quality_data_raw
-        tanks_volume_data = self.tanks_volume_data_raw
-        surface_species_concentrations = self.surface_species_concentration_raw
-        bulk_species_node_concentrations = self.bulk_species_node_concentration_raw
-        bulk_species_link_concentrations = self.bulk_species_link_concentration_raw
+        attributes = self.get_attributes()
+
+        pressure_data = attributes["pressure_data_raw"]
+        flow_data = attributes["flow_data_raw"]
+        demand_data = attributes["demand_data_raw"]
+        quality_node_data = attributes["node_quality_data_raw"]
+        quality_link_data = attributes["link_quality_data_raw"]
+        tanks_volume_data = attributes["tanks_volume_data_raw"]
+        surface_species_concentrations = attributes["surface_species_concentration_raw"]
+        bulk_species_node_concentrations = attributes["bulk_species_node_concentration_raw"]
+        bulk_species_link_concentrations = attributes["bulk_species_link_concentration_raw"]
 
         if flow_unit is not None:
             old_flow_unit = self.__sensor_config.flow_unit
@@ -926,23 +928,23 @@ class ScadaData(Serializable):
         if bulk_species_mass_unit is not None:
             # Convert bulk species concentrations
             if self.__frozen_sensor_config is True:
-                for i, species_id, _ in enumerate(self.__sensor_config.bulk_species_node_sensors):
+                for i, species_id in enumerate(self.__sensor_config.bulk_species_node_sensors):
                     species_idx = self.__sensor_config.bulk_species.index(species_id)
                     new_mass_unit = bulk_species_mass_unit[species_idx]
                     old_mass_unit = self.__sensor_config.bulk_species_mass_unit[species_idx]
 
                     if new_mass_unit != old_mass_unit:
                         convert_factor = __get_mass_convert_factor(new_mass_unit, old_mass_unit)
-                        bulk_species_node_concentrations[:, i, :] *= convert_factor
+                        bulk_species_node_concentrations[species_id] *= convert_factor
 
-                for i, species_id, _ in enumerate(self.__sensor_config.bulk_species_link_sensors):
+                for i, species_id, in enumerate(self.__sensor_config.bulk_species_link_sensors):
                     species_idx = self.__sensor_config.bulk_species.index(species_id)
                     new_mass_unit = bulk_species_mass_unit[species_idx]
                     old_mass_unit = self.__sensor_config.bulk_species_mass_unit[species_idx]
 
                     if new_mass_unit != old_mass_unit:
                         convert_factor = __get_mass_convert_factor(new_mass_unit, old_mass_unit)
-                        bulk_species_link_concentrations[:, i, :] *= convert_factor
+                        bulk_species_link_concentrations[species_id] *= convert_factor
             else:
                 for i in range(bulk_species_node_concentrations.shape[1]):
                     if bulk_species_mass_unit[i] != self.__sensor_config.bulk_species_mass_unit[i]:
@@ -963,7 +965,7 @@ class ScadaData(Serializable):
 
                     if new_mass_unit != old_mass_unit:
                         convert_factor = __get_mass_convert_factor(new_mass_unit, old_mass_unit)
-                        surface_species_concentrations[:, i, :] *= convert_factor
+                        surface_species_concentrations[species_id] *= convert_factor
             else:
                 for i in range(surface_species_concentrations.shape[1]):
                     old_mass_unit = self.__sensor_config.surface_species_mass_unit[i]
@@ -1513,7 +1515,7 @@ class ScadaData(Serializable):
                                                         s, len(self.__sensor_config.links),
                                                         self.get_data_bulk_species_link_concentration)
 
-                attr["bulk_species_node_concentration_raw"] = data
+                attr["bulk_species_link_concentration_raw"] = data
 
         return super().get_attributes() | attr
 
