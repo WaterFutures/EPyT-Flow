@@ -58,7 +58,8 @@ class ScadaDataExport():
         """
         return self.__export_raw_data
 
-    def create_global_sensor_config(self, scada_data: ScadaData) -> SensorConfig:
+    @staticmethod
+    def create_global_sensor_config(scada_data: ScadaData) -> SensorConfig:
         """
         Creates a global sensor configuration with sensors placed everywhere.
 
@@ -89,7 +90,8 @@ class ScadaDataExport():
 
         return sensor_config
 
-    def create_column_desc(self, scada_data: ScadaData) -> np.ndarray:
+    @staticmethod
+    def create_column_desc(scada_data: ScadaData) -> np.ndarray:
         """
         Creates column descriptions -- i.e. sensor type and location for each column
 
@@ -101,9 +103,9 @@ class ScadaDataExport():
         Returns
         -------
         `numpy.ndarray`
-            2-dimensional array describing all columns of the sensor readings:
-            The first dimension describes the sensor type, and the second dimension
-            describes the sensor location.
+            3-dimensional array describing all columns of the sensor readings:
+            The first dimension describes the sensor type, the second dimension
+            describes the sensor location, and the third one describes the measurement units.
         """
         sensor_readings = scada_data.get_data()
 

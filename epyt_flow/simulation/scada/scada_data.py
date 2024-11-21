@@ -3280,3 +3280,54 @@ class ScadaData(Serializable):
                                     x_axis_label=self.__get_x_axis_label(),
                                     y_axis_label=y_axis_label,
                                     show=show, save_to_file=save_to_file, ax=ax)
+
+    def to_numpy_file(self, f_out: str, export_raw_data: bool = False) -> None:
+        """
+        Exporting this SCADA data to Numpy (.npz file).
+
+        Parameters
+        ----------
+        f_out : `str`
+            Path to the .npz file to which the SCADA data will be exported.
+        export_raw_data : `bool`, optional
+            If True, the raw measurements (i.e. sensor reading without any noise or faults)
+            are exported instead of the final sensor readings.
+
+            The default is False.
+        """
+        from .scada_data_export import ScadaDataNumpyExport
+        ScadaDataNumpyExport(f_out, export_raw_data).export(self)
+
+    def to_excel_file(self, f_out: str, export_raw_data: bool = False) -> None:
+        """
+        Exporting this SCADA data to MS Excel (.xlsx file).
+
+        Parameters
+        ----------
+        f_out : `str`
+            Path to the .xlsx file to which the SCADA data will be exported.
+        export_raw_data : `bool`, optional
+            If True, the raw measurements (i.e. sensor reading without any noise or faults)
+            are exported instead of the final sensor readings.
+
+            The default is False.
+        """
+        from .scada_data_export import ScadaDataXlsxExport
+        ScadaDataXlsxExport(f_out, export_raw_data).export(self)
+
+    def to_matlab_file(self, f_out: str, export_raw_data: bool = False) -> None:
+        """
+        Exporting this SCADA data to Matlab (.mat file).
+
+        Parameters
+        ----------
+        f_out : `str`
+            Path to the .mat file to which the SCADA data will be exported.
+        export_raw_data : `bool`, optional
+            If True, the raw measurements (i.e. sensor reading without any noise or faults)
+            are exported instead of the final sensor readings.
+
+            The default is False.
+        """
+        from .scada_data_export import ScadaDataMatlabExport
+        ScadaDataMatlabExport(f_out, export_raw_data).export(self)
