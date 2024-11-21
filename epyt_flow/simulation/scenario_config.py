@@ -6,6 +6,7 @@ from copy import deepcopy
 import os
 import json
 import numpy as np
+from pathlib import Path
 
 from ..uncertainty import AbsoluteGaussianUncertainty, RelativeGaussianUncertainty, \
     AbsoluteUniformUncertainty, RelativeUniformUncertainty, ModelUncertainty, \
@@ -220,7 +221,12 @@ class ScenarioConfig(Serializable):
         `str`
             Path to the .inp file.
         """
-        return os.path.join(self._parent_path, self.__f_inp_in)
+        if Path(self.__f_inp_in).is_absolute():
+            return self.__f_inp_in
+        elif Path(self.__f_inp_in).name == self.__f_inp_in:
+            return os.path.join(self._parent_path, self.__f_inp_in)
+        else:
+            return self.__f_inp_in
 
     @property
     def f_msx_in(self) -> str:
@@ -235,7 +241,12 @@ class ScenarioConfig(Serializable):
         if self.__f_msx_in is None:
             return None
         else:
-            return os.path.join(self._parent_path, self.__f_msx_in)
+            if Path(self.__f_msx_in).is_absolute():
+                return self.__f_msx_in
+            elif Path(self.__f_msx_in).name == self.__f_msx_in:
+                return os.path.join(self._parent_path, self.__f_msx_in)
+            else:
+                return self.__f_msx_in
 
     @property
     def general_params(self) -> dict:
