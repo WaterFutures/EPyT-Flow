@@ -7,6 +7,7 @@ from copy import deepcopy
 import numpy as np
 from scipy.sparse import bsr_array
 import matplotlib
+import pandas as pd
 from epyt.epanet import ToolkitConstants
 
 from ..sensor_config import SensorConfig, is_flowunit_simetric, massunit_to_str, flowunit_to_str,\
@@ -3280,6 +3281,43 @@ class ScadaData(Serializable):
                                     x_axis_label=self.__get_x_axis_label(),
                                     y_axis_label=y_axis_label,
                                     show=show, save_to_file=save_to_file, ax=ax)
+
+    def to_pandas_dataframe(self, export_raw_data: bool = False) -> pd.DataFrame:
+        """
+        Exports this SCADA data to a Pandas dataframe.
+
+        Parameters
+        ----------
+        export_raw_data : `bool`, optional
+            If True, the raw measurements (i.e. sensor reading without any noise or faults)
+            are exported instead of the final sensor readings.
+
+            The default is False.
+
+        Returns
+        -------
+        `pandas.DataFrame`
+            Exported data.
+        """
+        from .scada_data_export import ScadaDataExport
+
+        old_sensor_config = None
+        if export_raw_data is True:
+            # Backup old sensor config and set a new one with sensors everywhere
+            old_sensor_config = self.sensor_config
+            self.change_sensor_config(ScadaDataExport.create_global_sensor_config(self))
+
+        sensor_readings = self.get_data()
+        col_desc = ScadaDataExport.create_column_desc(self)
+        columns = [f"{sensor_type} [{unit_desc}] at {item_id}" for sensor_type, item_id, unit_desc in col_desc]
+
+        data = {col_desc: sensor_readings[:, c_id] for c_id, col_desc in enumerate(columns)}
+
+        if export_raw_data is True:
+            # Restore old sensor config
+            self.change_sensor_config(old_sensor_config)
+
+        return pd.DataFrame(data)
 
     def to_numpy_file(self, f_out: str, export_raw_data: bool = False) -> None:
         """
