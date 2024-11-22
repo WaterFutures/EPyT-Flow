@@ -77,6 +77,18 @@ class ScenarioControlEnv(ABC):
         if self._scenario_sim is not None:
             self._scenario_sim.close()
 
+    def contains_events(self) -> bool:
+        """
+        Check if the scenario contains any events.
+
+        Returns
+        -------
+        `bool`
+            True is the scenario contains any events, False otherwise.
+        """
+        return len(self._scenario_config.system_events) != 0 or \
+            len(self._scenario_config.sensor_reading_events) != 0
+
     def reset(self) -> ScadaData:
         """
         Resets the environment (i.e. simulation).
