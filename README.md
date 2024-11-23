@@ -87,7 +87,7 @@ pip install .
 ```python
 from epyt_flow.data.benchmarks import load_leakdb_scenarios
 from epyt_flow.simulation import ScenarioSimulator
-from epyt_flow.utils import to_seconds, plot_timeseries_data
+from epyt_flow.utils import to_seconds
 
 
 if __name__ == "__main__":
