@@ -40,16 +40,10 @@ Quick example
 
             # Print & plot sensor readings over the entire simulation
             print(f"Pressure readings: {scada_data.get_data_pressures()}")
-            plot_timeseries_data(scada_data.get_data_pressures().T,
-                                labels=[f"Node {n_id}" for n_id in
-                                        scada_data.sensor_config.pressure_sensors],
-                                x_axis_label="Time (30min steps)",
-                                y_axis_label="Pressure in $m$")
+            scada_data.plot_pressures()
 
             print(f"Flow readings: {scada_data.get_data_flows()}")
-            plot_timeseries_data(scada_data.get_data_flows().T,
-                                x_axis_label="Time (30min steps)",
-                                y_axis_label="Flow rate in $m^3/h$")
+            scada_data.plot_flows()
 
 
 More examples
