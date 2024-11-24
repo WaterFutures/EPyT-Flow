@@ -27,7 +27,7 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
         Injection strength profile -- i.e. every entry corresponds to the strength of the injection
         at a point in time. Pattern will repeat if it is shorter than the total injection time.
     source_type : `int`
-        Types of the bulk species injection source -- must be one of
+        Type of the bulk species injection source -- must be one of
         the following EPANET toolkit constants:
 
             - EN_CONCEN     = 0
@@ -121,7 +121,8 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
         return self.__source_type
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"node_id": self.__node_id, "profile": self.__profile,
+        return super().get_attributes() | {"species_id": self.__species_id,
+                                           "node_id": self.__node_id, "profile": self.__profile,
                                            "source_type": self.__source_type}
 
     def __eq__(self, other) -> bool:
