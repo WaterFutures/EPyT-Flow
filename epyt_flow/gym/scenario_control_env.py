@@ -37,6 +37,14 @@ class ScenarioControlEnv(ABC):
         SCADA data from the hydraulic simulation -- only used if EPANET-MSX is used in the control scenario.
     """
     def __init__(self, scenario_config: ScenarioConfig, autoreset: bool = False, **kwds):
+        if not isinstance(scenario_config, ScenarioConfig):
+            raise TypeError("'scenario_config' must be an instance of " +
+                            "'epyt_flow.simulation.ScenarioConfig' " +
+                            "but not of '{type(scenario_config)}'")
+        if not isinstance(autoreset, bool):
+            raise TypeError("'autoreset' must be an instance of 'bool' " +
+                            f"but not of '{type(autoreset)}'")
+
         self._scenario_config = scenario_config
         self._scenario_sim = None
         self._sim_generator = None
