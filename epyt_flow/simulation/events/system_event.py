@@ -73,6 +73,11 @@ class SystemEvent(Event):
             Current time (seconds since the start) in the simulation.
         """
 
+    def cleanup(self) -> None:
+        """
+        Clean up any changes/modifications made by this event.
+        """
+
     @abstractmethod
     def apply(self, cur_time: int) -> None:
         """

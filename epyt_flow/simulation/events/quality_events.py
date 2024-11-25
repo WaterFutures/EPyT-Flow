@@ -2,6 +2,7 @@
 Module provides a class for implementing species injection (e.g. contamination) events.
 """
 from copy import deepcopy
+import warnings
 import math
 import numpy as np
 import epyt
@@ -134,6 +135,9 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
         return f"{super().__str__()} species_id: {self.__species_id} " +\
             f"node_id: {self.__node_id} profile: {self.__profile} source_type: {self.__source_type}"
 
+    def _get_pattern_id(self) -> str:
+        return f"{self.__species_id}_{self.__node_id}_{self.start_time}"
+
     def init(self, epanet_api: epyt.epanet) -> None:
         super().init(epanet_api)
 
@@ -174,13 +178,17 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
         elif self.__source_type == ToolkitConstants.EN_FLOWPACED:
             source_type_ = "FLOWPACED"
 
-        pattern_id = f"{self.__species_id}_{self.__node_id}_{self.start_time}"
+        pattern_id = self._get_pattern_id()
         if pattern_id in self._epanet_api.getMSXPatternsNameID():
             raise ValueError("Duplicated injection event")
 
         self._epanet_api.addMSXPattern(pattern_id, pattern)
         self._epanet_api.setMSXSources(self.__node_id, self.__species_id, source_type_, 1,
                                        pattern_id)
+
+    def cleanup(self) -> None:
+        warnings.warn("Can not undo SpeciedInjectionEvent -- " +
+                      "EPANET-MSX does not support removing patterns")
 
     def apply(self, cur_time: int) -> None:
         pass

@@ -366,6 +366,9 @@ this method is called ONCE after the end of the event.
 In order to support multiple simulation runs of the same scenario, the method
 :func:`~epyt_flow.simulation.events.system_event.SystemEvent.reset` can be overridden to reset the
 event (e.g. resetting time index of a leak profile).
+Any clean-up logic should be implemented by overriding
+:func:`~epyt_flow.simulation.events.system_event.SystemEvent.cleanup` -- e.g.
+removing any new patterns or nodes, etc.
 
 Example of a system event that activates a pump:
 
