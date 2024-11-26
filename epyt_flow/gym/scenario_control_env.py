@@ -97,7 +97,7 @@ class ScenarioControlEnv(ABC):
         return len(self._scenario_config.system_events) != 0 or \
             len(self._scenario_config.sensor_reading_events) != 0
 
-    def reset(self) -> ScadaData:
+    def reset(self) -> Union[tuple[ScadaData, bool], ScadaData]:
         """
         Resets the environment (i.e. simulation).
 
@@ -127,7 +127,7 @@ class ScenarioControlEnv(ABC):
 
         return self._next_sim_itr()
 
-    def _next_sim_itr(self) -> ScadaData:
+    def _next_sim_itr(self) -> Union[tuple[ScadaData, bool], ScadaData]:
         try:
             next(self._sim_generator)
             scada_data = self._sim_generator.send(False)
