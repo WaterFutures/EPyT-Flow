@@ -413,3 +413,54 @@ instance to numpy:
 
         # Export results (i.e. SCADA for the current sensor configuration) to numpy
         ScadaDataNumpyExport(f_out="myHanoiResults.npz").export(scada_data)
+
+
+Importing external data
+-----------------------
+
+Some use cases might require loading external (real-world) SCADA data into EPyT-Flow for further
+analysis/processing such as calibration and state estimation tasks where the user wants to use
+information from both the hydraulic simulation results and sparse SCADA data to
+correct parameters (like pipe roughnesses) or estimate real-time system-wide pressures and flows.
+
+External SCADA data can be loaded into EPyT-Flow by manually creating a
+:class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance.
+
+A hypothetical example of how to simulate a given .inp file and
+loading external (real-world) sensor readings into EPyT-Flow:
+
+.. code-block:: python
+
+    # Load C-Town network
+    with ScenarioSimulator(scenario_config=load_ctown()) as sim:
+        # Place a pressure sensor at the tank "T1"
+        sim.set_pressure_sensors(sensor_locations=["T1"])
+        my_sensor_config = sim.sensor_config
+
+        # Run simulation
+        scada_data = sim.run_simulation()
+
+        # Import external sensor measurements for the pressure at "T1" into a ScadaData instance
+        my_measurement_time_points = np.arange(0, 3600*24, 3600)
+        real_world_pressure_data = np.array([3, 2.82, 2.7, 2.62, 2.7, 2.89, 3.14, 3.26,
+                                             3.4, 3.66, 3.73, 3.66, 3.73, 3.88, 4.07,
+                                             4.23, 4.41, 4.44, 4.03, 4.03, 4.03, 4.03,
+                                             4.03, 4.03])
+
+        # We only have pressure data at the tank --
+        # everything else is set to zero and will be ignored by ScadaData
+        pressure_measurements = np.zeros((len(my_measurement_time_points),
+                                          len(my_sensor_config.nodes)))
+        tank_data_idx = my_sensor_config.map_node_id_to_idx("T1")
+        pressure_measurements[:, tank_data_idx] = real_world_pressure_data
+
+        # IMPORTANT: frozen_sensor_config=True because we only provide data for some specific sensors!
+        my_scada_data = ScadaData(sensor_config=my_sensor_config,
+                                  frozen_sensor_config=True,
+                                  sensor_readings_time=my_measurement_time_points,
+                                  pressure_data_raw=pressure_measurements)
+
+        # Show/Analyze external sensor data in EPyT-Flow
+        print(my_scada_data.get_data_pressures())
+
+        # ....
