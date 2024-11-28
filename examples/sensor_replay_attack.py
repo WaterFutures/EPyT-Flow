@@ -33,9 +33,7 @@ if __name__ == "__main__":
         print(pressure_readings[10:15])     # The same as the first 5 readings!
         print(pressure_readings[16:])
 
-        plot_timeseries_data(pressure_readings.T,
-                             x_axis_label="Time (30min steps)",
-                             y_axis_label="Pressure in $m$")
+        scada_data.plot_pressures(sensor_locations=["13"])
         plot_timeseries_data(pressure_readings[:20].T,    # The same as the first 5 readings!
                              x_axis_label="Time (30min steps)",
                              y_axis_label="Pressure in $m$")
