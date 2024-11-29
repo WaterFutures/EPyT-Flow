@@ -238,7 +238,7 @@ class Leakage(SystemEvent, JsonSerializable):
             g = 32.17405    # feet/s^2
         else:
             raise ValueError("Leakages are only implemented for the following flow units:\n" +
-                             " EN_CMH (cubic foot/sec)\n EN_CFS (cubic meter/hr)")
+                             " EN_CMH (cubic meter/hr)\n EN_CFS (foot/sec)")
 
         return discharge_coef * area * np.sqrt(2. * g)
 
