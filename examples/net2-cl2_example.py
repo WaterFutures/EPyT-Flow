@@ -2,7 +2,7 @@
 Example of running an advanced quality analysis of Cl2 in Net2 using EPANET-MSX.
 """
 from epyt_flow.simulation import ScenarioSimulator
-from epyt_flow.utils import to_seconds, plot_timeseries_data
+from epyt_flow.utils import to_seconds
 
 
 if __name__ == "__main__":
@@ -20,7 +20,4 @@ if __name__ == "__main__":
         scada_data = sim.run_simulation()
 
         # Show "CL2" concentration at the 11th node over the entire simulation
-        conc = scada_data.get_data_bulk_species_node_concentration()
-        plot_timeseries_data(conc[:, 10].reshape(1, -1),
-                             x_axis_label="Time (60min steps)",
-                             y_axis_label="Cl2 $mg/L$")
+        scada_data.plot_bulk_species_node_concentration({"CL2": [sim.sensor_config.nodes[10]]})

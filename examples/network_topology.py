@@ -15,7 +15,7 @@ if __name__ == "__main__":
         # Get network topology
         topo = sim.get_topology()
 
-        # Show edges
+        # Show edges/links
         print(topo.edges)
 
         # Show nodes
