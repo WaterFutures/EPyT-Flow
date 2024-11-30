@@ -2185,6 +2185,16 @@ class ScenarioSimulator():
             self.__running_simulation = False
             raise ex
 
+    def run_simulation_as_generator(self, hyd_export: str = None, verbose: bool = False,
+                                    support_abort: bool = False,
+                                    return_as_dict: bool = False,
+                                    frozen_sensor_config: bool = False,
+                                    ) -> Generator[Union[ScadaData, dict], bool, None]:
+        warnings.warn("'run_simulation_as_generator' is deprecated and will be removed in " +
+                      "future releases -- use 'run_hydraulic_simulation_as_generator' instead")
+        return self.run_hydraulic_simulation_as_generator(hyd_export, verbose, support_abort,
+                                                          return_as_dict, frozen_sensor_config)
+
     def run_simulation(self, hyd_export: str = None, verbose: bool = False,
                        frozen_sensor_config: bool = False) -> ScadaData:
         """
