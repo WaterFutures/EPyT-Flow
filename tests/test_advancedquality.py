@@ -21,6 +21,42 @@ def test_msx_net2cl2():
         assert res.get_data_bulk_species_node_concentration() is not None
 
 
+def test_msx_net2cl2_place_sensors_everywhere():
+    # Load net2-cl2 scenario
+    with ScenarioSimulator(f_inp_in="net2-cl2.inp", f_msx_in="net2-cl2.msx") as sim:
+        # Set simulation duration to ten days
+        sim.set_general_parameters(simulation_duration=to_seconds(days=10))
+
+        # Monitor "CL2" bulk species at every node
+        sim.place_bulk_species_node_sensors_everywhere()
+        sim.place_bulk_species_link_sensors_everywhere()
+
+        # Run entire simulation
+        res = sim.run_simulation(verbose=True)
+
+        # Show sensor readings over the entire simulation
+        assert res.get_data_bulk_species_node_concentration() is not None
+        assert res.get_data_bulk_species_link_concentration() is not None
+
+
+def test_msx_net2cl2_place_sensors_everywhere2():
+    # Load net2-cl2 scenario
+    with ScenarioSimulator(f_inp_in="net2-cl2.inp", f_msx_in="net2-cl2.msx") as sim:
+        # Set simulation duration to ten days
+        sim.set_general_parameters(simulation_duration=to_seconds(days=10))
+
+        # Monitor "CL2" bulk species at every node
+        sim.place_bulk_species_node_sensors_everywhere(["CL2"])
+        sim.place_bulk_species_link_sensors_everywhere(["CL2"])
+
+        # Run entire simulation
+        res = sim.run_simulation(verbose=True)
+
+        # Show sensor readings over the entire simulation
+        assert res.get_data_bulk_species_node_concentration() is not None
+        assert res.get_data_bulk_species_link_concentration() is not None
+
+
 def test_msx_Net3NH2CL():
     # Load Net3-NH2CL scenario
     with ScenarioSimulator(f_inp_in="Net3-NH2CL.inp", f_msx_in="Net3-NH2CL.msx") as sim:
