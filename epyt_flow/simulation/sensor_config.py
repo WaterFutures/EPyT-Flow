@@ -2,7 +2,6 @@
 Module provides a class for implementing sensor configurations.
 """
 from copy import deepcopy
-import warnings
 import itertools
 import numpy as np
 import epyt
@@ -465,7 +464,7 @@ class SensorConfig(JsonSerializable):
     """
     def __init__(self, nodes: list[str], links: list[str], valves: list[str], pumps: list[str],
                  tanks: list[str], bulk_species: list[str], surface_species: list[str],
-                 flow_unit: int = None,
+                 flow_unit: int,
                  pressure_sensors: list[str] = [],
                  flow_sensors: list[str] = [],
                  demand_sensors: list[str] = [],
@@ -685,16 +684,11 @@ class SensorConfig(JsonSerializable):
             if any(s not in surface_species for s in surfacespecies_id_to_idx.keys()):
                 raise ValueError("Unknown surface species ID in 'surfacespecies_id_to_idx'")
 
-        if flow_unit is not None:
-            if not isinstance(flow_unit, int):
-                raise TypeError("'flow_unit' must be a an instance of 'int' " +
-                                f"but not of '{type(flow_unit)}'")
-            if flow_unit not in range(10):
-                raise ValueError("Invalid value of 'flow_unit'")
-        else:
-            warnings.warn("Loading a file that was created with an outdated version of EPyT-Flow" +
-                          " -- support of such old files will be removed in the next release!",
-                          DeprecationWarning)
+        if not isinstance(flow_unit, int):
+            raise TypeError("'flow_unit' must be a an instance of 'int' " +
+                            f"but not of '{type(flow_unit)}'")
+        if flow_unit not in range(10):
+            raise ValueError("Invalid value of 'flow_unit'")
 
         if quality_unit is not None:
             if not isinstance(quality_unit, int):

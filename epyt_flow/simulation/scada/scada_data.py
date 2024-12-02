@@ -142,8 +142,6 @@ class ScadaData(Serializable):
                                                             dict[int, bsr_array]] = None,
                  bulk_species_link_concentration_raw: Union[np.ndarray,
                                                             dict[int, bsr_array]] = None,
-                 pump_energy_usage_data = None,
-                 pump_efficiency_data = None,
                  pumps_energy_usage_data_raw: np.ndarray = None,
                  pumps_efficiency_data_raw: np.ndarray = None,
                  sensor_faults: list[SensorFault] = [],
@@ -288,11 +286,6 @@ class ScadaData(Serializable):
         if not isinstance(frozen_sensor_config, bool):
             raise TypeError("'frozen_sensor_config' must be an instance of 'bool' " +
                             f"but not of '{type(frozen_sensor_config)}'")
-
-        if pump_efficiency_data is not None or pump_energy_usage_data is not None:
-            warnings.warn("Loading a file that was created with an outdated version of EPyT-Flow" +
-                          " -- support of such old files will be removed in the next release!",
-                          DeprecationWarning)
 
         def __raise_shape_mismatch(var_name: str) -> None:
             raise ValueError(f"Shape mismatch in '{var_name}' -- " +
@@ -2668,7 +2661,7 @@ class ScadaData(Serializable):
         return plot_timeseries_data(data.T, labels=[f"Pump {n_id}"
                                                     for n_id in pump_efficiency_sensors],
                                     x_axis_label=self.__get_x_axis_label(),
-                                    y_axis_label="Efficiency in $\%$",
+                                    y_axis_label="Efficiency in $%$",
                                     show=show, save_to_file=save_to_file, ax=ax)
 
     def get_data_pumps_energyconsumption(self, sensor_locations: list[str] = None) -> np.ndarray:
