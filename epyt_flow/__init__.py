@@ -6,6 +6,7 @@ import os
 
 with open(os.path.join(os.path.dirname(__file__), 'VERSION'), encoding="utf-8") as f:
     VERSION = f.read().strip()
+    __version__ = VERSION
 
 
 def compile_libraries_unix(lib_epanet_name: str, compile_script_name: str,
