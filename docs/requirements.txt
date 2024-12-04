@@ -1,4 +1,4 @@
-epyt-flow
+epyt-flow @ git+https://github.com/WaterFutures/EPyT-Flow@rdt-bug
 sphinx>=7.2.6
 sphinx-rtd-theme>=2.0.0
 nbsphinx>=0.9.3
