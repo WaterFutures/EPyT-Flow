@@ -104,10 +104,6 @@ def load_inp(f_in: str, include_empty_sensor_config: bool = True,
     if not os.path.isfile(f_in):
         raise ValueError(f"Can not find {f_in}")
 
-    print(f_in)
-    with open(f_in, "rt") as f_:
-        print(f_.readlines())
-
     if include_empty_sensor_config is True:
         return ScenarioConfig(f_inp_in=f_in, sensor_config=create_empty_sensor_config(f_inp=f_in),
                               general_params=get_default_hydraulic_options(flow_units_id))
@@ -157,7 +153,7 @@ def load_net1(download_dir: str = get_temp_folder(), verbose: bool = True,
         :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Net1.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/main/epyt/networks/" + \
           "asce-tf-wdst/Net1.inp"
 
     download_if_necessary(f_in, url, verbose)
@@ -205,7 +201,7 @@ def load_net2(download_dir: str = get_temp_folder(), verbose: bool = True,
         :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Net2.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/refs/heads/main/epyt/networks/" + \
           "asce-tf-wdst/Net2.inp"
 
     download_if_necessary(f_in, url, verbose)
@@ -253,7 +249,7 @@ def load_net3(download_dir: str = get_temp_folder(), verbose: bool = True,
         :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Net3.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/main/epyt/networks/" + \
           "asce-tf-wdst/Net3.inp"
 
     download_if_necessary(f_in, url, verbose)
@@ -301,7 +297,7 @@ def load_net6(download_dir: str = get_temp_folder(), verbose: bool = True,
         :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Net6.inp")
-    url = "https://github.com/OpenWaterAnalytics/WNTR/raw/main/examples/networks/Net6.inp"
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/WNTR/ref/head/main/examples/networks/Net6.inp"
 
     download_if_necessary(f_in, url, verbose)
     return load_inp(f_in, flow_units_id=flow_units_id)
@@ -348,7 +344,7 @@ def load_richmond(download_dir: str = get_temp_folder(), verbose: bool = True,
         :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Richmond_standard.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/main/epyt/networks/" + \
           "exeter-benchmarks/Richmond_standard.inp"
 
     download_if_necessary(f_in, url, verbose)
@@ -636,7 +632,7 @@ def load_anytown(download_dir: str = get_temp_folder(), verbose: bool = True,
         :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Anytown.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/main/epyt/networks/" + \
           "asce-tf-wdst/Anytown.inp"
 
     download_if_necessary(f_in, url, verbose)
@@ -787,7 +783,7 @@ def load_kentucky(wdn_id: int = 1, download_dir: str = get_temp_folder(),
         raise ValueError(f"Unknown network 'ky{wdn_id}.inp'")
 
     f_in = os.path.join(download_dir, f"ky{wdn_id}.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/main/epyt/networks/" + \
           f"asce-tf-wdst/ky{wdn_id}.inp"
 
     download_if_necessary(f_in, url, verbose)
@@ -840,7 +836,7 @@ def load_hanoi(download_dir: str = get_temp_folder(),
         :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Hanoi.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/main/epyt/networks/" + \
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/main/epyt/networks/" + \
           "asce-tf-wdst/Hanoi.inp"
 
     download_if_necessary(f_in, url, verbose)
@@ -1015,3 +1011,4 @@ def load_ltown_a(download_dir: str = get_temp_folder(), use_realistic_demands: b
         config = ScenarioConfig(scenario_config=config, sensor_config=sensor_config)
 
     return config
+
