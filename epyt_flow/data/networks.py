@@ -204,7 +204,7 @@ def load_net2(download_dir: str = get_temp_folder(), verbose: bool = True,
         :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Net2.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/refs/heads/main/epyt/networks/" + \
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/main/epyt/networks/" + \
           "asce-tf-wdst/Net2.inp"
 
     download_if_necessary(f_in, url, verbose)
@@ -300,7 +300,7 @@ def load_net6(download_dir: str = get_temp_folder(), verbose: bool = True,
         :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "Net6.inp")
-    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/WNTR/ref/head/main/examples/networks/Net6.inp"
+    url = "https://raw.githubusercontent.com/OpenWaterAnalytics/WNTR/refs/heads/main/examples/networks/Net6.inp"
 
     download_if_necessary(f_in, url, verbose)
     return load_inp(f_in, flow_units_id=flow_units_id)
