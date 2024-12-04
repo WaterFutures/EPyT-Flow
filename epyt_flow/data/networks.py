@@ -102,7 +102,7 @@ def load_inp(f_in: str, include_empty_sensor_config: bool = True,
         Scenario configuration for the .inp file.
     """
     if not os.path.isfile(f_in):
-        raise ValueError("Can not find 'f_in'")
+        raise ValueError(f"Can not find {f_in}")
 
     if include_empty_sensor_config is True:
         return ScenarioConfig(f_inp_in=f_in, sensor_config=create_empty_sensor_config(f_inp=f_in),
