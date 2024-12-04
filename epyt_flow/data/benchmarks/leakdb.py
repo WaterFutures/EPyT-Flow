@@ -491,9 +491,9 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
 
         return dem_final
 
-    week_pattern_url = "https://github.com/KIOS-Research/LeakDB/raw/master/CCWI-WDSA2018/" +\
+    week_pattern_url = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/CCWI-WDSA2018/" +\
         "Dataset_Generator_Py3/weekPat_30min.mat"
-    year_offset_url = "https://github.com/KIOS-Research/LeakDB/raw/master/CCWI-WDSA2018/" +\
+    year_offset_url = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/CCWI-WDSA2018/" +\
         "Dataset_Generator_Py3/yearOffset_30min.mat"
 
     download_if_necessary(os.path.join(download_dir, "weekPat_30min.mat"),
