@@ -104,6 +104,9 @@ def load_inp(f_in: str, include_empty_sensor_config: bool = True,
     if not os.path.isfile(f_in):
         raise ValueError(f"Can not find {f_in}")
 
+    with open(f_in, "rt") as f_:
+        print(f_.readlines())
+
     if include_empty_sensor_config is True:
         return ScenarioConfig(f_inp_in=f_in, sensor_config=create_empty_sensor_config(f_inp=f_in),
                               general_params=get_default_hydraulic_options(flow_units_id))
