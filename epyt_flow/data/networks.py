@@ -842,6 +842,7 @@ def load_hanoi(download_dir: str = get_temp_folder(),
     url = "https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/main/epyt/networks/" + \
           "asce-tf-wdst/Hanoi.inp"
 
+    print(url)
     download_if_necessary(f_in, url, verbose)
     config = load_inp(f_in, flow_units_id=flow_units_id)
 
