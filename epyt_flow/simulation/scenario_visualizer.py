@@ -13,6 +13,7 @@ from svgpath2mpl import parse_path
 
 from .scenario_simulator import ScenarioSimulator
 from .scada.scada_data import ScadaData
+from .visualization_utils import JunctionObject
 
 PUMP_PATH = ('M 202.5 93 A 41.5 42 0 0 0 161 135 A 41.5 42 0 0 0 202.5 177 A '
              '41.5 42 0 0 0 244 135 A 41.5 42 0 0 0 241.94922 122 L 278 122 '
@@ -174,21 +175,21 @@ class ScenarioVisualizer:
         self.pipe_parameters = {
             'edgelist': [x[1] for x in self.topology.get_all_links()],
             'edge_color': 'k'}
-        self.junction_parameters = {
-            'nodelist': self.topology.get_all_junctions(), 'node_size': 10,
-            'node_color': 'k'}
-        self.tank_parameters = {'nodelist': self.topology.get_all_tanks(),
-                                'node_size': 100, 'node_color': 'k',
-                                'node_shape': markers.tank}
-        self.reservoir_parameters = {
-            'nodelist': self.topology.get_all_reservoirs(), 'node_size': 100,
-            'node_color': 'k', 'node_shape': markers.reservoir}
-        self.valve_parameters = {'nodelist': self.topology.get_all_valves(),
-                                 'node_size': 75, 'node_color': 'k',
-                                 'node_shape': markers.valve}
-        self.pump_parameters = {'nodelist': self.topology.get_all_pumps(),
-                                'node_size': 100, 'node_color': 'k',
-                                'node_shape': markers.pump}
+
+        self.junction_parameters = JunctionObject(self.topology.get_all_junctions())
+
+        self.tank_parameters = JunctionObject(self.topology.get_all_tanks(), node_size=100)
+        self.tank_parameters.node_shape = markers.tank
+
+        self.reservoir_parameters = JunctionObject(self.topology.get_all_reservoirs(), node_size=100)
+        self.reservoir_parameters.node_shape = markers.reservoir
+
+        self.valve_parameters = JunctionObject(self.topology.get_all_valves(), node_size=75)
+        self.valve_parameters.node_shape = markers.valve
+
+        self.pump_parameters = JunctionObject(self.topology.get_all_pumps(), node_size=100)
+        self.pump_parameters.node_shape = markers.pump
+
         self.animation_dict = {}
         self.colorbars = {}
 
@@ -249,39 +250,27 @@ class ScenarioVisualizer:
         nxp.draw_networkx_edges(self.topology, self.pos_dict, ax=self.ax,
                                 label='Pipes', **self.pipe_parameters)
 
-        if 'junctions' in self.animation_dict:
-            self.junction_parameters['node_color'] = \
-                self.animation_dict['junctions'][frame_number]
         if 'pipes' in self.animation_dict:
             self.pipe_parameters['edge_color'] = self.animation_dict['pipes'][
                 frame_number]
         if 'pipe_sizes' in self.animation_dict:
             self.pipe_parameters['width'] = self.animation_dict['pipe_sizes'][
                 frame_number]
-        if 'pumps' in self.animation_dict:
-            self.pump_parameters['node_color'] = self.animation_dict['pumps'][
-                frame_number]
-        if 'tanks' in self.animation_dict:
-            self.tank_parameters['node_color'] = self.animation_dict['tanks'][
-                frame_number]
-        if 'valves' in self.animation_dict:
-            self.valve_parameters['node_color'] = \
-                self.animation_dict['valves'][frame_number]
 
         nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
-                                label='Junctions', **self.junction_parameters)
+                                label='Junctions', **self.junction_parameters.get_frame(frame_number))
         nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
-                                label='Tanks', **self.tank_parameters)
+                                label='Tanks', **self.tank_parameters.get_frame(frame_number))
         nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
                                 label='Reservoirs',
-                                **self.reservoir_parameters)
+                                **self.reservoir_parameters.get_frame(frame_number))
         nxp.draw_networkx_nodes(
             self.topology,
             self.__get_midpoints(self.topology.get_all_valves()), ax=self.ax,
-            label='Valves', **self.valve_parameters)
+            label='Valves', **self.valve_parameters.get_frame(frame_number))
         nxp.draw_networkx_nodes(
             self.topology, self.__get_midpoints(self.topology.get_all_pumps()),
-            ax=self.ax, label='Pumps', **self.pump_parameters)
+            ax=self.ax, label='Pumps', **self.pump_parameters.get_frame(frame_number))
 
         self.ax.legend(fontsize=6)
 
@@ -404,92 +393,6 @@ class ScenarioVisualizer:
         return sorted_values, sim_length
 
     @staticmethod
-    def __get_parameters_update(statistic: str, values: np.ndarray,
-                                pit: Union[int, Tuple[int]],
-                                intervals: Union[int, List[Union[int, float]]],
-                                all_junctions: List[str],
-                                junction_sorting: List[str]) -> List:
-        """
-        Computes and returns statistical values for junctions in a water
-        network.
-
-        This method processes a 2D array of data (e.g., flow rates or quality)
-        by calculating specified statistics (mean, min, max, or time step) and
-        optionally grouping the data into intervals. It returns the data sorted
-        according to the provided junction sorting order.
-
-        Parameters
-        ----------
-        statistic : `str`
-            The statistical operation to apply to the data. Must be one of
-            'mean', 'min', 'max', or 'time_step'.
-        values : :class:`~np.ndarray`
-            A 2D NumPy array of shape (timesteps, junctions) containing the
-            data for all junctions over time.
-        pit : `int` or `tuple` of `int`
-            The point in time or range of points in time for which to retrieve
-            data, required if 'time_step' is selected as the statistic. If an
-            integer is provided, it selects a single point in time.
-        intervals : `int`, `float`, or `list[int]` or `list[float]`
-            If specified, divides the data into intervals. Can be an integer
-            representing the number of groups, or a list of boundary points
-            defining the intervals.
-        all_junctions : `list` of `str`
-            A list of all junction IDs in the network, corresponding to the
-            data  in the `values` array.
-        junction_sorting : `list` of `str`
-            The order in which to sort the junctions for the return value.
-
-        Returns
-        -------
-        sorted_values : `list`
-            A list of statistical values for the junctions, sorted according to
-            `junction_sorting`.
-
-        Raises
-        ------
-        ValueError
-            If the `statistic` is not 'mean', 'min', 'max', or 'time_step', or
-            if `pit` is not provided for the 'time_step' statistic, or if
-            `intervals` is not in a valid format.
-
-        """
-
-        if statistic == 'mean':
-            stat_values = np.mean(values, axis=0)
-        elif statistic == 'min':
-            stat_values = np.min(values, axis=0)
-        elif statistic == 'max':
-            stat_values = np.max(values, axis=0)
-        elif statistic == 'time_step':
-            if not pit and pit != 0:
-                raise ValueError(
-                    'Please input point in time (pit) parameter when selecting'
-                    ' time_step statistic')
-            stat_values = np.take(values, pit, axis=0)
-        else:
-            raise ValueError(
-                'Statistic parameter must be mean, min, max or time_step')
-
-        if intervals is None:
-            pass
-        elif isinstance(intervals, (int, float)):
-            interv = np.linspace(stat_values.min(), stat_values.max(),
-                                 intervals + 1)
-            stat_values = np.digitize(stat_values, interv) - 1
-        elif isinstance(intervals, list):
-            stat_values = np.digitize(stat_values, intervals) - 1
-        else:
-            raise ValueError(
-                'Intervals must be either number of groups or list of interval'
-                ' boundary points')
-
-        value_dict = dict(zip(all_junctions, stat_values))
-        sorted_values = [value_dict[x] for x in junction_sorting]
-
-        return sorted_values
-
-    @staticmethod
     def __rescale(values: np.ndarray, scale_min_max: List,
                   values_min_max: List = None) -> List:
         """
@@ -603,19 +506,19 @@ class ScenarioVisualizer:
         nxp.draw_networkx_edges(self.topology, self.pos_dict, ax=self.ax,
                                 label='Pipes', **self.pipe_parameters)
         nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
-                                label='Junctions', **self.junction_parameters)
+                                label='Junctions', **self.junction_parameters.get_frame())
         nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
-                                label='Tanks', **self.tank_parameters)
+                                label='Tanks', **self.tank_parameters.get_frame())
         nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
                                 label='Reservoirs',
-                                **self.reservoir_parameters)
+                                **self.reservoir_parameters.get_frame())
         nxp.draw_networkx_nodes(
             self.topology,
             self.__get_midpoints(self.topology.get_all_valves()), ax=self.ax,
-            label='Valves', **self.valve_parameters)
+            label='Valves', **self.valve_parameters.get_frame())
         nxp.draw_networkx_nodes(
             self.topology, self.__get_midpoints(self.topology.get_all_pumps()),
-            ax=self.ax, label='Pumps', **self.pump_parameters)
+            ax=self.ax, label='Pumps', **self.pump_parameters.get_frame())
         self.ax.legend(fontsize=6)
 
         for colorbar_stats in self.colorbars.values():
@@ -681,8 +584,7 @@ class ScenarioVisualizer:
             'time_step' statistic.
 
         """
-
-        self.junction_parameters.update({'cmap': colormap})
+        self.junction_parameters.cmap = colormap
 
         if scada_data:
             self.scada_data = scada_data
@@ -704,32 +606,12 @@ class ScenarioVisualizer:
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
-            sorted_values = self.__get_parameters_update(
-                statistic, values, pit[0], intervals,
-                self.scada_data.sensor_config.nodes,
-                self.topology.get_all_junctions())
-            self.animation_dict['junctions'] = []
-            vmin, vmax = min(sorted_values), max(sorted_values)
             for frame in range(*pit):
                 if frame > values.shape[0] - 1:
                     break
-                sorted_values = self.__get_parameters_update(
-                    statistic, values, frame, intervals,
-                    self.scada_data.sensor_config.nodes,
-                    self.topology.get_all_junctions())
-                vmin, vmax = (min(*sorted_values, vmin),
-                              max(*sorted_values, vmax))
-                self.animation_dict['junctions'].append(sorted_values)
-            self.junction_parameters['vmin'] = vmin
-            self.junction_parameters['vmax'] = vmax
+                self.junction_parameters.add_frame(statistic, values, frame, intervals, self.scada_data.sensor_config.nodes)
         else:
-            sorted_values = self.__get_parameters_update(
-                statistic, values, pit, intervals,
-                self.scada_data.sensor_config.nodes,
-                self.topology.get_all_junctions())
-            self.junction_parameters.update(
-                {'node_color': sorted_values, 'vmin': min(sorted_values),
-                 'vmax': max(sorted_values)})
+            self.junction_parameters.add_frame(statistic, values, pit, intervals, self.scada_data.sensor_config.nodes)
 
         if show_colorbar:
             if statistic == 'time_step':
@@ -739,8 +621,8 @@ class ScenarioVisualizer:
                 label = str(statistic).capitalize() + ' ' + str(parameter)
             self.colorbars['junctions'] = {'mappable': plt.cm.ScalarMappable(
                 norm=mpl.colors.Normalize(
-                    vmin=self.junction_parameters['vmin'],
-                    vmax=self.junction_parameters['vmax']), cmap=colormap),
+                    vmin=self.junction_parameters.vmin,
+                    vmax=self.junction_parameters.vmin), cmap=colormap),
                 'label': label}
 
     def color_links(
@@ -896,7 +778,7 @@ class ScenarioVisualizer:
 
         """
 
-        self.pump_parameters.update({'cmap': colormap})
+        self.pump_parameters.cmap = colormap
 
         if scada_data:
             self.scada_data = scada_data
@@ -915,33 +797,13 @@ class ScenarioVisualizer:
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
-            sorted_values = self.__get_parameters_update(
-                statistic, values, pit[0], intervals,
-                self.scada_data.sensor_config.pumps,
-                self.topology.get_all_pumps())
-            self.animation_dict['pumps'] = []
-            vmin = min(sorted_values)
-            vmax = max(sorted_values)
             for frame in range(*pit):
                 if frame > values.shape[0] - 1:
                     break
-                sorted_values = self.__get_parameters_update(
-                    statistic, values, frame, intervals,
-                    self.scada_data.sensor_config.pumps,
-                    self.topology.get_all_pumps())
-                vmin = min(*sorted_values, vmin)
-                vmax = max(*sorted_values, vmax)
-                self.animation_dict['pumps'].append(sorted_values)
-            self.pump_parameters['vmin'] = vmin
-            self.pump_parameters['vmax'] = vmax
+                self.pump_parameters.add_frame(statistic, values, frame, intervals, self.scada_data.sensor_config.pumps)
         else:
-            sorted_values = self.__get_parameters_update(
-                statistic, values, pit, intervals,
-                self.scada_data.sensor_config.pumps,
-                self.topology.get_all_pumps())
-            self.pump_parameters.update(
-                {'node_color': sorted_values, 'vmin': min(sorted_values),
-                 'vmax': max(sorted_values)})
+            self.pump_parameters.add_frame(statistic, values, pit, intervals,
+                                           self.scada_data.sensor_config.pumps)
 
         if show_colorbar:
             if statistic == 'time_step':
@@ -951,8 +813,8 @@ class ScenarioVisualizer:
                 label = str(statistic).capitalize() + ' ' + str(
                     parameter).replace('_', ' ')
             self.colorbars['pumps'] = {'mappable': plt.cm.ScalarMappable(
-                norm=mpl.colors.Normalize(vmin=self.pump_parameters['vmin'],
-                                          vmax=self.pump_parameters['vmax']),
+                norm=mpl.colors.Normalize(vmin=self.pump_parameters.vmin,
+                                          vmax=self.pump_parameters.vmax),
                 cmap=colormap), 'label': label}
 
     def color_tanks(
@@ -1001,7 +863,7 @@ class ScenarioVisualizer:
             If `pit` is not correctly provided for the 'time_step' statistic.
 
         """
-        self.pump_parameters.update({'node_size': 10, 'cmap': colormap})
+        self.tank_parameters.cmap = colormap
 
         if scada_data:
             self.scada_data = scada_data
@@ -1012,33 +874,12 @@ class ScenarioVisualizer:
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
-            sorted_values = self.__get_parameters_update(
-                statistic, values, pit[0], intervals,
-                self.scada_data.sensor_config.tanks,
-                self.topology.get_all_tanks())
-            self.animation_dict['tanks'] = []
-            vmin = min(sorted_values)
-            vmax = max(sorted_values)
             for frame in range(*pit):
                 if frame > values.shape[0] - 1:
                     break
-                sorted_values = self.__get_parameters_update(
-                    statistic, values, frame, intervals,
-                    self.scada_data.sensor_config.tanks,
-                    self.topology.get_all_tanks())
-                vmin = min(*sorted_values, vmin)
-                vmax = max(*sorted_values, vmax)
-                self.animation_dict['tanks'].append(sorted_values)
-            self.tank_parameters['vmin'] = vmin
-            self.tank_parameters['vmax'] = vmax
+                self.tank_parameters.add_frame(statistic, values, frame, intervals, self.scada_data.sensor_config.tanks)
         else:
-            sorted_values = self.__get_parameters_update(
-                statistic, values, pit, intervals,
-                self.scada_data.sensor_config.tanks,
-                self.topology.get_all_tanks())
-            self.tank_parameters.update(
-                {'node_color': sorted_values, 'vmin': min(sorted_values),
-                 'vmax': max(sorted_values)})
+            self.tank_parameters.add_frame(statistic, values, pit, intervals, self.scada_data.sensor_config.tanks)
 
         if show_colorbar:
             if statistic == 'time_step':
@@ -1046,8 +887,8 @@ class ScenarioVisualizer:
             else:
                 label = str(statistic).capitalize() + ' ' + 'tank volume'
             self.colorbars['tanks'] = {'mappable': plt.cm.ScalarMappable(
-                norm=mpl.colors.Normalize(vmin=self.tank_parameters['vmin'],
-                                          vmax=self.tank_parameters['vmax']),
+                norm=mpl.colors.Normalize(vmin=self.tank_parameters.vmin,
+                                          vmax=self.tank_parameters.vmin),
                 cmap=colormap), 'label': label}
 
     def color_valves(
@@ -1096,7 +937,7 @@ class ScenarioVisualizer:
 
         """
 
-        self.valve_parameters.update({'node_size': 15, 'cmap': colormap})
+        self.valve_parameters.cmap = colormap
 
         if scada_data:
             self.scada_data = scada_data
@@ -1107,33 +948,14 @@ class ScenarioVisualizer:
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
-            sorted_values = self.__get_parameters_update(
-                statistic, values, pit[0], intervals,
-                self.scada_data.sensor_config.valves,
-                self.topology.get_all_valves())
-            self.animation_dict['valves'] = []
-            vmin = min(sorted_values)
-            vmax = max(sorted_values)
             for frame in range(*pit):
                 if frame > values.shape[0] - 1:
                     break
-                sorted_values = self.__get_parameters_update(
-                    statistic, values, frame, intervals,
-                    self.scada_data.sensor_config.valves,
-                    self.topology.get_all_valves())
-                vmin = min(*sorted_values, vmin)
-                vmax = max(*sorted_values, vmax)
-                self.animation_dict['valves'].append(sorted_values)
-            self.valve_parameters['vmin'] = vmin
-            self.valve_parameters['vmax'] = vmax
+                self.valve_parameters.add_frame(statistic, values, frame, intervals, self.scada_data.sensor_config.valves)
         else:
-            sorted_values = self.__get_parameters_update(
-                statistic, values, pit, intervals,
-                self.scada_data.sensor_config.valves,
-                self.topology.get_all_valves())
-            self.valve_parameters.update(
-                {'node_color': sorted_values, 'vmin': min(sorted_values),
-                 'vmax': max(sorted_values)})
+            self.valve_parameters.add_frame(statistic, values, pit,
+                                            intervals,
+                                            self.scada_data.sensor_config.valves)
 
         if show_colorbar:
             if statistic == 'time_step':
@@ -1141,8 +963,8 @@ class ScenarioVisualizer:
             else:
                 label = str(statistic).capitalize() + ' ' + 'valve state'
             self.colorbars['valves'] = {'mappable': plt.cm.ScalarMappable(
-                norm=mpl.colors.Normalize(vmin=self.valve_parameters['vmin'],
-                                          vmax=self.valve_parameters['vmax']),
+                norm=mpl.colors.Normalize(vmin=self.valve_parameters.vmin,
+                                          vmax=self.valve_parameters.vmax),
                 cmap=colormap), 'label': label}
 
     def resize_links(
@@ -1228,7 +1050,7 @@ class ScenarioVisualizer:
         dictionary, effectively removing all nodes from view in the current
         visualization.
         """
-        self.junction_parameters['nodelist'] = []
+        self.junction_parameters.nodelist = [[]]
 
     def highlight_sensor_config(self) -> None:
         """
@@ -1257,7 +1079,7 @@ class ScenarioVisualizer:
         pipe_style = ['dashed' if link in highlighted_links else 'solid' for
                       link in self.topology]
 
-        self.junction_parameters.update(
+        self.junction_parameters.add_attributes(
             {'linewidths': 1, 'edgecolors': node_edges})
         self.pipe_parameters.update({'style': pipe_style})
 
