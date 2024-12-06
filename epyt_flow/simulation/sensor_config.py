@@ -1775,12 +1775,12 @@ class SensorConfig(JsonSerializable):
     @property
     def sensors_id_to_idx(self) -> dict:
         """
-        Gets a mapping of sensor IDs to indices in the final Numpy array returned by `get_data()`.
+        Gets a mapping of sensor IDs to indices in the final `Numpy array <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_ returned by `get_data()`.
 
         Returns
         -------
         `dict`
-            Mapping of sensor IDs to indices in the final Numpy array.
+            Mapping of sensor IDs to indices in the final `Numpy array <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_.
         """
         return deepcopy(self.__sensors_id_to_idx)
 
@@ -1981,39 +1981,39 @@ class SensorConfig(JsonSerializable):
 
         Parameters
         ----------
-        pressures : `numpy.ndarray`
+        pressures : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Pressure values at all nodes.
-        flows : `numpy.ndarray`
+        flows : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Flow values at all links/pipes.
-        demands : `numpy.ndarray`
+        demands : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Demand values at all nodes.
-        nodes_quality : `numpy.ndarray`
+        nodes_quality : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Quality values at all nodes.
-        links_quality : `numpy.ndarray`
+        links_quality : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Quality values at all links/pipes.
-        pumps_state : `numpy.ndarray`
+        pumps_state : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             States of all pumps.
-        pumps_efficiency : `numpy.ndarray`
+        pumps_efficiency : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Efficiency of all pumps.
-        pumps_energyconsumption : `numpy.ndarray`
+        pumps_energyconsumption : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Energy consumption of all pumps.
-        valves_state : `numpy.ndarray`
+        valves_state : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             States of all valves.
-        tanks_volume : `numpy.ndarray`
+        tanks_volume : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Water volume in all tanks.
-        bulk_species_node_concentrations : `numpy.ndarray`
+        bulk_species_node_concentrations : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Bulk species concentrations at all nodes.
 
             Expect a three-dimensional array: First dimension denotes time,
             second dimension corresponds to species ID,
             and third dimension contains the concentration.
-        bulk_species_link_concentrations : `numpy.ndarray`
+        bulk_species_link_concentrations : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Bulk species concentrations at all links/pipes.
 
             Expect a three-dimensional array: First dimension denotes time,
             second dimension corresponds to species ID,
             and third dimension contains the concentration.
-        surface_species_concentrations : `numpy.ndarray`
+        surface_species_concentrations : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Surface species concentrations at all links/pipes.
 
             Expect a three-dimensional array: First dimension denotes time,
@@ -2022,7 +2022,7 @@ class SensorConfig(JsonSerializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Sensor readings.
         """
         data = []

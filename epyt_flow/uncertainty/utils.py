@@ -11,7 +11,7 @@ def smoothing(pattern: np.ndarray, sigma: float = 10.) -> np.ndarray:
 
     Parameters
     ----------
-    pattern : `numpy.ndarray`
+    pattern : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         The original pattern
     sigma : `float`, optional
         Standard deviation for the Gaussian filter.
@@ -32,7 +32,7 @@ def scale_to_range(pattern: np.ndarray, min_value: float, max_value: float) -> n
 
     Parameters
     ----------
-    pattern : `numpy.ndarray`
+    pattern : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         The pattern to be scaled.
     min_value : `float`
         Lower bound of the pattern.
@@ -41,7 +41,7 @@ def scale_to_range(pattern: np.ndarray, min_value: float, max_value: float) -> n
 
     Returns
     -------
-    `numpy.ndarray`
+    `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         The scaled pattern.
     """
     if min_value is None or max_value is None:
@@ -65,7 +65,7 @@ def generate_random_gaussian_noise(n_samples: int):
 
     Returns
     -------
-    `numpy.ndarray`
+    `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Gaussian noise.
     """
     return np.random.normal(np.random.rand(), np.random.rand(), size=n_samples)
@@ -87,7 +87,7 @@ def generate_deep_random_gaussian_noise(n_samples: int, mean: float = None):
 
     Returns
     -------
-    `numpy.ndarray`
+    `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Random Gaussian noise.
     """
     noise = []
@@ -127,7 +127,7 @@ def create_deep_random_pattern(n_samples: int, min_value: float = 0., max_value:
 
     Returns
     -------
-    `numpy.ndarray`
+    `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Random pattern.
     """
     pattern = []
@@ -179,7 +179,7 @@ def _create_deep_random_pattern(start_value: float = None, min_length: int = 2, 
 
     Returns
     -------
-    `numpy.ndarray`
+    `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Random pattern.
     """
     pattern = []

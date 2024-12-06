@@ -102,7 +102,7 @@ class ScadaDataExport():
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             3-dimensional array describing all columns of the sensor readings:
             The first dimension describes the sensor type, the second dimension
             describes the sensor location, and the third one describes the measurement units.

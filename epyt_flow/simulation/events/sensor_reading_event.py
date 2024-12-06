@@ -157,14 +157,14 @@ class SensorReadingEvent(Event):
 
         Parameters
         ----------
-        sensor_readings : `numpy.ndarray`
+        sensor_readings : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Original sensor readings.
-        sensor_readings_time : `numpy.ndarray`
+        sensor_readings_time : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Time (seconds since simulation start) for each sensor reading row in 'sensor_readings'.
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Modified sensor readings.
         """
         raise NotImplementedError()

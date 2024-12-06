@@ -38,7 +38,7 @@ class ScadaDataRemoveHandler(ScadaDataBaseHandler):
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         data_id : `str`
             UUID of the SCADA data instance.
@@ -65,7 +65,7 @@ class ScadaDataSensorConfigHandler(ScadaDataBaseHandler):
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         data_id : `str`
             UUID of the SCADA data.
@@ -87,9 +87,9 @@ class ScadaDataSensorConfigHandler(ScadaDataBaseHandler):
 
         Parameters
         ----------
-        req : `falcon.Request`
+        req : `falcon.Request <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#request>`_
             Request instance.
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         data_id : `str`
             UUID of the SCADA data.
@@ -121,7 +121,7 @@ class ScadaDataSensorFaultsHandler(ScadaDataBaseHandler):
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         data_id : `str`
             UUID of the SCADA data.
@@ -143,9 +143,9 @@ class ScadaDataSensorFaultsHandler(ScadaDataBaseHandler):
 
         Parameters
         ----------
-        req : `falcon.Request`
+        req : `falcon.Request <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#request>`_
             Request instance.
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         data_id : `str`
             UUID of the SCADA data.
@@ -178,9 +178,9 @@ class ScadaDataConvertUnitsHandler(ScadaDataBaseHandler):
 
         Parameters
         ----------
-        req : `falcon.Request`
+        req : `falcon.Request <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#request>`_
             Request instance.
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         data_id : `str`
             UUID of the SCADA data.

@@ -23,7 +23,7 @@ class SystemEvent(Event):
 
         Parameters
         ----------
-        epanet_api : `epyt.epanet`
+        epanet_api : `epyt.epanet <https://epanet-python-toolkit-epyt.readthedocs.io/en/stable/api.html#epyt.epanet.epanet>`_
             API to EPANET and EPANET-MSX.
         """
         self._epanet_api = epanet_api

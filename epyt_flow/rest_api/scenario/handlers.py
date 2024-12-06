@@ -54,7 +54,7 @@ class ScenarioRemoveHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         scenario_id : `str`
             UUID of the scenario.
@@ -95,7 +95,7 @@ class ScenarioExportHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         tmp_file : `str`
             Path to the temporary file to be send.
@@ -111,7 +111,7 @@ class ScenarioExportHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         scenario_id : `str`
             UUID of the scenario.
@@ -152,7 +152,7 @@ class ScenarioConfigHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         scenario_id : `str`
             UUID of the scenario.
@@ -179,9 +179,9 @@ class ScenarioNewHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
-        req : `falcon.Request`
+        req : `falcon.Request <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#request>`_
             Request instance.
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         scenario_id : `str`
             UUID of the scenario.
@@ -205,7 +205,7 @@ class ScenarioTopologyHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         scenario_id : `str`
             UUID of the scenario.
@@ -232,7 +232,7 @@ class ScenarioGeneralParamsHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         scenario_id : `str`
             UUID of the scenario.
@@ -255,9 +255,9 @@ class ScenarioGeneralParamsHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
-        req : `falcon.Request`
+        req : `falcon.Request <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#request>`_
             Request instance.
-        resp : `falcon.Request`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Request instance.
         scenario_id : `str`
             UUID of the scenario.
@@ -288,7 +288,7 @@ class ScenarioSensorConfigHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         scenario_id : `str`
             UUID of the scenario.
@@ -310,9 +310,9 @@ class ScenarioSensorConfigHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
-        req : `falcon.Request`
+        req : `falcon.Request <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#request>`_
             Request instance.
-        resp : `falcon.Request`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Request instance.
         scenario_id : `str`
             UUID of the scenario.
@@ -345,9 +345,9 @@ class ScenarioNodeDemandPatternHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
-        req : `falcon.Request`
+        req : `falcon.Request <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#request>`_
             Request instance.
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         scenario_id : `str`
             UUID of the scenario.

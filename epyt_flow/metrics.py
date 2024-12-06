@@ -12,7 +12,7 @@ def r2_score(y_pred: np.ndarray, y: np.ndarray) -> float:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted outputs.
     y : `numpy.ndarray`
         Ground truth outputs.
@@ -31,9 +31,9 @@ def running_r2_score(y_pred: np.ndarray, y: np.ndarray) -> list[float]:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted outputs.
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth outputs.
 
     Returns
@@ -55,9 +55,9 @@ def mean_squared_error(y_pred: np.ndarray, y: np.ndarray) -> float:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted outputs.
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth outputs.
 
     Returns
@@ -74,9 +74,9 @@ def running_mse(y_pred: np.ndarray, y: np.ndarray) -> list[float]:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted outputs.
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth outputs.
 
     Returns
@@ -112,9 +112,9 @@ def mape(y_pred: np.ndarray, y: np.ndarray, epsilon: float = .05) -> float:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted outputs.
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth outputs.
     epsilon : `float`, optional
         Small number added to predictions and ground truth to avoid division-by-zero.
@@ -153,9 +153,9 @@ def smape(y_pred: np.ndarray, y: np.ndarray, epsilon: float = .05) -> float:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted outputs.
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth outputs.
     epsilon : `float`, optional
         Small number added to predictions and ground truth to avoid division-by-zero.
@@ -194,9 +194,9 @@ def mase(y_pred: np.ndarray, y: np.ndarray, epsilon: float = .05) -> float:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted outputs.
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth outputs.
     epsilon : `float`, optional
         Small number added to predictions and ground truth to avoid division-by-zero.
@@ -242,9 +242,9 @@ def f1_micro_score(y_pred: np.ndarray, y: np.ndarray) -> float:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted labels.
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth labels.
 
     Returns
@@ -270,9 +270,9 @@ def roc_auc_score(y_pred: np.ndarray, y: np.ndarray) -> float:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted labels.
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth labels.
 
     Returns
@@ -298,9 +298,9 @@ def true_positive_rate(y_pred: np.ndarray, y: np.ndarray) -> float:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted labels.
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth labels.
 
     Returns
@@ -335,9 +335,9 @@ def true_negative_rate(y_pred: np.ndarray, y: np.ndarray) -> float:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted labels.
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth labels.
 
     Returns
@@ -372,9 +372,9 @@ def precision_score(y_pred: np.ndarray, y: np.ndarray) -> float:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted labels.
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth labels.
 
     Returns
@@ -405,9 +405,9 @@ def accuracy_score(y_pred: np.ndarray, y: np.ndarray) -> float:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted labels.
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth labels.
 
     Returns
@@ -434,9 +434,9 @@ def f1_score(y_pred: np.ndarray, y: np.ndarray) -> float:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted labels.
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth labels.
 
     Returns

@@ -552,7 +552,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         Returns
         -------
         `dict`
-            Network topology as a dictionary of `geopandas.GeoDataFrames` instances.
+            Network topology as a dictionary of `geopandas.GeoDataFrames <https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html>`_ instances.
             If a quantity does not exist, the data frame will be None.
         """
         gis = {"nodes": None, "links": None,
@@ -629,7 +629,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
         Returns
         -------
-        `scipy.bsr_array`
+        `scipy.bsr_array <https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.bsr_array.html>`_
             Adjacency matrix as a sparse array.
         """
         nodes_id = [node_id for node_id, _ in self.__nodes]

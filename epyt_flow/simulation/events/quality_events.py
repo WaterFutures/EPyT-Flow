@@ -24,7 +24,7 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
         ID of the bulk species that is going to be injected.
     node_id : `str`
         ID of the node at which the injection is palced.
-    profile : `numpy.ndarray`
+    profile : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Injection strength profile -- i.e. every entry corresponds to the strength of the injection
         at a point in time. Pattern will repeat if it is shorter than the total injection time.
     source_type : `int`

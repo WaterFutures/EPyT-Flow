@@ -52,14 +52,16 @@ SPECIESINJECTION_EVENT_ID               = 31
 
 def my_packb(data: Any) -> bytes:
     """
-    Overriden `umsgpack.packb` method to support custom serialization handlers.
+    Overriden `umsgpack.packb <https://msgpack-python.readthedocs.io/en/latest/api.html#msgpack.packb>`_
+    method to support custom serialization handlers.
     """
     return umsgpack.packb(data, ext_handlers=ext_handler_pack)
 
 
 def my_unpackb(data: Any) -> Any:
     """
-    Overriden `umsgpack.unpackb` method to support custom serialization handlers.
+    Overriden `umsgpack.unpackb <https://msgpack-python.readthedocs.io/en/latest/api.html#msgpack.unpackb>`_
+    method to support custom serialization handlers.
     """
     return umsgpack.unpackb(data, ext_handlers=ext_handler_unpack)
 

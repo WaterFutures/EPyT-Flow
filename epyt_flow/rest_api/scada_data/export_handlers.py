@@ -41,7 +41,7 @@ class ScadaDataBaseExportHandler(ScadaDataBaseHandler):
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         tmp_file : `str`
             Path to the temporary file to be send.
@@ -71,7 +71,7 @@ class ScadaDataBaseExportHandler(ScadaDataBaseHandler):
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         data_id : `str`
             UUID of the SCADA data.

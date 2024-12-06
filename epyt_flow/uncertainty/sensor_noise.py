@@ -63,11 +63,11 @@ class SensorNoise(JsonSerializable):
 
         Parameters
         ----------
-        sensor_readings : `numpy.ndarray`
+        sensor_readings : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Perturbed sensor readings.
         """
         return self.__uncertainty.apply_batch(sensor_readings)

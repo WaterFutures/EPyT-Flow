@@ -248,7 +248,7 @@ class ModelUncertainty(JsonSerializable):
 
         Parameters
         ----------
-        epanet_api : `epyt.epanet`
+        epanet_api : `epyt.epanet <https://epanet-python-toolkit-epyt.readthedocs.io/en/stable/api.html#epyt.epanet.epanet>`_
             Interface to EPANET and EPANET-MSX.
         """
         if self.__pipe_length is not None:
