@@ -192,10 +192,10 @@ Example of a scenario where we want to monitor chlorine in Net2:
         sim.set_general_parameters(simulation_duration=to_seconds(days=5))
 
         # Monitor bulk species "CL2" at every node
-        sim.set_bulk_species_sensors(sensor_info={"CL2": sim.sensor_config.nodes})
+        sim.set_bulk_species_node_sensors(sensor_info={"CL2": sim.sensor_config.nodes})
 
         # Run entire simulation
         res = sim.run_simulation(verbose=True)
 
         # Show concentration of chlorine species at every node
-        print(res.get_data_bulk_species_concentration())
+        print(res.get_data_bulk_species_node_concentration())
