@@ -1952,7 +1952,7 @@ class ScadaData(Serializable):
 
         if self.__pumps_energy_usage_data_raw is not None:
             self.__pumps_energy_usage_data_raw = np.concatenate(
-                (self.__pumps_energy_usage_data_raw, other.pumps_energy_usage_data_raw),
+                (self.__pumps_energy_usage_data_raw, other.pumps_energyconsumption_data_raw),
                 axis=0)
 
         if self.__pumps_efficiency_data_raw is not None:
