@@ -31,9 +31,9 @@ def compute_evaluation_score(y_pred: np.ndarray, y: np.ndarray) -> float:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Event indication prediction over time
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth event indication over time.
 
     Returns
@@ -85,7 +85,7 @@ def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool
 
     Returns
     -------
-    `pandas.DataFrame` or `tuple[numpy.ndarray, numpy.ndarray]`
+    `pandas.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_ or `tuple[numpy.ndarray, numpy.ndarray] <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         The benchmark data set as either a Pandas data frame or as a pair of (X, y) Numpy arrays.
     """
     url_data = "https://zenodo.org/records/3884465/files/1_gecco2017_water_quality.csv?download=1"
@@ -154,7 +154,7 @@ def load_gecco2018_water_quality_data(download_dir: str = None, return_X_y: bool
 
     Returns
     -------
-    `pandas.DataFrame` or `tuple[numpy.ndarray, numpy.ndarray]`
+    `pandas.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_ or `tuple[numpy.ndarray, numpy.ndarray] <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         The benchmark data set as either a Pandas data frame or as a pair of (X, y) Numpy arrays.
     """
     # Download data if necessary

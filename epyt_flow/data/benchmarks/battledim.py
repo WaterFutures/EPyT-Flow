@@ -286,7 +286,7 @@ def load_data(return_test_scenario: bool, download_dir: str = None, return_X_y: 
 
     Returns
     -------
-    Either a `pandas.DataFrame` instance or a tuple of Numpy arrays.
+    Either a `pandas.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_ instance or a tuple of `Numpy arrays <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_.
         Benchmark data set.
     """
     # Download data files if necessary
@@ -389,8 +389,9 @@ def load_scada_data(return_test_scenario: bool, download_dir: str = None,
     :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or `list[tuple[numpy.ndarray, numpy.ndarray]]`
         The simulated benchmark scenario as either a
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance or as a tuple of
-        (X, y) Numpy arrays. If 'return_leak_locations' is True, the leak locations are included
-        as an instance of `scipy.sparse.bsr_array` as well.
+        (X, y) `Numpy arrays <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_.
+        If 'return_leak_locations' is True, the leak locations are included
+        as an instance of `scipy.sparse.bsr_array <https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.bsr_array.html>`_ as well.
     """
     download_dir = download_dir if download_dir is not None else get_temp_folder()
 
