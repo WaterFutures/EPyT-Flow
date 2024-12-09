@@ -428,6 +428,15 @@ several (WDN related) benchmark data sets from the literature:
 +--------------------------------+---------------------------------------------------------------------------------------------+
 
 
+
+WaterBenchmarkHub
++++++++++++++++++
+
+For more networks and benchmarks, check-out the
+`WaterBenchmarkHub <https://waterfutures.github.io/WaterBenchmarkHub>`_,
+a platform for accessing and sharing Water Distribution Network (WDN) benchmarks and data sets.
+
+
 .. [1] Vrachimis et al. (2018) -- see https://github.com/KIOS-Research/LeakDB/
 .. [2] Vrachmimis et al. (2020) -- see https://github.com/KIOS-Research/BattLeDIM
 .. [3] Taormina et al. (2017) -- see https://www.batadal.net/
