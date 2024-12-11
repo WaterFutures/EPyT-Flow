@@ -477,7 +477,8 @@ class ScenarioSimulator():
         self.close()
 
     def save_to_epanet_file(self, inp_file_path: str, msx_file_path: str = None,
-                            export_sensor_config: bool = True) -> None:
+                            export_sensor_config: bool = True, undo_system_events: bool = True
+                            ) -> None:
         """
         Exports this scenario to EPANET files -- i.e. an .inp file
         and (optionally) a .msx file if EPANET-MSX was loaded.
@@ -539,6 +540,10 @@ class ScenarioSimulator():
                 f_in.write(report_desc)
                 if write_end_section is True:
                     f_in.write("\n[END]")
+
+        if undo_system_events is True:
+            for event in self._system_events:
+                event.cleanup()
 
         if inp_file_path is not None:
             self.epanet_api.saveInputFile(inp_file_path)
@@ -640,6 +645,10 @@ class ScenarioSimulator():
                     report_desc += f"SPECIES {species_id} YES\n"
 
                 __override_report_section(msx_file_path, report_desc)
+
+        if undo_system_events is True:
+            for event in self._system_events:
+                event.init(self.epanet_api)
 
     def get_flow_units(self) -> int:
         """
