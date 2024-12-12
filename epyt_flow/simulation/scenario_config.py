@@ -5,8 +5,8 @@ from typing import Any
 from copy import deepcopy
 import os
 import json
-import numpy as np
 from pathlib import Path
+import numpy as np
 
 from ..uncertainty import AbsoluteGaussianUncertainty, RelativeGaussianUncertainty, \
     AbsoluteUniformUncertainty, RelativeUniformUncertainty, ModelUncertainty, \

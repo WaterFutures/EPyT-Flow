@@ -4,8 +4,8 @@ Module provides functions for simulating several scenarios in parallel.
 from typing import Callable, Any
 import os
 import warnings
-from multiprocess import Pool, cpu_count
 import shutil
+from multiprocess import Pool, cpu_count
 import psutil
 
 from .scenario_config import ScenarioConfig
