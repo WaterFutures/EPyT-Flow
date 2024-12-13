@@ -4,6 +4,7 @@ Module provides a class for implementing model uncertainty.
 from copy import deepcopy
 import warnings
 import epyt
+from epyt.epanet import ToolkitConstants
 import numpy as np
 
 from ..serialization import serializable, JsonSerializable, MODEL_UNCERTAINTY_ID
@@ -18,36 +19,86 @@ class ModelUncertainty(JsonSerializable):
 
     Parameters
     ----------
-    pipe_length_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
-        Uncertainty of pipe lengths. None, in the case of no uncertainty.
+    global_pipe_length_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
+        Global uncertainty of pipe lengths. None, in the case of no uncertainty.
 
         The default is None.
-    pipe_roughness_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
-        Uncertainty of pipe roughness coefficients. None, in the case of no uncertainty.
+    global_pipe_roughness_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
+        Global uncertainty of pipe roughness coefficients. None, in the case of no uncertainty.
 
         The default is None.
-    pipe_diameter_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
-        Uncertainty of pipe diameters. None, in the case of no uncertainty.
+    global_pipe_diameter_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
+        Global uncertainty of pipe diameters. None, in the case of no uncertainty.
 
         The default is None.
-    base_demand_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
-        Uncertainty of base demands. None, in the case of no uncertainty.
+    global_base_demand_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
+        Global uncertainty of base demands. None, in the case of no uncertainty.
 
         The default is None.
-    demand_pattern_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
-        Uncertainty of demand patterns. None, in the case of no uncertainty.
+    global_demand_pattern_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
+        Global uncertainty of demand patterns. None, in the case of no uncertainty.
 
         The default is None.
-    elevation_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
-        Uncertainty of elevations. None, in the case of no uncertainty.
+    global_elevation_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
+        Global uncertainty of elevations. None, in the case of no uncertainty.
 
         The default is None.
-    constants_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
-        Uncertainty of MSX constants. None, in the case of no uncertainty.
+    global_constants_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
+        Global uncertainty of MSX constants. None, in the case of no uncertainty.
 
         The default is None.
-    parameters_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
-        Uncertainty of MSX parameters. None, in the case of no uncertainty.
+    global_parameters_uncertainty : :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`, optional
+        Global uncertainty of MSX parameters. None, in the case of no uncertaint.
+
+        The default is None.
+    local_pipe_length_uncertainty : dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`], optional
+        Local uncertainty of pipe lengths -- i.e. a dictionary of pipe IDs and uncertainties.
+
+        None, in the case of no uncertainty.
+
+        The default is None.
+    local_pipe_roughness_uncertainty : dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`], optional
+        Local uncertainty of pipe roughness coefficients -- i.e. a dictionary of pipe IDs and uncertainties.
+
+        None, in the case of no uncertainty.
+
+        The default is None.
+    local_pipe_diameter_uncertainty : dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`], optional
+        Local uncertainty of pipe diameters -- i.e. a dictionary of pipe IDs and uncertainties.
+
+        None, in the case of no uncertainty.
+
+        The default is None.
+    local_base_demand_uncertainty : dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`], optional
+        Local uncertainty of base demands -- i.e. a dictionary of node IDs and uncertainties.
+
+        None, in the case of no uncertainty.
+
+        The default is None.
+    local_demand_pattern_uncertainty : dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`], optional
+        Local uncertainty of demand patterns --
+        i.e. a dictionary of demand pattern IDs and uncertainties.
+
+        None, in the case of no uncertainty.
+
+        The default is None.
+    local_elevation_uncertainty : dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`], optional
+        Local uncertainty of elevations -- i.e. a dictionary of node IDs and uncertainties.
+
+        None, in the case of no uncertainty.
+
+        The default is None.
+    local_constants_uncertainty : dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`], optional
+        Local uncertainty of MSX constants -- i.e. a dictionary of constant IDs and uncertainties.
+
+        None, in the case of no uncertainty.
+
+        The default is None.
+    local_parameters_uncertainty : dict[tuple[str, int, str] :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`], optional
+        Local uncertainty of MSX parameters -- i.e. a dictionary of
+        (parameter ID, item type, item ID) and uncertainties.
+
+        None, in the case of no uncertainty.
 
         The default is None.
     """
@@ -59,188 +110,450 @@ class ModelUncertainty(JsonSerializable):
                  elevation_uncertainty: Uncertainty = None,
                  constants_uncertainty: Uncertainty = None,
                  parameters_uncertainty: Uncertainty = None,
-                 demand_base_uncertainty: Uncertainty = None, **kwds):
-        if demand_base_uncertainty is not None:
-            warnings.warn("Loading a file that was created with an outdated version of EPyT-Flow" +
-                          " -- support of such old files will be removed in the next release!",
-                          DeprecationWarning)
-
+                 global_pipe_length_uncertainty: Uncertainty = None,
+                 global_pipe_roughness_uncertainty: Uncertainty = None,
+                 global_pipe_diameter_uncertainty: Uncertainty = None,
+                 global_base_demand_uncertainty: Uncertainty = None,
+                 global_demand_pattern_uncertainty: Uncertainty = None,
+                 global_elevation_uncertainty: Uncertainty = None,
+                 global_constants_uncertainty: Uncertainty = None,
+                 global_parameters_uncertainty: Uncertainty = None,
+                 local_pipe_length_uncertainty: dict[str, Uncertainty] = None,
+                 local_pipe_roughness_uncertainty: dict[str, Uncertainty] = None,
+                 local_pipe_diameter_uncertainty: dict[str, Uncertainty] = None,
+                 local_base_demand_uncertainty: dict[str, Uncertainty] = None,
+                 local_demand_pattern_uncertainty: dict[str, Uncertainty] = None,
+                 local_elevation_uncertainty: dict[str, Uncertainty] = None,
+                 local_constants_uncertainty: dict[str, Uncertainty] = None,
+                 local_parameters_uncertainty: dict[str, int, Uncertainty] = None,
+                 **kwds):
         if pipe_length_uncertainty is not None:
-            if not isinstance(pipe_length_uncertainty, Uncertainty):
-                raise TypeError("'pipe_length_uncertainty' must be an instance of " +
-                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
-                                f"'{type(pipe_length_uncertainty)}'")
+            global_pipe_diameter_uncertainty = pipe_length_uncertainty
+            warnings.warn("'pipe_length_uncertainty' is deprecated and " +
+                          "will be removed in future releases")
         if pipe_roughness_uncertainty is not None:
-            if not isinstance(pipe_roughness_uncertainty, Uncertainty):
-                raise TypeError("'pipe_roughness_uncertainty' must be an instance of " +
-                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
-                                f"'{type(pipe_roughness_uncertainty)}'")
+            global_pipe_roughness_uncertainty = pipe_roughness_uncertainty
+            warnings.warn("'pipe_roughness_uncertainty' is deprecated and " +
+                          "will be removed in future releases")
         if pipe_diameter_uncertainty is not None:
-            if not isinstance(pipe_diameter_uncertainty, Uncertainty):
-                raise TypeError("'pipe_diameter_uncertainty' must be an instance of " +
-                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
-                                f"'{type(pipe_diameter_uncertainty)}'")
+            global_pipe_diameter_uncertainty = pipe_diameter_uncertainty
+            warnings.warn("'pipe_diameter_uncertainty' is deprecated and " +
+                          "will be removed in future releases")
         if base_demand_uncertainty is not None:
-            if not isinstance(base_demand_uncertainty, Uncertainty):
-                raise TypeError("'base_demand_uncertainty' must be an instance of " +
-                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
-                                f"'{type(base_demand_uncertainty)}'")
+            global_base_demand_uncertainty = base_demand_uncertainty
+            warnings.warn("'base_demand_uncertainty' is deprecated and " +
+                          "will be removed in future releases")
         if demand_pattern_uncertainty is not None:
-            if not isinstance(demand_pattern_uncertainty, Uncertainty):
-                raise TypeError("'demand_pattern_uncertainty' must be an instance of " +
-                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
-                                f"'{type(demand_pattern_uncertainty)}'")
+            global_demand_pattern_uncertainty = demand_pattern_uncertainty
+            warnings.warn("'demand_pattern_uncertainty' is deprecated and " +
+                          "will be removed in future releases")
         if elevation_uncertainty is not None:
-            if not isinstance(elevation_uncertainty, Uncertainty):
-                raise TypeError("'elevation_uncertainty' must be an instance of " +
-                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
-                                f"'{type(elevation_uncertainty)}'")
+            global_elevation_uncertainty = elevation_uncertainty
+            warnings.warn("'elevation_uncertainty' is deprecated and " +
+                          "will be removed in future releases")
         if constants_uncertainty is not None:
-            if not isinstance(constants_uncertainty, Uncertainty):
-                raise TypeError("'constants_uncertainty' must be an instance of " +
-                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
-                                f"'{type(constants_uncertainty)}'")
+            global_constants_uncertainty = constants_uncertainty
+            warnings.warn("'constants_uncertainty' is deprecated and " +
+                          "will be removed in future releases")
         if parameters_uncertainty is not None:
-            if not isinstance(parameters_uncertainty, Uncertainty):
-                raise TypeError("'parameters_uncertainty' must be an instance of " +
-                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
-                                f"'{type(parameters_uncertainty)}'")
+            global_parameters_uncertainty = parameters_uncertainty
+            warnings.warn("'parameters_uncertainty' is deprecated and " +
+                          "will be removed in future releases")
 
-        self.__pipe_length = pipe_length_uncertainty
-        self.__pipe_roughness = pipe_roughness_uncertainty
-        self.__pipe_diameter = pipe_diameter_uncertainty
-        self.__base_demand = base_demand_uncertainty
-        self.__demand_pattern = demand_pattern_uncertainty
-        self.__elevation = elevation_uncertainty
-        self.__constants = constants_uncertainty
-        self.__parameters = parameters_uncertainty
+        if global_pipe_length_uncertainty is not None:
+            if not isinstance(global_pipe_length_uncertainty, Uncertainty):
+                raise TypeError("'global_pipe_length_uncertainty' must be an instance of " +
+                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
+                                f"'{type(global_pipe_length_uncertainty)}'")
+        if global_pipe_roughness_uncertainty is not None:
+            if not isinstance(global_pipe_roughness_uncertainty, Uncertainty):
+                raise TypeError("'global_pipe_roughness_uncertainty' must be an instance of " +
+                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
+                                f"'{type(global_pipe_roughness_uncertainty)}'")
+        if global_pipe_diameter_uncertainty is not None:
+            if not isinstance(global_pipe_diameter_uncertainty, Uncertainty):
+                raise TypeError("'global_pipe_diameter_uncertainty' must be an instance of " +
+                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
+                                f"'{type(global_pipe_diameter_uncertainty)}'")
+        if global_base_demand_uncertainty is not None:
+            if not isinstance(global_base_demand_uncertainty, Uncertainty):
+                raise TypeError("'global_base_demand_uncertainty' must be an instance of " +
+                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
+                                f"'{type(global_base_demand_uncertainty)}'")
+        if global_demand_pattern_uncertainty is not None:
+            if not isinstance(global_demand_pattern_uncertainty, Uncertainty):
+                raise TypeError("'global_demand_pattern_uncertainty' must be an instance of " +
+                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
+                                f"'{type(global_demand_pattern_uncertainty)}'")
+        if global_elevation_uncertainty is not None:
+            if not isinstance(global_elevation_uncertainty, Uncertainty):
+                raise TypeError("'global_elevation_uncertainty' must be an instance of " +
+                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
+                                f"'{type(global_elevation_uncertainty)}'")
+        if global_constants_uncertainty is not None:
+            if not isinstance(global_constants_uncertainty, Uncertainty):
+                raise TypeError("'global_constants_uncertainty' must be an instance of " +
+                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
+                                f"'{type(global_constants_uncertainty)}'")
+        if global_parameters_uncertainty is not None:
+            if not isinstance(global_parameters_uncertainty, Uncertainty):
+                raise TypeError("'global_parameters_uncertainty' must be an instance of " +
+                                "'epyt_flow.uncertainty.Uncertainty' but not of " +
+                                f"'{type(global_parameters_uncertainty)}'")
+
+        if local_pipe_length_uncertainty is not None:
+            if not isinstance(local_pipe_length_uncertainty, dict):
+                raise TypeError("'local_pipe_length_uncertainty' must be an instance of " +
+                                "'dict[str, epyt_flow.uncertainty.Uncertainty]' but not of " +
+                                f"'{type(local_pipe_length_uncertainty)}'")
+            if any(not isinstance(key, str) or not isinstance(val, Uncertainty)
+                   for key, val in local_pipe_length_uncertainty.items()):
+                raise TypeError("'local_pipe_length_uncertainty': " +
+                                "All keys must be instances of 'str' and all values must be " +
+                                "instances of 'epyt_flow.uncertainty.Uncertainty'")
+        if local_pipe_roughness_uncertainty is not None:
+            if not isinstance(local_pipe_roughness_uncertainty, dict):
+                raise TypeError("'local_pipe_roughness_uncertainty' must be an instance of " +
+                                "'dict[str, epyt_flow.uncertainty.Uncertainty]' but not of " +
+                                f"'{type(local_pipe_roughness_uncertainty)}'")
+            if any(not isinstance(key, str) or not isinstance(val, Uncertainty)
+                   for key, val in local_pipe_roughness_uncertainty.items()):
+                raise TypeError("'local_pipe_roughness_uncertainty': " +
+                                "All keys must be instances of 'str' and all values must be " +
+                                "instances of 'epyt_flow.uncertainty.Uncertainty'")
+        if local_pipe_diameter_uncertainty is not None:
+            if not isinstance(local_pipe_diameter_uncertainty, dict):
+                raise TypeError("'local_pipe_diameter_uncertainty' must be an instance of " +
+                                "'dict[str, epyt_flow.uncertainty.Uncertainty]' but not of " +
+                                f"'{type(local_pipe_diameter_uncertainty)}'")
+            if any(not isinstance(key, str) or not isinstance(val, Uncertainty)
+                   for key, val in local_pipe_diameter_uncertainty.items()):
+                raise TypeError("'local_pipe_diameter_uncertainty': " +
+                                "All keys must be instances of 'str' and all values must be " +
+                                "instances of 'epyt_flow.uncertainty.Uncertainty'")
+        if local_base_demand_uncertainty is not None:
+            if not isinstance(local_base_demand_uncertainty, dict):
+                raise TypeError("'local_base_demand_uncertainty' must be an instance of " +
+                                "'dict[str, epyt_flow.uncertainty.Uncertainty]' but not of " +
+                                f"'{type(local_base_demand_uncertainty)}'")
+            if any(not isinstance(key, str) or not isinstance(val, Uncertainty)
+                   for key, val in local_base_demand_uncertainty.items()):
+                raise TypeError("'local_base_demand_uncertainty': " +
+                                "All keys must be instances of 'str' and all values must be " +
+                                "instances of 'epyt_flow.uncertainty.Uncertainty'")
+        if local_demand_pattern_uncertainty is not None:
+            if not isinstance(local_demand_pattern_uncertainty, dict):
+                raise TypeError("'local_demand_pattern_uncertainty' must be an instance of " +
+                                "'dict[str, epyt_flow.uncertainty.Uncertainty]' but not of " +
+                                f"'{type(local_demand_pattern_uncertainty)}'")
+            if any(not isinstance(key, str) or not isinstance(val, Uncertainty)
+                   for key, val in local_demand_pattern_uncertainty.items()):
+                raise TypeError("'local_demand_pattern_uncertainty': " +
+                                "All keys must be instances of 'str' and all values must be " +
+                                "instances of 'epyt_flow.uncertainty.Uncertainty'")
+        if local_elevation_uncertainty is not None:
+            if not isinstance(local_elevation_uncertainty, dict):
+                raise TypeError("'local_elevation_uncertainty' must be an instance of " +
+                                "'dict[str, epyt_flow.uncertainty.Uncertainty]' but not of " +
+                                f"'{type(local_elevation_uncertainty)}'")
+            if any(not isinstance(key, str) or not isinstance(val, Uncertainty)
+                   for key, val in local_elevation_uncertainty.items()):
+                raise TypeError("'local_elevation_uncertainty': " +
+                                "All keys must be instances of 'str' and all values must be " +
+                                "instances of 'epyt_flow.uncertainty.Uncertainty'")
+        if local_constants_uncertainty is not None:
+            if not isinstance(local_constants_uncertainty, dict):
+                raise TypeError("'local_constants_uncertainty' must be an instance of " +
+                                "'dict[str, epyt_flow.uncertainty.Uncertainty]' but not of " +
+                                f"'{type(local_constants_uncertainty)}'")
+            if any(not isinstance(key, str) or not isinstance(val, Uncertainty)
+                   for key, val in local_constants_uncertainty.items()):
+                raise TypeError("'local_constants_uncertainty': " +
+                                "All keys must be instances of 'str' and all values must be " +
+                                "instances of 'epyt_flow.uncertainty.Uncertainty'")
+        if local_parameters_uncertainty is not None:
+            if not isinstance(local_parameters_uncertainty, dict):
+                raise TypeError("'local_parameters_uncertainty' must be an instance of " +
+                                "'dict[str, epyt_flow.uncertainty.Uncertainty]' but not of " +
+                                f"'{type(local_parameters_uncertainty)}'")
+            if any(not isinstance(key,tuple) or not isinstance(key[0], str) or
+                   not isinstance(key[1], int) or not isinstance(key[2], str) or
+                   not isinstance(local_parameters_uncertainty[key], Uncertainty)
+                   for key in local_parameters_uncertainty.keys()):
+                raise TypeError("'local_parameters_uncertainty': " +
+                                "All keys must be instances of 'tuple[str, int, str]' and all " +
+                                "values must be instances of 'epyt_flow.uncertainty.Uncertainty'")
+
+        self.__global_pipe_length = global_pipe_length_uncertainty
+        self.__global_pipe_roughness = global_pipe_roughness_uncertainty
+        self.__global_pipe_diameter = global_pipe_diameter_uncertainty
+        self.__global_base_demand = global_base_demand_uncertainty
+        self.__global_demand_pattern = global_demand_pattern_uncertainty
+        self.__global_elevation = global_elevation_uncertainty
+        self.__global_constants = global_constants_uncertainty
+        self.__global_parameters = global_parameters_uncertainty
+        self.__local_pipe_length = local_pipe_length_uncertainty
+        self.__local_pipe_roughness = local_pipe_roughness_uncertainty
+        self.__local_pipe_diameter = local_pipe_diameter_uncertainty
+        self.__local_base_demand = local_base_demand_uncertainty
+        self.__local_demand_pattern = local_demand_pattern_uncertainty
+        self.__local_elevation = local_elevation_uncertainty
+        self.__local_constants = local_constants_uncertainty
+        self.__local_parameters = local_parameters_uncertainty
 
         super().__init__(**kwds)
 
     @property
-    def pipe_length(self) -> Uncertainty:
+    def global_pipe_length(self) -> Uncertainty:
         """
-        Gets the pipe length uncertainty.
+        Returns the global pipe length uncertainty.
 
         Returns
         -------
         :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
-            Pipe length uncertainty.
+            Global pipe length uncertainty.
         """
-        return deepcopy(self.__pipe_length)
+        return deepcopy(self.__global_pipe_length)
 
     @property
-    def pipe_roughness(self) -> Uncertainty:
+    def global_pipe_roughness(self) -> Uncertainty:
         """
-        Gets the pipe roughness uncertainty.
+        Returns the global pipe roughness uncertainty.
 
         Returns
         -------
         :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
-            Pipe roughness uncertainty.
+            Global pipe roughness uncertainty.
         """
-        return deepcopy(self.__pipe_roughness)
+        return deepcopy(self.__global_pipe_roughness)
 
     @property
-    def pipe_diameter(self) -> Uncertainty:
+    def global_pipe_diameter(self) -> Uncertainty:
         """
-        Gets the pipe diameter uncertainty.
+        Returns the global pipe diameter uncertainty.
 
         Returns
         -------
         :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
-            Pipe diameter uncertainty.
+            Global pipe diameter uncertainty.
         """
-        return deepcopy(self.__pipe_diameter)
+        return deepcopy(self.__global_pipe_diameter)
 
     @property
-    def base_demand(self) -> Uncertainty:
+    def global_base_demand(self) -> Uncertainty:
         """
-        Gets the base demand uncertainty.
+        Returns the global base demand uncertainty.
 
         Returns
         -------
         :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
-            Demand base uncertainty.
+            Global base demand uncertainty.
         """
-        return deepcopy(self.__base_demand)
+        return deepcopy(self.__global_base_demand)
 
     @property
-    def demand_pattern(self) -> Uncertainty:
+    def global_demand_pattern(self) -> Uncertainty:
         """
-        Gets the demand pattern uncertainty.
+        Returns the global demand pattern uncertainty.
 
         Returns
         -------
         :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
-            Demand pattern uncertainty.
+            Global demand pattern uncertainty.
         """
-        return deepcopy(self.__demand_pattern)
+        return deepcopy(self.__global_demand_pattern)
 
     @property
-    def elevation(self) -> Uncertainty:
+    def global_elevation(self) -> Uncertainty:
         """
-        Gets the node elevation uncertainty.
+        Returns the global node elevation uncertainty.
 
         Returns
         -------
         :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
-            Node elevation uncertainty.
+            Global node elevation uncertainty.
         """
-        return deepcopy(self.__elevation)
+        return deepcopy(self.__global_elevation)
 
     @property
-    def constants(self) -> Uncertainty:
+    def global_constants(self) -> Uncertainty:
         """
-        Gets the MSX constant uncertainty.
+        Returns the global MSX constant uncertainty.
 
         Returns
         -------
         :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
-            MSX constant uncertainty.
+            Global MSX constant uncertainty.
         """
-        return deepcopy(self.__constants)
+        return deepcopy(self.__global_constants)
 
     @property
-    def parameters(self) -> Uncertainty:
+    def global_parameters(self) -> Uncertainty:
         """
-        Gets the MSX parameter uncertainty.
+        Returns the global MSX parameter uncertainty.
 
         Returns
         -------
         :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
-            MSX parameter uncertainty.
+            Global MSX parameter uncertainty.
         """
-        return deepcopy(self.__parameters)
+        return deepcopy(self.__global_parameters)
+
+    @property
+    def local_pipe_length(self) -> dict[str, Uncertainty]:
+        """
+        Returns the local pipe length uncertainty.
+
+        Returns
+        -------
+        dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`]
+            Local pipe length uncertainty.
+        """
+        return deepcopy(self.__local_pipe_length)
+
+    @property
+    def local_pipe_roughness(self) -> dict[str, Uncertainty]:
+        """
+        Returns the local pipe roughness uncertainty.
+
+        Returns
+        -------
+        dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`]
+            Local pipe roughness uncertainty.
+        """
+        return deepcopy(self.__local_pipe_roughness)
+
+    @property
+    def local_pipe_diameter(self) -> dict[str, Uncertainty]:
+        """
+        Returns the local pipe diameter uncertainty.
+
+        Returns
+        -------
+        dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`]
+            Local pipe diameter uncertainty.
+        """
+        return deepcopy(self.__local_pipe_diameter)
+
+    @property
+    def local_base_demand(self) -> dict[str, Uncertainty]:
+        """
+        Returns the local base demand uncertainty.
+
+        Returns
+        -------
+        dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`]
+            Local base demand uncertainty.
+        """
+        return deepcopy(self.__local_base_demand)
+
+    @property
+    def local_demand_pattern(self) -> dict[str, Uncertainty]:
+        """
+        Returns the local demand pattern uncertainty.
+
+        Returns
+        -------
+        dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`]
+            Local demand pattern uncertainty.
+        """
+        return deepcopy(self.__local_demand_pattern)
+
+    @property
+    def local_elevation(self) -> dict[str, Uncertainty]:
+        """
+        Returns the local node elevation uncertainty.
+
+        Returns
+        -------
+        dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`]
+            Local node elevation uncertainty.
+        """
+        return deepcopy(self.__local_elevation)
+
+    @property
+    def local_constants(self) -> dict[str, Uncertainty]:
+        """
+        Returns the local MSX constant uncertainty.
+
+        Returns
+        -------
+        dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`]
+            Local MSX constant uncertainty.
+        """
+        return deepcopy(self.__local_constants)
+
+    @property
+    def local_parameters(self) -> dict[tuple[str, int, str], Uncertainty]:
+        """
+        Returns the local MSX parameter uncertainty.
+
+        Returns
+        -------
+        dict[tuple[str, int, str], :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`]
+            Local MSX parameter uncertainty.
+        """
+        return deepcopy(self.__local_parameters)
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"pipe_length_uncertainty": self.__pipe_length,
-                                           "pipe_roughness_uncertainty": self.__pipe_roughness,
-                                           "pipe_diameter_uncertainty": self.__pipe_diameter,
-                                           "base_demand_uncertainty": self.__base_demand,
-                                           "demand_pattern_uncertainty": self.__demand_pattern,
-                                           "elevation_uncertainty": self.__elevation,
-                                           "constants_uncertainty": self.__constants,
-                                           "parameters_uncertainty": self.__parameters}
+        attribs = {"global_pipe_length_uncertainty": self.__global_pipe_length,
+                   "global_pipe_roughness_uncertainty": self.__global_pipe_roughness,
+                   "global_pipe_diameter_uncertainty": self.__global_pipe_diameter,
+                   "global_base_demand_uncertainty": self.__global_base_demand,
+                   "global_demand_pattern_uncertainty": self.__global_demand_pattern,
+                   "global_elevation_uncertainty": self.__global_elevation,
+                   "global_constants_uncertainty": self.__global_constants,
+                   "global_parameters_uncertainty": self.__global_parameters,
+                   "local_pipe_length_uncertainty": self.__local_pipe_length,
+                   "local_pipe_roughness_uncertainty": self.__local_pipe_roughness,
+                   "local_pipe_diameter_uncertainty": self.__local_pipe_diameter,
+                   "local_base_demand_uncertainty": self.__local_base_demand,
+                   "local_demand_pattern_uncertainty": self.__local_demand_pattern,
+                   "local_elevation_uncertainty": self.__local_elevation,
+                   "local_constants_uncertainty": self.__local_constants,
+                   "local_parameters_uncertainty": self.__local_parameters}
+
+        return super().get_attributes() | attribs
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, ModelUncertainty):
             raise TypeError("Can not compare 'ModelUncertainty' instance " +
                             f"with '{type(other)}' instance")
 
-        return self.__pipe_length == other.pipe_length \
-            and self.__pipe_roughness == other.pipe_roughness \
-            and self.__pipe_diameter == other.pipe_diameter \
-            and self.__base_demand == other.base_demand \
-            and self.__demand_pattern == other.demand_pattern \
-            and self.__elevation == other.elevation \
-            and self.__parameters == other.parameters and self.__constants == other.constants
+        return self.__global_pipe_length == other.global_pipe_length \
+            and self.__global_pipe_roughness == other.global_pipe_roughness \
+            and self.__global_pipe_diameter == other.global_pipe_diameter \
+            and self.__global_base_demand == other.global_base_demand \
+            and self.__global_demand_pattern == other.global_demand_pattern \
+            and self.__global_elevation == other.global_elevation \
+            and self.__global_parameters == other.global_parameters \
+            and self.__global_constants == other.global_constants \
+            and self.__local_pipe_length == other.local_pipe_length \
+            and self.__local_pipe_roughness == other.local_pipe_roughness \
+            and self.__local_pipe_diameter == other.local_pipe_diameter \
+            and self.__local_base_demand == other.local_base_demand \
+            and self.__local_demand_pattern == other.local_demand_pattern \
+            and self.__local_elevation == other.local_elevation \
+            and self.__local_parameters == other.local_parameters \
+            and self.__local_constants == other.local_constants
 
     def __str__(self) -> str:
-        return f"pipe_length: {self.__pipe_length} pipe_roughness: {self.__pipe_roughness} " + \
-            f"pipe_diameter: {self.__pipe_diameter} demand_base: {self.__base_demand} " + \
-            f"demand_pattern: {self.__demand_pattern} elevation: {self.__elevation} " + \
-            f"constants: {self.__constants} parameters: {self.__parameters}"
+        return f"global_pipe_length: {self.__global_pipe_length} " +\
+            f"global_pipe_roughness: {self.__global_pipe_roughness} " + \
+            f"global_pipe_diameter: {self.__global_pipe_diameter} " + \
+            f"global_demand_base: {self.__global_base_demand} " + \
+            f"global_demand_pattern: {self.__global_demand_pattern} " + \
+            f"global_elevation: {self.__global_elevation} " + \
+            f"global_constants: {self.__global_constants} " + \
+            f"global_parameters: {self.__global_parameters}" + \
+            f"local_pipe_length: {self.__local_pipe_length} " +\
+            f"local_pipe_roughness: {self.__local_pipe_roughness} " + \
+            f"local_pipe_diameter: {self.__local_pipe_diameter} " + \
+            f"local_demand_base: {self.__local_base_demand} " + \
+            f"local_demand_pattern: {self.__local_demand_pattern} " + \
+            f"local_elevation: {self.__local_elevation} " + \
+            f"local_constants: {self.__local_constants} " + \
+            f"local_parameters: {self.__local_parameters}"
 
     def apply(self, epanet_api: epyt.epanet) -> None:
         """
@@ -251,31 +564,61 @@ class ModelUncertainty(JsonSerializable):
         epanet_api : `epyt.epanet <https://epanet-python-toolkit-epyt.readthedocs.io/en/stable/api.html#epyt.epanet.epanet>`_
             Interface to EPANET and EPANET-MSX.
         """
-        if self.__pipe_length is not None:
+        if self.__global_pipe_length is not None:
             link_length = epanet_api.getLinkLength()
-            link_length = self.__pipe_length.apply_batch(link_length)
+            link_length = self.__global_pipe_length.apply_batch(link_length)
             epanet_api.setLinkLength(link_length)
 
-        if self.__pipe_diameter is not None:
+        if self.__local_pipe_length is not None:
+            for pipe_id, uncertainty in self.__local_pipe_length.items():
+                link_idx = epanet_api.getLinkIndex(pipe_id)
+                link_length = epanet_api.getLinkLength(link_idx)
+                link_length = uncertainty.apply(link_length)
+                epanet_api.setLinkLength(link_idx, link_length)
+
+        if self.__global_pipe_diameter is not None:
             link_diameters = epanet_api.getLinkDiameter()
-            link_diameters = self.__pipe_diameter.apply_batch(link_diameters)
+            link_diameters = self.__global_pipe_diameter.apply_batch(link_diameters)
             epanet_api.setLinkDiameter(link_diameters)
 
-        if self.__pipe_roughness is not None:
+        if self.__local_pipe_diameter is not None:
+            for pipe_id, uncertainty in self.__local_pipe_diameter.items():
+                link_idx = epanet_api.getLinkIndex(pipe_id)
+                link_diameter = epanet_api.getLinkDiameter(link_idx)
+                link_diameter = uncertainty.apply(link_diameter)
+                epanet_api.setLinkDiameter(link_idx, link_diameter)
+
+        if self.__global_pipe_roughness is not None:
             coeffs = epanet_api.getLinkRoughnessCoeff()
-            coeffs = self.__pipe_roughness.apply_batch(coeffs)
+            coeffs = self.__global_pipe_roughness.apply_batch(coeffs)
             epanet_api.setLinkRoughnessCoeff(coeffs)
 
-        if self.__base_demand is not None:
+        if self.__local_pipe_roughness is not None:
+            for pipe_id, uncertainty in self.__local_pipe_roughness.items():
+                link_idx = epanet_api.getLinkIndex(pipe_id)
+                link_roughness_coeff = epanet_api.getLinkRoughnessCoeff(link_idx)
+                link_roughness_coeff = uncertainty.apply(link_roughness_coeff)
+                epanet_api.setLinkRoughnessCoeff(link_idx, link_roughness_coeff)
+
+        if self.__global_base_demand is not None:
             all_nodes_idx = epanet_api.getNodeIndex()
             for node_idx in all_nodes_idx:
                 n_demand_categories = epanet_api.getNodeDemandCategoriesNumber(node_idx)
                 for demand_category in range(n_demand_categories):
                     base_demand = epanet_api.getNodeBaseDemands(node_idx)[demand_category + 1]
-                    base_demand = self.__base_demand.apply(base_demand)
+                    base_demand = self.__global_base_demand.apply(base_demand)
                     epanet_api.setNodeBaseDemands(node_idx, demand_category + 1, base_demand)
 
-        if self.__demand_pattern is not None:
+        if self.__local_base_demand is not None:
+            for node_id, uncertainty in self.__local_base_demand.items():
+                node_idx = epanet_api.getNodeIndex(node_id)
+                n_demand_categories = epanet_api.getNodeDemandCategoriesNumber(node_idx)
+                for demand_category in range(n_demand_categories):
+                    base_demand = epanet_api.getNodeBaseDemands(node_idx)[demand_category + 1]
+                    base_demand = uncertainty.apply(base_demand)
+                    epanet_api.setNodeBaseDemands(node_idx, demand_category + 1, base_demand)
+
+        if self.__global_demand_pattern is not None:
             demand_patterns_idx = epanet_api.getNodeDemandPatternIndex()
             demand_patterns_id = np.unique([demand_patterns_idx[k]
                                             for k in demand_patterns_idx.keys()])
@@ -285,25 +628,53 @@ class ModelUncertainty(JsonSerializable):
                 pattern_length = epanet_api.getPatternLengths(pattern_id)
                 for t in range(pattern_length):
                     v = epanet_api.getPatternValue(pattern_id, t+1)
-                    epanet_api.setPatternValue(pattern_id, t+1, self.__demand_pattern.apply(v))
+                    v_ = self.__global_demand_pattern.apply(v)
+                    epanet_api.setPatternValue(pattern_id, t+1, v_)
 
-        if self.__elevation is not None:
+        if self.__local_demand_pattern is not None:
+            patterns_id = epanet_api.getPatternNameID()
+            paterns_idx = epanet_api.getPatternIndex()
+
+            for pattern_id, uncertainty in self.__local_demand_pattern.items():
+                pattern_idx = paterns_idx[patterns_id.index(pattern_id)]
+                pattern_length, = epanet_api.getPatternLengths(pattern_id)
+                for t in range(pattern_length):
+                    v = epanet_api.getPatternValue(pattern_idx, t+1)
+                    v_ = uncertainty.apply(v)
+                    epanet_api.setPatternValue(pattern_idx, t+1, v_)
+
+        if self.__global_elevation is not None:
             elevations = epanet_api.getNodeElevations()
-            elevations = self.__elevation.apply_batch(elevations)
+            elevations = self.__global_elevation.apply_batch(elevations)
             epanet_api.setNodeElevations(elevations)
 
-        if self.__constants is not None:
+        if self.__local_elevation is not None:
+            for node_id, uncertainty in self.__local_elevation.items():
+                node_idx = epanet_api.getNodeIndex(node_id)
+                elevation = epanet_api.getNodeElevations(node_idx)
+                elevation = uncertainty.apply(elevation)
+                epanet_api.setNodeElevations(node_idx, elevation)
+
+        if self.__global_constants is not None:
             constants = np.array(epanet_api.getMSXConstantsValue())
-            constants = self.__constants.apply_batch(constants)
+            constants = self.__global_constants.apply_batch(constants)
             epanet_api.setMSXConstantsValue(constants)
 
-        if self.__parameters is not None:
+        if self.__local_constants:
+            for constant_id, uncertainty in self.__local_constants.items():
+                idx = epanet_api.MSXgetindex(ToolkitConstants.MSX_CONSTANT, constant_id)
+                constant = epanet_api.msx.MSXgetconstant(idx)
+                constant = uncertainty.apply(constant)
+                epanet_api.msx.MSXsetconstant(idx, constant)
+
+        if self.__global_parameters is not None:
             parameters_pipes = epanet_api.getMSXParametersPipesValue()
             for i, pipe_idx in enumerate(epanet_api.getLinkPipeIndex()):
                 if len(parameters_pipes[i]) == 0:
                     continue
 
-                parameters_pipes_val = self.__parameters.apply_batch(np.array(parameters_pipes[i]))
+                parameters_pipes_val = self.__global_parameters.apply_batch(
+                    np.array(parameters_pipes[i]))
                 epanet_api.setMSXParametersPipesValue(pipe_idx, parameters_pipes_val)
 
             parameters_tanks = epanet_api.getMSXParametersTanksValue()
@@ -311,5 +682,22 @@ class ModelUncertainty(JsonSerializable):
                 if parameters_tanks[i] is None or len(parameters_tanks[i]) == 0:
                     continue
 
-                parameters_tanks_val = self.__parameters.apply_batch(np.array(parameters_tanks[i]))
+                parameters_tanks_val = self.__global_parameters.apply_batch(
+                    np.array(parameters_tanks[i]))
                 epanet_api.setMSXParametersTanksValue(tank_idx, parameters_tanks_val)
+
+        if self.__local_parameters is not None:
+            for (param_id, item_type, item_id), uncertainty in self.__local_parameters.items():
+                idx, = epanet_api.getMSXParametersIndex([param_id])
+
+                if item_type == ToolkitConstants.MSX_NODE:
+                    item_idx = epanet_api.getNodeIndex(item_id)
+                elif item_type == ToolkitConstants.MSX_LINK:
+                    item_idx = epanet_api.getLinkIndex(item_id)
+                else:
+                    raise ValueError(f"Unknown item type '{item_type}' must be either " +
+                                     "ToolkitConstants.MSX_NODE or ToolkitConstants.MSX_LINK")
+
+                parameter = epanet_api.msx.MSXgetparameter(item_type, item_idx, idx)
+                parameter = uncertainty.apply(parameter)
+                epanet_api.msx.MSXsetparameter(item_type, item_idx, idx, parameter)

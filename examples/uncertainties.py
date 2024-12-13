@@ -21,7 +21,7 @@ if __name__ == "__main__":
         # Consequently, the simulation is no longer deterministic and the results vary
         # from run to run.
         uc = RelativeUniformUncertainty(low=0.75, high=1.25)
-        sim.set_model_uncertainty(ModelUncertainty(demand_pattern_uncertainty=uc))
+        sim.set_model_uncertainty(ModelUncertainty(global_demand_pattern_uncertainty=uc))
 
         # Run simulation three times and retrieve sensor readings at node "n105"
         measurements = []

@@ -544,9 +544,9 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
             upper = data + z
             return lower + np.random.uniform() * (upper - lower)
 
-    my_uncertainties = {"pipe_length_uncertainty": MyUniformUncertainty(low=0, high=0.25),
-                        "pipe_roughness_uncertainty": MyUniformUncertainty(low=0, high=0.25),
-                        "base_demand_uncertainty": MyUniformUncertainty(low=0, high=0.25)}
+    my_uncertainties = {"global_pipe_length_uncertainty": MyUniformUncertainty(low=0, high=0.25),
+                        "global_pipe_roughness_uncertainty": MyUniformUncertainty(low=0, high=0.25),
+                        "global_base_demand_uncertainty": MyUniformUncertainty(low=0, high=0.25)}
     model_uncertainty = ModelUncertainty(**my_uncertainties)
 
     # Create sensor config (place pressure and flow sensors everywhere)

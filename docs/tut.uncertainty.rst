@@ -50,7 +50,7 @@ A complete list of pre-defined and implemented uncertainties is given in the fol
 Model Uncertainty
 +++++++++++++++++
 
-Model uncertainty refers to uncertainty in the WDN model -- i.e. uncertainty in pipe lengths,
+Model uncertainty refers to uncertainties in the WDN model -- i.e. uncertainties in pipe lengths,
 pipe diameters, base demands, demand patterns, etc.
 
 EPyT-Flow allows the user to specify model uncertainties by instantiating
@@ -58,10 +58,38 @@ EPyT-Flow allows the user to specify model uncertainties by instantiating
 to the scenario simulator
 (instance of :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`) by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_model_uncertainty` BEFORE
-the simulation is run.
+the simulation is run. As a consequence, the simulation runs are no longer deterministic.
+See below for a full list of all quantities that can be affected by uncertainties:
 
-Example of setting pipe length, and demand pattern uncertainty -- in both cases the uncertainty
-corresponds to a uniform deviation of up to 10%:
++-------------------------------------------------+
+| Quantities that can be affected by uncertainties|
++=================================================+
+| Node elevation                                  |
++-------------------------------------------------+
+| Pipe length                                     |
++-------------------------------------------------+
+| Pipe diameter                                   |
++-------------------------------------------------+
+| Pipe roughness coefficient                      |
++-------------------------------------------------+
+| Base demand                                     |
++-------------------------------------------------+
+| Demand pattern                                  |
++-------------------------------------------------+
+| EPANET-MSX constants                            |
++-------------------------------------------------+
+| EPANET-MSX parameters                           |
++-------------------------------------------------+
+
+Uncertainties can be either on a global or local level.
+In global uncertainties, a specific quantity (e.g. pipe length) is always affected by the
+same uncertainty -- e.g. all pipe's length are affected by the same uncertainty.
+On the other hand, local uncertainties allow to specify the uncertainties for each element
+and quantity separately -- e.g. only a sub-set of pipes is affected by some uncertainty,
+also, the type and magnitude of uncertainty could vary between the pipes. 
+
+Example of setting pipe length, and demand pattern global uncertainty -- in both cases the
+global uncertainty corresponds to a uniform deviation of up to 10%:
 
 .. code-block:: python
 
@@ -70,8 +98,8 @@ corresponds to a uniform deviation of up to 10%:
     with ScenarioSimulator(scenario_config=network_config) as sim:
         # Specify pipe length and demand pattern uncertainty
         uncertainty = PercentageDeviationUncertainty(deviation_percentage=.1)
-        model_uncertainty = ModelUncertainty(pipe_length_uncertainty=uncertainty,
-                                             demand_pattern_uncertainty=uncertainty)
+        model_uncertainty = ModelUncertainty(global_pipe_length_uncertainty=uncertainty,
+                                             global_demand_pattern_uncertainty=uncertainty)
         sim.set_model_uncertainty(model_uncertainty)
 
         # Run the simulation
