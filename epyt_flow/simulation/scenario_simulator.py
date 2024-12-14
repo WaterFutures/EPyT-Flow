@@ -1663,7 +1663,7 @@ class ScenarioSimulator():
             print("Running EPANET-MSX ...")
             n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
                                      hyd_time_step)
-            progress_bar = iter(tqdm(range(n_iterations + 1), desc="Time steps"))
+            progress_bar = iter(tqdm(range(n_iterations + 1), ascii=True, desc="Time steps"))
 
         def __get_concentrations(init_qual=False):
             if init_qual is True:
@@ -1905,7 +1905,7 @@ class ScenarioSimulator():
             print("Running basic quality analysis using EPANET ...")
             n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
                                      requested_time_step)
-            progress_bar = iter(tqdm(range(n_iterations + 1), desc="Time steps"))
+            progress_bar = iter(tqdm(range(n_iterations + 1), ascii=True, desc="Time steps"))
 
         # Run simulation step by step
         total_time = 0
@@ -2090,7 +2090,7 @@ class ScenarioSimulator():
             print("Running EPANET ...")
             n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
                                      requested_time_step)
-            progress_bar = iter(tqdm(range(n_iterations + 1), desc="Time steps"))
+            progress_bar = iter(tqdm(range(n_iterations + 1), ascii=True, desc="Time steps"))
 
         try:
             # Run simulation step by step

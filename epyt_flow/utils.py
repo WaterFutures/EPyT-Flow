@@ -342,6 +342,7 @@ def download_if_necessary(download_path: str, url: str, verbose: bool = True) ->
             content_length = int(response.headers.get('content-length', 0))
             with open(download_path, "wb") as file, tqdm(desc=download_path,
                                                          total=content_length,
+                                                         ascii=True,
                                                          unit='B',
                                                          unit_scale=True,
                                                          unit_divisor=1024) as progress_bar:
