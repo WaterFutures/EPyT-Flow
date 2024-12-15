@@ -947,6 +947,45 @@ class ScenarioSimulator():
             for t in range(pattern_length):  # Set shuffled/randomized pattern
                 self.epanet_api.setPatternValue(pattern_id, t + 1, pattern[t])
 
+    def get_pattern(self, pattern_id: str) -> np.ndarray:
+        """
+        Returns the EPANET pattern (i.e. all multiplier factors over time) given its ID.
+
+        Parameters
+        ----------
+        pattern_id : `str`
+            ID of the pattern.
+
+        Returns
+        -------
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
+            The pattern -- i.e. multiplier factors over time.
+        """
+        pattern_idx = self.epanet_api.getPatternIndex(pattern_id)
+        pattern_length = self.epanet_api.getPatternLengths(pattern_idx)
+        return np.array([self.epanet_api.getPatternValue(pattern_idx, t+1)
+                         for t in range(pattern_length)])
+
+    def get_node_demand_pattern(self, node_id: str) -> np.ndarray:
+        """
+        Returns the values of the demand pattern of a given node --
+        i.e. multiplier factors that are applied to the base demand.
+
+        Parameters
+        ----------
+        node_id : `str`
+            ID of the node.
+
+        Returns
+        -------
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
+            The demand pattern -- i.e. multiplier factors over time.
+        """
+        node_idx = self.epanet_api.getNodeIndex(node_id)
+        demand_category = self.epanet_api.getNodeDemandCategoriesNumber()[node_idx]
+        demand_pattern_id = self.epanet_api.getNodeDemandPatternNameID()[demand_category][node_idx]
+        return self.get_pattern(demand_pattern_id)
+
     def set_node_demand_pattern(self, node_id: str, base_demand: float, demand_pattern_id: str,
                                 demand_pattern: np.ndarray) -> None:
         """
