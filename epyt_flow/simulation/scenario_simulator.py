@@ -983,7 +983,7 @@ class ScenarioSimulator():
         """
         node_idx = self.epanet_api.getNodeIndex(node_id)
         demand_category = self.epanet_api.getNodeDemandCategoriesNumber()[node_idx]
-        demand_pattern_id = self.epanet_api.getNodeDemandPatternNameID()[demand_category][node_idx]
+        demand_pattern_id = self.epanet_api.getNodeDemandPatternNameID()[demand_category][node_idx - 1]
         return self.get_pattern(demand_pattern_id)
 
     def set_node_demand_pattern(self, node_id: str, base_demand: float, demand_pattern_id: str,
@@ -998,7 +998,7 @@ class ScenarioSimulator():
         base_demand : `float`
             Base demand.
         demand_pattern_id : `str`
-            ID of the new demand pattern.
+            ID of the (new) demand pattern. Existing demand pattern will be overriden if it already exisits.
         demand_pattern : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Demand pattern over time. Final demand over time = base_demand * demand_pattern
         """
@@ -1020,7 +1020,13 @@ class ScenarioSimulator():
                              "detected. Expected a one dimensional array!")
 
         node_idx = self.epanet_api.getNodeIndex(node_id)
-        self.epanet_api.addPattern(demand_pattern_id, demand_pattern)
+
+        if demand_pattern_id not in self.epanet_api.getPatternNameID():
+            self.epanet_api.addPattern(demand_pattern_id, demand_pattern)
+        else:
+            pattern_idx = self.epanet_api.getPatternIndex(demand_pattern_id)
+            self.epanet_api.setPattern(pattern_idx, demand_pattern)
+
         self.epanet_api.setNodeJunctionData(node_idx, self.epanet_api.getNodeElevations(node_idx),
                                             base_demand, demand_pattern_id)
 
