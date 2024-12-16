@@ -999,7 +999,7 @@ class ScenarioSimulator():
             Base demand.
         demand_pattern_id : `str`
             ID of the new demand pattern.
-        demand_pattern : `numpy.ndarray`
+        demand_pattern : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Demand pattern over time. Final demand over time = base_demand * demand_pattern
         """
         self._adapt_to_network_changes()
@@ -2595,7 +2595,7 @@ class ScenarioSimulator():
         ----------
         node_id : `str`
             ID of the node at which this external water quality source is placed.
-        pattern : `numpy.ndarray`
+        pattern : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             1d source pattern.
         source_type : `int`,
             Types of the external water quality source -- must be of the following
@@ -2688,7 +2688,7 @@ class ScenarioSimulator():
         node_id : `str`
             ID of the node at which this external (bulk or surface) species injection source
             is placed.
-        pattern : `numpy.ndarray`
+        pattern : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             1d source pattern.
         source_type : `int`,
             Type of the external (bulk or surface) species injection source -- must be one of

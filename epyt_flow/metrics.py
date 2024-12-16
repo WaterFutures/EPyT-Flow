@@ -14,7 +14,7 @@ def r2_score(y_pred: np.ndarray, y: np.ndarray) -> float:
     ----------
     y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted outputs.
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth outputs.
 
     Returns
