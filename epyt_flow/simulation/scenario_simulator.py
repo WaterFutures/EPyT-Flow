@@ -966,6 +966,31 @@ class ScenarioSimulator():
         return np.array([self.epanet_api.getPatternValue(pattern_idx, t+1)
                          for t in range(pattern_length)])
 
+    def add_pattern(self, pattern_id: str, pattern: np.ndarray) -> None:
+        """
+        Adds a pattern to the EPANET scenario.
+
+        Parameters
+        ----------
+        pattern_id : `str`
+            ID of the pattern.
+        pattern : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
+            Pattern of multipliers over time.
+        """
+        self._adapt_to_network_changes()
+
+        if not isinstance(pattern_id, str):
+            raise TypeError("'pattern_id' must be an instance of 'str' " +
+                            f"but not of '{type(pattern_id)}'")
+        if not isinstance(pattern, np.ndarray):
+            raise TypeError("'pattern' must be an instance of 'numpy.ndarray' " +
+                            f"but not of '{type(pattern)}'")
+        if len(pattern.shape) > 1:
+            raise ValueError(f"Inconsistent pattern shape '{pattern.shape}' " +
+                             "detected. Expected a one dimensional array!")
+
+        self.epanet_api.addPattern(pattern_id, pattern)
+
     def get_node_demand_pattern(self, node_id: str) -> np.ndarray:
         """
         Returns the values of the demand pattern of a given node --
