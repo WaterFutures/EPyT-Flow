@@ -1,11 +1,15 @@
 from dataclasses import dataclass
 import numpy as np
 from typing import Optional, Union, List, Tuple, Iterable
+import inspect
+import networkx.drawing.nx_pylab as nxp
+import matplotlib as mpl
 
 
 @dataclass
 class JunctionObject:
     nodelist: list
+    node_shape: mpl.path.Path = None
     node_size: int = 10
     node_color: Union[str, list] = 'k' # list of lists with frames or single letter
 
@@ -58,14 +62,21 @@ class JunctionObject:
 
     def get_frame(self, frame_number: int = 0):
 
-        attributes = vars(self)
+        attributes = vars(self).copy()
 
         if not isinstance(self.node_color, str):
             if frame_number > len(self.node_color):
-                frame_number = 0
+                frame_number = -1
             attributes['node_color'] = self.node_color[frame_number]
 
-        return attributes
+        sig = inspect.signature(nxp.draw_networkx_nodes)
+
+        valid_params = {
+            key: value for key, value in attributes.items()
+            if key in sig.parameters and value is not None
+        }
+
+        return valid_params
 
     def add_attributes(self, attributes: dict):
         for key, value in attributes.items():
@@ -135,7 +146,14 @@ class PipeObject:
                 frame_number = 0
             attributes['node_color'] = self.node_color[frame_number]
 
-        return attributes
+        sig = inspect.signature(nxp.draw_networkx_edges)
+
+        valid_params = {
+            key: value for key, value in attributes.items()
+            if key in sig.parameters and value is not None
+        }
+
+        return valid_params
 
     def add_attributes(self, attributes: dict):
         for key, value in attributes.items():

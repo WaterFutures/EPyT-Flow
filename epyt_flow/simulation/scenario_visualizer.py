@@ -178,17 +178,13 @@ class ScenarioVisualizer:
 
         self.junction_parameters = JunctionObject(self.topology.get_all_junctions())
 
-        self.tank_parameters = JunctionObject(self.topology.get_all_tanks(), node_size=100)
-        self.tank_parameters.node_shape = markers.tank
+        self.tank_parameters = JunctionObject(self.topology.get_all_tanks(), node_size=100, node_shape=markers.tank)
 
-        self.reservoir_parameters = JunctionObject(self.topology.get_all_reservoirs(), node_size=100)
-        self.reservoir_parameters.node_shape = markers.reservoir
+        self.reservoir_parameters = JunctionObject(self.topology.get_all_reservoirs(), node_size=100, node_shape=markers.reservoir)
 
-        self.valve_parameters = JunctionObject(self.topology.get_all_valves(), node_size=75)
-        self.valve_parameters.node_shape = markers.valve
+        self.valve_parameters = JunctionObject(self.topology.get_all_valves(), node_size=75, node_shape=markers.valve)
 
-        self.pump_parameters = JunctionObject(self.topology.get_all_pumps(), node_size=100)
-        self.pump_parameters.node_shape = markers.pump
+        self.pump_parameters = JunctionObject(self.topology.get_all_pumps(), node_size=100, node_shape=markers.pump)
 
         self.animation_dict = {}
         self.colorbars = {}
@@ -465,16 +461,17 @@ class ScenarioVisualizer:
         self.fig = plt.figure(figsize=(6.4, 4.8), dpi=200)
 
         total_frames = float('inf')
-        for ll in self.animation_dict.values():
-            total_frames = min(total_frames, len(ll))
+        for node_source in [self.junction_parameters, self.tank_parameters, self.reservoir_parameters, self.valve_parameters, self.pump_parameters]:
+            if len(node_source.node_color) > 1:
+                total_frames = min(total_frames, len(node_source.node_color))
 
-        if not self.animation_dict or total_frames == 0:
+        if total_frames == 0:
             raise RuntimeError("The color or resize functions must be called "
                                "with a time_step range (pit) to enable "
                                "animations")
 
         anim = FuncAnimation(self.fig, self.__get_next_frame,
-                             frames=total_frames, interval=25)
+                             frames=total_frames, interval=100)
 
         if export_to_file is not None:
             anim.save(export_to_file, writer='ffmpeg', fps=4)
@@ -532,7 +529,7 @@ class ScenarioVisualizer:
     def color_nodes(
             self, scada_data: Optional[ScadaData] = None,
             parameter: str = 'pressure', statistic: str = 'mean',
-            pit: Optional[Union[int, Tuple[int]]] = None,
+            pit: Optional[Union[int, Tuple[int, int]]] = None,
             colormap: str = 'viridis',
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
             conversion: Optional[dict] = None, show_colorbar: bool = False) ->\
