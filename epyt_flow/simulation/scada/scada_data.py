@@ -1314,54 +1314,44 @@ class ScadaData(Serializable):
         """
         return deepcopy(self.__pumps_efficiency_data_raw)
 
+    def __map_sensor_to_idx(self, sensor_type: int, sensor_id: str) -> int:
+        if sensor_type == SENSOR_TYPE_NODE_PRESSURE:
+            return self.__sensor_config.get_index_of_reading(pressure_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_NODE_QUALITY:
+            return self.__sensor_config.get_index_of_reading(node_quality_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_NODE_DEMAND:
+            return self.__sensor_config.get_index_of_reading(demand_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_LINK_FLOW:
+            return self.__sensor_config.get_index_of_reading(flow_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_LINK_QUALITY:
+            return self.__sensor_config.get_index_of_reading(link_quality_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_VALVE_STATE:
+            return self.__sensor_config.get_index_of_reading(valve_state_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_PUMP_STATE:
+            return self.__sensor_config.get_index_of_reading(pump_state_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_PUMP_EFFICIENCY:
+            return self.__sensor_config.get_index_of_reading(pump_efficiency_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_PUMP_ENERGYCONSUMPTION:
+            return self.__sensor_config.get_index_of_reading(pump_energyconsumption_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_TANK_VOLUME:
+            return self.__sensor_config.get_index_of_reading(tank_volume_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_NODE_BULK_SPECIES:
+            return self.__sensor_config.get_index_of_reading(bulk_species_node_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_LINK_BULK_SPECIES:
+            return self.__sensor_config.get_index_of_reading(bulk_species_link_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_SURFACE_SPECIES:
+            return self.__sensor_config.get_index_of_reading(surface_species_sensor=sensor_id)
+        else:
+            raise ValueError(f"Unknown sensor type '{sensor_type}'")
+
     def __init(self):
-        self.__apply_sensor_noise = lambda x: x
+        self.__apply_global_sensor_noise = lambda x: x
         if self.__sensor_noise is not None:
-            self.__apply_sensor_noise = self.__sensor_noise.apply
+            self.__apply_global_sensor_noise = self.__sensor_noise.apply_global_uncertainty
 
         self.__apply_sensor_reading_events = []
         for sensor_event in self.__sensor_reading_events:
-            idx = None
-            if sensor_event.sensor_type == SENSOR_TYPE_NODE_PRESSURE:
-                idx = self.__sensor_config.get_index_of_reading(
-                    pressure_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_NODE_QUALITY:
-                idx = self.__sensor_config.get_index_of_reading(
-                    node_quality_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_NODE_DEMAND:
-                idx = self.__sensor_config.get_index_of_reading(
-                    demand_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_LINK_FLOW:
-                idx = self.__sensor_config.get_index_of_reading(
-                    flow_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_LINK_QUALITY:
-                idx = self.__sensor_config.get_index_of_reading(
-                    link_quality_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_VALVE_STATE:
-                idx = self.__sensor_config.get_index_of_reading(
-                    valve_state_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_PUMP_STATE:
-                idx = self.__sensor_config.get_index_of_reading(
-                    pump_state_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_PUMP_EFFICIENCY:
-                idx = self.__sensor_config.get_index_of_reading(
-                    pump_efficiency_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_PUMP_ENERGYCONSUMPTION:
-                idx = self.__sensor_config.get_index_of_reading(
-                    pump_energyconsumption_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_TANK_VOLUME:
-                idx = self.__sensor_config.get_index_of_reading(
-                    tank_volume_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_NODE_BULK_SPECIES:
-                idx = self.__sensor_config.get_index_of_reading(
-                    bulk_species_node_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_LINK_BULK_SPECIES:
-                idx = self.__sensor_config.get_index_of_reading(
-                    bulk_species_link_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_SURFACE_SPECIES:
-                idx = self.__sensor_config.get_index_of_reading(
-                    surface_species_sensor=sensor_event.sensor_id)
-
+            idx = self.__map_sensor_to_idx(sensor_event.sensor_type, sensor_event.sensor_id)
             self.__apply_sensor_reading_events.append((idx, sensor_event.apply))
 
         self.__sensor_readings = None
@@ -2019,18 +2009,21 @@ class ScadaData(Serializable):
             sensor_readings = np.concatenate(data, axis=1)
 
         # Apply sensor uncertainties
-        state_sensors_idx = []   # Pump states and valve states are NOT affected!
-        for link_id in self.sensor_config.pump_state_sensors:
-            state_sensors_idx.append(
-                self.__sensor_config.get_index_of_reading(pump_state_sensor=link_id))
-        for link_id in self.sensor_config.valve_state_sensors:
-            state_sensors_idx.append(
-                self.__sensor_config.get_index_of_reading(valve_state_sensor=link_id))
+        if self.__sensor_noise is not None:
+            state_sensors_idx = []   # Pump states and valve states are NOT affected!
+            for link_id in self.sensor_config.pump_state_sensors:
+                state_sensors_idx.append(
+                    self.__sensor_config.get_index_of_reading(pump_state_sensor=link_id))
+            for link_id in self.sensor_config.valve_state_sensors:
+                state_sensors_idx.append(
+                    self.__sensor_config.get_index_of_reading(valve_state_sensor=link_id))
 
-        mask = np.ones(sensor_readings.shape[1], dtype=bool)
-        mask[state_sensors_idx] = False
+            mask = np.ones(sensor_readings.shape[1], dtype=bool)
+            mask[state_sensors_idx] = False
+            sensor_readings[:, mask] = self.__apply_global_sensor_noise(sensor_readings[:, mask])
 
-        sensor_readings[:, mask] = self.__apply_sensor_noise(sensor_readings[:, mask])
+            sensor_readings = self.__sensor_noise.apply_local_uncertainty(self.__map_sensor_to_idx,
+                                                                          sensor_readings)
 
         # Apply sensor faults
         for idx, f in self.__apply_sensor_reading_events:
