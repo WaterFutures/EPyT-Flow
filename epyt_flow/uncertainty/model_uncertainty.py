@@ -101,6 +101,19 @@ class ModelUncertainty(JsonSerializable):
         None, in the case of no uncertainty.
 
         The default is None.
+    local_patterns_uncertainty : dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`], optional
+        Local uncertainty of EPANET patterns -- i.e. a dictionary of pattern IDs and uncertainties.
+
+        None, in the case of no uncertainty.
+
+        The default is None.
+    local_msx_patterns_uncertainty : dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`], optional
+        Local uncertainty of EPANET-MSX patterns -- i.e. a dictionary of MSX pattern IDs
+        and uncertainties.
+
+        None, in the case of no uncertainty.
+
+        The default is None.
     """
     def __init__(self, pipe_length_uncertainty: Uncertainty = None,
                  pipe_roughness_uncertainty: Uncertainty = None,
@@ -126,6 +139,8 @@ class ModelUncertainty(JsonSerializable):
                  local_elevation_uncertainty: dict[str, Uncertainty] = None,
                  local_constants_uncertainty: dict[str, Uncertainty] = None,
                  local_parameters_uncertainty: dict[str, int, Uncertainty] = None,
+                 local_patterns_uncertainty: dict[str, Uncertainty] = None,
+                 local_msx_patterns_uncertainty: dict[str, Uncertainty] = None,
                  **kwds):
         if pipe_length_uncertainty is not None:
             global_pipe_diameter_uncertainty = pipe_length_uncertainty
@@ -276,13 +291,33 @@ class ModelUncertainty(JsonSerializable):
                 raise TypeError("'local_parameters_uncertainty' must be an instance of " +
                                 "'dict[str, epyt_flow.uncertainty.Uncertainty]' but not of " +
                                 f"'{type(local_parameters_uncertainty)}'")
-            if any(not isinstance(key,tuple) or not isinstance(key[0], str) or
+            if any(not isinstance(key, tuple) or not isinstance(key[0], str) or
                    not isinstance(key[1], int) or not isinstance(key[2], str) or
                    not isinstance(local_parameters_uncertainty[key], Uncertainty)
                    for key in local_parameters_uncertainty.keys()):
                 raise TypeError("'local_parameters_uncertainty': " +
                                 "All keys must be instances of 'tuple[str, int, str]' and all " +
                                 "values must be instances of 'epyt_flow.uncertainty.Uncertainty'")
+        if local_patterns_uncertainty is not None:
+            if not isinstance(local_patterns_uncertainty, dict):
+                raise TypeError("'local_patterns_uncertainty' must be an instance of " +
+                                "'dict[str, epyt_flow.uncertainty.Uncertainty]' but not of " +
+                                f"'{type(local_patterns_uncertainty)}'")
+            if any(not isinstance(key, str) or not isinstance(val, Uncertainty)
+                   for key, val in local_patterns_uncertainty.items()):
+                raise TypeError("'local_patterns_uncertainty': " +
+                                "All keys must be instances of 'str' and all values must be " +
+                                "instances of 'epyt_flow.uncertainty.Uncertainty'")
+        if local_msx_patterns_uncertainty is not None:
+            if not isinstance(local_msx_patterns_uncertainty, dict):
+                raise TypeError("'local_msx_patterns_uncertainty' must be an instance of " +
+                                "'dict[str, epyt_flow.uncertainty.Uncertainty]' but not of " +
+                                f"'{type(local_msx_patterns_uncertainty)}'")
+            if any(not isinstance(key, str) or not isinstance(val, Uncertainty)
+                   for key, val in local_msx_patterns_uncertainty.items()):
+                raise TypeError("'local_msx_patterns_uncertainty': " +
+                                "All keys must be instances of 'str' and all values must be " +
+                                "instances of 'epyt_flow.uncertainty.Uncertainty'")
 
         self.__global_pipe_length = global_pipe_length_uncertainty
         self.__global_pipe_roughness = global_pipe_roughness_uncertainty
@@ -300,6 +335,8 @@ class ModelUncertainty(JsonSerializable):
         self.__local_elevation = local_elevation_uncertainty
         self.__local_constants = local_constants_uncertainty
         self.__local_parameters = local_parameters_uncertainty
+        self.__local_patterns = local_patterns_uncertainty
+        self.__local_msx_patterns = local_msx_patterns_uncertainty
 
         super().__init__(**kwds)
 
@@ -495,6 +532,30 @@ class ModelUncertainty(JsonSerializable):
         """
         return deepcopy(self.__local_parameters)
 
+    @property
+    def local_patterns(self) -> dict[str, Uncertainty]:
+        """
+        Returns the local EPANET patterns uncertainty.
+
+        Returns
+        -------
+        dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`]
+            Local EPANET patterns uncertainty.
+        """
+        return deepcopy(self.__local_patterns)
+
+    @property
+    def local_msx_patterns(self) -> dict[str, Uncertainty]:
+        """
+        Returns the local EPANET-MSX patterns uncertainty.
+
+        Returns
+        -------
+        dict[str, :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`]
+            Local EPANET-MSX patterns uncertainty.
+        """
+        return deepcopy(self.__local_msx_patterns)
+
     def get_attributes(self) -> dict:
         attribs = {"global_pipe_length_uncertainty": self.__global_pipe_length,
                    "global_pipe_roughness_uncertainty": self.__global_pipe_roughness,
@@ -511,7 +572,9 @@ class ModelUncertainty(JsonSerializable):
                    "local_demand_pattern_uncertainty": self.__local_demand_pattern,
                    "local_elevation_uncertainty": self.__local_elevation,
                    "local_constants_uncertainty": self.__local_constants,
-                   "local_parameters_uncertainty": self.__local_parameters}
+                   "local_parameters_uncertainty": self.__local_parameters,
+                   "local_patterns_uncertainty": self.__local_patterns,
+                   "local_msx_patterns_uncertainty": self.__local_msx_patterns}
 
         return super().get_attributes() | attribs
 
@@ -535,7 +598,9 @@ class ModelUncertainty(JsonSerializable):
             and self.__local_demand_pattern == other.local_demand_pattern \
             and self.__local_elevation == other.local_elevation \
             and self.__local_parameters == other.local_parameters \
-            and self.__local_constants == other.local_constants
+            and self.__local_constants == other.local_constants \
+            and self.__local_patterns == other.local_patterns \
+            and self.__local_msx_patterns == other.local_msx_patterns
 
     def __str__(self) -> str:
         return f"global_pipe_length: {self.__global_pipe_length} " +\
@@ -553,7 +618,9 @@ class ModelUncertainty(JsonSerializable):
             f"local_demand_pattern: {self.__local_demand_pattern} " + \
             f"local_elevation: {self.__local_elevation} " + \
             f"local_constants: {self.__local_constants} " + \
-            f"local_parameters: {self.__local_parameters}"
+            f"local_parameters: {self.__local_parameters} " + \
+            f"local_patterns: {self.__local_patterns} " + \
+            f"local_msx_patterns: {self.__local_msx_patterns}"
 
     def apply(self, epanet_api: epyt.epanet) -> None:
         """
@@ -655,49 +722,71 @@ class ModelUncertainty(JsonSerializable):
                 elevation = uncertainty.apply(elevation)
                 epanet_api.setNodeElevations(node_idx, elevation)
 
-        if self.__global_constants is not None:
-            constants = np.array(epanet_api.getMSXConstantsValue())
-            constants = self.__global_constants.apply_batch(constants)
-            epanet_api.setMSXConstantsValue(constants)
+        if self.__local_patterns is not None:
+            for pattern_id, uncertainty in self.__local_patterns.items():
+                pattern_idx = epanet_api.getPatternIndex(pattern_id)
+                pattern_length = epanet_api.getPatternLengths(pattern_idx)
+                pattern = np.array([epanet_api.getPatternValue(pattern_idx, t+1)
+                                    for t in range(pattern_length)])
+                pattern = uncertainty.apply_batch(pattern)
+                epanet_api.setPattern(pattern_idx, pattern)
 
-        if self.__local_constants:
-            for constant_id, uncertainty in self.__local_constants.items():
-                idx = epanet_api.MSXgetindex(ToolkitConstants.MSX_CONSTANT, constant_id)
-                constant = epanet_api.msx.MSXgetconstant(idx)
-                constant = uncertainty.apply(constant)
-                epanet_api.msx.MSXsetconstant(idx, constant)
+        if epanet_api.MSXFile is not None:
+            if self.__global_constants is not None:
+                constants = np.array(epanet_api.getMSXConstantsValue())
+                constants = self.__global_constants.apply_batch(constants)
+                epanet_api.setMSXConstantsValue(constants)
 
-        if self.__global_parameters is not None:
-            parameters_pipes = epanet_api.getMSXParametersPipesValue()
-            for i, pipe_idx in enumerate(epanet_api.getLinkPipeIndex()):
-                if len(parameters_pipes[i]) == 0:
-                    continue
+            if self.__local_constants:
+                for constant_id, uncertainty in self.__local_constants.items():
+                    idx = epanet_api.MSXgetindex(ToolkitConstants.MSX_CONSTANT, constant_id)
+                    constant = epanet_api.msx.MSXgetconstant(idx)
+                    constant = uncertainty.apply(constant)
+                    epanet_api.msx.MSXsetconstant(idx, constant)
 
-                parameters_pipes_val = self.__global_parameters.apply_batch(
-                    np.array(parameters_pipes[i]))
-                epanet_api.setMSXParametersPipesValue(pipe_idx, parameters_pipes_val)
+            if self.__global_parameters is not None:
+                parameters_pipes = epanet_api.getMSXParametersPipesValue()
+                for i, pipe_idx in enumerate(epanet_api.getLinkPipeIndex()):
+                    if len(parameters_pipes[i]) == 0:
+                        continue
 
-            parameters_tanks = epanet_api.getMSXParametersTanksValue()
-            for i, tank_idx in enumerate(epanet_api.getNodeTankIndex()):
-                if parameters_tanks[i] is None or len(parameters_tanks[i]) == 0:
-                    continue
+                    parameters_pipes_val = self.__global_parameters.apply_batch(
+                        np.array(parameters_pipes[i]))
+                    epanet_api.setMSXParametersPipesValue(pipe_idx, parameters_pipes_val)
 
-                parameters_tanks_val = self.__global_parameters.apply_batch(
-                    np.array(parameters_tanks[i]))
-                epanet_api.setMSXParametersTanksValue(tank_idx, parameters_tanks_val)
+                parameters_tanks = epanet_api.getMSXParametersTanksValue()
+                for i, tank_idx in enumerate(epanet_api.getNodeTankIndex()):
+                    if parameters_tanks[i] is None or len(parameters_tanks[i]) == 0:
+                        continue
 
-        if self.__local_parameters is not None:
-            for (param_id, item_type, item_id), uncertainty in self.__local_parameters.items():
-                idx, = epanet_api.getMSXParametersIndex([param_id])
+                    parameters_tanks_val = self.__global_parameters.apply_batch(
+                        np.array(parameters_tanks[i]))
+                    epanet_api.setMSXParametersTanksValue(tank_idx, parameters_tanks_val)
 
-                if item_type == ToolkitConstants.MSX_NODE:
-                    item_idx = epanet_api.getNodeIndex(item_id)
-                elif item_type == ToolkitConstants.MSX_LINK:
-                    item_idx = epanet_api.getLinkIndex(item_id)
-                else:
-                    raise ValueError(f"Unknown item type '{item_type}' must be either " +
-                                     "ToolkitConstants.MSX_NODE or ToolkitConstants.MSX_LINK")
+            if self.__local_parameters is not None:
+                for (param_id, item_type, item_id), uncertainty in self.__local_parameters.items():
+                    idx, = epanet_api.getMSXParametersIndex([param_id])
 
-                parameter = epanet_api.msx.MSXgetparameter(item_type, item_idx, idx)
-                parameter = uncertainty.apply(parameter)
-                epanet_api.msx.MSXsetparameter(item_type, item_idx, idx, parameter)
+                    if item_type == ToolkitConstants.MSX_NODE:
+                        item_idx = epanet_api.getNodeIndex(item_id)
+                    elif item_type == ToolkitConstants.MSX_LINK:
+                        item_idx = epanet_api.getLinkIndex(item_id)
+                    else:
+                        raise ValueError(f"Unknown item type '{item_type}' must be either " +
+                                         "ToolkitConstants.MSX_NODE or ToolkitConstants.MSX_LINK")
+
+                    parameter = epanet_api.msx.MSXgetparameter(item_type, item_idx, idx)
+                    parameter = uncertainty.apply(parameter)
+                    epanet_api.msx.MSXsetparameter(item_type, item_idx, idx, parameter)
+
+            if self.__local_msx_patterns is not None:
+                for pattern_id, uncertainty in self.__local_msx_patterns.items():
+                    pattern_idx, = epanet_api.getMSXPatternsIndex([pattern_id])
+                    pattern = epanet_api.getMSXConstantsValue([pattern_idx])
+                    pattern = uncertainty.apply_batch(pattern)
+                    epanet_api.setMSXPattern(pattern_idx, pattern)
+        else:
+            if self.__local_msx_patterns is not None or self.__local_parameters is not None or \
+                    self.__local_constants is not None or self.__global_constants is not None or \
+                    self.__global_parameters is not None:
+                warnings.warn("Ignoring EPANET-MSX uncertainties because not .msx file was loaded")
