@@ -13,7 +13,7 @@ from svgpath2mpl import parse_path
 
 from .scenario_simulator import ScenarioSimulator
 from .scada.scada_data import ScadaData
-from .visualization_utils import JunctionObject
+from .visualization_utils import JunctionObject, EdgeObject
 
 PUMP_PATH = ('M 202.5 93 A 41.5 42 0 0 0 161 135 A 41.5 42 0 0 0 202.5 177 A '
              '41.5 42 0 0 0 244 135 A 41.5 42 0 0 0 241.94922 122 L 278 122 '
@@ -172,9 +172,11 @@ class ScenarioVisualizer:
         self.topology = self.__scenario.get_topology()
         self.pos_dict = {x: self.topology.get_node_info(x)['coord'] for x in
                          self.topology.get_all_nodes()}
-        self.pipe_parameters = {
-            'edgelist': [x[1] for x in self.topology.get_all_links()],
-            'edge_color': 'k'}
+        #self.pipe_parameters = {
+        #    'edgelist': [x[1] for x in self.topology.get_all_links()],
+        #    'edge_color': 'k'}
+
+        self.pipe_parameters = EdgeObject([x[1] for x in self.topology.get_all_links()], 'k')
 
         self.junction_parameters = JunctionObject(self.topology.get_all_junctions())
 
@@ -244,7 +246,7 @@ class ScenarioVisualizer:
         self.ax.axis('off')
 
         nxp.draw_networkx_edges(self.topology, self.pos_dict, ax=self.ax,
-                                label='Pipes', **self.pipe_parameters)
+                                label='Pipes', **self.pipe_parameters.get_frame(frame_number))
 
         if 'pipes' in self.animation_dict:
             self.pipe_parameters['edge_color'] = self.animation_dict['pipes'][
@@ -269,167 +271,6 @@ class ScenarioVisualizer:
             ax=self.ax, label='Pumps', **self.pump_parameters.get_frame(frame_number))
 
         self.ax.legend(fontsize=6)
-
-    def __get_link_data(
-            self, scada_data: Optional[ScadaData] = None,
-            parameter: str = 'flow_rate', statistic: str = 'mean',
-            pit: Optional[Union[int, Tuple[int]]] = None,
-            intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            conversion: Optional[dict] = None)\
-            -> Tuple[Union[List, Iterable], int]:
-
-        """
-        Retrieves or generates SCADA data and processes it according to the
-        parameters.
-
-        The method extracts SCADA data corresponding to links. The given
-        statistic is then applied and the data returned in a format suitable
-        for plotting.
-
-        Parameters
-        ----------
-        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, optional
-            The SCADA data object to retrieve link data from. If `None`, a
-            simulation is run to generate the SCADA data. Default is `None`.
-        parameter : `str`, optional
-            The type of link data to retrieve. Must be either 'flow_rate',
-            'link_quality', or 'diameter'. Default is 'flow_rate'.
-        statistic : `str`, optional
-            The statistic to calculate for the link data. Can be 'mean', 'min',
-            'max', or 'time_step'. Default is 'mean'.
-        pit : `int` or `tuple(int, int)`, optional
-            Point in time for the 'time_step' statistic. Can be either one
-            point or a tuple setting a range. Required if 'time_step' is
-            selected as the statistic. Default is `None`.
-        intervals : `int`, `float`, or `list` of `int` or `float`, optional
-            If specified, the link data will be grouped into intervals. This
-            can either be an integer specifying the number of groups or a
-            `list` of boundary points defining the intervals. Default is
-            `None`.
-        conversion : `dict`, optional
-            A dictionary of conversion parameters to convert SCADA data units.
-            Default is `None`.
-
-        Returns
-        -------
-        sorted_values : `list`
-            A list of processed and sorted values for each link in the water
-            distribution network.
-        sim_length : `int`
-            The length of the simulation or SCADA data used.
-
-        Raises
-        ------
-        ValueError
-            If an invalid `parameter`, `statistic`, or `intervals` argument is
-            provided, or if `pit` is not provided when using the 'time_step'
-            statistic.
-
-        """
-
-        if scada_data:
-            self.scada_data = scada_data
-        elif not self.scada_data:
-            self.scada_data = self.__scenario.run_simulation()
-
-        if conversion:
-            self.scada_data = self.scada_data.convert_units(**conversion)
-
-        if parameter == 'flow_rate':
-            values = self.scada_data.flow_data_raw
-        elif parameter == 'link_quality':
-            values = self.scada_data.link_quality_data_raw
-        elif parameter == 'diameter':
-            value_dict = {
-                link[0]: self.topology.get_link_info(link[0])['diameter'] for
-                link in self.topology.get_all_links()}
-            sorted_values = [value_dict[x[0]] for x in
-                             self.topology.get_all_links()]
-            return (self.__rescale(sorted_values, (1, 2)),
-                    self.scada_data.flow_data_raw.shape[0])
-        else:
-            raise ValueError('Parameter must be flow_rate or link_quality')
-
-        sim_length = values.shape[0]
-
-        if statistic == 'mean':
-            stat_values = np.mean(values, axis=0)
-        elif statistic == 'min':
-            stat_values = np.min(values, axis=0)
-        elif statistic == 'max':
-            stat_values = np.max(values, axis=0)
-        elif statistic == 'time_step':
-            if not pit and pit != 0:
-                raise ValueError(
-                    'Please input point in time (pit) parameter when selecting'
-                    ' time_step statistic')
-            stat_values = np.take(values, pit, axis=0)
-        else:
-            raise ValueError(
-                'Statistic parameter must be mean, min, max or time_step')
-
-        if intervals is None:
-            pass
-        elif isinstance(intervals, (int, float)):
-            interv = np.linspace(stat_values.min(), stat_values.max(),
-                                 intervals + 1)
-            stat_values = np.digitize(stat_values, interv) - 1
-        elif isinstance(intervals, list):
-            stat_values = np.digitize(stat_values, intervals) - 1
-        else:
-            raise ValueError(
-                'Intervals must be either number of groups or list of interval'
-                ' boundary points')
-
-        value_dict = dict(zip(self.scada_data.sensor_config.links,
-                              stat_values))
-        sorted_values = [value_dict[x[0]] for x in
-                         self.topology.get_all_links()]
-
-        return sorted_values, sim_length
-
-    @staticmethod
-    def __rescale(values: np.ndarray, scale_min_max: List,
-                  values_min_max: List = None) -> List:
-        """
-        Rescales the given values to a new range.
-
-        This method rescales an array of values to fit within a specified
-        minimum and maximum scale range. Optionally, the minimum and maximum
-        of the input values can be manually provided; otherwise, they are
-        automatically determined from the data.
-
-        Parameters
-        ----------
-        values : :class:`~np.ndarray`
-            The array of numerical values to be rescaled.
-        scale_min_max : `list`
-            A list containing two elements: the minimum and maximum values
-            of the desired output range.
-        values_min_max : `list`, optional
-            A list containing two elements: the minimum and maximum values
-            of the input data. If not provided, they are computed from the
-            input `values`. Default is `None`.
-
-        Returns
-        -------
-        rescaled_values : `list`
-            A list of values rescaled to the range specified by
-            `scale_min_max`.
-
-        """
-
-        if not values_min_max:
-            min_val, max_val = min(values), max(values)
-        else:
-            min_val, max_val = values_min_max
-        scale = scale_min_max[1] - scale_min_max[0]
-
-        def range_map(x):
-            return scale_min_max[0] + (x - min_val) / (
-                    max_val - min_val) * scale
-
-        return [range_map(x) for x in values]
 
     def show_animation(self, export_to_file: str = None,
                        return_animation: bool = False)\
@@ -460,7 +301,7 @@ class ScenarioVisualizer:
         """
         self.fig = plt.figure(figsize=(6.4, 4.8), dpi=200)
 
-        total_frames = float('inf')
+        total_frames = int('inf')
         for node_source in [self.junction_parameters, self.tank_parameters, self.reservoir_parameters, self.valve_parameters, self.pump_parameters]:
             if len(node_source.node_color) > 1:
                 total_frames = min(total_frames, len(node_source.node_color))
@@ -501,7 +342,7 @@ class ScenarioVisualizer:
         self.ax.axis('off')
 
         nxp.draw_networkx_edges(self.topology, self.pos_dict, ax=self.ax,
-                                label='Pipes', **self.pipe_parameters)
+                                label='Pipes', **self.pipe_parameters.get_frame())
         nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
                                 label='Junctions', **self.junction_parameters.get_frame())
         nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
@@ -676,40 +517,26 @@ class ScenarioVisualizer:
             incorrectly provided for the 'time_step' statistic.
 
         """
+        if scada_data:
+            self.scada_data = scada_data
+        elif not self.scada_data:
+            self.scada_data = self.__scenario.run_simulation()
+
+        if conversion:
+            self.scada_data = self.scada_data.convert_units(**conversion)
+
+        self.pipe_parameters.edge_cmap = mpl.colormaps[colormap]
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
-            sorted_values, sim_length = self.__get_link_data(scada_data,
-                                                             parameter,
-                                                             statistic, pit[0],
-                                                             intervals,
-                                                             conversion)
-            self.pipe_parameters.update({'edge_color': sorted_values,
-                                         'edge_cmap': mpl.colormaps[colormap],
-                                         'edge_vmin': min(sorted_values),
-                                         'edge_vmax': max(sorted_values)})
-            self.animation_dict['pipes'] = []
-            vmin = min(sorted_values)
-            vmax = max(sorted_values)
             for frame in range(*pit):
-                if frame > sim_length - 1:
+                self.pipe_parameters.add_frame(self.topology, 'edge_color',
+                                               scada_data, parameter,
+                                               statistic, frame, intervals)
+                if frame >= self.pipe_parameters.sim_length - 1:
                     break
-                sorted_values, _ = self.__get_link_data(scada_data, parameter,
-                                                        statistic, frame,
-                                                        intervals, conversion)
-                vmin = min(*sorted_values, vmin)
-                vmax = max(*sorted_values, vmax)
-                self.animation_dict['pipes'].append(sorted_values)
-            self.pipe_parameters['edge_vmin'] = vmin
-            self.pipe_parameters['edge_vmax'] = vmax
         else:
-            sorted_values, _ = self.__get_link_data(scada_data, parameter,
-                                                    statistic, pit, intervals,
-                                                    conversion)
-            self.pipe_parameters.update({'edge_color': sorted_values,
-                                         'edge_cmap': mpl.colormaps[colormap],
-                                         'edge_vmin': min(sorted_values),
-                                         'edge_vmax': max(sorted_values)})
+            self.pipe_parameters.add_frame(self.topology, 'edge_color', scada_data, parameter, statistic, pit, intervals)
 
         if show_colorbar:
             if statistic == 'time_step':
@@ -720,8 +547,8 @@ class ScenarioVisualizer:
                     parameter).replace('_', ' ')
             self.colorbars['pipes'] = {'mappable': plt.cm.ScalarMappable(
                 norm=mpl.colors.Normalize(
-                    vmin=self.pipe_parameters['edge_vmin'],
-                    vmax=self.pipe_parameters['edge_vmax']), cmap=colormap),
+                    vmin=self.pipe_parameters.edge_vmin,
+                    vmax=self.pipe_parameters.edge_vmax), cmap=colormap),
                 'label': label}
 
     def color_pumps(
@@ -1006,6 +833,17 @@ class ScenarioVisualizer:
             A dictionary of conversion parameters to convert SCADA data units.
             Default is `None`.
         """
+
+        if scada_data:
+            self.scada_data = scada_data
+        elif not self.scada_data:
+            self.scada_data = self.__scenario.run_simulation()
+
+        if conversion:
+            self.scada_data = self.scada_data.convert_units(**conversion)
+
+        # ----------------------------------------------------------------------
+
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
