@@ -85,23 +85,36 @@ class JunctionObject:
             setattr(self, key, value)
 
 
-# TODO: adjust!!! to pipes
 @dataclass
 class EdgeObject:
     edgelist: list
     edge_color: Union[str, list] = 'k' # list of lists with frames or single letter
 
+    def rescale_widths(self, line_widths: Tuple[int] = (1, 2)):
+        if not hasattr(self, 'width'):
+            raise AttributeError("Please call add_frame with edge_param=width before rescaling the widths.")
+
+        vmin = min(min(l) for l in self.width)
+        vmax = max(max(l) for l in self.width)
+
+        tmp = []
+        for il in self.width:
+            tmp.append(self.__rescale(il, line_widths, values_min_max=(vmin, vmax)))
+        self.width = tmp
+
     def add_frame(
-            self, topology, color_object: str, scada_data: Optional[ScadaData] = None,
+            self, topology, edge_param: str, scada_data: Optional[ScadaData] = None,
             parameter: str = 'flow_rate', statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None):
 
-        if isinstance(self.edge_color, str):
-            # First run of this method
-            self.edge_color = []
-            self.edge_vmin = float('inf')
-            self.edge_vmax = float('-inf')
+        if edge_param == 'edge_width' and not hasattr(self, 'width'):
+            self.width = []
+        else:
+            if isinstance(self.edge_color, str):
+                self.edge_color = []
+                self.edge_vmin = float('inf')
+                self.edge_vmax = float('-inf')
 
         if parameter == 'flow_rate':
             values = scada_data.flow_data_raw
@@ -114,11 +127,12 @@ class EdgeObject:
             sorted_values = [value_dict[x[0]] for x in
                              topology.get_all_links()]
 
-            # TODO: brauche ich hier ein rescale -> KP
-            values = self.__rescale(sorted_values, (1, 2))
-            self.edge_color.append(values)
-            self.edge_vmin = min(*values, self.edge_vmin)
-            self.edge_vmax = max(*values, self.edge_vmax)
+            if edge_param == 'edge_width':
+                self.width.append(sorted_values)
+            else:
+                self.edge_color.append(sorted_values)
+                self.edge_vmin = min(*sorted_values, self.edge_vmin)
+                self.edge_vmax = max(*sorted_values, self.edge_vmax)
 
             return
         else:
@@ -159,9 +173,12 @@ class EdgeObject:
                               stat_values))
         sorted_values = [value_dict[x[0]] for x in topology.get_all_links()]
 
-        self.edge_color.append(sorted_values)
-        self.edge_vmin = min(*sorted_values, self.edge_vmin)
-        self.edge_vmax = max(*sorted_values, self.edge_vmax)
+        if edge_param == 'edge_width':
+            self.width.append(values)
+        else:
+            self.edge_color.append(sorted_values)
+            self.edge_vmin = min(*sorted_values, self.edge_vmin)
+            self.edge_vmax = max(*sorted_values, self.edge_vmax)
 
     def get_frame(self, frame_number: int = 0):
 
@@ -171,6 +188,11 @@ class EdgeObject:
             if frame_number > len(self.edge_color):
                 frame_number = -1
             attributes['edge_color'] = self.edge_color[frame_number]
+
+        if hasattr(self, 'width'):
+            if frame_number > len(self.width):
+                frame_number = -1
+            attributes['width'] = self.width[frame_number]
 
         sig = inspect.signature(nxp.draw_networkx_edges)
 

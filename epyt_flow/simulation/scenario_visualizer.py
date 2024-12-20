@@ -842,39 +842,18 @@ class ScenarioVisualizer:
         if conversion:
             self.scada_data = self.scada_data.convert_units(**conversion)
 
-        # ----------------------------------------------------------------------
-
-
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
-            sorted_values, sim_length = self.__get_link_data(scada_data,
-                                                             parameter,
-                                                             statistic, pit[0],
-                                                             intervals,
-                                                             conversion)
-            pipe_size_list = []
-            vmin = min(sorted_values)
-            vmax = max(sorted_values)
+
             for frame in range(*pit):
-                if frame > sim_length - 1:
+                self.pipe_parameters.add_frame(self.topology, 'edge_width',
+                                               scada_data, parameter,
+                                               statistic, frame, intervals)
+                if frame >= self.pipe_parameters.sim_length - 1:
                     break
-                sorted_values, _ = self.__get_link_data(scada_data, parameter,
-                                                        statistic, frame,
-                                                        intervals, conversion)
-                vmin = min(*sorted_values, vmin)
-                vmax = max(*sorted_values, vmax)
-                pipe_size_list.append(sorted_values)
-            self.animation_dict['pipe_sizes'] = []
-            for vals in pipe_size_list:
-                self.animation_dict['pipe_sizes'].append(
-                    self.__rescale(vals, line_widths,
-                                   values_min_max=(vmin, vmax)))
         else:
-            sorted_values, _ = self.__get_link_data(scada_data, parameter,
-                                                    statistic, pit, intervals,
-                                                    conversion)
-            self.pipe_parameters.update(
-                {'width': self.__rescale(sorted_values, line_widths)})
+            self.pipe_parameters.add_frame(self.topology, 'edge_width', scada_data, parameter, statistic, pit, intervals)
+        self.pipe_parameters.rescale_widths(line_widths)
 
     def hide_nodes(self) -> None:
         """
