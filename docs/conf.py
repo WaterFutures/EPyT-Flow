@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath('../'))
 
 project = 'EPyT-Flow'
 copyright = 'EPyT-Flow Developers, 2024'
-author = 'André Artelt, Marios S. Kyriakou, Stelios G. Vrachimis'
+author = 'André Artelt, Marios S. Kyriakou, Stelios G. Vrachimis, et al.'
 
 
 # -- General configuration ---------------------------------------------------

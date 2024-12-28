@@ -86,12 +86,12 @@ class Uncertainty(ABC):
 
         Parameters
         ----------
-        data : `numpy.ndarray`
+        data : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Array to be clipped.
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Clipped data.
         """
         if self.__min_value is not None:
@@ -124,12 +124,12 @@ class Uncertainty(ABC):
 
         Parameters
         ----------
-        data : `numpy.ndarray`
+        data : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Array of values to which the uncertainty is applied.
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Uncertainty applied to `data`.
         """
         for t in range(data.shape[0]):

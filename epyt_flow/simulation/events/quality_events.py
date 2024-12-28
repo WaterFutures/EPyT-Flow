@@ -24,7 +24,7 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
         ID of the bulk species that is going to be injected.
     node_id : `str`
         ID of the node at which the injection is palced.
-    profile : `numpy.ndarray`
+    profile : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Injection strength profile -- i.e. every entry corresponds to the strength of the injection
         at a point in time. Pattern will repeat if it is shorter than the total injection time.
     source_type : `int`
@@ -136,7 +136,7 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
             f"node_id: {self.__node_id} profile: {self.__profile} source_type: {self.__source_type}"
 
     def _get_pattern_id(self) -> str:
-        return f"{self.__species_id}_{self.__node_id}_{self.start_time}"
+        return f"{self.__species_id}_{self.__node_id}"
 
     def init(self, epanet_api: epyt.epanet) -> None:
         super().init(epanet_api)
@@ -180,9 +180,20 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
 
         pattern_id = self._get_pattern_id()
         if pattern_id in self._epanet_api.getMSXPatternsNameID():
-            raise ValueError("Duplicated injection event")
+            node_idx = self._epanet_api.getNodeIndex(self.__node_id)
+            species_idx, = self._epanet_api.getMSXSpeciesIndex([self.__species_id])
+            cur_source_type = self._epanet_api.msx.MSXgetsource(node_idx, species_idx)
+            if cur_source_type[0] != source_type_:
+                raise ValueError("Source type does not match existing source type")
 
-        self._epanet_api.addMSXPattern(pattern_id, pattern)
+            # Add new injection amount to existing injection --
+            # i.e. two injection events at the same node
+            pattern_idx, = self._epanet_api.getMSXPatternsIndex([pattern_id])
+            cur_pattern = self._epanet_api.getMSXPattern()[pattern_idx - 1]
+            cur_pattern += pattern
+            self._epanet_api.setMSXPattern(pattern_idx, cur_pattern)
+        else:
+            self._epanet_api.addMSXPattern(pattern_id, pattern)
         self._epanet_api.setMSXSources(self.__node_id, self.__species_id, source_type_, 1,
                                        pattern_id)
 

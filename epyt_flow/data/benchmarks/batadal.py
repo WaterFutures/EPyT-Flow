@@ -91,7 +91,7 @@ def load_data(download_dir: str = None, return_X_y: bool = False,
     `dict`
         Dictionary of the loaded benchmark data. The dictionary contains the two training
         data sets ("train_1" and "train_2"), as well as the test data set ("test").
-        If `return_X_y` is False, each dictionary entry is a Pandas dataframe.
+        If `return_X_y` is False, each dictionary entry is a `Pandas dataframe <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
         Otherwise, it is a tuple of sensor readings and labels (except for the test set) --
         if `return_ground_truth` is True or `return_features_desc` is True, the corresponding
         data is appended to the tuple.

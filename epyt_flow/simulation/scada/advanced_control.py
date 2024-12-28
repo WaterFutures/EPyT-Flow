@@ -15,7 +15,7 @@ class AdvancedControlModule(ABC):
 
     Attributes
     ----------
-    epanet_api : `epyt.epanet`
+    epanet_api : `epyt.epanet <https://epanet-python-toolkit-epyt.readthedocs.io/en/latest/api.html#epyt.epanet.epanet>`_
         API to EPANET and EPANET-MSX. Is set in :func:`init`.
     """
     def __init__(self, **kwds):
@@ -29,7 +29,7 @@ class AdvancedControlModule(ABC):
 
         Parameters
         ----------
-        epanet_api : `epyt.epanet`
+        epanet_api : `epyt.epanet <https://epanet-python-toolkit-epyt.readthedocs.io/en/latest/api.html#epyt.epanet.epanet>`_
             API to EPANET for implementing the control module.
         """
         if not isinstance(epanet_api, epyt.epanet):

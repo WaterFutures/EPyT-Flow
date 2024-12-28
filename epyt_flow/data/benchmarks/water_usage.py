@@ -22,9 +22,9 @@ def compute_evaluation_score(y_pred: np.ndarray, y: np.ndarray) -> dict:
 
     Parameters
     ----------
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Event indication prediction over time
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth event indication over time.
 
     Returns

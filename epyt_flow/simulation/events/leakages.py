@@ -37,7 +37,7 @@ class Leakage(SystemEvent, JsonSerializable):
         in this case, 'area' must be set to 'None'.
 
         The default is None.
-    profile : `numpy.ndarray`
+    profile : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Pattern of this leak.
     node_id : `str`, optional
         ID of the node at which the leak is placed.

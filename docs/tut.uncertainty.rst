@@ -50,7 +50,7 @@ A complete list of pre-defined and implemented uncertainties is given in the fol
 Model Uncertainty
 +++++++++++++++++
 
-Model uncertainty refers to uncertainty in the WDN model -- i.e. uncertainty in pipe lengths,
+Model uncertainty refers to uncertainties in the WDN model -- i.e. uncertainties in pipe lengths,
 pipe diameters, base demands, demand patterns, etc.
 
 EPyT-Flow allows the user to specify model uncertainties by instantiating
@@ -58,10 +58,38 @@ EPyT-Flow allows the user to specify model uncertainties by instantiating
 to the scenario simulator
 (instance of :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`) by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_model_uncertainty` BEFORE
-the simulation is run.
+the simulation is run. As a consequence, the simulation runs are no longer deterministic.
+See below for a full list of all quantities that can be affected by uncertainties:
 
-Example of setting pipe length, and demand pattern uncertainty -- in both cases the uncertainty
-corresponds to a uniform deviation of up to 10%:
++-------------------------------------------------+
+| Quantities that can be affected by uncertainties|
++=================================================+
+| Node elevation                                  |
++-------------------------------------------------+
+| Pipe length                                     |
++-------------------------------------------------+
+| Pipe diameter                                   |
++-------------------------------------------------+
+| Pipe roughness coefficient                      |
++-------------------------------------------------+
+| Base demand                                     |
++-------------------------------------------------+
+| Demand pattern                                  |
++-------------------------------------------------+
+| EPANET-MSX constants                            |
++-------------------------------------------------+
+| EPANET-MSX parameters                           |
++-------------------------------------------------+
+
+Uncertainties can be either on a global or local level.
+In global uncertainties, a specific quantity (e.g. pipe length) is always affected by the
+same uncertainty -- e.g. all pipe's length are affected by the same uncertainty.
+On the other hand, local uncertainties allow to specify the uncertainties for each element
+and quantity separately -- e.g. only a sub-set of pipes is affected by some uncertainty,
+also, the type and magnitude of uncertainty could vary between the pipes. 
+
+Example of setting global pipe length, and demand pattern uncertainty -- in both cases the
+global uncertainty corresponds to a uniform deviation of up to 10%:
 
 .. code-block:: python
 
@@ -70,8 +98,8 @@ corresponds to a uniform deviation of up to 10%:
     with ScenarioSimulator(scenario_config=network_config) as sim:
         # Specify pipe length and demand pattern uncertainty
         uncertainty = PercentageDeviationUncertainty(deviation_percentage=.1)
-        model_uncertainty = ModelUncertainty(pipe_length_uncertainty=uncertainty,
-                                             demand_pattern_uncertainty=uncertainty)
+        model_uncertainty = ModelUncertainty(global_pipe_length_uncertainty=uncertainty,
+                                             global_demand_pattern_uncertainty=uncertainty)
         sim.set_model_uncertainty(model_uncertainty)
 
         # Run the simulation
@@ -83,8 +111,9 @@ corresponds to a uniform deviation of up to 10%:
 Sensor Uncertainty
 ++++++++++++++++++
 
-Sensor uncertainty (also referred to as sensor noise) refers to uncertainty that affects **ALL**
-sensor readings -- i.e. all sensor readings are perturbed by the given uncertainty.
+Sensor uncertainty (also referred to as sensor noise) can either act on a global level --
+i.e. all sensor readings are perturbed by the given uncertainty --,
+or on a local level by just affecting a sub-set of sensors.
 In EPyT-Flow, sensor uncertainties have to be
 :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty` instances wrapped inside a
 :class:`~epyt_flow.uncertainty.sensor_noise.SensorNoise` instance.
@@ -93,7 +122,7 @@ Sensor uncertainty/noise can be added BEFORE the simulation is run by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_sensor_noise` of a
 :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
 
-Example setting Gaussian uncertainty BEFORE the simulation is run:
+Example setting a global Gaussian uncertainty BEFORE the simulation is run:
 
 .. code-block:: python
 
@@ -102,7 +131,7 @@ Example setting Gaussian uncertainty BEFORE the simulation is run:
     with ScenarioSimulator(scenario_config=network_config) as sim:
         # Sensor readings are affected by relative Gaussian uncertainty with scale=1
         uncertainty = RelativeGaussianUncertainty(scale=1.)
-        sim.set_sensor_noise(SensorNoise(uncertainty))
+        sim.set_sensor_noise(SensorNoise(global_uncertainty=uncertainty))
 
         # Run simulation
         # ....
@@ -111,7 +140,7 @@ AFTERWARDS, the sensor uncertainty/noise can be set or changed by calling
 :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.change_sensor_noise` of a
 :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance.
 
-Example of setting/changing the sensor uniform deviation uncertainty AFTER the
+Example of setting/changing a global sensor uniform deviation uncertainty AFTER the
 simulation was run:
 
 .. code-block:: python
@@ -124,4 +153,4 @@ simulation was run:
 
     # Sensor readings deviate (uniformly) up to 10% from their original value
     uncertainty = PercentageDeviationUncertainty(deviation_percentage=.1)
-    scada_data.change_sensor_noise(SensorNoise(uncertainty))
+    scada_data.change_sensor_noise(SensorNoise(global_uncertainty=uncertainty))

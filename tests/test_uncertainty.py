@@ -21,19 +21,19 @@ def test_model_uncertainty():
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
-        sim.set_model_uncertainty(
-            ModelUncertainty(pipe_length_uncertainty=RelativeUniformUncertainty(low=0.9,
-                                                                                high=1.1),
-                             pipe_roughness_uncertainty=RelativeUniformUncertainty(low=0.75,
-                                                                                   high=1.25),
-                             pipe_diameter_uncertainty=AbsoluteGaussianUncertainty(mean=0.,
-                                                                                   scale=.05),
-                             base_demand_uncertainty=RelativeUniformUncertainty(low=0.75,
-                                                                                high=1.25),
-                             demand_pattern_uncertainty=RelativeUniformUncertainty(low=0.75,
-                                                                                   high=1.25),
-                             elevation_uncertainty=AbsoluteGaussianUncertainty(mean=0.,
-                                                                               scale=0.1)))
+        uncertainties = {"global_pipe_length_uncertainty": RelativeUniformUncertainty(low=0.9,
+                                                                                      high=1.1),
+                         "global_pipe_roughness_uncertainty": RelativeUniformUncertainty(low=0.75,
+                                                                                         high=1.25),
+                         "global_pipe_diameter_uncertainty": AbsoluteGaussianUncertainty(mean=0.,
+                                                                                         scale=.05),
+                         "global_base_demand_uncertainty": RelativeUniformUncertainty(low=0.75,
+                                                                                      high=1.25),
+                         "global_demand_pattern_uncertainty": RelativeUniformUncertainty(low=0.75,
+                                                                                         high=1.25),
+                         "global_elevation_uncertainty": AbsoluteGaussianUncertainty(mean=0.,
+                                                                                     scale=0.1)}
+        sim.set_model_uncertainty(ModelUncertainty(**uncertainties))
 
         res = sim.run_simulation()
         assert res.get_data() is not None
@@ -48,7 +48,7 @@ def test_sensor_noise():
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
-        sim.set_sensor_noise(SensorNoise(RelativeGaussianUncertainty(scale=1.)))
+        sim.set_sensor_noise(SensorNoise(global_uncertainty=RelativeGaussianUncertainty(scale=1.)))
 
         res = sim.run_simulation()
         assert res.get_data() is not None
@@ -59,7 +59,7 @@ def test_sensor_noise():
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
-        sim.set_sensor_noise(SensorNoise(PercentageDeviationUncertainty(0.2)))
+        sim.set_sensor_noise(SensorNoise(global_uncertainty=PercentageDeviationUncertainty(0.2)))
 
         res = sim.run_simulation()
         assert res.get_data() is not None
@@ -70,7 +70,7 @@ def test_sensor_noise():
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
-        sim.set_sensor_noise(SensorNoise(AbsoluteUniformUncertainty(0, .5)))
+        sim.set_sensor_noise(SensorNoise(global_uncertainty=AbsoluteUniformUncertainty(0, .5)))
 
         res = sim.run_simulation()
         assert res.get_data() is not None
@@ -81,7 +81,7 @@ def test_sensor_noise():
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
-        sim.set_sensor_noise(SensorNoise(AbsoluteDeepUniformUncertainty()))
+        sim.set_sensor_noise(SensorNoise(global_uncertainty=AbsoluteDeepUniformUncertainty()))
 
         res = sim.run_simulation()
         assert res.get_data() is not None
@@ -92,7 +92,7 @@ def test_sensor_noise():
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
-        sim.set_sensor_noise(SensorNoise(RelativeDeepUniformUncertainty()))
+        sim.set_sensor_noise(SensorNoise(global_uncertainty=RelativeDeepUniformUncertainty()))
 
         res = sim.run_simulation()
         assert res.get_data() is not None
@@ -103,7 +103,7 @@ def test_sensor_noise():
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
-        sim.set_sensor_noise(SensorNoise(AbsoluteDeepUniformUncertainty()))
+        sim.set_sensor_noise(SensorNoise(global_uncertainty=AbsoluteDeepUniformUncertainty()))
 
         res = sim.run_simulation()
         assert res.get_data() is not None
@@ -114,7 +114,7 @@ def test_sensor_noise():
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
-        sim.set_sensor_noise(SensorNoise(AbsoluteDeepGaussianUncertainty()))
+        sim.set_sensor_noise(SensorNoise(global_uncertainty=AbsoluteDeepGaussianUncertainty()))
 
         res = sim.run_simulation()
         assert res.get_data() is not None
@@ -125,7 +125,7 @@ def test_sensor_noise():
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
-        sim.set_sensor_noise(SensorNoise(RelativeDeepGaussianUncertainty()))
+        sim.set_sensor_noise(SensorNoise(global_uncertainty=RelativeDeepGaussianUncertainty()))
 
         res = sim.run_simulation()
         assert res.get_data() is not None

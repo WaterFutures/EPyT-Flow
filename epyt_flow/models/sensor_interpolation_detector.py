@@ -20,7 +20,7 @@ class SensorInterpolationDetector(EventDetector):
         Regressor class that will be used for the sensor interpolation.
         Must implement the usual `fit` and `predict` functions.
 
-        The default is `sklearn.linear_model.LinearRegression`
+        The default is `sklearn.linear_model.LinearRegression <https://scikit-learn.org/dev/modules/generated/sklearn.linear_model.LinearRegression.html>`_
     """
     def __init__(self, regressor_type: Any = LinearRegression, **kwds):
         self.__regressor_type = regressor_type
@@ -63,7 +63,7 @@ class SensorInterpolationDetector(EventDetector):
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or `numpy.ndarray`
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             SCADA data to fit this detector.
         """
         if isinstance(scada_data, ScadaData):
@@ -93,7 +93,7 @@ class SensorInterpolationDetector(EventDetector):
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or `numpy.ndarray`
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             SCADA data in which to look for events/anomalies.
 
         Returns

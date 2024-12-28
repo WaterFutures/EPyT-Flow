@@ -26,7 +26,7 @@ class SensorOverrideAttack(SensorReadingAttack, JsonSerializable):
 
     Parameters
     ----------
-    new_sensor_values : `numpy.ndarray`
+    new_sensor_values : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         New sensor reading values -- i.e. these values replace the true sensor reading values.
     """
     def __init__(self, new_sensor_values: np.ndarray, **kwds):

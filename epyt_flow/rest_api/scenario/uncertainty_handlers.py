@@ -18,7 +18,7 @@ class ScenarioModelUncertaintyHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         scenario_id : `str`
             UUID of the scenario.
@@ -40,9 +40,9 @@ class ScenarioModelUncertaintyHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
-        req : `falcon.Request`
+        req : `falcon.Request <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#request>`_
             Request instance.
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         scenario_id : `str`
             UUID of the scenario.
@@ -73,7 +73,7 @@ class ScenarioSensorUncertaintyHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         scenario_id : `str`
             UUID of the scenario.
@@ -95,9 +95,9 @@ class ScenarioSensorUncertaintyHandler(ScenarioBaseHandler):
 
         Parameters
         ----------
-        req : `falcon.Request`
+        req : `falcon.Request <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#request>`_
             Request instance.
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         scenario_id : `str`
             UUID of the scenario.

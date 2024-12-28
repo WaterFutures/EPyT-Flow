@@ -147,7 +147,7 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scenario : :class:`epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
+        scenario : :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
             An instance of the `ScenarioSimulator` class, used to simulate and
             retrieve the system topology.
 
@@ -155,7 +155,7 @@ class ScenarioVisualizer:
         ------
         TypeError
             If `scenario` is not an instance of
-            :class:`epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
+            :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
 
         """
         if not isinstance(scenario, ScenarioSimulator):
@@ -303,7 +303,7 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.scada.scada_data.ScadaData`, optional
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, optional
             The SCADA data object to retrieve link data from. If `None`, a
             simulation is run to generate the SCADA data. Default is `None`.
         parameter : `str`, optional
@@ -644,7 +644,7 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.scada.scad_data.ScadaData`, optional
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, optional
             The SCADA data object containing node data. If `None`, a simulation
             will be run to generate SCADA data. Default is `None`.
         parameter : `str`, optional
@@ -761,7 +761,7 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.scada.scada_data.ScadaData`, optional
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, optional
             The SCADA data object. If `None`, the method will run a simulation.
             Default is `None`.
         parameter : `str`, optional
@@ -861,7 +861,7 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.scada.scada_data.ScadaData`, optional
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, optional
             The SCADA data object containing the pump data. If `None`, a
             simulation will be run to generate SCADA data. Default is `None`.
         parameter : `str`, optional
@@ -971,7 +971,7 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.scada.scada_data.ScadaData`, optional
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, optional
             The SCADA data object containing tank volume data.
             If `None`, a simulation will be run to generate it.
             Default is `None`.
@@ -1066,7 +1066,7 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.scada.scada_data.ScadaData`, optional
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, optional
             The SCADA data object containing valve state data. If `None`, a
             simulation is run to generate SCADA data. Default is `None`.
         statistic : `str`, optional
@@ -1162,7 +1162,7 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.scada.scada_data.ScadaData`, optional
+        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, optional
             The SCADA data object. If `None`, a simulation will be run to
             generate it. Default is `None`.
         parameter : `str`, optional

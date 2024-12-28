@@ -97,7 +97,7 @@ def compute_evaluation_score(scenarios_id: list[int], use_net1: bool,
         List of scenarios ID that are to be evaluated -- there is a total number of 1000 scenarios.
     use_net1 : `bool`
         If True, Net1 LeakDB will be used for evaluation, otherwise the Hanoi LeakDB will be used.
-    y_pred_labels_per_scenario : `list[numpy.ndarray]`
+    y_pred_labels_per_scenario : `list[numpy.ndarray] <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted binary labels (over time) for each scenario in `scenarios_id`.
 
     Returns
@@ -201,7 +201,7 @@ def load_data(scenarios_id: list[int], use_net1: bool, download_dir: str = None,
         The default is False.
     return_leak_locations : `bool`
         If True and if `return_X_y` is True, the leak locations are returned as well --
-        as an instance of `scipy.sparse.bsr_array`.
+        as an instance of `scipy.sparse.bsr_array <https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.bsr_array.html>`_.
 
         The default is False.
     verbose : `bool`, optional
@@ -327,7 +327,7 @@ def load_scada_data(scenarios_id: list[int], use_net1: bool = True, download_dir
         The default is False.
     return_leak_locations : `bool`
         If True, the leak locations are returned as well --
-        as an instance of `scipy.sparse.bsr_array`.
+        as an instance of `scipy.sparse.bsr_array <https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.bsr_array.html>`_.
 
         The default is False.
     verbose : `bool`, optional
@@ -341,7 +341,7 @@ def load_scada_data(scenarios_id: list[int], use_net1: bool = True, download_dir
         The simulated benchmark scenarios as either a list of
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances or as a list of
         (X, y) Numpy arrays. If 'return_leak_locations' is True, the leak locations are included
-        as an instance of `scipy.sparse.bsr_array` as well.
+        as an instance of `scipy.sparse.bsr_array <https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.bsr_array.html>`_ as well.
     """
     download_dir = download_dir if download_dir is not None else get_temp_folder()
 
@@ -544,9 +544,9 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
             upper = data + z
             return lower + np.random.uniform() * (upper - lower)
 
-    my_uncertainties = {"pipe_length_uncertainty": MyUniformUncertainty(low=0, high=0.25),
-                        "pipe_roughness_uncertainty": MyUniformUncertainty(low=0, high=0.25),
-                        "base_demand_uncertainty": MyUniformUncertainty(low=0, high=0.25)}
+    my_uncertainties = {"global_pipe_length_uncertainty": MyUniformUncertainty(low=0, high=0.25),
+                        "global_pipe_roughness_uncertainty": MyUniformUncertainty(low=0, high=0.25),
+                        "global_base_demand_uncertainty": MyUniformUncertainty(low=0, high=0.25)}
     model_uncertainty = ModelUncertainty(**my_uncertainties)
 
     # Create sensor config (place pressure and flow sensors everywhere)

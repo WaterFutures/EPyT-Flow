@@ -180,7 +180,7 @@ class PumpSpeedEvent(PumpEvent, JsonSerializable):
         if pattern_idx == 0:
             warnings.warn(f"No pattern for pump '{self.pump_id}' found -- a new pattern is created")
             pattern_idx = self._epanet_api.addPattern(f"pump_speed_{self.pump_id}")
-            self._epanet_api.setLinkPumpPatternIndex(pattern_idx)
+            self._epanet_api.setLinkPumpPatternIndex(pump_idx, pattern_idx)
 
         self._epanet_api.setPattern(pattern_idx, np.array([self.__pump_speed]))
 

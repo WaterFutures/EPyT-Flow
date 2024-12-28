@@ -34,75 +34,75 @@ class ScadaData(Serializable):
     ----------
     sensor_config : :class:`~epyt_flow.simulation.sensor_config.SensorConfig`
         Specifications of all sensors.
-    sensor_readings_time : `numpy.ndarray`
+    sensor_readings_time : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Time (seconds since simulation start) for each sensor reading row
         in `sensor_readings_data_raw`.
 
         This parameter is expected to be a 1d array with the same size as
         the number of rows in `sensor_readings_data_raw`.
-    pressure_data_raw : `numpy.ndarray`, optional
+    pressure_data_raw : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         Raw pressure values of all nodes as a two-dimensional array --
         first dimension encodes time, second dimension pressure at nodes.
 
         The default is None,
-    flow_data_raw : `numpy.ndarray`, optional
+    flow_data_raw : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         Raw flow values of all links/pipes --
         first dimension encodes time, second dimension pressure at links/pipes.
 
         The default is None.
-    demand_data_raw : `numpy.ndarray`, optional
+    demand_data_raw : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         Raw demand values of all nodes --
         first dimension encodes time, second dimension demand at nodes.
 
         The default is None.
-    node_quality_data_raw : `numpy.ndarray`, optional
+    node_quality_data_raw : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         Raw quality values of all nodes --
         first dimension encodes time, second dimension quality at nodes.
 
         The default is None.
-    link_quality_data_raw : `numpy.ndarray`, optional
+    link_quality_data_raw : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         Raw quality values of all links/pipes --
         first dimension encodes time, second dimension quality at links/pipes.
 
         The default is None.
-    pumps_state_data_raw : `numpy.ndarray`, optional
+    pumps_state_data_raw : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         States of all pumps --
         first dimension encodes time, second dimension states of pumps.
 
         The default is None.
-    valves_state_data_raw : `numpy.ndarray`, optional
+    valves_state_data_raw : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         States of all valves --
         first dimension encodes time, second dimension states of valves.
 
         The default is None.
-    tanks_volume_data_raw : `numpy.ndarray`, optional
+    tanks_volume_data_raw : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         Water volumes in all tanks --
         first dimension encodes time, second dimension water volume in tanks.
 
         The default is None.
-    surface_species_concentration_raw : `numpy.ndarray`, optional
+    surface_species_concentration_raw : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         Raw concentrations of surface species as a tree dimensional array --
         first dimension encodes time, second dimension denotes the different surface species,
         third dimension denotes species concentrations at links/pipes.
 
         The default is None.
-    bulk_species_node_concentration_raw : `numpy.ndarray`, optional
+    bulk_species_node_concentration_raw : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         Raw concentrations of bulk species at nodes as a tree dimensional array --
         first dimension encodes time, second dimension denotes the different bulk species,
         third dimension denotes species concentrations at nodes.
 
         The default is None.
-    bulk_species_link_concentration_raw : `numpy.ndarray`, optional
+    bulk_species_link_concentration_raw : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         Raw concentrations of bulk species at links as a tree dimensional array --
         first dimension encodes time, second dimension denotes the different bulk species,
         third dimension denotes species concentrations at nodes.
 
         The default is None.
-    pumps_energy_usage_data_raw : `numpy.ndarray`, optional
+    pumps_energy_usage_data_raw : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         Energy usage data of each pump.
 
         The default is None.
-    pumps_efficiency_data_raw : `numpy.ndarray`, optional
+    pumps_efficiency_data_raw : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         Pump efficiency data of each pump.
 
         The default is None.
@@ -142,8 +142,6 @@ class ScadaData(Serializable):
                                                             dict[int, bsr_array]] = None,
                  bulk_species_link_concentration_raw: Union[np.ndarray,
                                                             dict[int, bsr_array]] = None,
-                 pump_energy_usage_data = None,
-                 pump_efficiency_data = None,
                  pumps_energy_usage_data_raw: np.ndarray = None,
                  pumps_efficiency_data_raw: np.ndarray = None,
                  sensor_faults: list[SensorFault] = [],
@@ -288,11 +286,6 @@ class ScadaData(Serializable):
         if not isinstance(frozen_sensor_config, bool):
             raise TypeError("'frozen_sensor_config' must be an instance of 'bool' " +
                             f"but not of '{type(frozen_sensor_config)}'")
-
-        if pump_efficiency_data is not None or pump_energy_usage_data is not None:
-            warnings.warn("Loading a file that was created with an outdated version of EPyT-Flow" +
-                          " -- support of such old files will be removed in the next release!",
-                          DeprecationWarning)
 
         def __raise_shape_mismatch(var_name: str) -> None:
             raise ValueError(f"Shape mismatch in '{var_name}' -- " +
@@ -1160,7 +1153,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Raw pressure readings.
         """
         return deepcopy(self.__pressure_data_raw)
@@ -1172,7 +1165,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Raw flow readings.
         """
         return deepcopy(self.__flow_data_raw)
@@ -1184,7 +1177,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Raw demand readings.
         """
         return deepcopy(self.__demand_data_raw)
@@ -1196,7 +1189,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Raw node quality readings.
         """
         return deepcopy(self.__node_quality_data_raw)
@@ -1208,7 +1201,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Raw link quality readings.
         """
         return deepcopy(self.__link_quality_data_raw)
@@ -1220,7 +1213,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Sensor readings time stamps.
         """
         return deepcopy(self.__sensor_readings_time)
@@ -1232,7 +1225,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Raw pump state readings.
         """
         return deepcopy(self.__pumps_state_data_raw)
@@ -1244,7 +1237,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Raw valve state readings.
         """
         return deepcopy(self.__valves_state_data_raw)
@@ -1256,7 +1249,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Raw tank volume readings.
         """
         return deepcopy(self.__tanks_volume_data_raw)
@@ -1268,7 +1261,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Raw species concentrations.
         """
         return deepcopy(self.__surface_species_concentration_raw)
@@ -1280,7 +1273,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Raw species concentrations.
         """
         return deepcopy(self.__bulk_species_node_concentration_raw)
@@ -1292,7 +1285,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Raw species concentrations.
         """
         return deepcopy(self.__bulk_species_link_concentration_raw)
@@ -1304,7 +1297,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Energy consumption of each pump.
         """
         return deepcopy(self.__pumps_energy_usage_data_raw)
@@ -1316,59 +1309,49 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Pumps' efficiency.
         """
         return deepcopy(self.__pumps_efficiency_data_raw)
 
+    def __map_sensor_to_idx(self, sensor_type: int, sensor_id: str) -> int:
+        if sensor_type == SENSOR_TYPE_NODE_PRESSURE:
+            return self.__sensor_config.get_index_of_reading(pressure_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_NODE_QUALITY:
+            return self.__sensor_config.get_index_of_reading(node_quality_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_NODE_DEMAND:
+            return self.__sensor_config.get_index_of_reading(demand_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_LINK_FLOW:
+            return self.__sensor_config.get_index_of_reading(flow_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_LINK_QUALITY:
+            return self.__sensor_config.get_index_of_reading(link_quality_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_VALVE_STATE:
+            return self.__sensor_config.get_index_of_reading(valve_state_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_PUMP_STATE:
+            return self.__sensor_config.get_index_of_reading(pump_state_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_PUMP_EFFICIENCY:
+            return self.__sensor_config.get_index_of_reading(pump_efficiency_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_PUMP_ENERGYCONSUMPTION:
+            return self.__sensor_config.get_index_of_reading(pump_energyconsumption_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_TANK_VOLUME:
+            return self.__sensor_config.get_index_of_reading(tank_volume_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_NODE_BULK_SPECIES:
+            return self.__sensor_config.get_index_of_reading(bulk_species_node_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_LINK_BULK_SPECIES:
+            return self.__sensor_config.get_index_of_reading(bulk_species_link_sensor=sensor_id)
+        elif sensor_type == SENSOR_TYPE_SURFACE_SPECIES:
+            return self.__sensor_config.get_index_of_reading(surface_species_sensor=sensor_id)
+        else:
+            raise ValueError(f"Unknown sensor type '{sensor_type}'")
+
     def __init(self):
-        self.__apply_sensor_noise = lambda x: x
+        self.__apply_global_sensor_noise = lambda x: x
         if self.__sensor_noise is not None:
-            self.__apply_sensor_noise = self.__sensor_noise.apply
+            self.__apply_global_sensor_noise = self.__sensor_noise.apply_global_uncertainty
 
         self.__apply_sensor_reading_events = []
         for sensor_event in self.__sensor_reading_events:
-            idx = None
-            if sensor_event.sensor_type == SENSOR_TYPE_NODE_PRESSURE:
-                idx = self.__sensor_config.get_index_of_reading(
-                    pressure_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_NODE_QUALITY:
-                idx = self.__sensor_config.get_index_of_reading(
-                    node_quality_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_NODE_DEMAND:
-                idx = self.__sensor_config.get_index_of_reading(
-                    demand_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_LINK_FLOW:
-                idx = self.__sensor_config.get_index_of_reading(
-                    flow_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_LINK_QUALITY:
-                idx = self.__sensor_config.get_index_of_reading(
-                    link_quality_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_VALVE_STATE:
-                idx = self.__sensor_config.get_index_of_reading(
-                    valve_state_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_PUMP_STATE:
-                idx = self.__sensor_config.get_index_of_reading(
-                    pump_state_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_PUMP_EFFICIENCY:
-                idx = self.__sensor_config.get_index_of_reading(
-                    pump_efficiency_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_PUMP_ENERGYCONSUMPTION:
-                idx = self.__sensor_config.get_index_of_reading(
-                    pump_energyconsumption_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_TANK_VOLUME:
-                idx = self.__sensor_config.get_index_of_reading(
-                    tank_volume_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_NODE_BULK_SPECIES:
-                idx = self.__sensor_config.get_index_of_reading(
-                    bulk_species_node_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_LINK_BULK_SPECIES:
-                idx = self.__sensor_config.get_index_of_reading(
-                    bulk_species_link_sensor=sensor_event.sensor_id)
-            elif sensor_event.sensor_type == SENSOR_TYPE_SURFACE_SPECIES:
-                idx = self.__sensor_config.get_index_of_reading(
-                    surface_species_sensor=sensor_event.sensor_id)
-
+            idx = self.__map_sensor_to_idx(sensor_event.sensor_type, sensor_event.sensor_id)
             self.__apply_sensor_reading_events.append((idx, sensor_event.apply))
 
         self.__sensor_readings = None
@@ -1959,7 +1942,7 @@ class ScadaData(Serializable):
 
         if self.__pumps_energy_usage_data_raw is not None:
             self.__pumps_energy_usage_data_raw = np.concatenate(
-                (self.__pumps_energy_usage_data_raw, other.pumps_energy_usage_data_raw),
+                (self.__pumps_energy_usage_data_raw, other.pumps_energyconsumption_data_raw),
                 axis=0)
 
         if self.__pumps_efficiency_data_raw is not None:
@@ -1974,7 +1957,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Final sensor readings.
         """
         # Comute clean sensor readings
@@ -2026,18 +2009,21 @@ class ScadaData(Serializable):
             sensor_readings = np.concatenate(data, axis=1)
 
         # Apply sensor uncertainties
-        state_sensors_idx = []   # Pump states and valve states are NOT affected!
-        for link_id in self.sensor_config.pump_state_sensors:
-            state_sensors_idx.append(
-                self.__sensor_config.get_index_of_reading(pump_state_sensor=link_id))
-        for link_id in self.sensor_config.valve_state_sensors:
-            state_sensors_idx.append(
-                self.__sensor_config.get_index_of_reading(valve_state_sensor=link_id))
+        if self.__sensor_noise is not None:
+            state_sensors_idx = []   # Pump states and valve states are NOT affected!
+            for link_id in self.sensor_config.pump_state_sensors:
+                state_sensors_idx.append(
+                    self.__sensor_config.get_index_of_reading(pump_state_sensor=link_id))
+            for link_id in self.sensor_config.valve_state_sensors:
+                state_sensors_idx.append(
+                    self.__sensor_config.get_index_of_reading(valve_state_sensor=link_id))
 
-        mask = np.ones(sensor_readings.shape[1], dtype=bool)
-        mask[state_sensors_idx] = False
+            mask = np.ones(sensor_readings.shape[1], dtype=bool)
+            mask[state_sensors_idx] = False
+            sensor_readings[:, mask] = self.__apply_global_sensor_noise(sensor_readings[:, mask])
 
-        sensor_readings[:, mask] = self.__apply_sensor_noise(sensor_readings[:, mask])
+            sensor_readings = self.__sensor_noise.apply_local_uncertainty(self.__map_sensor_to_idx,
+                                                                          sensor_readings)
 
         # Apply sensor faults
         for idx, f in self.__apply_sensor_reading_events:
@@ -2075,7 +2061,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Pressure sensor readings.
         """
         if self.__sensor_config.pressure_sensors == []:
@@ -2125,14 +2111,14 @@ class ScadaData(Serializable):
             i.e. a plot can not be shown and saved to a file at the same time!
 
             The default is None.
-        ax : `matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_, optional
             If not None, 'ax' is used for plotting.
 
             The default is None.
 
         Returns
         -------
-        `matplotlib.axes.Axes`
+        `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_
             Plot.
         """
         data = self.get_data_pressures(sensor_locations)
@@ -2162,7 +2148,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Flow sensor readings.
         """
         if self.__sensor_config.flow_sensors == []:
@@ -2212,14 +2198,14 @@ class ScadaData(Serializable):
             i.e. a plot can not be shown and saved to a file at the same time!
 
             The default is None.
-        ax : `matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_, optional
             If not None, 'ax' is used for plotting.
 
             The default is None.
 
         Returns
         -------
-        `matplotlib.axes.Axes`
+        `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_
             Plot.
         """
         data = self.get_data_flows(sensor_locations)
@@ -2248,7 +2234,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Demand sensor readings.
         """
         if self.__sensor_config.demand_sensors == []:
@@ -2298,14 +2284,14 @@ class ScadaData(Serializable):
             i.e. a plot can not be shown and saved to a file at the same time!
 
             The default is None.
-        ax : `matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_, optional
             If not None, 'ax' is used for plotting.
 
             The default is None.
 
         Returns
         -------
-        `matplotlib.axes.Axes`
+        `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_
             Plot.
         """
         data = self.get_data_demands(sensor_locations)
@@ -2334,7 +2320,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Node quality sensor readings.
         """
         if self.__sensor_config.quality_node_sensors == []:
@@ -2386,14 +2372,14 @@ class ScadaData(Serializable):
             i.e. a plot can not be shown and saved to a file at the same time!
 
             The default is None.
-        ax : `matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_, optional
             If not None, 'ax' is used for plotting.
 
             The default is None.
 
         Returns
         -------
-        `matplotlib.axes.Axes`
+        `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_
             Plot.
         """
         data = self.get_data_nodes_quality(sensor_locations)
@@ -2423,7 +2409,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Link quality sensor readings.
         """
         if self.__sensor_config.quality_link_sensors == []:
@@ -2475,14 +2461,14 @@ class ScadaData(Serializable):
             i.e. a plot can not be shown and saved to a file at the same time!
 
             The default is None.
-        ax : `matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_, optional
             If not None, 'ax' is used for plotting.
 
             The default is None.
 
         Returns
         -------
-        `matplotlib.axes.Axes`
+        `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_
             Plot.
         """
         data = self.get_data_links_quality(sensor_locations)
@@ -2512,7 +2498,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Pump state sensor readings.
         """
         if self.__sensor_config.pump_state_sensors == []:
@@ -2563,14 +2549,14 @@ class ScadaData(Serializable):
             i.e. a plot can not be shown and saved to a file at the same time!
 
             The default is None.
-        ax : `matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_, optional
             If not None, 'ax' is used for plotting.
 
             The default is None.
 
         Returns
         -------
-        `matplotlib.axes.Axes`
+        `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_
             Plot.
         """
         data = self.get_data_pumps_state(sensor_locations)
@@ -2599,7 +2585,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Pump efficiency sensor readings.
         """
         if self.__sensor_config.pump_efficiency_sensors == []:
@@ -2651,14 +2637,14 @@ class ScadaData(Serializable):
             i.e. a plot can not be shown and saved to a file at the same time!
 
             The default is None.
-        ax : `matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_, optional
             If not None, 'ax' is used for plotting.
 
             The default is None.
 
         Returns
         -------
-        `matplotlib.axes.Axes`
+        `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_
             Plot.
         """
         data = self.get_data_pumps_efficiency(sensor_locations)
@@ -2668,7 +2654,7 @@ class ScadaData(Serializable):
         return plot_timeseries_data(data.T, labels=[f"Pump {n_id}"
                                                     for n_id in pump_efficiency_sensors],
                                     x_axis_label=self.__get_x_axis_label(),
-                                    y_axis_label="Efficiency in $\%$",
+                                    y_axis_label="Efficiency in $%$",
                                     show=show, save_to_file=save_to_file, ax=ax)
 
     def get_data_pumps_energyconsumption(self, sensor_locations: list[str] = None) -> np.ndarray:
@@ -2687,7 +2673,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Pump energy consumption sensor readings.
         """
         if self.__sensor_config.pump_energyconsumption_sensors == []:
@@ -2739,14 +2725,14 @@ class ScadaData(Serializable):
             i.e. a plot can not be shown and saved to a file at the same time!
 
             The default is None.
-        ax : `matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_, optional
             If not None, 'ax' is used for plotting.
 
             The default is None.
 
         Returns
         -------
-        `matplotlib.axes.Axes`
+        `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_
             Plot.
         """
         data = self.get_data_pumps_energyconsumption(sensor_locations)
@@ -2774,7 +2760,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Valve state sensor readings.
         """
         if self.__sensor_config.valve_state_sensors == []:
@@ -2825,14 +2811,14 @@ class ScadaData(Serializable):
             i.e. a plot can not be shown and saved to a file at the same time!
 
             The default is None.
-        ax : `matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_, optional
             If not None, 'ax' is used for plotting.
 
             The default is None.
 
         Returns
         -------
-        `matplotlib.axes.Axes`
+        `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_
             Plot.
         """
         data = self.get_data_valves_state(sensor_locations)
@@ -2861,7 +2847,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Water tanks volume sensor readings.
         """
         if self.__sensor_config.tank_volume_sensors == []:
@@ -2912,14 +2898,14 @@ class ScadaData(Serializable):
             i.e. a plot can not be shown and saved to a file at the same time!
 
             The default is None.
-        ax : `matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_, optional
             If not None, 'ax' is used for plotting.
 
             The default is None.
 
         Returns
         -------
-        `matplotlib.axes.Axes`
+        `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_
             Plot.
         """
         data = self.get_data_tanks_water_volume(sensor_locations)
@@ -2953,7 +2939,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Surface species concentration sensor readings.
         """
         if self.__sensor_config.surface_species_sensors == {}:
@@ -3014,14 +3000,14 @@ class ScadaData(Serializable):
             i.e. a plot can not be shown and saved to a file at the same time!
 
             The default is None.
-        ax : `matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_, optional
             If not None, 'ax' is used for plotting.
 
             The default is None.
 
         Returns
         -------
-        `matplotlib.axes.Axes`
+        `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_
             Plot.
         """
         data = self.get_data_surface_species_concentration(surface_species_sensor_locations)
@@ -3069,7 +3055,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Bulk species concentration sensor readings.
         """
         if self.__sensor_config.bulk_species_node_sensors == {}:
@@ -3130,14 +3116,14 @@ class ScadaData(Serializable):
             i.e. a plot can not be shown and saved to a file at the same time!
 
             The default is None.
-        ax : `matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_, optional
             If not None, 'ax' is used for plotting.
 
             The default is None.
 
         Returns
         -------
-        `matplotlib.axes.Axes`
+        `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_
             Plot.
         """
         data = self.get_data_bulk_species_node_concentration(bulk_species_node_sensors)
@@ -3184,7 +3170,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `numpy.ndarray`
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Bulk species concentration sensor readings.
         """
         if self.__sensor_config.bulk_species_link_sensors == {}:
@@ -3245,14 +3231,14 @@ class ScadaData(Serializable):
             i.e. a plot can not be shown and saved to a file at the same time!
 
             The default is None.
-        ax : `matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_, optional
             If not None, 'ax' is used for plotting.
 
             The default is None.
 
         Returns
         -------
-        `matplotlib.axes.Axes`
+        `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_
             Plot.
         """
         data = self.get_data_bulk_species_link_concentration(bulk_species_link_sensors)
@@ -3296,7 +3282,7 @@ class ScadaData(Serializable):
 
         Returns
         -------
-        `pandas.DataFrame`
+        `pandas.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_
             Exported data.
         """
         from .scada_data_export import ScadaDataExport

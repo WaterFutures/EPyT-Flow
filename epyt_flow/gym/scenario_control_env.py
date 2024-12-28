@@ -194,7 +194,7 @@ class ScenarioControlEnv(ABC):
         if pattern_idx == 0:
             warnings.warn(f"No pattern for pump '{pump_id}' found -- a new pattern is created")
             pattern_idx = self._scenario_sim.epanet_api.addPattern(f"pump_speed_{pump_id}")
-            self._scenario_sim.epanet_api.setLinkPumpPatternIndex(pattern_idx)
+            self._scenario_sim.epanet_api.setLinkPumpPatternIndex(pump_idx, pattern_idx)
 
         self._scenario_sim.epanet_api.setPattern(pattern_idx, np.array([speed]))
 

@@ -15,7 +15,7 @@ def register(env_name: str, env: ScenarioControlEnv) -> None:
     ----------
     env_name : `str`
         Name of the environment -- must be unique among all environments.
-    env : :class:`epyt_flow.gym.scenario_control_env.ScenarioControlEnv`
+    env : :class:`~epyt_flow.gym.scenario_control_env.ScenarioControlEnv`
         Environment.
     """
     if env_name in environments:
@@ -38,7 +38,7 @@ def make(env_name: str, **kwds) -> ScenarioControlEnv:
 
     Returns
     -------
-    :class:`epyt_flow.gym.scenario_control_env.ScenarioControlEnv`
+    :class:`~epyt_flow.gym.scenario_control_env.ScenarioControlEnv`
         Environment.
     """
     if env_name not in environments:

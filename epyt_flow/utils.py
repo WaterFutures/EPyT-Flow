@@ -76,7 +76,7 @@ def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, x_axis_labe
 
     Parameters
     ----------
-    data : `numpy.ndarray`
+    data : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Time series data -- each row in `data` corresponds to a complete time series.
     labels : `list[str]`, optional
         Labels for each time series in `data`.
@@ -108,14 +108,14 @@ def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, x_axis_labe
         i.e. a plot can not be shown and saved to a file at the same time!
 
         The default is None.
-    ax : `matplotlib.axes.Axes`, optional
+    ax : `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_, optional
         If not None, 'ax' is used for plotting.
 
         The default is None.
 
     Returns
     -------
-    `matplotlib.axes.Axes`
+    `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_
         Plot.
     """
     if not isinstance(data, np.ndarray):
@@ -198,11 +198,11 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
 
     Parameters
     ----------
-    y : `numpy.ndarray`
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Ground truth values.
-    y_pred : `numpy.ndarray`
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Predicted values.
-    confidence_interval : `numpy.ndarray`, optional
+    confidence_interval : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         Confidence interval (upper and lower value) for each prediction in `y_pred`.
         If not None, the confidence interval is plotted as well.
 
@@ -232,14 +232,14 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
         i.e. a plot can not be shown and saved to a file at the same time!
 
         The default is None.
-    ax : `matplotlib.axes.Axes`, optional
+    ax : `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_, optional
         If not None, 'axes' is used for plotting.
 
         The default is None.
 
     Returns
     -------
-    `matplotlib.axes.Axes`
+    `matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html>`_
         Plot.
     """
     if not isinstance(y_pred, np.ndarray):
@@ -342,6 +342,7 @@ def download_if_necessary(download_path: str, url: str, verbose: bool = True) ->
             content_length = int(response.headers.get('content-length', 0))
             with open(download_path, "wb") as file, tqdm(desc=download_path,
                                                          total=content_length,
+                                                         ascii=True,
                                                          unit='B',
                                                          unit_scale=True,
                                                          unit_divisor=1024) as progress_bar:

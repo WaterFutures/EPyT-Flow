@@ -477,7 +477,8 @@ class ScenarioSimulator():
         self.close()
 
     def save_to_epanet_file(self, inp_file_path: str, msx_file_path: str = None,
-                            export_sensor_config: bool = True) -> None:
+                            export_sensor_config: bool = True, undo_system_events: bool = True
+                            ) -> None:
         """
         Exports this scenario to EPANET files -- i.e. an .inp file
         and (optionally) a .msx file if EPANET-MSX was loaded.
@@ -539,6 +540,10 @@ class ScenarioSimulator():
                 f_in.write(report_desc)
                 if write_end_section is True:
                     f_in.write("\n[END]")
+
+        if undo_system_events is True:
+            for event in self._system_events:
+                event.cleanup()
 
         if inp_file_path is not None:
             self.epanet_api.saveInputFile(inp_file_path)
@@ -640,6 +645,10 @@ class ScenarioSimulator():
                     report_desc += f"SPECIES {species_id} YES\n"
 
                 __override_report_section(msx_file_path, report_desc)
+
+        if undo_system_events is True:
+            for event in self._system_events:
+                event.init(self.epanet_api)
 
     def get_flow_units(self) -> int:
         """
@@ -938,8 +947,72 @@ class ScenarioSimulator():
             for t in range(pattern_length):  # Set shuffled/randomized pattern
                 self.epanet_api.setPatternValue(pattern_id, t + 1, pattern[t])
 
+    def get_pattern(self, pattern_id: str) -> np.ndarray:
+        """
+        Returns the EPANET pattern (i.e. all multiplier factors over time) given its ID.
+
+        Parameters
+        ----------
+        pattern_id : `str`
+            ID of the pattern.
+
+        Returns
+        -------
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
+            The pattern -- i.e. multiplier factors over time.
+        """
+        pattern_idx = self.epanet_api.getPatternIndex(pattern_id)
+        pattern_length = self.epanet_api.getPatternLengths(pattern_idx)
+        return np.array([self.epanet_api.getPatternValue(pattern_idx, t+1)
+                         for t in range(pattern_length)])
+
+    def add_pattern(self, pattern_id: str, pattern: np.ndarray) -> None:
+        """
+        Adds a pattern to the EPANET scenario.
+
+        Parameters
+        ----------
+        pattern_id : `str`
+            ID of the pattern.
+        pattern : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
+            Pattern of multipliers over time.
+        """
+        self._adapt_to_network_changes()
+
+        if not isinstance(pattern_id, str):
+            raise TypeError("'pattern_id' must be an instance of 'str' " +
+                            f"but not of '{type(pattern_id)}'")
+        if not isinstance(pattern, np.ndarray):
+            raise TypeError("'pattern' must be an instance of 'numpy.ndarray' " +
+                            f"but not of '{type(pattern)}'")
+        if len(pattern.shape) > 1:
+            raise ValueError(f"Inconsistent pattern shape '{pattern.shape}' " +
+                             "detected. Expected a one dimensional array!")
+
+        self.epanet_api.addPattern(pattern_id, pattern)
+
+    def get_node_demand_pattern(self, node_id: str) -> np.ndarray:
+        """
+        Returns the values of the demand pattern of a given node --
+        i.e. multiplier factors that are applied to the base demand.
+
+        Parameters
+        ----------
+        node_id : `str`
+            ID of the node.
+
+        Returns
+        -------
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
+            The demand pattern -- i.e. multiplier factors over time.
+        """
+        node_idx = self.epanet_api.getNodeIndex(node_id)
+        demand_category = self.epanet_api.getNodeDemandCategoriesNumber()[node_idx]
+        demand_pattern_id = self.epanet_api.getNodeDemandPatternNameID()[demand_category][node_idx - 1]
+        return self.get_pattern(demand_pattern_id)
+
     def set_node_demand_pattern(self, node_id: str, base_demand: float, demand_pattern_id: str,
-                                demand_pattern: np.ndarray) -> None:
+                                demand_pattern: np.ndarray = None) -> None:
         """
         Sets the demand pattern (incl. base demand) at a given node.
 
@@ -950,9 +1023,12 @@ class ScenarioSimulator():
         base_demand : `float`
             Base demand.
         demand_pattern_id : `str`
-            ID of the new demand pattern.
-        demand_pattern : `numpy.ndarray`
+            ID of the (new) demand pattern. Existing demand pattern will be overriden if it already exisits.
+        demand_pattern : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
             Demand pattern over time. Final demand over time = base_demand * demand_pattern
+            If None, the pattern demand_pattern_id is assumed to already exist.
+
+            The default is None.
         """
         self._adapt_to_network_changes()
 
@@ -964,15 +1040,26 @@ class ScenarioSimulator():
         if not isinstance(demand_pattern_id, str):
             raise TypeError("'demand_pattern_id' must be an instance of 'str' " +
                             f"but not of '{type(demand_pattern_id)}'")
-        if not isinstance(demand_pattern, np.ndarray):
-            raise TypeError("'demand_pattern' must be an instance of 'numpy.ndarray' " +
-                            f"but not of '{type(demand_pattern)}'")
-        if len(demand_pattern.shape) > 1:
-            raise ValueError(f"Inconsistent demand pattern shape '{demand_pattern.shape}' " +
-                             "detected. Expected a one dimensional array!")
+        if demand_pattern is not None:
+            if not isinstance(demand_pattern, np.ndarray):
+                raise TypeError("'demand_pattern' must be an instance of 'numpy.ndarray' " +
+                                f"but not of '{type(demand_pattern)}'")
+            if len(demand_pattern.shape) > 1:
+                raise ValueError(f"Inconsistent demand pattern shape '{demand_pattern.shape}' " +
+                                 "detected. Expected a one dimensional array!")
 
         node_idx = self.epanet_api.getNodeIndex(node_id)
-        self.epanet_api.addPattern(demand_pattern_id, demand_pattern)
+
+        if demand_pattern_id not in self.epanet_api.getPatternNameID():
+            if demand_pattern is None:
+                raise ValueError("'demand_pattern' can not be None if " +
+                                 "'demand_pattern_id' does not already exist.")
+            self.epanet_api.addPattern(demand_pattern_id, demand_pattern)
+        else:
+            if demand_pattern is not None:
+                pattern_idx = self.epanet_api.getPatternIndex(demand_pattern_id)
+                self.epanet_api.setPattern(pattern_idx, demand_pattern)
+
         self.epanet_api.setNodeJunctionData(node_idx, self.epanet_api.getNodeElevations(node_idx),
                                             base_demand, demand_pattern_id)
 
@@ -1654,7 +1741,7 @@ class ScenarioSimulator():
             print("Running EPANET-MSX ...")
             n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
                                      hyd_time_step)
-            progress_bar = iter(tqdm(range(n_iterations + 1), desc="Time steps"))
+            progress_bar = iter(tqdm(range(n_iterations + 1), ascii=True, desc="Time steps"))
 
         def __get_concentrations(init_qual=False):
             if init_qual is True:
@@ -1896,7 +1983,7 @@ class ScenarioSimulator():
             print("Running basic quality analysis using EPANET ...")
             n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
                                      requested_time_step)
-            progress_bar = iter(tqdm(range(n_iterations + 1), desc="Time steps"))
+            progress_bar = iter(tqdm(range(n_iterations + 1), ascii=True, desc="Time steps"))
 
         # Run simulation step by step
         total_time = 0
@@ -2081,7 +2168,7 @@ class ScenarioSimulator():
             print("Running EPANET ...")
             n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
                                      requested_time_step)
-            progress_bar = iter(tqdm(range(n_iterations + 1), desc="Time steps"))
+            progress_bar = iter(tqdm(range(n_iterations + 1), ascii=True, desc="Time steps"))
 
         try:
             # Run simulation step by step
@@ -2538,7 +2625,7 @@ class ScenarioSimulator():
         self.set_general_parameters(quality_model={"type": "CHEM", "chemical_name": chemical_name,
                                                    "units": chemical_units})
 
-    def add_quality_source(self, node_id: str, pattern: np.ndarray, source_type: int,
+    def add_quality_source(self, node_id: str, source_type: int, pattern: np.ndarray = None,
                            pattern_id: str = None, source_strength: int = 1.) -> None:
         """
         Adds a new external water quality source at a particular node.
@@ -2547,8 +2634,6 @@ class ScenarioSimulator():
         ----------
         node_id : `str`
             ID of the node at which this external water quality source is placed.
-        pattern : `numpy.ndarray`
-            1d source pattern.
         source_type : `int`,
             Types of the external water quality source -- must be of the following
             EPANET toolkit constants:
@@ -2564,6 +2649,12 @@ class ScenarioSimulator():
                 - EN_MASS Injects a given mass/minute into a node
                 - EN_SETPOINT Sets the concentration leaving a node to a given value
                 - EN_FLOWPACED Adds a given value to the concentration leaving a node
+        pattern : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
+            1d source pattern multipiers over time -- i.e. quality-source = source_strength * pattern.
+
+            If None, the pattern pattern_id is assume to already exist.
+
+            The default is None.
         pattern_id : `str`, optional
             ID of the source pattern.
 
@@ -2586,20 +2677,23 @@ class ScenarioSimulator():
                                "call 'enable_chemical_analysis()' before calling this function.")
         if node_id not in self._sensor_config.nodes:
             raise ValueError(f"Unknown node '{node_id}'")
-        if not isinstance(pattern, np.ndarray):
-            raise TypeError("'pattern' must be an instance of 'numpy.ndarray' " +
-                            f"but not of '{type(pattern)}'")
         if not isinstance(source_type, int) or not 0 <= source_type <= 3:
             raise ValueError("Invalid type of water quality source")
-
+        if pattern is not None:
+            if not isinstance(pattern, np.ndarray):
+                raise TypeError("'pattern' must be an instance of 'numpy.ndarray' " +
+                                f"but not of '{type(pattern)}'")
+        if pattern is None and pattern_id is None:
+            raise ValueError("'pattern_id' and 'pattern' can not be None at the same time")
         if pattern_id is None:
             pattern_id = f"quality_source_pattern_node={node_id}"
-        if pattern_id in self.epanet_api.getPatternNameID():
-            raise ValueError("Invalid 'pattern_id' -- " +
-                             f"there already exists a pattern with ID '{pattern_id}'")
 
         node_idx = self.epanet_api.getNodeIndex(node_id)
-        pattern_idx = self.epanet_api.addPattern(pattern_id, pattern)
+
+        if pattern is None:
+            pattern_idx = self.epanet_api.getPatternIndex(pattern_id)
+        else:
+            pattern_idx = self.epanet_api.addPattern(pattern_id, pattern)
 
         self.epanet_api.api.ENsetnodevalue(node_idx, ToolkitConstants.EN_SOURCETYPE, source_type)
         self.epanet_api.setNodeSourceQuality(node_idx, source_strength)
@@ -2640,7 +2734,7 @@ class ScenarioSimulator():
         node_id : `str`
             ID of the node at which this external (bulk or surface) species injection source
             is placed.
-        pattern : `numpy.ndarray`
+        pattern : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             1d source pattern.
         source_type : `int`,
             Type of the external (bulk or surface) species injection source -- must be one of

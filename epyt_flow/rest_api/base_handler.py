@@ -17,7 +17,7 @@ class BaseHandler():
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         error_msg : `str`
             Error message.
@@ -43,7 +43,7 @@ class BaseHandler():
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         """
         resp.status = falcon.HTTP_BAD_REQUEST
@@ -55,7 +55,7 @@ class BaseHandler():
 
         Parameters
         ----------
-        req : `falcon.Request`
+        req : `falcon.Request <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#request>`_
             Request instance.
 
         Returns
@@ -74,7 +74,7 @@ class BaseHandler():
 
         Parameters
         ----------
-        resp : `falcon.Response`
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
             Response instance.
         data : `Any`
             Data to be sent.
