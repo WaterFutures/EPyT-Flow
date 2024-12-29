@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('../'))
 # -- Project information -----------------------------------------------------
 
 project = 'EPyT-Flow'
-copyright = 'EPyT-Flow Developers, 2024'
+copyright = 'EPyT-Flow Developers'
 author = 'André Artelt, Marios S. Kyriakou, Stelios G. Vrachimis, et al.'
 
 
