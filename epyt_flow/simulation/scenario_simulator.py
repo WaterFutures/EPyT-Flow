@@ -28,7 +28,7 @@ from .sensor_config import SensorConfig, areaunit_to_id, massunit_to_id, quality
 from ..uncertainty import ModelUncertainty, SensorNoise
 from .events import SystemEvent, Leakage, ActuatorEvent, SensorFault, SensorReadingAttack, \
     SensorReadingEvent
-from .scada import ScadaData, AdvancedControlModule
+from .scada import ScadaData, AdvancedControlModule, SimpleControlModule
 from ..topology import NetworkTopology, UNITS_SIMETRIC, UNITS_USCUSTOM
 from ..utils import get_temp_folder
 
@@ -67,8 +67,10 @@ class ScenarioSimulator():
         Sensor noise.
     _sensor_config : :class:`~epyt_flow.simulation.sensor_config.SensorConfig`, protected
         Sensor configuration.
-    _controls : list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`], protected
-        List of custom control modules.
+    _advanced_controls : list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`], protected
+        List of custom (advanced) control modules.
+    _simple_controls : list[:class:`~epyt_flow.simulation.scada.simple_control.SimpleControlModule`], protected
+        List of EPANET control rules.
     _system_events : list[:class:`~epyt_flow.simulation.events.system_event.SystemEvent`], protected
         Lsit of system events such as leakages.
     _sensor_reading_events : list[:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent`], protected
@@ -105,7 +107,8 @@ class ScenarioSimulator():
         self._model_uncertainty = ModelUncertainty()
         self._sensor_noise = None
         self._sensor_config = None
-        self._controls = []
+        self._advanced_controls = []
+        self._simple_controls = []
         self._system_events = []
         self._sensor_reading_events = []
         self.__running_simulation = False
@@ -177,8 +180,10 @@ class ScenarioSimulator():
             self._sensor_noise = scenario_config.sensor_noise
             self._sensor_config = scenario_config.sensor_config
 
-            for control in scenario_config.controls:
-                self.add_control(control)
+            for control in scenario_config.advanced_controls:
+                self.add_advanced_control(control)
+            for control in scenario_config.simple_controls:
+                self.add_simple_control(control)
             for event in scenario_config.system_events:
                 self.add_system_event(event)
             for event in scenario_config.sensor_reading_events:
@@ -323,18 +328,32 @@ class ScenarioSimulator():
         self._sensor_config = sensor_config
 
     @property
-    def controls(self) -> list[AdvancedControlModule]:
+    def advanced_controls(self) -> list[AdvancedControlModule]:
         """
-        Gets all control modules.
+        Gets all advanced control modules.
 
         Returns
         -------
         list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`]
-            All control modules.
+            All advanced control modules.
         """
         self._adapt_to_network_changes()
 
-        return deepcopy(self._controls)
+        return deepcopy(self._advanced_controls)
+
+    @property
+    def simple_controls(self) -> list[SimpleControlModule]:
+        """
+        Gets all EPANET control rules.
+
+        Returns
+        -------
+        list[:class:`~epyt_flow.simulation.scada.simple_control.SimpleControlModule`]
+            All EPANET control rules.
+        """
+        self._adapt_to_network_changes()
+
+        return deepcopy(self._simple_controls)
 
     @property
     def leakages(self) -> list[Leakage]:
@@ -800,7 +819,9 @@ class ScenarioSimulator():
         return ScenarioConfig(f_inp_in=self.__f_inp_in, f_msx_in=self.__f_msx_in,
                               general_params=general_params, sensor_config=self.sensor_config,
                               memory_consumption_estimate=self.estimate_memory_consumption(),
-                              controls=self.controls, sensor_noise=self.sensor_noise,
+                              advanced_controls=self.advanced_controls,
+                              simple_controls=self.simple_controls,
+                              sensor_noise=self.sensor_noise,
                               model_uncertainty=self.model_uncertainty,
                               system_events=self.system_events,
                               sensor_reading_events=self.sensor_reading_events)
@@ -1063,14 +1084,14 @@ class ScenarioSimulator():
         self.epanet_api.setNodeJunctionData(node_idx, self.epanet_api.getNodeElevations(node_idx),
                                             base_demand, demand_pattern_id)
 
-    def add_control(self, control: AdvancedControlModule) -> None:
+    def add_advanced_control(self, control: AdvancedControlModule) -> None:
         """
-        Adds a control module to the scenario simulation.
+        Adds an advanced control module to the scenario simulation.
 
         Parameters
         ----------
         control : :class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`
-            Control module.
+            Advanced control module.
         """
         self._adapt_to_network_changes()
 
@@ -1079,7 +1100,25 @@ class ScenarioSimulator():
                             "'epyt_flow.simulation.scada.AdvancedControlModule' not of " +
                             f"'{type(control)}'")
 
-        self._controls.append(control)
+        self._advanced_controls.append(control)
+
+    def add_simple_control(self, control: SimpleControlModule) -> None:
+        """
+        Adds an EPANET control rule to the scenario simulation.
+
+        Parameters
+        ----------
+        control : :class:`~epyt_flow.simulation.scada.simple_control.SimpleControlModule`
+            EPANET control module.
+        """
+        self._adapt_to_network_changes()
+
+        if not isinstance(control, SimpleControlModule):
+            raise TypeError("'control' must be an instance of " +
+                            "'epyt_flow.simulation.scada.SimpleControlModule' not of " +
+                            f"'{type(control)}'")
+
+        self._simple_controls.append(control)
 
     def add_leakage(self, leakage_event: Leakage) -> None:
         """
@@ -1616,8 +1655,8 @@ class ScenarioSimulator():
         for event in self._system_events:
             event.reset()
 
-        if self._controls is not None:
-            for c in self._controls:
+        if self._advanced_controls is not None:
+            for c in self._advanced_controls:
                 c.init(self.epanet_api)
 
     def run_advanced_quality_simulation(self, hyd_file_in: str, verbose: bool = False,
@@ -2254,7 +2293,7 @@ class ScenarioSimulator():
                     yield data
 
                 # Apply control modules
-                for control in self._controls:
+                for control in self._advanced_controls:
                     control.step(scada_data)
 
                 # Next

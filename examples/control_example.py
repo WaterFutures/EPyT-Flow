@@ -52,7 +52,7 @@ if __name__ == "__main__":
         sim.epanet_api.deleteControls()
 
         # Add custom controls
-        sim.add_control(MyControl())
+        sim.add_advanced_control(MyControl())
 
         # Run simulation and show sensor readings over time
         scada_data_res = sim.run_simulation()

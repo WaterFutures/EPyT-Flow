@@ -48,6 +48,7 @@ PUMP_STATE_EVENT_ID                     = 28
 PUMP_SPEED_EVENT_ID                     = 29
 VALVE_STATE_EVENT_ID                    = 30
 SPECIESINJECTION_EVENT_ID               = 31
+SIMPLE_CONTROL_ID                       = 32
 
 
 def my_packb(data: Any) -> bytes:

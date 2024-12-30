@@ -4,12 +4,64 @@
 Control
 *******
 
-EPyT-Flow supports the implementation of custom control modules & algorithms in Python code.
-Note that those controls can go beyond simple IF-THEN-ELSE controls as supported by EPANET --
-i.e. arbitrary control logic can be implemented by the user, incl. AI-based controls where
-for instance a neural network is utlized to make control decisions.
+Besides the :ref:`simple EPANET control rules <simple_controls>`, EPyT-Flow also supports
+the implementation of :ref:`custom (advanced) control modules & algorithms <advanced_controls>`
+in Python code.
+Note that those advanced control modules can go beyond simple IF-THEN-ELSE controls as supported
+by EPANET -- i.e. arbitrary control logic can be implemented by the user, incl. AI-based controls
+where for instance a neural network is utlized to make control decisions.
 
-All controls must be derived from
+.. _simple_controls:
+
+Simple EPANET Control Rules
++++++++++++++++++++++++++++
+
+EPANET natively supports
+`simple control rules <https://epanet22.readthedocs.io/en/latest/back_matter.html#controls>`_
+that can change valves and pumps at some points in time or if a lower or upper bound on some node's
+pressure or tank level is observed.
+
+.. note::
+    Be aware that those rules are directly processed by EPANET and are therefore not affected
+    by any sensor noise or sensor reading attacks.
+
+EPyT-Flow implements those simple control rules in
+:class:`~epyt_flow.simulation.scada.simple_control.SimpleControlModule`
+and makes them accesible by the
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.simple_controls` property
+of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
+
+Such simple EPANET control rules can be added to a scenario by calling the
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_simple_control` function
+of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
+
+For the users' convinience, EPyT-Flow comes with wrappers for all possible types of EPANET control rules:
+
++-------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| Class                                                                               | Description                                                                                                    |
++=====================================================================================+================================================================================================================+
+| :func:`~epyt_flow.simulation.scada.simple_control.SimplePumpSpeedTimeControl`       | Sets the pump speed at some points in time.                                                                    |
++-------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| :func:`~epyt_flow.simulation.scada.simple_control.SimplePumpSpeedConditionControl`  | Sets the pump speed if some pressure or water level condition is met at a given node.                          |
++-------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| :func:`~epyt_flow.simulation.scada.simple_control.SimpleValveTimeControl`           | Sets the valve status (i.e. open or closed) at some points in time.                                            |
++-------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| :func:`~epyt_flow.simulation.scada.simple_control.SimpleValveConditionControl`      | Sets the valve status (i.e. open or closed) if some pressure or water level condition is met at a given node.  |
++-------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+
+TODO-Example
+
+.. code-block:: python
+
+    # TODO
+
+
+.. _advanced_controls:
+
+Advanced Control
+++++++++++++++++
+
+All advanced controls must be derived from
 :class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule` 
 and implement the
 :func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.step` method.
@@ -43,8 +95,8 @@ EPyT-Flow also provides some pre-defined helper functions:
 
 .. note::
     
-    Note that control rules such as time-based rules specified in the .inp file will be prioritized.
-    Other than that, EPyT-Flow first applies events and then controls --
+    Note that EPANET control rules such as time-based rules specified in the .inp file
+    will be prioritized. Other than that, EPyT-Flow first applies events and then controls --
     i.e. events are always prioritized over controls.
 
 Example of implementing a simple pump control strategy where pump "9" is activated or deactivated
@@ -81,7 +133,7 @@ based on the water level in tank "2":
 
 
 Custom control modules & algorithms can be added to a scenario by calling
-:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_control`
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_advanced_control`
 of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
 instance BEFORE running the simulation:
 
@@ -99,7 +151,7 @@ instance BEFORE running the simulation:
         # ...
 
         # Add custom controls
-        sim.add_control(MyControl())
+        sim.add_advanced_control(MyControl())
 
         # Run simulation
         # ....
