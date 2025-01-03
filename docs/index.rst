@@ -49,8 +49,8 @@ Unique features of EPyT-Flow that make it superior to other (Python) toolboxes a
 - High- and low-level interface
 - Object-orientated design that is easy to extend and customize
 - Sensor configurations
-- Wide variety of pre-defined events (e.g. leakages, sensor faults, actuator events, cyber-attacks, etc.)
-- Wide variety of pre-defined types of uncertainties (e.g. model uncertainties)
+- Wide variety of pre-defined events (e.g. leakages, sensor faults, actuator events, contamination, cyber-attacks, etc.)
+- Wide variety of pre-defined types of global & local uncertainties (e.g. model uncertainties)
 - Step-wise simulation and environment for training and evaluating control strategies
 - Serialization module for easy exchange of data and (scenario) configurations
 - REST API to make EPyT-Flow accessible in other applications
@@ -88,6 +88,7 @@ Examples
    examples/water_age
    examples/chlorine_injection
    examples/net2-cl2_example
+   examples/arsenic_contamination
    examples/event_detection
    examples/visualization
 
