@@ -39,7 +39,7 @@ Unique features of EPyT-Flow that make it superior to other (Python) toolboxes a
 
 ## Installation
 
-EPyT-Flow supports Python 3.9 - 3.12
+EPyT-Flow supports Python 3.9 - 3.13
 
 Note that [EPANET and EPANET-MSX sources](epyt_flow/EPANET/) are compiled and overwrite the binaries
 shipped by EPyT **IF** EPyT-Flow is installed on a Unix system and the *gcc* compiler is available.
