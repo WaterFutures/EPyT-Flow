@@ -13,7 +13,7 @@ from ..uncertainty import AbsoluteGaussianUncertainty, RelativeGaussianUncertain
     AbsoluteUniformUncertainty, RelativeUniformUncertainty, ModelUncertainty, \
     SensorNoise, Uncertainty
 from .sensor_config import SensorConfig
-from .scada import AdvancedControlModule, SimpleControlModule
+from .scada import AdvancedControlModule, SimpleControlModule, ComplexControlModule
 from .events import SystemEvent, SensorReadingEvent
 from .events.sensor_faults import SensorFaultConstant, SensorFaultDrift, SensorFaultGaussian, \
     SensorFaultPercentage, SensorFaultStuckZero
@@ -72,6 +72,10 @@ class ScenarioConfig(Serializable):
         List of EPANET control rules that are active during the simulation.
 
         The default is an empty list.
+    complex_controls : list[:class:`~epyt_flow.simulation.scada.complex_control.ComplexControlModule`], optional
+        List of complex (i.e. IF-THEN-ELSE) EPANET control rules that are active during the simulation.
+
+        The default is an empty list.
     model_uncertainty : :class:`~epyt_flow.uncertainty.model_uncertainty.ModelUncertainty`, optional
         Specification of model uncertainty.
     system_events : list[:class:`~epyt_flow.simulation.events.system_event.SystemEvent`], optional
@@ -89,7 +93,8 @@ class ScenarioConfig(Serializable):
                  memory_consumption_estimate: float = None,
                  controls: list[AdvancedControlModule] = None,
                  advanced_controls: list[AdvancedControlModule] = [],
-                 simple_controls : list[SimpleControlModule] = [],
+                 simple_controls: list[SimpleControlModule] = [],
+                 complex_controls: list[ComplexControlModule] = [],
                  sensor_noise: SensorNoise = None,
                  model_uncertainty: ModelUncertainty = None,
                  system_events: list[SystemEvent] = [],
@@ -140,8 +145,12 @@ class ScenarioConfig(Serializable):
                             f"'{type(simple_controls)}'")
         if len(simple_controls) != 0:
             if any(not isinstance(c, SimpleControlModule) for c in simple_controls):
-                raise TypeError("Each item in 'controls' must be an instance of " +
+                raise TypeError("Each item in 'simple_controls' must be an instance of " +
                                 "'epyt_flow.simulation.scada.SimppleControlModule'")
+        if len(complex_controls) != 0:
+            if any(not isinstance(c, ComplexControlModule) for c in complex_controls):
+                raise TypeError("Each item in 'complex_controls' must be an instance of " +
+                                "'epyt_flow.simulation.scada.ComplexControlModule'")
         if sensor_noise is not None:
             if not isinstance(sensor_noise, SensorNoise):
                 raise TypeError("'sensor_noise' must be an instance of " +
@@ -198,6 +207,11 @@ class ScenarioConfig(Serializable):
             else:
                 self.__simple_controls = simple_controls
 
+            if len(complex_controls) == 0:
+                self.__complex_controls = scenario_config.complex_controls
+            else:
+                self.__complex_controls = complex_controls
+
             if sensor_noise is None:
                 self.__sensor_noise = scenario_config.sensor_noise
             else:
@@ -225,6 +239,7 @@ class ScenarioConfig(Serializable):
             self.__memory_consumption_estimate = memory_consumption_estimate
             self.__advanced_controls = advanced_controls
             self.__simple_controls = simple_controls
+            self.__complex_controls = complex_controls
             self.__sensor_noise = sensor_noise
             self.__system_events = system_events
             self.__sensor_reading_events = sensor_reading_events
@@ -335,6 +350,19 @@ class ScenarioConfig(Serializable):
         return deepcopy(self.__simple_controls)
 
     @property
+    def complex_controls(self) -> list[ComplexControlModule]:
+        """
+        Gets the list of all complex (i.e. IF-THEN-ELSE) EPANET control rules
+        that are active during the simulation.
+
+        Returns
+        -------
+        list[:class:`~epyt_flow.simulation.scada.complex_control.ComplexControlModule`]
+            List of all complex EPANET control rules that are active during the simulation.
+        """
+        return deepcopy(self.__complex_controls)
+
+    @property
     def sensor_noise(self) -> SensorNoise:
         """
         Gets the sensor noise/uncertainty specification.
@@ -389,6 +417,7 @@ class ScenarioConfig(Serializable):
                          "memory_consumption_estimate": self.__memory_consumption_estimate,
                          "advanced_controls": self.__advanced_controls,
                          "simple_controls": self.__simple_controls,
+                         "complex_controls": self.__complex_controls,
                          "sensor_noise": self.__sensor_noise,
                          "model_uncertainty": self.__model_uncertainty,
                          "system_events": self.__system_events,
@@ -407,6 +436,7 @@ class ScenarioConfig(Serializable):
             and self.__sensor_config == other.sensor_config \
             and np.all(self.__advanced_controls == other.advanced_controls) \
             and np.all(self.__simple_controls == other.simple_controls) \
+            and np.all(self.__complex_controls == other.complex_controls) \
             and self.__model_uncertainty == other.model_uncertainty \
             and np.all(self.__system_events == other.system_events) \
             and np.all(self.__sensor_reading_events == other.sensor_reading_events)
@@ -416,6 +446,7 @@ class ScenarioConfig(Serializable):
             f"general_params: {self.general_params} sensor_config: {self.sensor_config} " + \
             f"memory_consumption_estimate: {self.memory_consumption_estimate} " + \
             f"advanced_controls: {self.advanced_controls} simple_controls: {self.simple_controls} " + \
+            f"complex_controls: {self.__complex_controls}" + \
             f"sensor_noise: {self.sensor_noise} model_uncertainty: {self.model_uncertainty} " + \
             f"system_events: {','.join(map(str, self.system_events))} " + \
             f"sensor_reading_events: {','.join(map(str, self.sensor_reading_events))}"

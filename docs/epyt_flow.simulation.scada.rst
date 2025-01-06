@@ -34,3 +34,11 @@ epyt_flow.simulation.scada.simple_control
 .. automodule:: epyt_flow.simulation.scada.simple_control
    :members:
    :show-inheritance:
+
+
+epyt_flow.simulation.scada.complex_control
+------------------------------------------
+
+.. automodule:: epyt_flow.simulation.scada.complex_control
+   :members:
+   :show-inheritance:
