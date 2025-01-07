@@ -74,7 +74,7 @@ class SimpleControlModule(JsonSerializable):
             if not isinstance(cond_var_value, str):
                 raise TypeError("EN_TIMEOFDAY requires that 'cond_var_value' must be an instance " +
                                 f"of 'str' but not of '{type(cond_var_value)}'")
-            if not cond_var_value.endswith("AM") or not cond_var_value.endswith("PM"):
+            if not cond_var_value.endswith("AM") and not cond_var_value.endswith("PM"):
                 raise ValueError(f"Invalid time of day format '{cond_var_value}' in " +
                                  "'cond_var_value'")
         elif cond_type == ToolkitConstants.EN_TIMER:
@@ -178,15 +178,17 @@ class SimpleControlModule(JsonSerializable):
         return self.__cond_comp_value
 
     def get_attributes(self) -> dict:
-        return {"link_id": self.__link_id, "link_status": self.__link_status,
-                "cond_type": self.__cond_type, "cond_var_value": self.__cond_var_value,
-                "cond_comp_value": self.__cond_comp_value}
+        return super().get_attributes() | {"link_id": self.__link_id,
+                                           "link_status": self.__link_status,
+                                           "cond_type": self.__cond_type,
+                                           "cond_var_value": self.__cond_var_value,
+                                           "cond_comp_value": self.__cond_comp_value}
 
     def __eq__(self, other) -> bool:
         return super().__eq__(other) and self.__link_id == other.link_id and \
             self.__link_status == other.link_status and self.__cond_type == other.cond_type and \
             self.__cond_var_value == other.cond_var_value and \
-            self.__cond_comp_value == other.cond_comp_value()
+            self.__cond_comp_value == other.cond_comp_value
 
     def __str__(self) -> str:
         control_rule_str = f"LINK {self.__link_id} "
