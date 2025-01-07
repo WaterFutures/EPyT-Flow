@@ -5,6 +5,8 @@ import sys
 import os
 import pathlib
 import time
+from datetime import timedelta
+from datetime import datetime
 from typing import Generator, Union
 from copy import deepcopy
 import shutil
@@ -28,7 +30,8 @@ from .sensor_config import SensorConfig, areaunit_to_id, massunit_to_id, quality
 from ..uncertainty import ModelUncertainty, SensorNoise
 from .events import SystemEvent, Leakage, ActuatorEvent, SensorFault, SensorReadingAttack, \
     SensorReadingEvent
-from .scada import ScadaData, AdvancedControlModule, SimpleControlModule
+from .scada import ScadaData, AdvancedControlModule, SimpleControlModule, ComplexControlModule, \
+    RuleCondition, RuleAction, ActuatorConstants, EN_R_ACTION_SETTING
 from ..topology import NetworkTopology, UNITS_SIMETRIC, UNITS_USCUSTOM
 from ..utils import get_temp_folder
 
@@ -70,7 +73,9 @@ class ScenarioSimulator():
     _advanced_controls : list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`], protected
         List of custom (advanced) control modules.
     _simple_controls : list[:class:`~epyt_flow.simulation.scada.simple_control.SimpleControlModule`], protected
-        List of EPANET control rules.
+        List of simle EPANET control rules.
+    _complex_controls : list[:class:`~epyt_flow.simulation.scada.complex_control.ComplexControlModule`], protected
+        List of complex (IF-THEN-ELSE) EPANET control rules.
     _system_events : list[:class:`~epyt_flow.simulation.events.system_event.SystemEvent`], protected
         Lsit of system events such as leakages.
     _sensor_reading_events : list[:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent`], protected
@@ -109,6 +114,7 @@ class ScenarioSimulator():
         self._sensor_config = None
         self._advanced_controls = []
         self._simple_controls = []
+        self._complex_controls = []
         self._system_events = []
         self._sensor_reading_events = []
         self.__running_simulation = False
@@ -171,6 +177,9 @@ class ScenarioSimulator():
             if self.__f_msx_in is not None:
                 self.epanet_api.loadMSXFile(my_f_msx_in, customMSXlib=custom_epanetmsx_lib)
 
+        self._simple_controls = self._parse_simple_control_rules()
+        self._complex_controls = self._parse_complex_control_rules()
+
         self._sensor_config = self._get_empty_sensor_config()
         if scenario_config is not None:
             if scenario_config.general_params is not None:
@@ -184,6 +193,8 @@ class ScenarioSimulator():
                 self.add_advanced_control(control)
             for control in scenario_config.simple_controls:
                 self.add_simple_control(control)
+            for control in scenario_config.complex_controls:
+                self.add_complex_control(control)
             for event in scenario_config.system_events:
                 self.add_system_event(event)
             for event in scenario_config.sensor_reading_events:
@@ -344,16 +355,30 @@ class ScenarioSimulator():
     @property
     def simple_controls(self) -> list[SimpleControlModule]:
         """
-        Gets all EPANET control rules.
+        Gets all simple EPANET control rules.
 
         Returns
         -------
         list[:class:`~epyt_flow.simulation.scada.simple_control.SimpleControlModule`]
-            All EPANET control rules.
+            All simple EPANET control rules.
         """
         self._adapt_to_network_changes()
 
         return deepcopy(self._simple_controls)
+
+    @property
+    def complex_controls(self) -> list[SimpleControlModule]:
+        """
+        Gets all complex (IF-THEN-ELSE) EPANET control rules.
+
+        Returns
+        -------
+        list[:class:`~epyt_flow.simulation.scada.complex_control.ComplexControlModule`]
+            All complex EPANET control rules.
+        """
+        self._adapt_to_network_changes()
+
+        return deepcopy(self._complex_controls)
 
     @property
     def leakages(self) -> list[Leakage]:
@@ -440,6 +465,132 @@ class ScenarioSimulator():
         self._adapt_to_network_changes()
 
         return deepcopy(self._sensor_reading_events)
+
+    def _parse_simple_control_rules(self) -> list[SimpleControlModule]:
+        controls = []
+
+        for idx in self.epanet_api.getControls():
+            control = self.epanet_api.getControls(idx)
+
+            if control.Setting == "OPEN":
+                link_status = ActuatorConstants.EN_OPEN
+            else:
+                link_status = ActuatorConstants.EN_CLOSED
+
+            if control.Type == "LOWLEVEL":
+                cond_type = ToolkitConstants.EN_LOWLEVEL
+            elif control.Type == "HIGHLEVEL":
+                cond_type = ToolkitConstants.EN_HILEVEL
+            elif control.Type == "TIMER":
+                cond_type = ToolkitConstants.EN_TIMER
+            elif control.Type == "TIMEOFDAY":
+                cond_type = ToolkitConstants.EN_TIMEOFDAY
+
+            if control.NodeID is not None:
+                cond_var_value = control.NodeID
+                cond_comp_value = control.Value
+            else:
+                if cond_type == ToolkitConstants.EN_TIMER:
+                    cond_var_value = int(control.Value / 3600)
+                elif cond_type == ToolkitConstants.EN_TIMEOFDAY:
+                    sec = control.Value
+                    if sec <= 43200:
+                        cond_var_value = \
+                            f"{':'.join(str(timedelta(seconds=sec)).split(':')[:2])} AM"
+                    else:
+                        sec -= 43200
+                        cond_var_value = \
+                            f"{':'.join(str(timedelta(seconds=sec)).split(':')[:2])} PM"
+                cond_comp_value = None
+
+            controls.append(SimpleControlModule(link_id=control.LinkID,
+                                                link_status=link_status,
+                                                cond_type=cond_type,
+                                                cond_var_value=cond_var_value,
+                                                cond_comp_value=cond_comp_value))
+
+        return controls
+
+    def _parse_complex_control_rules(self) -> list[ComplexControlModule]:
+        controls = []
+
+        rules = self.epanet_api.getRules()
+        for rule_idx, rule in rules.items():
+            rule_info = self.epanet_api.getRuleInfo(rule_idx)
+
+            rule_id = rule["Rule_ID"]
+            rule_priority, *_ = rule_info.Priority
+
+            # Parse conditions
+            n_rule_premises, *_ = rule_info.Premises
+
+            condition_1 = None
+            additional_conditions = []
+            for j in range(1, n_rule_premises + 1):
+                [logop, object_type_id, obj_idx, variable_type_id, relop, status, value_premise] = \
+                    self.epanet_api.api.ENgetpremise(rule_idx, j)
+
+                object_id = None
+                if object_type_id == ToolkitConstants.EN_R_NODE:
+                    object_id = self.epanet_api.getNodeNameID(obj_idx)
+                elif object_type_id == ToolkitConstants.EN_R_LINK:
+                    object_id = self.epanet_api.getLinkNameID(obj_idx)
+                elif object_type_id == ToolkitConstants.EN_R_SYSTEM:
+                    object_id = ""
+
+                if variable_type_id >= ToolkitConstants.EN_R_TIME:
+                    value_premise = datetime.fromtimestamp(value_premise)\
+                        .strftime("%I:%M %p")
+                if status != 0:
+                    value_premise = self.epanet_api.RULESTATUS[status - 1]
+
+                condition = RuleCondition(object_type_id, object_id, variable_type_id,
+                                          relop, value_premise)
+                if condition_1 is None:
+                    condition_1 = condition
+                else:
+                    additional_conditions.append((logop, condition))
+
+            # Parse actions
+            n_rule_then_actions, *_ = rule_info.ThenActions
+            actions = []
+            for j in range(1, n_rule_then_actions + 1):
+                [link_idx, link_status, link_setting] = \
+                    self.epanet_api.api.ENgetthenaction(rule_idx, j)
+
+                link_type_id = self.epanet_api.getLinkTypeIndex(link_idx)
+                link_id = self.epanet_api.getLinkNameID(link_idx)
+                if link_status >= 0:
+                    action_type_id = link_status
+                    action_value = link_status
+                else:
+                    action_type_id = EN_R_ACTION_SETTING
+                    action_value = link_setting
+
+                actions.append(RuleAction(link_type_id, link_id, action_type_id, action_value))
+
+            n_rule_else_actions, *_ = rule_info.ElseActions
+            else_actions = []
+            for j in range(1, n_rule_else_actions + 1):
+                [link_idx, link_status, link_setting] = \
+                    self.epanet_api.api.ENgetelseaction(rule_idx, j)
+
+                link_type_id = self.epanet_api.getLinkType(link_idx)
+                link_id = self.epanet_api.getLinkNameID(link_idx)
+                if link_status <= 3:
+                    action_type_id = link_status
+                    action_value = link_status
+                else:
+                    action_type_id = EN_R_ACTION_SETTING
+                    action_value = link_setting
+
+                else_actions.append(RuleAction(link_type_id, link_id, action_type_id, action_value))
+
+            # Create and add control module
+            controls.append(ComplexControlModule(rule_id, condition_1, additional_conditions,
+                                                 actions, else_actions, int(rule_priority)))
+
+        return controls
 
     def _adapt_to_network_changes(self):
         nodes = self.epanet_api.getNodeNameID()
@@ -821,6 +972,7 @@ class ScenarioSimulator():
                               memory_consumption_estimate=self.estimate_memory_consumption(),
                               advanced_controls=self.advanced_controls,
                               simple_controls=self.simple_controls,
+                              complex_controls=self.complex_controls,
                               sensor_noise=self.sensor_noise,
                               model_uncertainty=self.model_uncertainty,
                               system_events=self.system_events,
@@ -1104,12 +1256,12 @@ class ScenarioSimulator():
 
     def add_simple_control(self, control: SimpleControlModule) -> None:
         """
-        Adds an EPANET control rule to the scenario simulation.
+        Adds a simple EPANET control rule to the scenario simulation.
 
         Parameters
         ----------
         control : :class:`~epyt_flow.simulation.scada.simple_control.SimpleControlModule`
-            EPANET control module.
+            Simple EPANET control module.
         """
         self._adapt_to_network_changes()
 
@@ -1118,7 +1270,94 @@ class ScenarioSimulator():
                             "'epyt_flow.simulation.scada.SimpleControlModule' not of " +
                             f"'{type(control)}'")
 
-        self._simple_controls.append(control)
+        if not any(c == control for c in self._simple_controls):
+            self._simple_controls.append(control)
+            self.epanet_api.addControls(str(control))
+
+    def remove_all_simple_controls(self) -> None:
+        """
+        Removes all simple EPANET controls from the scenario.
+        """
+        self.epanet_api.deleteControls()
+        self._simple_controls = []
+
+    def remove_simple_control(self, control: SimpleControlModule) -> None:
+        """
+        Removes a given simple EPANET control rule from the scenario.
+
+        Parameters
+        ----------
+        control : :class:`~epyt_flow.simulation.scada.simple_control.SimpleControlModule`
+            Simple EPANET control module to be removed.
+        """
+        self._adapt_to_network_changes()
+
+        if not isinstance(control, SimpleControlModule):
+            raise TypeError("'control' must be an instance of " +
+                            "'epyt_flow.simulation.scada.SimpleControlModule' not of " +
+                            f"'{type(control)}'")
+
+        control_idx = None
+        for idx, c in enumerate(self._simple_controls):
+            if c == control:
+                control_idx = idx + 1
+                break
+        if control_idx is None:
+            raise ValueError("Invalid/Unknown control module.")
+
+        self.epanet_api.deleteControls(control_idx)
+        self._simple_controls.remove(control)
+
+    def add_complex_control(self, control: ComplexControlModule) -> None:
+        """
+        Adds an complex (IF-THEN-ELSE) EPANET control rule to the scenario simulation.
+
+        Parameters
+        ----------
+        control : :class:`~epyt_flow.simulation.scada.complex_control.ComplexControlModule`
+            Complex EPANET control module.
+        """
+        self._adapt_to_network_changes()
+
+        if not isinstance(control, ComplexControlModule):
+            raise TypeError("'control' must be an instance of " +
+                            "'epyt_flow.simulation.scada.ComplexControlModule' not of " +
+                            f"'{type(control)}'")
+
+        if not any(c == control for c in self._complex_controls):
+            self._complex_controls.append(control)
+            self.epanet_api.addRules(str(control))
+
+    def remove_all_complex_controls(self) -> None:
+        """
+        Removes all complex EPANET controls from the scenario.
+        """
+        self.epanet_api.deleteRules()
+        self._complex_controls = []
+
+    def remove_complex_control(self, control: ComplexControlModule) -> None:
+        """
+        Removes a given complex (IF-THEN-ELSE) EPANET control rule from the scenario.
+
+        Parameters
+        ----------
+        control : :class:`~epyt_flow.simulation.scada.complex_control.ComplexControlModule`
+            Complex EPANET control module to be removed.
+        """
+        self._adapt_to_network_changes()
+
+        if not isinstance(control, ComplexControlModule):
+            raise TypeError("'control' must be an instance of " +
+                            "'epyt_flow.simulation.scada.ComplexControlModule' not of " +
+                            f"'{type(control)}'")
+
+        if control.rule_id not in self.epanet_api.getRuleID():
+            raise ValueError("Invalid/Unknown control module. " +
+                             f"Can not find rule ID '{control.rule_id}'")
+
+        rule_idx = self.epanet_api.getRuleID().index(control.rule_id) + 1
+        self.epanet_api.deleteRules(rule_idx)
+        self._complex_controls.remove(control)
 
     def add_leakage(self, leakage_event: Leakage) -> None:
         """
