@@ -84,11 +84,12 @@ Examples
    examples/sensor_override_attack
    examples/sensor_replay_attack
    examples/pump_states
+   examples/simple_control_example
+   examples/complex_control_example
    examples/control_example
    examples/water_age
    examples/chlorine_injection
    examples/net2-cl2_example
-   examples/arsenic_contamination
    examples/event_detection
    examples/visualization
 

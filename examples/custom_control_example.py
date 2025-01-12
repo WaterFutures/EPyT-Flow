@@ -1,5 +1,5 @@
 """
-Example of implementing a simple pump control strategy.
+Example of implementing a simple pump control strategy using an advanced (custom) control module.
 """
 from epyt_flow.data.networks import load_net1
 from epyt_flow.simulation import ScenarioSimulator
@@ -49,7 +49,8 @@ if __name__ == "__main__":
         sim.set_pump_state_sensors(sensor_locations=["9"])
 
         # Remove all existing controls
-        sim.epanet_api.deleteControls()
+        # Note that Net1.inp contains some simple controls
+        sim.remove_all_simple_controls()
 
         # Add custom controls
         sim.add_advanced_control(MyControl())
