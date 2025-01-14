@@ -116,6 +116,8 @@ class EdgeObject:
                 self.edge_vmin = float('inf')
                 self.edge_vmax = float('-inf')
 
+        self.sim_length = scada_data.sensor_readings_time.shape[0]
+
         if parameter == 'flow_rate':
             values = scada_data.flow_data_raw
         elif parameter == 'link_quality':
@@ -137,8 +139,6 @@ class EdgeObject:
             return
         else:
             raise ValueError('Parameter must be flow_rate or link_quality')
-
-        self.sim_length = values.shape[0]
 
         if statistic == 'mean':
             stat_values = np.mean(values, axis=0)
@@ -174,7 +174,7 @@ class EdgeObject:
         sorted_values = [value_dict[x[0]] for x in topology.get_all_links()]
 
         if edge_param == 'edge_width':
-            self.width.append(values)
+            self.width.append(sorted_values)
         else:
             self.edge_color.append(sorted_values)
             self.edge_vmin = min(*sorted_values, self.edge_vmin)
@@ -249,5 +249,3 @@ class EdgeObject:
                     max_val - min_val) * scale
 
         return [range_map(x) for x in values]
-
-

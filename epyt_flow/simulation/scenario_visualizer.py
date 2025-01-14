@@ -188,7 +188,6 @@ class ScenarioVisualizer:
 
         self.pump_parameters = JunctionObject(self.topology.get_all_pumps(), node_size=100, node_shape=markers.pump)
 
-        self.animation_dict = {}
         self.colorbars = {}
 
     def __get_midpoints(self, elements: List[str]) -> dict[str, tuple[float, float]]:
@@ -247,14 +246,6 @@ class ScenarioVisualizer:
 
         nxp.draw_networkx_edges(self.topology, self.pos_dict, ax=self.ax,
                                 label='Pipes', **self.pipe_parameters.get_frame(frame_number))
-
-        if 'pipes' in self.animation_dict:
-            self.pipe_parameters['edge_color'] = self.animation_dict['pipes'][
-                frame_number]
-        if 'pipe_sizes' in self.animation_dict:
-            self.pipe_parameters['width'] = self.animation_dict['pipe_sizes'][
-                frame_number]
-
         nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
                                 label='Junctions', **self.junction_parameters.get_frame(frame_number))
         nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
@@ -301,12 +292,18 @@ class ScenarioVisualizer:
         """
         self.fig = plt.figure(figsize=(6.4, 4.8), dpi=200)
 
-        total_frames = int('inf')
+        total_frames = float('inf')
         for node_source in [self.junction_parameters, self.tank_parameters, self.reservoir_parameters, self.valve_parameters, self.pump_parameters]:
             if len(node_source.node_color) > 1:
                 total_frames = min(total_frames, len(node_source.node_color))
+        if hasattr(self.pipe_parameters, 'edge_color'):
+            if len(self.pipe_parameters.edge_color) > 1:
+                total_frames = min(total_frames, len(self.pipe_parameters.edge_color))
+        if hasattr(self.pipe_parameters, 'width'):
+            if len(self.pipe_parameters.width) > 1:
+                total_frames = min(total_frames, len(self.pipe_parameters.width))
 
-        if total_frames == 0:
+        if total_frames == 0 or total_frames == float('inf'):
             raise RuntimeError("The color or resize functions must be called "
                                "with a time_step range (pit) to enable "
                                "animations")
@@ -531,12 +528,12 @@ class ScenarioVisualizer:
                 pit) == 2 and all(isinstance(i, int) for i in pit):
             for frame in range(*pit):
                 self.pipe_parameters.add_frame(self.topology, 'edge_color',
-                                               scada_data, parameter,
+                                               self.scada_data, parameter,
                                                statistic, frame, intervals)
                 if frame >= self.pipe_parameters.sim_length - 1:
                     break
         else:
-            self.pipe_parameters.add_frame(self.topology, 'edge_color', scada_data, parameter, statistic, pit, intervals)
+            self.pipe_parameters.add_frame(self.topology, 'edge_color', self.scada_data, parameter, statistic, pit, intervals)
 
         if show_colorbar:
             if statistic == 'time_step':
@@ -847,12 +844,12 @@ class ScenarioVisualizer:
 
             for frame in range(*pit):
                 self.pipe_parameters.add_frame(self.topology, 'edge_width',
-                                               scada_data, parameter,
+                                               self.scada_data, parameter,
                                                statistic, frame, intervals)
                 if frame >= self.pipe_parameters.sim_length - 1:
                     break
         else:
-            self.pipe_parameters.add_frame(self.topology, 'edge_width', scada_data, parameter, statistic, pit, intervals)
+            self.pipe_parameters.add_frame(self.topology, 'edge_width', self.scada_data, parameter, statistic, pit, intervals)
         self.pipe_parameters.rescale_widths(line_widths)
 
     def hide_nodes(self) -> None:
@@ -864,7 +861,7 @@ class ScenarioVisualizer:
         dictionary, effectively removing all nodes from view in the current
         visualization.
         """
-        self.junction_parameters.nodelist = [[]]
+        self.junction_parameters.nodelist = []
 
     def highlight_sensor_config(self) -> None:
         """
@@ -895,7 +892,7 @@ class ScenarioVisualizer:
 
         self.junction_parameters.add_attributes(
             {'linewidths': 1, 'edgecolors': node_edges})
-        self.pipe_parameters.update({'style': pipe_style})
+        self.pipe_parameters.add_attributes({'style': pipe_style})
 
     @deprecated(reason="This function will be removed in feature versions, "
                        "please use show_plot() instead.")
