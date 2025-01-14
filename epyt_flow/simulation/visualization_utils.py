@@ -249,3 +249,31 @@ class EdgeObject:
                     max_val - min_val) * scale
 
         return [range_map(x) for x in values]
+
+
+color_schemes = {
+    "epanet": {
+        "pipe_color": "#0403ee",
+        "node_color": "#0403ee",
+        "pump_color": "#fe00ff",
+        "tank_color": "#02fffd",
+        "reservoir_color": "#00ff00",
+        "valve_color": "#000000",
+    },
+    "epyt_flow": {
+        "pipe_color": "#29222f",
+        "node_color": "#29222f",
+        "pump_color": "#d79233",
+        "tank_color": "#607b80",
+        "reservoir_color": "#33483d",
+        "valve_color": "#a3320b",
+    },
+    "black": {
+        "pipe_color": "#000000",
+        "node_color": "#000000",
+        "pump_color": "#000000",
+        "tank_color": "#000000",
+        "reservoir_color": "#000000",
+        "valve_color": "#000000",
+    },
+}
