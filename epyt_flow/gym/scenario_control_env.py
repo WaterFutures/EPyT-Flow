@@ -107,6 +107,14 @@ class ScenarioControlEnv(ABC):
             Current SCADA data (i.e. sensor readings).
         """
         if self._scenario_sim is not None:
+            # Abort current simulation if any is runing
+            try:
+                next(self._sim_generator)
+                self._sim_generator.send(True)
+            except StopIteration:
+                pass
+
+            # Close scenario
             self._scenario_sim.close()
 
         self._scenario_sim = ScenarioSimulator(
