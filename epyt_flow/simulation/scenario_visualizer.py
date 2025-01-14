@@ -261,7 +261,7 @@ class ScenarioVisualizer:
         self.ax.legend(fontsize=6)
 
     def show_animation(self, export_to_file: str = None,
-                       return_animation: bool = False)\
+                       return_animation: bool = False, duration: int = 5)\
             -> Optional[FuncAnimation]:
         """
         Displays, exports, or returns an animation of a water distribution
@@ -291,13 +291,13 @@ class ScenarioVisualizer:
 
         total_frames = float('inf')
         for node_source in [self.junction_parameters, self.tank_parameters, self.reservoir_parameters, self.valve_parameters, self.pump_parameters]:
-            if len(node_source.node_color) > 1:
+            if not isinstance(node_source.node_color, str) and len(node_source.node_color) > 1:
                 total_frames = min(total_frames, len(node_source.node_color))
         if hasattr(self.pipe_parameters, 'edge_color'):
-            if len(self.pipe_parameters.edge_color) > 1:
+            if not isinstance(self.pipe_parameters.edge_color, str) and len(self.pipe_parameters.edge_color) > 1:
                 total_frames = min(total_frames, len(self.pipe_parameters.edge_color))
         if hasattr(self.pipe_parameters, 'width'):
-            if len(self.pipe_parameters.width) > 1:
+            if not isinstance(self.pipe_parameters.width, str) and len(self.pipe_parameters.width) > 1:
                 total_frames = min(total_frames, len(self.pipe_parameters.width))
 
         if total_frames == 0 or total_frames == float('inf'):
@@ -306,7 +306,7 @@ class ScenarioVisualizer:
                                "animations")
 
         anim = FuncAnimation(self.fig, self.__get_next_frame,
-                             frames=total_frames, interval=100)
+                             frames=total_frames, interval=int(duration*100/total_frames))
 
         if export_to_file is not None:
             anim.save(export_to_file, writer='ffmpeg', fps=4)
