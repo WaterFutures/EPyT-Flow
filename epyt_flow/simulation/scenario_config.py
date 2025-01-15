@@ -13,7 +13,7 @@ from ..uncertainty import AbsoluteGaussianUncertainty, RelativeGaussianUncertain
     AbsoluteUniformUncertainty, RelativeUniformUncertainty, ModelUncertainty, \
     SensorNoise, Uncertainty
 from .sensor_config import SensorConfig
-from .scada import AdvancedControlModule, SimpleControlModule, ComplexControlModule
+from .scada import CustomControlModule, SimpleControlModule, ComplexControlModule
 from .events import SystemEvent, SensorReadingEvent
 from .events.sensor_faults import SensorFaultConstant, SensorFaultDrift, SensorFaultGaussian, \
     SensorFaultPercentage, SensorFaultStuckZero
@@ -64,8 +64,8 @@ class ScenarioConfig(Serializable):
         Speciation of sensor noise -- i.e. noise/uncertainty affecting the sensor readings.
 
         The default is None
-    advanced_controls : list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`], optional
-        List of (advanced) control modules that are active during the simulation.
+    csutom_controls : list[:class:`~epyt_flow.simulation.scada.custom_control.CustomControlModule`], optional
+        List of custom control modules that are active during the simulation.
 
         The default is an empty list.
     simple_controls : list[:class:`~epyt_flow.simulation.scada.simple_control.SimpleControlModule`], optional
@@ -91,8 +91,9 @@ class ScenarioConfig(Serializable):
     def __init__(self, scenario_config: Any = None, f_inp_in: str = None, f_msx_in: str = None,
                  general_params: dict = None, sensor_config: SensorConfig = None,
                  memory_consumption_estimate: float = None,
-                 controls: list[AdvancedControlModule] = None,
-                 advanced_controls: list[AdvancedControlModule] = [],
+                 controls: list = None,
+                 advanced_controls: list = None,
+                 custom_controls: list[CustomControlModule] = [],
                  simple_controls: list[SimpleControlModule] = [],
                  complex_controls: list[ComplexControlModule] = [],
                  sensor_noise: SensorNoise = None,
@@ -102,6 +103,9 @@ class ScenarioConfig(Serializable):
         if controls is not None:
             warnings.warn("'controls' is deprecated and will be removed in future releases")
             advanced_controls = controls
+        if advanced_controls is not None:
+            warnings.warn("'advanced_controls' is deprecated and will be removed in " +
+                          "future releases -- use 'custom_controls' instead")
 
         if f_inp_in is None and scenario_config is None:
             raise ValueError("Either 'f_inp_in' or 'scenario_config' must be given")
@@ -131,14 +135,20 @@ class ScenarioConfig(Serializable):
             if not isinstance(memory_consumption_estimate, float) or \
                     memory_consumption_estimate <= 0:
                 raise ValueError("'memory_consumption_estimate' must be a positive integer")
-        if not isinstance(advanced_controls, list):
-            raise TypeError("'advanced_controls' must be an instance of " +
-                            "'list[epyt_flow.simulation.scada.AdvancedControlModule]' but no of " +
-                            f"'{type(advanced_controls)}'")
-        if len(advanced_controls) != 0:
+        if advanced_controls is not None:
+            if not isinstance(advanced_controls, list):
+                raise TypeError("'advanced_controls' must be an instance of " +
+                                "'list[epyt_flow.simulation.scada.AdvancedControlModule]' but no of " +
+                                f"'{type(advanced_controls)}'")
+
+            from .scada.advanced_control import AdvancedControlModule
             if any(not isinstance(c, AdvancedControlModule) for c in advanced_controls):
                 raise TypeError("Each item in 'advanced_controls' must be an instance of " +
                                 "'epyt_flow.simulation.scada.AdvancedControlModule'")
+        if len(custom_controls) != 0:
+            if any(not isinstance(c, CustomControlModule) for c in custom_controls):
+                raise TypeError("Each item in 'custom_controls' must be an instance of " +
+                                "'epyt_flow.simulation.scada.CustomControlModule'")
         if not isinstance(simple_controls, list):
             raise TypeError("'simple_controls' must be an instance of " +
                             "'list[epyt_flow.simulation.scada.SimpleControlModule]' but no of " +
@@ -197,10 +207,15 @@ class ScenarioConfig(Serializable):
             else:
                 self.__memory_consumption_estimate = memory_consumption_estimate
 
-            if len(advanced_controls) == 0:
-                self.__advanced_controls = scenario_config.advanced_controls
+            self.__advanced_controls = advanced_controls
+            if advanced_controls is not None:
+                if len(advanced_controls) == 0:
+                    self.__advanced_controls = scenario_config.advanced_controls
+
+            if len(custom_controls) == 0:
+                self.__custom_controls = scenario_config.custom_controls
             else:
-                self.__advanced_controls = advanced_controls
+                self.__custom_controls = custom_controls
 
             if len(simple_controls) == 0:
                 self.__simple_controls = scenario_config.simple_controls
@@ -238,6 +253,7 @@ class ScenarioConfig(Serializable):
             self.__sensor_config = sensor_config
             self.__memory_consumption_estimate = memory_consumption_estimate
             self.__advanced_controls = advanced_controls
+            self.__custom_controls = custom_controls
             self.__simple_controls = simple_controls
             self.__complex_controls = complex_controls
             self.__sensor_noise = sensor_noise
@@ -326,7 +342,7 @@ class ScenarioConfig(Serializable):
         return self.__memory_consumption_estimate
 
     @property
-    def advanced_controls(self) -> list[AdvancedControlModule]:
+    def advanced_controls(self) -> list:
         """
         Gets the list of all (advanced) control modules that are active during the simulation.
 
@@ -336,6 +352,18 @@ class ScenarioConfig(Serializable):
             List of all control modules that are active during the simulation.
         """
         return deepcopy(self.__advanced_controls)
+
+    @property
+    def custom_controls(self) -> list[CustomControlModule]:
+        """
+        Returns the list of all custom control modules that are active during the simulation.
+
+        Returns
+        -------
+        list[:class:`~epyt_flow.simulation.scada.custom_control.CustomControlModule`]
+            List of all custom control modules that are active during the simulation.
+        """
+        return deepcopy(self.__custom_controls)
 
     @property
     def simple_controls(self) -> list[SimpleControlModule]:
@@ -416,6 +444,7 @@ class ScenarioConfig(Serializable):
                          "sensor_config": self.__sensor_config,
                          "memory_consumption_estimate": self.__memory_consumption_estimate,
                          "advanced_controls": self.__advanced_controls,
+                         "custom_controls": self.__custom_controls,
                          "simple_controls": self.__simple_controls,
                          "complex_controls": self.__complex_controls,
                          "sensor_noise": self.__sensor_noise,
@@ -435,6 +464,7 @@ class ScenarioConfig(Serializable):
             and self.__memory_consumption_estimate == other.memory_consumption_estimate \
             and self.__sensor_config == other.sensor_config \
             and np.all(self.__advanced_controls == other.advanced_controls) \
+            and np.all(self.__custom_controls == other.custom_controls) \
             and np.all(self.__simple_controls == other.simple_controls) \
             and np.all(self.__complex_controls == other.complex_controls) \
             and self.__model_uncertainty == other.model_uncertainty \
@@ -446,7 +476,8 @@ class ScenarioConfig(Serializable):
             f"general_params: {self.general_params} sensor_config: {self.sensor_config} " + \
             f"memory_consumption_estimate: {self.memory_consumption_estimate} " + \
             f"advanced_controls: {self.advanced_controls} simple_controls: {self.simple_controls} " + \
-            f"complex_controls: {self.__complex_controls}" + \
+            f"complex_controls: {self.__complex_controls} " + \
+            f"custom_controls: {self.__custom_controls}" + \
             f"sensor_noise: {self.sensor_noise} model_uncertainty: {self.model_uncertainty} " + \
             f"system_events: {','.join(map(str, self.system_events))} " + \
             f"sensor_reading_events: {','.join(map(str, self.sensor_reading_events))}"

@@ -6,8 +6,8 @@ Control
 
 Besides the :ref:`simple <simple_controls>` and :ref:`complex <complex_controls>` EPANET
 control rules, EPyT-Flow also supports the implementation of
-:ref:`custom (advanced) control modules & algorithms <advanced_controls>` in Python code.
-Note that those advanced control modules can go beyond IF-THEN-ELSE controls as supported
+:ref:`custom control modules & algorithms <custom_controls>` in Python code.
+Note that those custom control modules can go beyond IF-THEN-ELSE controls as supported
 by EPANET -- i.e. arbitrary control logic can be implemented by the user, incl. AI-based controls
 where for instance a neural network is utlized to make control decisions.
 
@@ -169,17 +169,17 @@ based on the water level in tank "2":
 
 
 
-.. _advanced_controls:
+.. _custom_controls:
 
-Advanced & Custom Control
-+++++++++++++++++++++++++
+Custom Control
+++++++++++++++
 
-EPyT-Flow allows the user to implement their own custom (advanced) control modules.
+EPyT-Flow allows the user to implement completly custom control modules.
 
-All advanced controls must be derived from
-:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule` 
+All custom controls must be derived from
+:class:`~epyt_flow.simulation.scada.custom_control.CustomControlModule` 
 and implement the
-:func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.step` method.
+:func:`~epyt_flow.simulation.scada.custom_control.CustomControlModule.step` method.
 This function implements the control logic and is called in every simulation step.
 It gets the current sensor readings as an :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
 instance as an argument and is supposed to apply the control logic.
@@ -189,37 +189,37 @@ instance as an argument and is supposed to apply the control logic.
     :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
     instance might be subject to sensor faults and noise.
 
-Optionally, the :func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.init`
+Optionally, the :func:`~epyt_flow.simulation.scada.custom_control.CustomControlModule.init`
 method can be overridden for running some initialization logic -- make sure to call the parent's
-:func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.init` first.
+:func:`~epyt_flow.simulation.scada.custom_control.CustomControlModule.init` first.
 
 Besides implementing the control strategy through EPANET and EPANET-MSX functions,
 EPyT-Flow also provides some pre-defined helper functions:
 
-+------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------+
-| Function                                                                                                   | Description                                                                                             |
-+============================================================================================================+=========================================================================================================+
-| :func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.set_pump_status`                 | Sets the status (i.e. turn it on or off) of a pump.                                                     |
-+------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------+
-| :func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.set_pump_speed`                  | Sets the speed of a pump.                                                                               |
-+------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------+
-| :func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.set_valve_status`                | Sets the status (i.e. open or closed) of a valve.                                                       |
-+------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------+
-| :func:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule.set_node_quality_source_value`   | Sets the quality source (e.g. chemical injection amount) at a particular node to a specific value.      |
-+------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------+
+| Function                                                                                               | Description                                                                                             |
++========================================================================================================+=========================================================================================================+
+| :func:`~epyt_flow.simulation.scada.custom_control.CustomControlModule.set_pump_status`                 | Sets the status (i.e. turn it on or off) of a pump.                                                     |
++--------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------+
+| :func:`~epyt_flow.simulation.scada.custom_control.CustomControlModule.set_pump_speed`                  | Sets the speed of a pump.                                                                               |
++--------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------+
+| :func:`~epyt_flow.simulation.scada.custom_control.CustomControlModule.set_valve_status`                | Sets the status (i.e. open or closed) of a valve.                                                       |
++--------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------+
+| :func:`~epyt_flow.simulation.scada.custom_control.CustomControlModule.set_node_quality_source_value`   | Sets the quality source (e.g. chemical injection amount) at a particular node to a specific value.      |
++--------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------+
 
 .. note::
     
-    Note that EPANET control rules such as time-based rules specified in the .inp file
-    will be prioritized. Other than that, EPyT-Flow first applies events and then controls --
-    i.e. events are always prioritized over controls.
+    Note that EPANET control rules specified in the .inp file
+    will be prioritized. Other than that, EPyT-Flow first applies events and then custom controls --
+    i.e. events are always prioritized over custom controls.
 
 Example of implementing a simple pump control strategy where pump "9" is activated or deactivated
 based on the water level in tank "2":
 
 .. code-block:: python
 
-    class MyControl(AdvancedControlModule):
+    class MyControl(CustomControlModule):
         def __init__(self, **kwds):
             # Tank and pump ID
             self.__tank_id = "2"
@@ -248,7 +248,7 @@ based on the water level in tank "2":
 
 
 Custom control modules & algorithms can be added to a scenario by calling
-:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_advanced_control`
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_custom_control`
 of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
 instance BEFORE running the simulation:
 
@@ -266,7 +266,7 @@ instance BEFORE running the simulation:
         # ...
 
         # Add custom controls
-        sim.add_advanced_control(MyControl())
+        sim.add_custom_control(MyControl())
 
         # Run simulation
         # ....

@@ -30,7 +30,7 @@ from .sensor_config import SensorConfig, areaunit_to_id, massunit_to_id, quality
 from ..uncertainty import ModelUncertainty, SensorNoise
 from .events import SystemEvent, Leakage, ActuatorEvent, SensorFault, SensorReadingAttack, \
     SensorReadingEvent
-from .scada import ScadaData, AdvancedControlModule, SimpleControlModule, ComplexControlModule, \
+from .scada import ScadaData, CustomControlModule, SimpleControlModule, ComplexControlModule, \
     RuleCondition, RuleAction, ActuatorConstants, EN_R_ACTION_SETTING
 from ..topology import NetworkTopology, UNITS_SIMETRIC, UNITS_USCUSTOM
 from ..utils import get_temp_folder
@@ -70,8 +70,8 @@ class ScenarioSimulator():
         Sensor noise.
     _sensor_config : :class:`~epyt_flow.simulation.sensor_config.SensorConfig`, protected
         Sensor configuration.
-    _advanced_controls : list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`], protected
-        List of custom (advanced) control modules.
+    _custom_controls : list[:class:`~epyt_flow.simulation.scada.custom_control.CustomControlModule`], protected
+        List of custom control modules.
     _simple_controls : list[:class:`~epyt_flow.simulation.scada.simple_control.SimpleControlModule`], protected
         List of simle EPANET control rules.
     _complex_controls : list[:class:`~epyt_flow.simulation.scada.complex_control.ComplexControlModule`], protected
@@ -113,6 +113,7 @@ class ScenarioSimulator():
         self._sensor_noise = None
         self._sensor_config = None
         self._advanced_controls = []
+        self._custom_controls = []
         self._simple_controls = []
         self._complex_controls = []
         self._system_events = []
@@ -189,8 +190,11 @@ class ScenarioSimulator():
             self._sensor_noise = scenario_config.sensor_noise
             self._sensor_config = scenario_config.sensor_config
 
-            for control in scenario_config.advanced_controls:
-                self.add_advanced_control(control)
+            if scenario_config.advanced_controls is not None:
+                for control in scenario_config.advanced_controls:
+                    self.add_advanced_control(control)
+            for control in scenario_config.custom_controls:
+                self.add_custom_control(control)
             for control in scenario_config.simple_controls:
                 self.add_simple_control(control)
             for control in scenario_config.complex_controls:
@@ -339,18 +343,34 @@ class ScenarioSimulator():
         self._sensor_config = sensor_config
 
     @property
-    def advanced_controls(self) -> list[AdvancedControlModule]:
+    def advanced_controls(self) -> list:
         """
-        Gets all advanced control modules.
+        Returns all advanced control modules.
 
         Returns
         -------
         list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`]
             All advanced control modules.
         """
+        warnings.warn("'AdvancedControlModule' is deprecated and will be removed in a " +
+                      "future release -- use 'CustomControlModule' instead")
         self._adapt_to_network_changes()
 
         return deepcopy(self._advanced_controls)
+
+    @property
+    def custom_controls(self) -> list[CustomControlModule]:
+        """
+        Returns all custom control modules.
+
+        Returns
+        -------
+        list[:class:`~epyt_flow.simulation.scada.custom_control.CustomControlModule`]
+            All custom control modules.
+        """
+        self._adapt_to_network_changes()
+
+        return deepcopy(self._custom_controls)
 
     @property
     def simple_controls(self) -> list[SimpleControlModule]:
@@ -971,6 +991,7 @@ class ScenarioSimulator():
                               general_params=general_params, sensor_config=self.sensor_config,
                               memory_consumption_estimate=self.estimate_memory_consumption(),
                               advanced_controls=self.advanced_controls,
+                              custom_controls=self.custom_controls,
                               simple_controls=self.simple_controls,
                               complex_controls=self.complex_controls,
                               sensor_noise=self.sensor_noise,
@@ -1236,7 +1257,7 @@ class ScenarioSimulator():
         self.epanet_api.setNodeJunctionData(node_idx, self.epanet_api.getNodeElevations(node_idx),
                                             base_demand, demand_pattern_id)
 
-    def add_advanced_control(self, control: AdvancedControlModule) -> None:
+    def add_advanced_control(self, control) -> None:
         """
         Adds an advanced control module to the scenario simulation.
 
@@ -1247,12 +1268,31 @@ class ScenarioSimulator():
         """
         self._adapt_to_network_changes()
 
+        from .scada.advanced_control import AdvancedControlModule
         if not isinstance(control, AdvancedControlModule):
             raise TypeError("'control' must be an instance of " +
                             "'epyt_flow.simulation.scada.AdvancedControlModule' not of " +
                             f"'{type(control)}'")
 
         self._advanced_controls.append(control)
+
+    def add_custom_control(self, control: CustomControlModule) -> None:
+        """
+        Adds a custom control module to the scenario simulation.
+
+        Parameters
+        ----------
+        control : :class:`~epyt_flow.simulation.scada.custom_control.CustomControlModule`
+            Custom control module.
+        """
+        self._adapt_to_network_changes()
+
+        if not isinstance(control, CustomControlModule):
+            raise TypeError("'control' must be an instance of " +
+                            "'epyt_flow.simulation.scada.CustomControlModule' not of " +
+                            f"'{type(control)}'")
+
+        self._custom_controls.append(control)
 
     def add_simple_control(self, control: SimpleControlModule) -> None:
         """
@@ -1897,6 +1937,9 @@ class ScenarioSimulator():
         if self._advanced_controls is not None:
             for c in self._advanced_controls:
                 c.init(self.epanet_api)
+        if self._custom_controls is not None:
+            for control in self._custom_controls:
+                control.init(self.epanet_api)
 
     def run_advanced_quality_simulation(self, hyd_file_in: str, verbose: bool = False,
                                         frozen_sensor_config: bool = False) -> ScadaData:
@@ -2533,6 +2576,8 @@ class ScenarioSimulator():
 
                 # Apply control modules
                 for control in self._advanced_controls:
+                    control.step(scada_data)
+                for control in self._custom_controls:
                     control.step(scada_data)
 
                 # Next

@@ -86,7 +86,7 @@ Examples
    examples/pump_states
    examples/simple_control_example
    examples/complex_control_example
-   examples/control_example
+   examples/custom_control_example
    examples/water_age
    examples/chlorine_injection
    examples/net2-cl2_example
