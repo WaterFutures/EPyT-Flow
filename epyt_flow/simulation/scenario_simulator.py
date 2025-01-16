@@ -1942,7 +1942,9 @@ class ScenarioSimulator():
                 control.init(self.epanet_api)
 
     def run_advanced_quality_simulation(self, hyd_file_in: str, verbose: bool = False,
-                                        frozen_sensor_config: bool = False) -> ScadaData:
+                                        frozen_sensor_config: bool = False,
+                                        use_quality_time_step_as_reporting_time_step: bool = False
+                                        ) -> ScadaData:
         """
         Runs an advanced quality analysis using EPANET-MSX.
 
@@ -1958,6 +1960,13 @@ class ScenarioSimulator():
         frozen_sensor_config : `bool`, optional
             If True, the sensor config can not be changed and only the required sensor nodes/links
             will be stored -- this usually leads to a significant reduction in memory consumption.
+
+            The default is False.
+        use_quality_time_step_as_reporting_time_step : `bool`, optional
+            If True, the water quality time step will be used as the reporting time step.
+
+            As a consequence, the simualtion results can not be merged
+            with the hydraulic simulation.
 
             The default is False.
 
@@ -1978,7 +1987,9 @@ class ScenarioSimulator():
         for scada_data in gen(hyd_file_in=hyd_file_in,
                               verbose=verbose,
                               return_as_dict=True,
-                              frozen_sensor_config=frozen_sensor_config):
+                              frozen_sensor_config=frozen_sensor_config,
+                              use_quality_time_step_as_reporting_time_step=
+                              use_quality_time_step_as_reporting_time_step):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -2003,7 +2014,8 @@ class ScenarioSimulator():
     def run_advanced_quality_simulation_as_generator(self, hyd_file_in: str, verbose: bool = False,
                                                      support_abort: bool = False,
                                                      return_as_dict: bool = False,
-                                                     frozen_sensor_config: bool = False
+                                                     frozen_sensor_config: bool = False,
+                                                     use_quality_time_step_as_reporting_time_step: bool = False,
                                                      ) -> Generator[Union[ScadaData, dict], bool, None]:
         """
         Runs an advanced quality analysis using EPANET-MSX.
@@ -2024,6 +2036,13 @@ class ScenarioSimulator():
         frozen_sensor_config : `bool`, optional
             If True, the sensor config can not be changed and only the required sensor nodes/links
             will be stored -- this usually leads to a significant reduction in memory consumption.
+
+            The default is False.
+        use_quality_time_step_as_reporting_time_step : `bool`, optional
+            If True, the water quality time step will be used as the reporting time step.
+
+            As a consequence, the simualtion results can not be merged
+            with the hydraulic simulation.
 
             The default is False.
 
@@ -2049,6 +2068,11 @@ class ScenarioSimulator():
         reporting_time_start = self.epanet_api.getTimeReportingStart()
         reporting_time_step = self.epanet_api.getTimeReportingStep()
         hyd_time_step = self.epanet_api.getTimeHydraulicStep()
+
+        if use_quality_time_step_as_reporting_time_step is True:
+            quality_time_step = self.epanet_api.getMSXTimeStep()
+            reporting_time_step = quality_time_step
+            hyd_time_step = quality_time_step
 
         self.epanet_api.initializeMSXQualityAnalysis(ToolkitConstants.EN_NOSAVE)
 
@@ -2201,7 +2225,9 @@ class ScenarioSimulator():
         self.__running_simulation = False
 
     def run_basic_quality_simulation(self, hyd_file_in: str, verbose: bool = False,
-                                     frozen_sensor_config: bool = False) -> ScadaData:
+                                     frozen_sensor_config: bool = False,
+                                     use_quality_time_step_as_reporting_time_step: bool = False
+                                     ) -> ScadaData:
         """
         Runs a basic quality analysis using EPANET.
 
@@ -2217,6 +2243,13 @@ class ScenarioSimulator():
         frozen_sensor_config : `bool`, optional
             If True, the sensor config can not be changed and only the required sensor nodes/links
             will be stored -- this usually leads to a significant reduction in memory consumption.
+
+            The default is False.
+        use_quality_time_step_as_reporting_time_step : `bool`, optional
+            If True, the water quality time step will be used as the reporting time step.
+
+            As a consequence, the simualtion results can not be merged
+            with the hydraulic simulation.
 
             The default is False.
 
@@ -2235,7 +2268,9 @@ class ScenarioSimulator():
         for scada_data in gen(hyd_file_in=hyd_file_in,
                               verbose=verbose,
                               return_as_dict=True,
-                              frozen_sensor_config=frozen_sensor_config):
+                              frozen_sensor_config=frozen_sensor_config,
+                              use_quality_time_step_as_reporting_time_step=
+                              use_quality_time_step_as_reporting_time_step):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -2258,6 +2293,7 @@ class ScenarioSimulator():
                                                   support_abort: bool = False,
                                                   return_as_dict: bool = False,
                                                   frozen_sensor_config: bool = False,
+                                                  use_quality_time_step_as_reporting_time_step: bool = False
                                                   ) -> Generator[Union[ScadaData, dict], bool, None]:
         """
         Runs a basic quality analysis using EPANET.
@@ -2282,6 +2318,13 @@ class ScenarioSimulator():
             will be stored -- this usually leads to a significant reduction in memory consumption.
 
             The default is False.
+        use_quality_time_step_as_reporting_time_step : `bool`, optional
+            If True, the water quality time step will be used as the reporting time step.
+
+            As a consequence, the simualtion results can not be merged
+            with the hydraulic simulation.
+
+            The default is False.
 
         Returns
         -------
@@ -2294,6 +2337,11 @@ class ScenarioSimulator():
         requested_time_step = self.epanet_api.getTimeHydraulicStep()
         reporting_time_start = self.epanet_api.getTimeReportingStart()
         reporting_time_step = self.epanet_api.getTimeReportingStep()
+
+        if use_quality_time_step_as_reporting_time_step is True:
+            quality_time_step = self.epanet_api.getTimeQualityStep()
+            requested_time_step = quality_time_step
+            reporting_time_step = quality_time_step
 
         self.epanet_api.useHydraulicFile(hyd_file_in)
 
@@ -2353,7 +2401,7 @@ class ScenarioSimulator():
                 yield data
 
             # Next
-            tstep = self.epanet_api.nextQualityAnalysisStep()
+            tstep = self.epanet_api.stepQualityAnalysisTimeLeft()
 
         self.epanet_api.closeHydraulicAnalysis()
 
