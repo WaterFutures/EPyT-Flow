@@ -443,7 +443,6 @@ class ScenarioConfig(Serializable):
                          "general_params": self.__general_params,
                          "sensor_config": self.__sensor_config,
                          "memory_consumption_estimate": self.__memory_consumption_estimate,
-                         "advanced_controls": self.__advanced_controls,
                          "custom_controls": self.__custom_controls,
                          "simple_controls": self.__simple_controls,
                          "complex_controls": self.__complex_controls,

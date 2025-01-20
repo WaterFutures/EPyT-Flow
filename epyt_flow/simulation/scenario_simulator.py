@@ -990,7 +990,7 @@ class ScenarioSimulator():
         return ScenarioConfig(f_inp_in=self.__f_inp_in, f_msx_in=self.__f_msx_in,
                               general_params=general_params, sensor_config=self.sensor_config,
                               memory_consumption_estimate=self.estimate_memory_consumption(),
-                              advanced_controls=self.advanced_controls,
+                              advanced_controls=None if len(self._advanced_controls) == 0 else self.advanced_controls,
                               custom_controls=self.custom_controls,
                               simple_controls=self.simple_controls,
                               complex_controls=self.complex_controls,
