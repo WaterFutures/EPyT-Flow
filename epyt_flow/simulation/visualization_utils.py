@@ -4,6 +4,7 @@ from typing import Optional, Union, List, Tuple, Iterable
 import inspect
 import networkx.drawing.nx_pylab as nxp
 import matplotlib as mpl
+from scipy.interpolate import CubicSpline
 
 from .scada.scada_data import ScadaData
 
@@ -14,6 +15,7 @@ class JunctionObject:
     node_shape: mpl.path.Path = None
     node_size: int = 10
     node_color: Union[str, list] = 'k' # list of lists with frames or single letter
+    interpolated: bool = False
 
     def add_frame(self, statistic: str, values: np.ndarray,
                                 pit: Union[int, Tuple[int]],
@@ -69,7 +71,11 @@ class JunctionObject:
         if not isinstance(self.node_color, str):
             if frame_number > len(self.node_color):
                 frame_number = -1
-            attributes['node_color'] = self.node_color[frame_number]
+            if self.interpolated:
+                # TODO: wenn nicht existiert fkt aufrufen die interpoliert
+                attributes['node_color'] = self.node_color_inter[frame_number]
+            else:
+                attributes['node_color'] = self.node_color[frame_number]
 
         sig = inspect.signature(nxp.draw_networkx_nodes)
 
@@ -79,6 +85,24 @@ class JunctionObject:
         }
 
         return valid_params
+
+    def interpolate(self, num_inter_frames):
+        if isinstance(self.node_color, str):
+            return
+
+        tmp_node_color = np.array(self.node_color)
+        steps, num_nodes = tmp_node_color.shape
+
+        x_axis = np.linspace(0, steps - 1, steps)
+        new_x_axis = np.linspace(0, steps - 1, num_inter_frames)
+
+        self.node_color_inter = np.zeros(((len(new_x_axis)), num_nodes))
+
+        for node in range(num_nodes):
+            cs = CubicSpline(x_axis, tmp_node_color[:, node])
+            self.node_color_inter[:, node] = cs(new_x_axis)
+
+        self.interpolated = True
 
     def add_attributes(self, attributes: dict):
         for key, value in attributes.items():

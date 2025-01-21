@@ -260,8 +260,23 @@ class ScenarioVisualizer:
 
         self.ax.legend(fontsize=6)
 
+    def __interpolate_frames(self, num_inter_frames):
+
+        for node_source in [self.junction_parameters, self.tank_parameters, self.reservoir_parameters, self.valve_parameters, self.pump_parameters]:
+            if not isinstance(node_source.node_color, str) and len(node_source.node_color) > 1:
+                node_source.interpolate(num_inter_frames)
+        return num_inter_frames
+        # TODO: edges
+        #if hasattr(self.pipe_parameters, 'edge_color'):
+        #    if not isinstance(self.pipe_parameters.edge_color, str) and len(self.pipe_parameters.edge_color) > 1:
+        #        total_frames = min(total_frames, len(self.pipe_parameters.edge_color))
+        #if hasattr(self.pipe_parameters, 'width'):
+        #    if not isinstance(self.pipe_parameters.width, str) and len(self.pipe_parameters.width) > 1:
+        #        total_frames = min(total_frames, len(self.pipe_parameters.width))
+
+
     def show_animation(self, export_to_file: str = None,
-                       return_animation: bool = False, duration: int = 5)\
+                       return_animation: bool = False, duration: int = 5, fps=15)\
             -> Optional[FuncAnimation]:
         """
         Displays, exports, or returns an animation of a water distribution
@@ -305,11 +320,13 @@ class ScenarioVisualizer:
                                "with a time_step range (pit) to enable "
                                "animations")
 
+        total_frames = self.__interpolate_frames(fps*duration)
+
         anim = FuncAnimation(self.fig, self.__get_next_frame,
                              frames=total_frames, interval=int(duration*100/total_frames))
 
         if export_to_file is not None:
-            anim.save(export_to_file, writer='ffmpeg', fps=4)
+            anim.save(export_to_file, writer='ffmpeg', fps=fps)
         if return_animation:
             plt.close(self.fig)
             return anim
