@@ -72,7 +72,6 @@ class JunctionObject:
             if frame_number > len(self.node_color):
                 frame_number = -1
             if self.interpolated:
-                # TODO: wenn nicht existiert fkt aufrufen die interpoliert
                 attributes['node_color'] = self.node_color_inter[frame_number]
             else:
                 attributes['node_color'] = self.node_color[frame_number]
@@ -87,7 +86,7 @@ class JunctionObject:
         return valid_params
 
     def interpolate(self, num_inter_frames):
-        if isinstance(self.node_color, str):
+        if isinstance(self.node_color, str) or len(self.node_color) <= 1:
             return
 
         tmp_node_color = np.array(self.node_color)
@@ -113,6 +112,7 @@ class JunctionObject:
 class EdgeObject:
     edgelist: list
     edge_color: Union[str, list] = 'k' # list of lists with frames or single letter
+    interpolated = {}
 
     def rescale_widths(self, line_widths: Tuple[int] = (1, 2)):
         if not hasattr(self, 'width'):
@@ -211,12 +211,18 @@ class EdgeObject:
         if not isinstance(self.edge_color, str):
             if frame_number > len(self.edge_color):
                 frame_number = -1
-            attributes['edge_color'] = self.edge_color[frame_number]
+            if 'edge_color' in self.interpolated.keys():
+                attributes['edge_color'] = self.interpolated['edge_color'][frame_number]
+            else:
+                attributes['edge_color'] = self.edge_color[frame_number]
 
         if hasattr(self, 'width'):
             if frame_number > len(self.width):
                 frame_number = -1
-            attributes['width'] = self.width[frame_number]
+            if 'width' in self.interpolated.keys():
+                attributes['width'] = self.interpolated['width'][frame_number]
+            else:
+                attributes['width'] = self.width[frame_number]
 
         sig = inspect.signature(nxp.draw_networkx_edges)
 
@@ -226,6 +232,26 @@ class EdgeObject:
         }
 
         return valid_params
+
+    def interpolate(self, num_inter_frames):
+
+        for name, inter_target in {'edge_color': self.edge_color, 'width': self.width}.items():
+            if isinstance(inter_target, str) or len(inter_target) <= 1:
+                continue
+
+            tmp_target = np.array(inter_target)
+            steps, num_edges = tmp_target.shape
+
+            x_axis = np.linspace(0, steps - 1, steps)
+            new_x_axis = np.linspace(0, steps - 1, num_inter_frames)
+
+            vals_inter = np.zeros(((len(new_x_axis)), num_edges))
+
+            for edge in range(num_edges):
+                cs = CubicSpline(x_axis, tmp_target[:, edge])
+                vals_inter[:, edge] = cs(new_x_axis)
+
+            self.interpolated[name] = vals_inter
 
     def add_attributes(self, attributes: dict):
         for key, value in attributes.items():
