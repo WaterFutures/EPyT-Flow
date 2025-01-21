@@ -235,7 +235,11 @@ class EdgeObject:
 
     def interpolate(self, num_inter_frames):
 
-        for name, inter_target in {'edge_color': self.edge_color, 'width': self.width}.items():
+        targets = {'edge_color': self.edge_color}
+        if hasattr(self, 'width'):
+            targets['width'] = self.width
+
+        for name, inter_target in targets.items():
             if isinstance(inter_target, str) or len(inter_target) <= 1:
                 continue
 
