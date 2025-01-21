@@ -1314,7 +1314,7 @@ class ScadaData(Serializable):
         """
         return deepcopy(self.__pumps_efficiency_data_raw)
 
-    def __map_sensor_to_idx(self, sensor_type: int, sensor_id: str) -> int:
+    def __map_sensor_to_idx(self, sensor_type: int, sensor_id: Union[str, tuple[str, str]]) -> int:
         if sensor_type == SENSOR_TYPE_NODE_PRESSURE:
             return self.__sensor_config.get_index_of_reading(pressure_sensor=sensor_id)
         elif sensor_type == SENSOR_TYPE_NODE_QUALITY:
@@ -1351,8 +1351,25 @@ class ScadaData(Serializable):
 
         self.__apply_sensor_reading_events = []
         for sensor_event in self.__sensor_reading_events:
-            idx = self.__map_sensor_to_idx(sensor_event.sensor_type, sensor_event.sensor_id)
-            self.__apply_sensor_reading_events.append((idx, sensor_event.apply))
+            sensor_id = sensor_event.sensor_id
+            if sensor_event.sensor_type == SENSOR_TYPE_NODE_BULK_SPECIES:
+                for species_id, node_sensors_id in self.__sensor_config.bulk_species_node_sensors.items():
+                    if sensor_id in node_sensors_id:
+                        idx = self.__map_sensor_to_idx(sensor_event.sensor_type, (species_id, sensor_id))
+                        self.__apply_sensor_reading_events.append((idx, sensor_event.apply))
+            elif sensor_event.sensor_type == SENSOR_TYPE_LINK_BULK_SPECIES:
+                for species_id, link_sensors_id in self.__sensor_config.bulk_species_link_sensors.items():
+                    if sensor_id in link_sensors_id:
+                        idx = self.__map_sensor_to_idx(sensor_event.sensor_type, (species_id, sensor_id))
+                        self.__apply_sensor_reading_events.append((idx, sensor_event.apply))
+            elif sensor_event.sensor_type == SENSOR_TYPE_SURFACE_SPECIES:
+                for species_id, link_sensors_id in self.__sensor_config.surface_species_sensors.items():
+                    if sensor_id in link_sensors_id:
+                        idx = self.__map_sensor_to_idx(sensor_event.sensor_type, (species_id, sensor_id))
+                        self.__apply_sensor_reading_events.append((idx, sensor_event.apply))
+            else:
+                idx = self.__map_sensor_to_idx(sensor_event.sensor_type, sensor_event.sensor_id)
+                self.__apply_sensor_reading_events.append((idx, sensor_event.apply))
 
         self.__sensor_readings = None
 
