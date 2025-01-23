@@ -449,7 +449,10 @@ class ScenarioVisualizer:
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
-            for frame in range(*pit):
+            rng = pit
+            if pit[1] == -1:
+                rng = (pit[0], values.shape[0])
+            for frame in range(*rng):
                 if frame > values.shape[0] - 1:
                     break
                 self.junction_parameters.add_frame(statistic, values, frame, intervals, self.scada_data.sensor_config.nodes)
@@ -534,12 +537,15 @@ class ScenarioVisualizer:
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
-            for frame in range(*pit):
+            rng = pit
+            if pit[1] == -1:
+                rng = (pit[0], self.scada_data.sensor_readings_time.shape[0])
+            for frame in range(*rng):
+                if frame > self.scada_data.sensor_readings_time.shape[0] - 1:
+                    break
                 self.pipe_parameters.add_frame(self.topology, 'edge_color',
                                                self.scada_data, parameter,
                                                statistic, frame, intervals)
-                if frame >= self.pipe_parameters.sim_length - 1:
-                    break
         else:
             self.pipe_parameters.add_frame(self.topology, 'edge_color', self.scada_data, parameter, statistic, pit, intervals)
 
@@ -626,7 +632,10 @@ class ScenarioVisualizer:
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
-            for frame in range(*pit):
+            rng = pit
+            if pit[1] == -1:
+                rng = (pit[0], values.shape[0])
+            for frame in range(*rng):
                 if frame > values.shape[0] - 1:
                     break
                 self.pump_parameters.add_frame(statistic, values, frame, intervals, self.scada_data.sensor_config.pumps)
@@ -703,7 +712,10 @@ class ScenarioVisualizer:
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
-            for frame in range(*pit):
+            rng = pit
+            if pit[1] == -1:
+                rng = (pit[0], values.shape[0])
+            for frame in range(*rng):
                 if frame > values.shape[0] - 1:
                     break
                 self.tank_parameters.add_frame(statistic, values, frame, intervals, self.scada_data.sensor_config.tanks)
@@ -777,7 +789,10 @@ class ScenarioVisualizer:
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
-            for frame in range(*pit):
+            rng = pit
+            if pit[1] == -1:
+                rng = (pit[0], values.shape[0])
+            for frame in range(*rng):
                 if frame > values.shape[0] - 1:
                     break
                 self.valve_parameters.add_frame(statistic, values, frame, intervals, self.scada_data.sensor_config.valves)
@@ -849,13 +864,15 @@ class ScenarioVisualizer:
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
-
-            for frame in range(*pit):
+            rng = pit
+            if pit[1] == -1:
+                rng = (pit[0], self.scada_data.sensor_readings_time.shape[0])
+            for frame in range(*rng):
+                if frame > self.scada_data.sensor_readings_time.shape[0] - 1:
+                    break
                 self.pipe_parameters.add_frame(self.topology, 'edge_width',
                                                self.scada_data, parameter,
                                                statistic, frame, intervals)
-                if frame >= self.pipe_parameters.sim_length - 1:
-                    break
         else:
             self.pipe_parameters.add_frame(self.topology, 'edge_width', self.scada_data, parameter, statistic, pit, intervals)
         self.pipe_parameters.rescale_widths(line_widths)

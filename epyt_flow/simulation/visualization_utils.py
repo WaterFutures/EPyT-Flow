@@ -140,8 +140,6 @@ class EdgeObject:
                 self.edge_vmin = float('inf')
                 self.edge_vmax = float('-inf')
 
-        self.sim_length = scada_data.sensor_readings_time.shape[0]
-
         if parameter == 'flow_rate':
             values = scada_data.flow_data_raw
         elif parameter == 'link_quality':
