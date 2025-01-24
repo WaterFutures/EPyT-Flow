@@ -95,13 +95,28 @@ class SensorReadingEvent(Event):
             if self.__sensor_id not in sensor_config.tank_volume_sensors:
                 __show_warning()
         elif self.__sensor_type == SENSOR_TYPE_NODE_BULK_SPECIES:
-            if self.__sensor_id not in sensor_config.bulk_species_node_sensors:
+            sensor_present = False
+            for _, sensors_id in sensor_config.bulk_species_node_sensors.items():
+                if self.__sensor_id in sensors_id:
+                    sensor_present = True
+                    break
+            if sensor_present is False:
                 __show_warning()
         elif self.__sensor_type == SENSOR_TYPE_LINK_BULK_SPECIES:
-            if self.__sensor_id not in sensor_config.bulk_species_link_sensors:
+            sensor_present = False
+            for _, sensors_id in sensor_config.bulk_species_link_sensors.items():
+                if self.__sensor_id in sensors_id:
+                    sensor_present = True
+                    break
+            if sensor_present is False:
                 __show_warning()
         elif self.__sensor_type == SENSOR_TYPE_SURFACE_SPECIES:
-            if self.__sensor_id not in sensor_config.surface_species_sensors:
+            sensor_present = False
+            for _, sensors_id in sensor_config.surface_species_sensors.items():
+                if self.__sensor_id in sensors_id:
+                    sensor_present = True
+                    break
+            if sensor_present is False:
                 __show_warning()
 
     @property

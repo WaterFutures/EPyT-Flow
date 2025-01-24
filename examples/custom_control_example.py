@@ -1,14 +1,14 @@
 """
-Example of implementing a simple pump control strategy.
+Example of implementing a simple pump control strategy using a custom control module.
 """
 from epyt_flow.data.networks import load_net1
 from epyt_flow.simulation import ScenarioSimulator
-from epyt_flow.simulation import AdvancedControlModule, ScadaData
+from epyt_flow.simulation import CustomControlModule, ScadaData
 from epyt_flow.utils import to_seconds, volume_to_level
 from epyt_flow.simulation.events import ActuatorConstants
 
 
-class MyControl(AdvancedControlModule):
+class MyControl(CustomControlModule):
     """
     Mimics the control rules stated in Net1.inp
     """
@@ -49,10 +49,11 @@ if __name__ == "__main__":
         sim.set_pump_state_sensors(sensor_locations=["9"])
 
         # Remove all existing controls
-        sim.epanet_api.deleteControls()
+        # Note that Net1.inp contains some simple controls
+        sim.remove_all_simple_controls()
 
         # Add custom controls
-        sim.add_control(MyControl())
+        sim.add_custom_control(MyControl())
 
         # Run simulation and show sensor readings over time
         scada_data_res = sim.run_simulation()

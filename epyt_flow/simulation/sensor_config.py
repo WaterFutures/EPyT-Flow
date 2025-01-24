@@ -1277,6 +1277,22 @@ class SensorConfig(JsonSerializable):
         return self.__links.copy()
 
     @property
+    def junctions(self) -> list[str]:
+        """
+        Returns all junction IDs.
+
+        Returns
+        -------
+        `list[str]`
+            All juncitons IDs.
+        """
+        junctions = self.nodes
+        for tank_id in self.tanks:
+            junctions.remove(tank_id)
+
+        return junctions
+
+    @property
     def valves(self) -> list[str]:
         """
         Gets all valve IDs (subset of link IDs).

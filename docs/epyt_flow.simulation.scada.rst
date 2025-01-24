@@ -20,9 +20,25 @@ epyt_flow.simulation.scada.scada_data_export
    :show-inheritance:
 
 
-epyt_flow.simulation.scada.advanced_control
--------------------------------------------
+epyt_flow.simulation.scada.custom_control
+-----------------------------------------
 
-.. automodule:: epyt_flow.simulation.scada.advanced_control
+.. automodule:: epyt_flow.simulation.scada.custom_control
+   :members:
+   :show-inheritance:
+
+
+epyt_flow.simulation.scada.simple_control
+-----------------------------------------
+
+.. automodule:: epyt_flow.simulation.scada.simple_control
+   :members:
+   :show-inheritance:
+
+
+epyt_flow.simulation.scada.complex_control
+------------------------------------------
+
+.. automodule:: epyt_flow.simulation.scada.complex_control
    :members:
    :show-inheritance:

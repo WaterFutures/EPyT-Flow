@@ -158,6 +158,11 @@ All sensor faults are derived from :class:`~epyt_flow.simulation.events.sensor_f
 need a starting and end time, as well as the location (i.e. type and location of the sensor that is affected by the fault). 
 Furthermore, most sensor faults also need a parameter describing the strength of the fault (e.g. variance of the Gaussian noise).
 
+.. note::
+
+    Note that sensor faults at MSX species sensors affect the readings of all MSX species
+    at the particular node or link.
+
 Sensor faults (i.e. instances of :class:`~epyt_flow.simulation.events.sensor_faults.SensorFault`) can be directly added to the simulation by 
 calling :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_sensor_fault`  
 of a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance BEFORE running the simulation.

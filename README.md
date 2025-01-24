@@ -29,8 +29,8 @@ Unique features of EPyT-Flow that make it superior to other (Python) toolboxes a
 - High- and low-level interface
 - Object-orientated design that is easy to extend and customize
 - Sensor configurations
-- Wide variety of pre-defined events (e.g. leakages, sensor faults, actuator events, cyber-attacks, etc.)
-- Wide variety of pre-defined types of uncertainties (e.g. model uncertainties)
+- Wide variety of pre-defined events (e.g. leakages, sensor faults, actuator events, contamination, cyber-attacks, etc.)
+- Wide variety of pre-defined types of global & local uncertainties (e.g. model uncertainties)
 - Step-wise simulation and environment for training and evaluating control strategies
 - Serialization module for easy exchange of data and (scenario) configurations
 - REST API to make EPyT-Flow accessible in other applications
@@ -39,7 +39,7 @@ Unique features of EPyT-Flow that make it superior to other (Python) toolboxes a
 
 ## Installation
 
-EPyT-Flow supports Python 3.9 - 3.12
+EPyT-Flow supports Python 3.9 - 3.13
 
 Note that [EPANET and EPANET-MSX sources](epyt_flow/EPANET/) are compiled and overwrite the binaries
 shipped by EPyT **IF** EPyT-Flow is installed on a Unix system and the *gcc* compiler is available.

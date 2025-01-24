@@ -46,7 +46,7 @@ class SensorOverrideAttack(SensorReadingAttack, JsonSerializable):
     @property
     def new_sensor_values(self) -> np.ndarray:
         """
-        Get the new sensor reading values -- i.e. these values replace the
+        Returns the new sensor reading values -- i.e. these values replace the
         true sensor reading values.
 
         Returns
@@ -64,7 +64,7 @@ class SensorOverrideAttack(SensorReadingAttack, JsonSerializable):
             raise TypeError("Can not compare 'SensorOverrideAttack' instance " +
                             f"with '{type(other)}' instance")
 
-        return super().__eq__(other) and self.__new_sensor_values == other.new_sensor_values
+        return super().__eq__(other) and np.all(self.__new_sensor_values == other.new_sensor_values)
 
     def __str__(self) -> str:
         return f"{type(self).__name__} {super().__str__()} " +\
@@ -151,6 +151,19 @@ class SensorReplayAttack(SensorReadingAttack, JsonSerializable):
         """
         return self.__sensor_data_time_window_end
 
+    @property
+    def new_sensor_values(self) -> np.ndarray:
+        """
+        Returns the new sensor reading values -- i.e. these values replace the
+        true sensor reading values.
+
+        Returns
+        -------
+        `np.ndarray`
+            New sensor readings.
+        """
+        return deepcopy(self.__new_sensor_values)
+
     def get_attributes(self) -> dict:
         my_attributes = {"new_sensor_values": self.__new_sensor_values,
                          "replay_data_time_window_start": self.__sensor_data_time_window_start,
@@ -163,7 +176,7 @@ class SensorReplayAttack(SensorReadingAttack, JsonSerializable):
             raise TypeError("Can not compare 'SensorReplayAttack' instance " +
                             f"with '{type(other)}' instance")
 
-        return super().__eq__(other) and self.__new_sensor_values == other.new_sensor_values
+        return super().__eq__(other) and np.all(self.__new_sensor_values == other.new_sensor_values)
 
     def __str__(self) -> str:
         return f"{type(self).__name__} {super().__str__()} " +\

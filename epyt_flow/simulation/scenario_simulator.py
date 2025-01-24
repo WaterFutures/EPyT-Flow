@@ -5,6 +5,8 @@ import sys
 import os
 import pathlib
 import time
+from datetime import timedelta
+from datetime import datetime
 from typing import Generator, Union
 from copy import deepcopy
 import shutil
@@ -28,7 +30,8 @@ from .sensor_config import SensorConfig, areaunit_to_id, massunit_to_id, quality
 from ..uncertainty import ModelUncertainty, SensorNoise
 from .events import SystemEvent, Leakage, ActuatorEvent, SensorFault, SensorReadingAttack, \
     SensorReadingEvent
-from .scada import ScadaData, AdvancedControlModule
+from .scada import ScadaData, CustomControlModule, SimpleControlModule, ComplexControlModule, \
+    RuleCondition, RuleAction, ActuatorConstants, EN_R_ACTION_SETTING
 from ..topology import NetworkTopology, UNITS_SIMETRIC, UNITS_USCUSTOM
 from ..utils import get_temp_folder
 
@@ -67,8 +70,12 @@ class ScenarioSimulator():
         Sensor noise.
     _sensor_config : :class:`~epyt_flow.simulation.sensor_config.SensorConfig`, protected
         Sensor configuration.
-    _controls : list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`], protected
+    _custom_controls : list[:class:`~epyt_flow.simulation.scada.custom_control.CustomControlModule`], protected
         List of custom control modules.
+    _simple_controls : list[:class:`~epyt_flow.simulation.scada.simple_control.SimpleControlModule`], protected
+        List of simle EPANET control rules.
+    _complex_controls : list[:class:`~epyt_flow.simulation.scada.complex_control.ComplexControlModule`], protected
+        List of complex (IF-THEN-ELSE) EPANET control rules.
     _system_events : list[:class:`~epyt_flow.simulation.events.system_event.SystemEvent`], protected
         Lsit of system events such as leakages.
     _sensor_reading_events : list[:class:`~epyt_flow.simulation.events.sensor_reading_event.SensorReadingEvent`], protected
@@ -105,7 +112,10 @@ class ScenarioSimulator():
         self._model_uncertainty = ModelUncertainty()
         self._sensor_noise = None
         self._sensor_config = None
-        self._controls = []
+        self._advanced_controls = []
+        self._custom_controls = []
+        self._simple_controls = []
+        self._complex_controls = []
         self._system_events = []
         self._sensor_reading_events = []
         self.__running_simulation = False
@@ -168,6 +178,9 @@ class ScenarioSimulator():
             if self.__f_msx_in is not None:
                 self.epanet_api.loadMSXFile(my_f_msx_in, customMSXlib=custom_epanetmsx_lib)
 
+        self._simple_controls = self._parse_simple_control_rules()
+        self._complex_controls = self._parse_complex_control_rules()
+
         self._sensor_config = self._get_empty_sensor_config()
         if scenario_config is not None:
             if scenario_config.general_params is not None:
@@ -177,8 +190,15 @@ class ScenarioSimulator():
             self._sensor_noise = scenario_config.sensor_noise
             self._sensor_config = scenario_config.sensor_config
 
-            for control in scenario_config.controls:
-                self.add_control(control)
+            if scenario_config.advanced_controls is not None:
+                for control in scenario_config.advanced_controls:
+                    self.add_advanced_control(control)
+            for control in scenario_config.custom_controls:
+                self.add_custom_control(control)
+            for control in scenario_config.simple_controls:
+                self.add_simple_control(control)
+            for control in scenario_config.complex_controls:
+                self.add_complex_control(control)
             for event in scenario_config.system_events:
                 self.add_system_event(event)
             for event in scenario_config.sensor_reading_events:
@@ -323,18 +343,62 @@ class ScenarioSimulator():
         self._sensor_config = sensor_config
 
     @property
-    def controls(self) -> list[AdvancedControlModule]:
+    def advanced_controls(self) -> list:
         """
-        Gets all control modules.
+        Returns all advanced control modules.
 
         Returns
         -------
         list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`]
-            All control modules.
+            All advanced control modules.
+        """
+        warnings.warn("'AdvancedControlModule' is deprecated and will be removed in a " +
+                      "future release -- use 'CustomControlModule' instead")
+        self._adapt_to_network_changes()
+
+        return deepcopy(self._advanced_controls)
+
+    @property
+    def custom_controls(self) -> list[CustomControlModule]:
+        """
+        Returns all custom control modules.
+
+        Returns
+        -------
+        list[:class:`~epyt_flow.simulation.scada.custom_control.CustomControlModule`]
+            All custom control modules.
         """
         self._adapt_to_network_changes()
 
-        return deepcopy(self._controls)
+        return deepcopy(self._custom_controls)
+
+    @property
+    def simple_controls(self) -> list[SimpleControlModule]:
+        """
+        Gets all simple EPANET control rules.
+
+        Returns
+        -------
+        list[:class:`~epyt_flow.simulation.scada.simple_control.SimpleControlModule`]
+            All simple EPANET control rules.
+        """
+        self._adapt_to_network_changes()
+
+        return deepcopy(self._simple_controls)
+
+    @property
+    def complex_controls(self) -> list[SimpleControlModule]:
+        """
+        Gets all complex (IF-THEN-ELSE) EPANET control rules.
+
+        Returns
+        -------
+        list[:class:`~epyt_flow.simulation.scada.complex_control.ComplexControlModule`]
+            All complex EPANET control rules.
+        """
+        self._adapt_to_network_changes()
+
+        return deepcopy(self._complex_controls)
 
     @property
     def leakages(self) -> list[Leakage]:
@@ -421,6 +485,132 @@ class ScenarioSimulator():
         self._adapt_to_network_changes()
 
         return deepcopy(self._sensor_reading_events)
+
+    def _parse_simple_control_rules(self) -> list[SimpleControlModule]:
+        controls = []
+
+        for idx in self.epanet_api.getControls():
+            control = self.epanet_api.getControls(idx)
+
+            if control.Setting == "OPEN":
+                link_status = ActuatorConstants.EN_OPEN
+            else:
+                link_status = ActuatorConstants.EN_CLOSED
+
+            if control.Type == "LOWLEVEL":
+                cond_type = ToolkitConstants.EN_LOWLEVEL
+            elif control.Type == "HIGHLEVEL":
+                cond_type = ToolkitConstants.EN_HILEVEL
+            elif control.Type == "TIMER":
+                cond_type = ToolkitConstants.EN_TIMER
+            elif control.Type == "TIMEOFDAY":
+                cond_type = ToolkitConstants.EN_TIMEOFDAY
+
+            if control.NodeID is not None:
+                cond_var_value = control.NodeID
+                cond_comp_value = control.Value
+            else:
+                if cond_type == ToolkitConstants.EN_TIMER:
+                    cond_var_value = int(control.Value / 3600)
+                elif cond_type == ToolkitConstants.EN_TIMEOFDAY:
+                    sec = control.Value
+                    if sec <= 43200:
+                        cond_var_value = \
+                            f"{':'.join(str(timedelta(seconds=sec)).split(':')[:2])} AM"
+                    else:
+                        sec -= 43200
+                        cond_var_value = \
+                            f"{':'.join(str(timedelta(seconds=sec)).split(':')[:2])} PM"
+                cond_comp_value = None
+
+            controls.append(SimpleControlModule(link_id=control.LinkID,
+                                                link_status=link_status,
+                                                cond_type=cond_type,
+                                                cond_var_value=cond_var_value,
+                                                cond_comp_value=cond_comp_value))
+
+        return controls
+
+    def _parse_complex_control_rules(self) -> list[ComplexControlModule]:
+        controls = []
+
+        rules = self.epanet_api.getRules()
+        for rule_idx, rule in rules.items():
+            rule_info = self.epanet_api.getRuleInfo(rule_idx)
+
+            rule_id = rule["Rule_ID"]
+            rule_priority, *_ = rule_info.Priority
+
+            # Parse conditions
+            n_rule_premises, *_ = rule_info.Premises
+
+            condition_1 = None
+            additional_conditions = []
+            for j in range(1, n_rule_premises + 1):
+                [logop, object_type_id, obj_idx, variable_type_id, relop, status, value_premise] = \
+                    self.epanet_api.api.ENgetpremise(rule_idx, j)
+
+                object_id = None
+                if object_type_id == ToolkitConstants.EN_R_NODE:
+                    object_id = self.epanet_api.getNodeNameID(obj_idx)
+                elif object_type_id == ToolkitConstants.EN_R_LINK:
+                    object_id = self.epanet_api.getLinkNameID(obj_idx)
+                elif object_type_id == ToolkitConstants.EN_R_SYSTEM:
+                    object_id = ""
+
+                if variable_type_id >= ToolkitConstants.EN_R_TIME:
+                    value_premise = datetime.fromtimestamp(value_premise)\
+                        .strftime("%I:%M %p")
+                if status != 0:
+                    value_premise = self.epanet_api.RULESTATUS[status - 1]
+
+                condition = RuleCondition(object_type_id, object_id, variable_type_id,
+                                          relop, value_premise)
+                if condition_1 is None:
+                    condition_1 = condition
+                else:
+                    additional_conditions.append((logop, condition))
+
+            # Parse actions
+            n_rule_then_actions, *_ = rule_info.ThenActions
+            actions = []
+            for j in range(1, n_rule_then_actions + 1):
+                [link_idx, link_status, link_setting] = \
+                    self.epanet_api.api.ENgetthenaction(rule_idx, j)
+
+                link_type_id = self.epanet_api.getLinkTypeIndex(link_idx)
+                link_id = self.epanet_api.getLinkNameID(link_idx)
+                if link_status >= 0:
+                    action_type_id = link_status
+                    action_value = link_status
+                else:
+                    action_type_id = EN_R_ACTION_SETTING
+                    action_value = link_setting
+
+                actions.append(RuleAction(link_type_id, link_id, action_type_id, action_value))
+
+            n_rule_else_actions, *_ = rule_info.ElseActions
+            else_actions = []
+            for j in range(1, n_rule_else_actions + 1):
+                [link_idx, link_status, link_setting] = \
+                    self.epanet_api.api.ENgetelseaction(rule_idx, j)
+
+                link_type_id = self.epanet_api.getLinkType(link_idx)
+                link_id = self.epanet_api.getLinkNameID(link_idx)
+                if link_status <= 3:
+                    action_type_id = link_status
+                    action_value = link_status
+                else:
+                    action_type_id = EN_R_ACTION_SETTING
+                    action_value = link_setting
+
+                else_actions.append(RuleAction(link_type_id, link_id, action_type_id, action_value))
+
+            # Create and add control module
+            controls.append(ComplexControlModule(rule_id, condition_1, additional_conditions,
+                                                 actions, else_actions, int(rule_priority)))
+
+        return controls
 
     def _adapt_to_network_changes(self):
         nodes = self.epanet_api.getNodeNameID()
@@ -800,7 +990,11 @@ class ScenarioSimulator():
         return ScenarioConfig(f_inp_in=self.__f_inp_in, f_msx_in=self.__f_msx_in,
                               general_params=general_params, sensor_config=self.sensor_config,
                               memory_consumption_estimate=self.estimate_memory_consumption(),
-                              controls=self.controls, sensor_noise=self.sensor_noise,
+                              advanced_controls=None if len(self._advanced_controls) == 0 else self.advanced_controls,
+                              custom_controls=self.custom_controls,
+                              simple_controls=self.simple_controls,
+                              complex_controls=self.complex_controls,
+                              sensor_noise=self.sensor_noise,
                               model_uncertainty=self.model_uncertainty,
                               system_events=self.system_events,
                               sensor_reading_events=self.sensor_reading_events)
@@ -1063,23 +1257,147 @@ class ScenarioSimulator():
         self.epanet_api.setNodeJunctionData(node_idx, self.epanet_api.getNodeElevations(node_idx),
                                             base_demand, demand_pattern_id)
 
-    def add_control(self, control: AdvancedControlModule) -> None:
+    def add_advanced_control(self, control) -> None:
         """
-        Adds a control module to the scenario simulation.
+        Adds an advanced control module to the scenario simulation.
 
         Parameters
         ----------
         control : :class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`
-            Control module.
+            Advanced control module.
         """
         self._adapt_to_network_changes()
 
+        from .scada.advanced_control import AdvancedControlModule
         if not isinstance(control, AdvancedControlModule):
             raise TypeError("'control' must be an instance of " +
                             "'epyt_flow.simulation.scada.AdvancedControlModule' not of " +
                             f"'{type(control)}'")
 
-        self._controls.append(control)
+        self._advanced_controls.append(control)
+
+    def add_custom_control(self, control: CustomControlModule) -> None:
+        """
+        Adds a custom control module to the scenario simulation.
+
+        Parameters
+        ----------
+        control : :class:`~epyt_flow.simulation.scada.custom_control.CustomControlModule`
+            Custom control module.
+        """
+        self._adapt_to_network_changes()
+
+        if not isinstance(control, CustomControlModule):
+            raise TypeError("'control' must be an instance of " +
+                            "'epyt_flow.simulation.scada.CustomControlModule' not of " +
+                            f"'{type(control)}'")
+
+        self._custom_controls.append(control)
+
+    def add_simple_control(self, control: SimpleControlModule) -> None:
+        """
+        Adds a simple EPANET control rule to the scenario simulation.
+
+        Parameters
+        ----------
+        control : :class:`~epyt_flow.simulation.scada.simple_control.SimpleControlModule`
+            Simple EPANET control module.
+        """
+        self._adapt_to_network_changes()
+
+        if not isinstance(control, SimpleControlModule):
+            raise TypeError("'control' must be an instance of " +
+                            "'epyt_flow.simulation.scada.SimpleControlModule' not of " +
+                            f"'{type(control)}'")
+
+        if not any(c == control for c in self._simple_controls):
+            self._simple_controls.append(control)
+            self.epanet_api.addControls(str(control))
+
+    def remove_all_simple_controls(self) -> None:
+        """
+        Removes all simple EPANET controls from the scenario.
+        """
+        self.epanet_api.deleteControls()
+        self._simple_controls = []
+
+    def remove_simple_control(self, control: SimpleControlModule) -> None:
+        """
+        Removes a given simple EPANET control rule from the scenario.
+
+        Parameters
+        ----------
+        control : :class:`~epyt_flow.simulation.scada.simple_control.SimpleControlModule`
+            Simple EPANET control module to be removed.
+        """
+        self._adapt_to_network_changes()
+
+        if not isinstance(control, SimpleControlModule):
+            raise TypeError("'control' must be an instance of " +
+                            "'epyt_flow.simulation.scada.SimpleControlModule' not of " +
+                            f"'{type(control)}'")
+
+        control_idx = None
+        for idx, c in enumerate(self._simple_controls):
+            if c == control:
+                control_idx = idx + 1
+                break
+        if control_idx is None:
+            raise ValueError("Invalid/Unknown control module.")
+
+        self.epanet_api.deleteControls(control_idx)
+        self._simple_controls.remove(control)
+
+    def add_complex_control(self, control: ComplexControlModule) -> None:
+        """
+        Adds an complex (IF-THEN-ELSE) EPANET control rule to the scenario simulation.
+
+        Parameters
+        ----------
+        control : :class:`~epyt_flow.simulation.scada.complex_control.ComplexControlModule`
+            Complex EPANET control module.
+        """
+        self._adapt_to_network_changes()
+
+        if not isinstance(control, ComplexControlModule):
+            raise TypeError("'control' must be an instance of " +
+                            "'epyt_flow.simulation.scada.ComplexControlModule' not of " +
+                            f"'{type(control)}'")
+
+        if not any(c == control for c in self._complex_controls):
+            self._complex_controls.append(control)
+            self.epanet_api.addRules(str(control))
+
+    def remove_all_complex_controls(self) -> None:
+        """
+        Removes all complex EPANET controls from the scenario.
+        """
+        self.epanet_api.deleteRules()
+        self._complex_controls = []
+
+    def remove_complex_control(self, control: ComplexControlModule) -> None:
+        """
+        Removes a given complex (IF-THEN-ELSE) EPANET control rule from the scenario.
+
+        Parameters
+        ----------
+        control : :class:`~epyt_flow.simulation.scada.complex_control.ComplexControlModule`
+            Complex EPANET control module to be removed.
+        """
+        self._adapt_to_network_changes()
+
+        if not isinstance(control, ComplexControlModule):
+            raise TypeError("'control' must be an instance of " +
+                            "'epyt_flow.simulation.scada.ComplexControlModule' not of " +
+                            f"'{type(control)}'")
+
+        if control.rule_id not in self.epanet_api.getRuleID():
+            raise ValueError("Invalid/Unknown control module. " +
+                             f"Can not find rule ID '{control.rule_id}'")
+
+        rule_idx = self.epanet_api.getRuleID().index(control.rule_id) + 1
+        self.epanet_api.deleteRules(rule_idx)
+        self._complex_controls.remove(control)
 
     def add_leakage(self, leakage_event: Leakage) -> None:
         """
@@ -1616,12 +1934,17 @@ class ScenarioSimulator():
         for event in self._system_events:
             event.reset()
 
-        if self._controls is not None:
-            for c in self._controls:
+        if self._advanced_controls is not None:
+            for c in self._advanced_controls:
                 c.init(self.epanet_api)
+        if self._custom_controls is not None:
+            for control in self._custom_controls:
+                control.init(self.epanet_api)
 
     def run_advanced_quality_simulation(self, hyd_file_in: str, verbose: bool = False,
-                                        frozen_sensor_config: bool = False) -> ScadaData:
+                                        frozen_sensor_config: bool = False,
+                                        use_quality_time_step_as_reporting_time_step: bool = False
+                                        ) -> ScadaData:
         """
         Runs an advanced quality analysis using EPANET-MSX.
 
@@ -1637,6 +1960,13 @@ class ScenarioSimulator():
         frozen_sensor_config : `bool`, optional
             If True, the sensor config can not be changed and only the required sensor nodes/links
             will be stored -- this usually leads to a significant reduction in memory consumption.
+
+            The default is False.
+        use_quality_time_step_as_reporting_time_step : `bool`, optional
+            If True, the water quality time step will be used as the reporting time step.
+
+            As a consequence, the simualtion results can not be merged
+            with the hydraulic simulation.
 
             The default is False.
 
@@ -1657,7 +1987,9 @@ class ScenarioSimulator():
         for scada_data in gen(hyd_file_in=hyd_file_in,
                               verbose=verbose,
                               return_as_dict=True,
-                              frozen_sensor_config=frozen_sensor_config):
+                              frozen_sensor_config=frozen_sensor_config,
+                              use_quality_time_step_as_reporting_time_step=
+                              use_quality_time_step_as_reporting_time_step):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -1682,7 +2014,8 @@ class ScenarioSimulator():
     def run_advanced_quality_simulation_as_generator(self, hyd_file_in: str, verbose: bool = False,
                                                      support_abort: bool = False,
                                                      return_as_dict: bool = False,
-                                                     frozen_sensor_config: bool = False
+                                                     frozen_sensor_config: bool = False,
+                                                     use_quality_time_step_as_reporting_time_step: bool = False,
                                                      ) -> Generator[Union[ScadaData, dict], bool, None]:
         """
         Runs an advanced quality analysis using EPANET-MSX.
@@ -1703,6 +2036,13 @@ class ScenarioSimulator():
         frozen_sensor_config : `bool`, optional
             If True, the sensor config can not be changed and only the required sensor nodes/links
             will be stored -- this usually leads to a significant reduction in memory consumption.
+
+            The default is False.
+        use_quality_time_step_as_reporting_time_step : `bool`, optional
+            If True, the water quality time step will be used as the reporting time step.
+
+            As a consequence, the simualtion results can not be merged
+            with the hydraulic simulation.
 
             The default is False.
 
@@ -1728,6 +2068,11 @@ class ScenarioSimulator():
         reporting_time_start = self.epanet_api.getTimeReportingStart()
         reporting_time_step = self.epanet_api.getTimeReportingStep()
         hyd_time_step = self.epanet_api.getTimeHydraulicStep()
+
+        if use_quality_time_step_as_reporting_time_step is True:
+            quality_time_step = self.epanet_api.getMSXTimeStep()
+            reporting_time_step = quality_time_step
+            hyd_time_step = quality_time_step
 
         self.epanet_api.initializeMSXQualityAnalysis(ToolkitConstants.EN_NOSAVE)
 
@@ -1880,7 +2225,9 @@ class ScenarioSimulator():
         self.__running_simulation = False
 
     def run_basic_quality_simulation(self, hyd_file_in: str, verbose: bool = False,
-                                     frozen_sensor_config: bool = False) -> ScadaData:
+                                     frozen_sensor_config: bool = False,
+                                     use_quality_time_step_as_reporting_time_step: bool = False
+                                     ) -> ScadaData:
         """
         Runs a basic quality analysis using EPANET.
 
@@ -1896,6 +2243,13 @@ class ScenarioSimulator():
         frozen_sensor_config : `bool`, optional
             If True, the sensor config can not be changed and only the required sensor nodes/links
             will be stored -- this usually leads to a significant reduction in memory consumption.
+
+            The default is False.
+        use_quality_time_step_as_reporting_time_step : `bool`, optional
+            If True, the water quality time step will be used as the reporting time step.
+
+            As a consequence, the simualtion results can not be merged
+            with the hydraulic simulation.
 
             The default is False.
 
@@ -1914,7 +2268,9 @@ class ScenarioSimulator():
         for scada_data in gen(hyd_file_in=hyd_file_in,
                               verbose=verbose,
                               return_as_dict=True,
-                              frozen_sensor_config=frozen_sensor_config):
+                              frozen_sensor_config=frozen_sensor_config,
+                              use_quality_time_step_as_reporting_time_step=
+                              use_quality_time_step_as_reporting_time_step):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -1937,6 +2293,7 @@ class ScenarioSimulator():
                                                   support_abort: bool = False,
                                                   return_as_dict: bool = False,
                                                   frozen_sensor_config: bool = False,
+                                                  use_quality_time_step_as_reporting_time_step: bool = False
                                                   ) -> Generator[Union[ScadaData, dict], bool, None]:
         """
         Runs a basic quality analysis using EPANET.
@@ -1961,6 +2318,13 @@ class ScenarioSimulator():
             will be stored -- this usually leads to a significant reduction in memory consumption.
 
             The default is False.
+        use_quality_time_step_as_reporting_time_step : `bool`, optional
+            If True, the water quality time step will be used as the reporting time step.
+
+            As a consequence, the simualtion results can not be merged
+            with the hydraulic simulation.
+
+            The default is False.
 
         Returns
         -------
@@ -1973,6 +2337,11 @@ class ScenarioSimulator():
         requested_time_step = self.epanet_api.getTimeHydraulicStep()
         reporting_time_start = self.epanet_api.getTimeReportingStart()
         reporting_time_step = self.epanet_api.getTimeReportingStep()
+
+        if use_quality_time_step_as_reporting_time_step is True:
+            quality_time_step = self.epanet_api.getTimeQualityStep()
+            requested_time_step = quality_time_step
+            reporting_time_step = quality_time_step
 
         self.epanet_api.useHydraulicFile(hyd_file_in)
 
@@ -2032,7 +2401,7 @@ class ScenarioSimulator():
                 yield data
 
             # Next
-            tstep = self.epanet_api.nextQualityAnalysisStep()
+            tstep = self.epanet_api.stepQualityAnalysisTimeLeft()
 
         self.epanet_api.closeHydraulicAnalysis()
 
@@ -2254,7 +2623,9 @@ class ScenarioSimulator():
                     yield data
 
                 # Apply control modules
-                for control in self._controls:
+                for control in self._advanced_controls:
+                    control.step(scada_data)
+                for control in self._custom_controls:
                     control.step(scada_data)
 
                 # Next

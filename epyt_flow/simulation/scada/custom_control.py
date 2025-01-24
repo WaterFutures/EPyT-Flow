@@ -1,21 +1,17 @@
 """
-Deprecated -- use epyt_flow.simulation.scada.custom_control instead
+Module provides a base class for custom control modules.
 """
-import warnings
 from abc import abstractmethod, ABC
+import warnings
 import numpy as np
 import epyt
 
 from . import ScadaData
 
 
-warnings.warn("'epyt_flow.simulation.scada.advanced_control' is deprecated and will be removed " +
-              "in future releases -- use 'epyt_flow.simulation.scada.custom_control' instead")
-
-
-class AdvancedControlModule(ABC):
+class CustomControlModule(ABC):
     """
-    Base class for a control module.
+    Base class for a custom control module.
 
     Attributes
     ----------

@@ -107,6 +107,14 @@ class ScenarioControlEnv(ABC):
             Current SCADA data (i.e. sensor readings).
         """
         if self._scenario_sim is not None:
+            # Abort current simulation if any is runing
+            try:
+                next(self._sim_generator)
+                self._sim_generator.send(True)
+            except StopIteration:
+                pass
+
+            # Close scenario
             self._scenario_sim.close()
 
         self._scenario_sim = ScenarioSimulator(
@@ -194,7 +202,7 @@ class ScenarioControlEnv(ABC):
         if pattern_idx == 0:
             warnings.warn(f"No pattern for pump '{pump_id}' found -- a new pattern is created")
             pattern_idx = self._scenario_sim.epanet_api.addPattern(f"pump_speed_{pump_id}")
-            self._scenario_sim.epanet_api.setLinkPumpPatternIndex(pump_idx, pattern_idx)
+            self._scenario_sim.epanet_api.setLinkPumpPatternIndex(pump_idx + 1, pattern_idx)
 
         self._scenario_sim.epanet_api.setPattern(pattern_idx, np.array([speed]))
 
