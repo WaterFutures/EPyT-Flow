@@ -1,6 +1,7 @@
 """
 Module provides tests to test different types of uncertainties and noise.
 """
+import numpy as np
 from epyt_flow.data.networks import load_hanoi
 from epyt_flow.simulation import ScenarioSimulator
 from epyt_flow.uncertainty import AbsoluteGaussianUncertainty, RelativeGaussianUncertainty, \
@@ -37,6 +38,34 @@ def test_model_uncertainty():
 
         res = sim.run_simulation()
         assert res.get_data() is not None
+
+
+def test_model_uncertainty_seed():
+    def run_sim() -> np.ndarray:
+        hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
+                                          include_default_sensor_placement=True)
+        with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
+            sim.set_general_parameters(simulation_duration=to_seconds(days=2))
+            uncertainties = {"global_pipe_length_uncertainty": RelativeUniformUncertainty(low=0.9,
+                                                                                        high=1.1),
+                            "global_pipe_roughness_uncertainty": RelativeUniformUncertainty(low=0.75,
+                                                                                            high=1.25),
+                            "global_pipe_diameter_uncertainty": AbsoluteGaussianUncertainty(mean=0.,
+                                                                                            scale=.05),
+                            "global_base_demand_uncertainty": RelativeUniformUncertainty(low=0.75,
+                                                                                        high=1.25),
+                            "global_demand_pattern_uncertainty": RelativeUniformUncertainty(low=0.75,
+                                                                                            high=1.25),
+                            "global_elevation_uncertainty": AbsoluteGaussianUncertainty(mean=0.,
+                                                                                        scale=0.1)}
+            sim.set_model_uncertainty(ModelUncertainty(**uncertainties, seed=42))
+
+            return sim.run_simulation().get_data()
+
+    data_1 = run_sim()
+    data_2 = run_sim()
+
+    assert np.all(data_1 == data_2)
 
 
 def test_sensor_noise():

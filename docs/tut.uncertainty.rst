@@ -81,6 +81,13 @@ See below for a full list of all quantities that can be affected by uncertaintie
 | EPANET-MSX parameters                           |
 +-------------------------------------------------+
 
+.. note::
+
+    For the purpose of ensuring reproducibility, the
+    :class:`~epyt_flow.uncertainty.model_uncertainty.ModelUncertainty` class has an
+    optional *seed* parameter which makes the uncertainty (i.e. random number generations)
+    deterministic and therefore reproducible.
+
 Uncertainties can be either on a global or local level.
 In global uncertainties, a specific quantity (e.g. pipe length) is always affected by the
 same uncertainty -- e.g. all pipe's length are affected by the same uncertainty.
@@ -117,6 +124,13 @@ or on a local level by just affecting a sub-set of sensors.
 In EPyT-Flow, sensor uncertainties have to be
 :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty` instances wrapped inside a
 :class:`~epyt_flow.uncertainty.sensor_noise.SensorNoise` instance.
+
+.. note::
+
+    For the purpose of ensuring reproducibility, the
+    :class:`~epyt_flow.uncertainty.sensor_noise.SensorNoise` class has an
+    optional *seed* parameter which makes the uncertainty (random number generations)
+    deterministic and therefore reproducible.
 
 Sensor uncertainty/noise can be added BEFORE the simulation is run by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_sensor_noise` of a
