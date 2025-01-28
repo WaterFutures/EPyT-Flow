@@ -186,6 +186,7 @@ class ScenarioVisualizer:
         self.pump_parameters = JunctionObject(self.topology.get_all_pumps(), node_size=50, node_shape=markers.pump, node_color=self.color_scheme['pump_color'])
 
         self.colorbars = {}
+        self.labels = {}
 
     def __get_midpoints(self, elements: List[str]) -> dict[str, tuple[float, float]]:
         """
@@ -258,6 +259,8 @@ class ScenarioVisualizer:
             self.topology, self.__get_midpoints(self.topology.get_all_pumps()),
             ax=self.ax, label='Pumps', **self.pump_parameters.get_frame(frame_number))
 
+        self.__draw_labels()
+
         self.ax.legend(fontsize=6)
 
     def __interpolate_frames(self, num_inter_frames):
@@ -267,6 +270,33 @@ class ScenarioVisualizer:
         self.pipe_parameters.interpolate(num_inter_frames)
 
         return num_inter_frames
+
+    def __draw_labels(self):
+        for k, v in self.labels.items():
+            if k in ['pipes']:
+                nxp.draw_networkx_edge_labels(self.topology, ax=self.ax, **v)
+                continue
+            nxp.draw_networkx_labels(self.topology, ax=self.ax, **v)
+
+    def add_labels(self, components: list or tuple = () or str, font_size=8):
+        if components == 'all':
+            components = ['nodes', 'tanks', 'reservoirs', 'pipes', 'valves', 'pumps']
+        # if list empty, do all nodes and nothing else
+        if len(components) == 0:
+            self.labels['nodes'] = {'pos': self.pos_dict, 'labels': {n: str(n) for n in self.junction_parameters.nodelist}, 'font_size': font_size}
+            return
+        if 'nodes' in components:
+            self.labels['nodes'] = {'pos': self.pos_dict, 'labels': {n: str(n) for n in self.junction_parameters.nodelist}, 'font_size': font_size}
+        if 'tanks' in components:
+            self.labels['tanks'] = {'pos': self.pos_dict, 'labels': {n: str(n) for n in self.tank_parameters.nodelist}, 'font_size': font_size}
+        if 'reservoirs' in components:
+            self.labels['reservoirs'] = {'pos': self.pos_dict, 'labels': {n: str(n) for n in self.reservoir_parameters.nodelist}, 'font_size': font_size}
+        if 'pipes' in components:
+            self.labels['pipes'] = {'pos': self.pos_dict, 'edge_labels': {tuple(n[1]): n[0] for n in self.topology.get_all_links()}, 'font_size': font_size}
+        if 'valves' in components:
+            self.labels['valves'] = {'pos': self.__get_midpoints(self.topology.get_all_valves()), 'labels': {n: str(n) for n in self.valve_parameters.nodelist}, 'verticalalignment': 'bottom', 'font_size': font_size}
+        if 'pumps' in components:
+            self.labels['pumps'] = {'pos': self.__get_midpoints(self.topology.get_all_pumps()), 'labels': {n: str(n) for n in self.pump_parameters.nodelist}, 'verticalalignment': 'bottom', 'font_size': font_size}
 
     def show_animation(self, export_to_file: str = None,
                        return_animation: bool = False, duration: int = 5, fps=15, interpolate=True)\
@@ -363,6 +393,8 @@ class ScenarioVisualizer:
             self.topology, self.__get_midpoints(self.topology.get_all_pumps()),
             ax=self.ax, label='Pumps', **self.pump_parameters.get_frame())
         self.ax.legend(fontsize=6)
+
+        self.__draw_labels()
 
         for colorbar_stats in self.colorbars.values():
             self.fig.colorbar(ax=self.ax, **colorbar_stats)
