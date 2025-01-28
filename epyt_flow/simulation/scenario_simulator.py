@@ -7,7 +7,7 @@ import pathlib
 import time
 from datetime import timedelta
 from datetime import datetime
-from typing import Generator, Union
+from typing import Generator, Union, Optional
 from copy import deepcopy
 import shutil
 import warnings
@@ -1041,6 +1041,7 @@ class ScenarioSimulator():
         nodes_type = [self.epanet_api.TYPENODE[i] for i in self.epanet_api.getNodeTypeIndex()]
         nodes_coord = [self.epanet_api.api.ENgetcoord(node_idx)
                        for node_idx in self.epanet_api.getNodeIndex()]
+        nodes_comments = self.epanet_api.getNodeComment()
         node_tank_names = self.epanet_api.getNodeTankNameID()
 
         links_id = self.epanet_api.getLinkNameID()
@@ -1060,10 +1061,12 @@ class ScenarioSimulator():
 
         # Build graph describing the topology
         nodes = []
-        for node_id, node_elevation, node_type, node_coord in zip(nodes_id, nodes_elevation,
-                                                                  nodes_type, nodes_coord):
+        for node_id, node_elevation, node_type, \
+                node_coord, node_comment in zip(nodes_id, nodes_elevation, nodes_type, nodes_coord,
+                                                nodes_comments):
             node_info = {"elevation": node_elevation,
                          "coord": node_coord,
+                         "comment": node_comment,
                          "type": node_type}
             if node_type == "TANK":
                 node_tank_idx = node_tank_names.index(node_id) + 1
@@ -1072,9 +1075,10 @@ class ScenarioSimulator():
             nodes.append((node_id, node_info))
 
         links = []
-        for link_id, link_type, link, diameter, length, roughness_coeff, bulk_coeff, wall_coeff, loss_coeff \
-                in zip(links_id, links_type, links_data, links_diameter, links_length,
-                       links_roughness_coeff, links_bulk_coeff, links_wall_coeff, links_loss_coeff):
+        for link_id, link_type, link, diameter, length, roughness_coeff, bulk_coeff, \
+            wall_coeff, loss_coeff in zip(links_id, links_type, links_data, links_diameter,
+                                          links_length, links_roughness_coeff, links_bulk_coeff,
+                                          links_wall_coeff, links_loss_coeff):
             links.append((link_id, list(link),
                           {"type": link_type, "diameter": diameter, "length": length,
                            "roughness_coeff": roughness_coeff,
