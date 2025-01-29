@@ -670,7 +670,7 @@ def load_dtown(download_dir: str = get_temp_folder(), verbose: bool = True,
         :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "d-town.inp")
-    url = "https://www.exeter.ac.uk/media/universityofexeter/emps/research/cws/downloads/d-town.inp"
+    url = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/d-town.inp"
 
     download_if_necessary(f_in, url, verbose)
     return load_inp(f_in, flow_units_id=flow_units_id)
