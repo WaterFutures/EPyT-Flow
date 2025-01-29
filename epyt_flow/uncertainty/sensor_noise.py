@@ -32,9 +32,9 @@ class SensorNoise(JsonSerializable):
 
         The default is None.
     """
-    def __init__(self, uncertainty: Uncertainty = None,
-                 global_uncertainty: Uncertainty = None,
-                 local_uncertainties: dict[int, str, Uncertainty] = None,
+    def __init__(self, uncertainty: Optional[Uncertainty] = None,
+                 global_uncertainty: Optional[Uncertainty] = None,
+                 local_uncertainties: Optional[dict[int, str, Uncertainty]] = None,
                  seed: Optional[int] = None,
                  **kwds):
         if uncertainty is not None:
