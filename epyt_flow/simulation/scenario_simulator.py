@@ -2949,6 +2949,78 @@ class ScenarioSimulator():
 
         return list(set(events_times))
 
+    def set_initial_link_status(self, link_id: str, status: int) -> None:
+        """
+        Sets the initial status (open or closed) of a given link.
+
+        Parameters
+        ----------
+        link_id : `str`
+            ID of the link.
+        status : `int`
+            Initial status of the link. Must be one of the following EPANET constants:
+
+                - EN_CLOSED   = 0
+                - EN_OPEN     = 1
+        """
+        if not isinstance(link_id, str):
+            raise TypeError(f"'link_id' must be an instance of 'str' but not of '{type(link_id)}'")
+        if link_id not in self._sensor_config.pumps:
+            raise ValueError("Invalid link ID '{link_id}'")
+        if not isinstance(status, int):
+            raise TypeError(f"'status' must be an instance of 'int' but not of '{type(status)}'")
+        if status not in [ActuatorConstants.EN_CLOSED, ActuatorConstants.EN_OPEN]:
+            raise ValueError(f"Invalid link status '{status}'")
+
+        link_idx = self.epanet_api.getLinkIndex(link_id)
+        self.epanet_api.setLinkInitialStatus(link_idx, status)
+
+    def set_initial_pump_speed(self, pump_id: str, speed: float) -> None:
+        """
+        Sets the initial pump speed of a given pump.
+
+        Parameters
+        ----------
+        pump_id : `str`
+            ID of the pump.
+        speed : `float`
+            Initial speed of the pump.
+        """
+        if not isinstance(pump_id, str):
+            raise TypeError(f"'pump_id' must be an instance of 'str' but not of '{type(pump_id)}'")
+        if pump_id not in self._sensor_config.pumps:
+            raise ValueError("Invalid pump ID '{tank_id}'")
+        if not isinstance(speed, float):
+            raise TypeError(f"'speed' must be an instance of 'int' but not of '{type(speed)}'")
+        if speed < 0:
+            raise ValueError("'speed' can not be negative")
+
+        pump_idx = self.epanet_api.getLinkIndex(pump_id)
+        self.epanet_api.setLinkInitialSetting(pump_idx, speed)
+
+    def set_initial_tank_level(self, tank_id, level: int) -> None:
+        """
+        Sets the initial water level of a given tank.
+
+        Parameters
+        ----------
+        tank_id : `str`
+            ID of the tank.
+        level : `int`
+            Initial water level in the tank.
+        """
+        if not isinstance(tank_id, str):
+            raise TypeError(f"'tank_id' must be an instance of 'str' but not of '{type(tank_id)}'")
+        if tank_id not in self._sensor_config.tanks:
+            raise ValueError("Invalid tank ID '{tank_id}'")
+        if not isinstance(level, int):
+            raise TypeError(f"'level' must be an instance of 'int' but not of '{type(level)}'")
+        if level < 0:
+            raise ValueError("'level' can not be negative")
+
+        tank_idx = self.epanet_api.getNodeIndex(tank_id)
+        self.epanet_api.setNodeTankInitialLevel(tank_idx, level)
+
     def __warn_if_quality_set(self):
         qual_info = self.epanet_api.getQualityInfo()
         if qual_info.QualityCode != ToolkitConstants.EN_NONE:
