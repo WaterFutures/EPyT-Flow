@@ -5,6 +5,7 @@ import inspect
 import networkx.drawing.nx_pylab as nxp
 import matplotlib as mpl
 from scipy.interpolate import CubicSpline
+import matplotlib.pyplot as plt
 
 from .scada.scada_data import ScadaData
 
@@ -69,11 +70,13 @@ class JunctionObject:
         attributes = vars(self).copy()
 
         if not isinstance(self.node_color, str):
-            if frame_number > len(self.node_color):
-                frame_number = -1
             if self.interpolated:
+                if frame_number > len(self.node_color_inter):
+                    frame_number = -1
                 attributes['node_color'] = self.node_color_inter[frame_number]
             else:
+                if frame_number > len(self.node_color):
+                    frame_number = -1
                 attributes['node_color'] = self.node_color[frame_number]
 
         sig = inspect.signature(nxp.draw_networkx_nodes)
@@ -207,19 +210,23 @@ class EdgeObject:
         attributes = vars(self).copy()
 
         if not isinstance(self.edge_color, str):
-            if frame_number > len(self.edge_color):
-                frame_number = -1
             if 'edge_color' in self.interpolated.keys():
+                if frame_number > len(self.interpolated['edge_color']):
+                    frame_number = -1
                 attributes['edge_color'] = self.interpolated['edge_color'][frame_number]
             else:
+                if frame_number > len(self.edge_color):
+                    frame_number = -1
                 attributes['edge_color'] = self.edge_color[frame_number]
 
         if hasattr(self, 'width'):
-            if frame_number > len(self.width):
-                frame_number = -1
             if 'width' in self.interpolated.keys():
+                if frame_number > len(self.interpolated['width']):
+                    frame_number = -1
                 attributes['width'] = self.interpolated['width'][frame_number]
             else:
+                if frame_number > len(self.width):
+                    frame_number = -1
                 attributes['width'] = self.width[frame_number]
 
         sig = inspect.signature(nxp.draw_networkx_edges)
