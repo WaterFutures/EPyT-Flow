@@ -314,7 +314,8 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
     return ax
 
 
-def download_if_necessary(download_path: str, url: str, verbose: bool = True) -> None:
+def download_if_necessary(download_path: str, url: str, verbose: bool = True,
+                          backup_urls: list[str] = []) -> None:
     """
     Downloads a file from a given URL if it does not already exist in a given path.
 
@@ -331,12 +332,25 @@ def download_if_necessary(download_path: str, url: str, verbose: bool = True) ->
         If True, a progress bar is shown while downloading the file.
 
         The default is True.
+    backup_urls : `list[str]`, optional
+        List of alternative URLs that are being tried in the case that downloading from 'url' fails.
+
+        The default is an empty list.
     """
     folder_path = str(Path(download_path).parent.absolute())
     create_path_if_not_exist(folder_path)
 
     if not os.path.isfile(download_path):
         response = requests.get(url, stream=verbose, allow_redirects=True, timeout=1000)
+
+        if response.status_code != 200:
+            for backup_url in backup_urls:
+                response = requests.get(backup_url, stream=verbose, allow_redirects=True,
+                                        timeout=1000)
+                if response.status_code == 200:
+                    break
+        if response.status_code != 200:
+            raise SystemError(f"Failed to download -- {response.status_code}")
 
         if verbose is True:
             content_length = int(response.headers.get('content-length', 0))
