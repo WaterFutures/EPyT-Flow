@@ -146,6 +146,16 @@ Besides that, you can read in-depth about the different functionalities of EPyT-
 we recommend reading the chapters in the order in which they are presented;
 you might decide to skip some of the last chapters if their content is not relevant to you.
 
+## More Networks and Benchmarks
+
+More Water Distribution Networks (WDNs) and benchmarks are available on the
+[WaterBenchmarkHub](https://waterfutures.github.io/WaterBenchmarkHub) platform.
+
+## More on Control
+
+We recommend checking out [EPyT-Control](https://github.com/WaterFutures/EPyT-Control)
+if you are intersted in (data-driven) control for Water Distribution Networks.
+
 ## License
 
 MIT license -- see [LICENSE](LICENSE)
