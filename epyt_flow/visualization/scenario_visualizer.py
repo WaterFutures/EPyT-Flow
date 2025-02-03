@@ -13,7 +13,7 @@ from svgpath2mpl import parse_path
 
 from .scenario_simulator import ScenarioSimulator
 from .scada.scada_data import ScadaData
-from .visualization_utils import JunctionObject, EdgeObject, color_schemes
+from .visualization_utils import JunctionObject, EdgeObject, ColorScheme
 
 PUMP_PATH = ('M 202.5 93 A 41.5 42 0 0 0 161 135 A 41.5 42 0 0 0 202.5 177 A '
              '41.5 42 0 0 0 244 135 A 41.5 42 0 0 0 241.94922 122 L 278 122 '
@@ -140,7 +140,7 @@ class ScenarioVisualizer:
         A dictionary containing the necessary data for drawing the required
         colorbars.
     """
-    def __init__(self, scenario: ScenarioSimulator, color_scheme="epyt_flow") -> None:
+    def __init__(self, scenario: ScenarioSimulator, color_scheme=ColorScheme.EPYT_FLOW) -> None:
         """
         Initializes the class with a given scenario, sets up the topology,
         SCADA data, and parameters for visualizing various hydraulic components
@@ -176,7 +176,7 @@ class ScenarioVisualizer:
         if isinstance(color_scheme, dict):
             self.color_scheme = color_scheme
         else:
-            self.color_scheme = color_schemes[color_scheme]
+            self.color_scheme = color_scheme.get_color_values()
 
         self.pipe_parameters = EdgeObject([x[1] for x in self.topology.get_all_links()], self.color_scheme['pipe_color'])
         self.junction_parameters = JunctionObject(self.topology.get_all_junctions(), node_color=self.color_scheme['node_color'])
@@ -347,7 +347,7 @@ class ScenarioVisualizer:
             total_frames = self.__interpolate_frames(fps*duration)
 
         anim = FuncAnimation(self.fig, self.__get_next_frame,
-                             frames=total_frames, interval=int(duration*100/total_frames))
+                             frames=total_frames, interval=round(duration*100/total_frames))
 
         if export_to_file is not None:
             anim.save(export_to_file, writer='ffmpeg', fps=fps)
@@ -405,7 +405,7 @@ class ScenarioVisualizer:
         plt.show()
 
     def color_nodes(
-            self, scada_data: Optional[ScadaData] = None,
+            self, data: Optional[ScadaData] = None,
             parameter: str = 'pressure', statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int, int]]] = None,
             colormap: str = 'viridis',
@@ -461,10 +461,13 @@ class ScenarioVisualizer:
         """
         self.junction_parameters.cmap = colormap
 
-        if scada_data:
-            self.scada_data = scada_data
+        if data is not None:
+            self.scada_data = data
+            if isinstance(data, ScadaData):
+                all_junctions = self.scada_data.sensor_config.nodes
         elif not self.scada_data:
             self.scada_data = self.__scenario.run_simulation()
+            all_junctions = self.scada_data.sensor_config.nodes
 
         if conversion:
             self.scada_data = self.scada_data.convert_units(**conversion)
@@ -475,9 +478,13 @@ class ScenarioVisualizer:
             values = self.scada_data.demand_data_raw
         elif parameter == 'node_quality':
             values = self.scada_data.node_quality_data_raw
+        elif parameter == 'custom_data':
+            # Custom should have the dimensions (timesteps, nodes)
+            values = self.scada_data
+            all_junctions = self.topology.get_all_junctions()
         else:
             raise ValueError(
-                'Parameter must be pressure, demand or node_quality')
+                'Parameter must be pressure, demand, node_quality or custom_data.')
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
@@ -487,16 +494,19 @@ class ScenarioVisualizer:
             for frame in range(*rng):
                 if frame > values.shape[0] - 1:
                     break
-                self.junction_parameters.add_frame(statistic, values, frame, intervals, self.scada_data.sensor_config.nodes)
+                # TODO same, what if scada data is np array, do I have to use all_junctions with sensor config or can I use node_list?
+                self.junction_parameters.add_frame(statistic, values, frame, intervals, all_junctions)
         else:
-            self.junction_parameters.add_frame(statistic, values, pit, intervals, self.scada_data.sensor_config.nodes)
+            # TODO: what do I do here if scada data is a numpy array? (custom data)
+            self.junction_parameters.add_frame(statistic, values, pit, intervals, all_junctions)
 
         if show_colorbar:
             if statistic == 'time_step':
                 label = str(parameter).capitalize() + ' at timestep ' + str(
                     pit)
             else:
-                label = str(statistic).capitalize() + ' ' + str(parameter)
+                # TODO: replace auf andere Funktionen übertragen
+                label = str(statistic).capitalize() + ' ' + str(parameter).replace('_', ' ')
             self.colorbars['junctions'] = {'mappable': plt.cm.ScalarMappable(
                 norm=mpl.colors.Normalize(
                     vmin=self.junction_parameters.vmin,
@@ -557,7 +567,8 @@ class ScenarioVisualizer:
             incorrectly provided for the 'time_step' statistic.
 
         """
-        if scada_data:
+        # TODO: hier und bei resize links EdgeObject für custom data anpassen
+        if scada_data is not None:
             self.scada_data = scada_data
         elif not self.scada_data:
             self.scada_data = self.__scenario.run_simulation()
@@ -647,10 +658,13 @@ class ScenarioVisualizer:
 
         self.pump_parameters.cmap = colormap
 
-        if scada_data:
+        if scada_data is not None:
             self.scada_data = scada_data
+            if isinstance(scada_data, ScadaData):
+                all_pumps = self.scada_data.sensor_config.pumps
         elif not self.scada_data:
             self.scada_data = self.__scenario.run_simulation()
+            all_pumps = self.scada_data.sensor_config.pumps
 
         if parameter == 'efficiency':
             values = self.scada_data.pumps_efficiency_data_raw
@@ -658,9 +672,12 @@ class ScenarioVisualizer:
             values = self.scada_data.pumps_energyconsumption_data_raw
         elif parameter == 'state':
             values = self.scada_data.pumps_state_data_raw
+        elif parameter == 'custom_data':
+            values = self.scada_data
+            all_pumps = self.topology.get_all_pumps()
         else:
             raise ValueError(
-                'Parameter must be efficiency, energy_consumption or state')
+                'Parameter must be efficiency, energy_consumption, state or custom_data')
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
@@ -670,10 +687,9 @@ class ScenarioVisualizer:
             for frame in range(*rng):
                 if frame > values.shape[0] - 1:
                     break
-                self.pump_parameters.add_frame(statistic, values, frame, intervals, self.scada_data.sensor_config.pumps)
+                self.pump_parameters.add_frame(statistic, values, frame, intervals, all_pumps)
         else:
-            self.pump_parameters.add_frame(statistic, values, pit, intervals,
-                                           self.scada_data.sensor_config.pumps)
+            self.pump_parameters.add_frame(statistic, values, pit, intervals, all_pumps)
 
         if show_colorbar:
             if statistic == 'time_step':
@@ -735,12 +751,21 @@ class ScenarioVisualizer:
         """
         self.tank_parameters.cmap = colormap
 
-        if scada_data:
+        if scada_data is not None:
             self.scada_data = scada_data
+            if isinstance(scada_data, ScadaData):
+                all_tanks = self.scada_data.sensor_config.tanks
         elif not self.scada_data:
             self.scada_data = self.__scenario.run_simulation()
+            all_tanks = self.scada_data.sensor_config.tanks
 
-        values = self.scada_data.tanks_volume_data_raw
+        # TODO: tanks hat ja gar keinen Parameter, den ich auf custom data checken könnte
+
+        if isinstance(self.scada_data, ScadaData):
+            values = self.scada_data.tanks_volume_data_raw
+        else:
+            values = self.scada_data
+            all_tanks = self.topology.get_all_tanks()
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
@@ -750,11 +775,12 @@ class ScenarioVisualizer:
             for frame in range(*rng):
                 if frame > values.shape[0] - 1:
                     break
-                self.tank_parameters.add_frame(statistic, values, frame, intervals, self.scada_data.sensor_config.tanks)
+                self.tank_parameters.add_frame(statistic, values, frame, intervals, all_tanks)
         else:
-            self.tank_parameters.add_frame(statistic, values, pit, intervals, self.scada_data.sensor_config.tanks)
+            self.tank_parameters.add_frame(statistic, values, pit, intervals, all_tanks)
 
         if show_colorbar:
+            # TODO: anpassen für custom data
             if statistic == 'time_step':
                 label = 'tank volume'.capitalize() + ' at timestep ' + str(pit)
             else:
@@ -812,7 +838,7 @@ class ScenarioVisualizer:
 
         self.valve_parameters.cmap = colormap
 
-        if scada_data:
+        if scada_data is not None:
             self.scada_data = scada_data
         elif not self.scada_data:
             self.scada_data = self.__scenario.run_simulation()
@@ -886,7 +912,7 @@ class ScenarioVisualizer:
             Default is `None`.
         """
 
-        if scada_data:
+        if scada_data is not None:
             self.scada_data = scada_data
         elif not self.scada_data:
             self.scada_data = self.__scenario.run_simulation()

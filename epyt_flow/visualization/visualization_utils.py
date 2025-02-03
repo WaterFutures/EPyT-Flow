@@ -6,6 +6,7 @@ import networkx.drawing.nx_pylab as nxp
 import matplotlib as mpl
 from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
+from enum import Enum
 
 from .scada.scada_data import ScadaData
 
@@ -310,29 +311,31 @@ class EdgeObject:
         return [range_map(x) for x in values]
 
 
-color_schemes = {
-    "epanet": {
+class ColorScheme(Enum):
+    EPANET = {
         "pipe_color": "#0403ee",
         "node_color": "#0403ee",
         "pump_color": "#fe00ff",
         "tank_color": "#02fffd",
         "reservoir_color": "#00ff00",
         "valve_color": "#000000",
-    },
-    "epyt_flow": {
+    }
+    EPYT_FLOW = {
         "pipe_color": "#29222f",
         "node_color": "#29222f",
         "pump_color": "#d79233",
         "tank_color": "#607b80",
         "reservoir_color": "#33483d",
         "valve_color": "#a3320b",
-    },
-    "black": {
+    }
+    BLACK = {
         "pipe_color": "#000000",
         "node_color": "#000000",
         "pump_color": "#000000",
         "tank_color": "#000000",
         "reservoir_color": "#000000",
         "valve_color": "#000000",
-    },
-}
+    }
+
+    def get_color_values(self):
+        return self.value
