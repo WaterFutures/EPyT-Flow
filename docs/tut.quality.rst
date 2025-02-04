@@ -100,8 +100,9 @@ Different types of source patterns are supported:
 +--------------+------------------------------------------------------------+
 
 
-Furthermore, reaction options such as bulk and wall coefficients might be set as well by 
-either setting the options in the .inp file or by calling the corresponding EPANET functions.
+Furthermore, initial node concentrations, and reaction options such as bulk and wall coefficients
+can be set as well by either setting the options in the .inp file or by calling
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_quality_parameters`.
 
 Example of running a chemical analysis where the concentration at the reservoir
 is fixed over time.

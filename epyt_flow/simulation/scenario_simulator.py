@@ -3146,6 +3146,212 @@ class ScenarioSimulator():
         self.epanet_api.setNodeSourceQuality(node_idx, source_strength)
         self.epanet_api.setNodeSourcePatternIndex(node_idx, pattern_idx)
 
+    def set_initial_node_quality(self, node_id: str, initial_quality: float) -> None:
+        """
+        Specifies the initial quality at a given node.
+        Quality represents concentration for chemicals, hours for water age,
+        or percent for source tracing.
+
+        Parameters
+        ----------
+        node_id : `str`
+            ID of the node.
+        initial_quality : `float`
+            Initial node quality.
+        """
+        self.set_quality_parameters(initial_quality={node_id, initial_quality})
+
+    def set_quality_parameters(self, initial_quality: Optional[dict[str, float]] = None,
+                               order_wall: Optional[int] = None, order_tank: Optional[int] = None,
+                               order_bulk: Optional[int] = None,
+                               global_wall_reaction_coefficient: Optional[float] = None,
+                               global_bulk_reaction_coefficient: Optional[float] = None,
+                               local_wall_reaction_coefficient: Optional[dict[str, float]] = None,
+                               local_bulk_reaction_coefficient: Optional[dict[str, float]] = None,
+                               local_tank_reaction_coefficient: Optional[dict[str, float]] = None,
+                               limiting_potential: Optional[float] = None) -> None:
+        """
+        Specifies some parameters of the EPANET quality analysis.
+        Note that those parameters are only relevant for EPANET but not for EPANET-MSX.
+
+        Parameters
+        ----------
+        initial_quality : `dict[str, float]`, optional
+            Specifies the initial quality (value in the dictionary) at nodes
+            (key in the dictionary).
+            Quality represents concentration for chemicals, hours for water age,
+            or percent for source tracing.
+
+            The default is None.
+        order_wall : `int`, optional
+            Specifies the order of reactions occurring in the bulk fluid at pipe walls.
+            Value for wall reactions must be either 0 or 1.
+            If not specified, the default reaction order is 1.0.
+
+            The default is None.
+        order_bulk : `int`, optional
+            Specifies the order of reactions occurring in the bulk fluid in tanks.
+            Value must be either 0 or 1.
+            If not specified, the default reaction order is 1.0.
+
+            The default is None.
+        global_wall_reaction_coefficient : `float`, optional
+            Specifies the global value for all pipe wall reaction coefficients (pipes and tanks).
+            If not specified, the default value is zero.
+
+            The default is None.
+        global_bulk_reaction_coefficient : `float`, optional
+            Specifies the global value for all bulk reaction coefficients (pipes and tanks).
+            If not specified, the default value is zero.
+
+            The default is None.
+        local_wall_reaction_coefficient : `dict[str, float]`, optional
+            Overrides the global reaction coefficients for specific pipes (key in dictionary).
+
+            The default is None.
+        local_bulk_reaction_coefficient : `dict[str, float]`, optional
+            Overrides the global reaction coefficients for specific pipes (key in dictionary).
+
+            The default is None.
+        local_tank_reaction_coefficient : `dict[str, float]`, optional
+            Overrides the global reaction coefficients for specific tanks (key in dictionary).
+
+            The default is None.
+        limiting_potential : `float`, optional
+            Specifies that reaction rates are proportional to the difference between the
+            current concentration and some (specified) limiting potential value.
+
+            The default is None.
+        """
+        if initial_quality is not None:
+            if not isinstance(initial_quality, dict):
+                raise TypeError("'initial_quality' must be an instance of 'dict[str, float]' " +
+                                f"but not of '{type(initial_quality)}'")
+            if any(not isinstance(key, str) or not isinstance(value, float)
+                   for key, value in initial_quality):
+                raise TypeError("'initial_quality' must be an instance of 'dict[str, float]'")
+            for node_id, node_init_qual in initial_quality:
+                if node_id not in self._sensor_config.nodes:
+                    raise ValueError(f"Invalid node ID '{node_id}'")
+                if node_init_qual < 0:
+                    raise ValueError(f"{node_id}: Initial node quality can not be negative")
+
+            init_qual = self.epanet_api.getNodeInitialQuality()
+            for node_id, node_init_qual in initial_quality:
+                node_idx = self.epanet_api.getNodeIndex(node_id) - 1
+                init_qual[node_idx] = node_init_qual
+
+            self.epanet_api.setNodeInitialQuality(init_qual)
+
+        if order_wall is not None:
+            if not isinstance(order_wall, int):
+                raise TypeError("'order_wall' must be an instance of 'int' " +
+                                f"but not of '{type(order_wall)}'")
+            if order_wall not in [0, 1]:
+                raise ValueError(f"Invalid value '{order_wall}' for order_wall")
+
+            self.epanet_api.setOptionsPipeWallReactionOrder(order_wall)
+
+        if order_bulk is not None:
+            if not isinstance(order_bulk, int):
+                raise TypeError("'order_bulk' must be an instance of 'int' " +
+                                f"but not of '{type(order_bulk)}'")
+            if order_bulk not in [0, 1]:
+                raise ValueError(f"Invalid value '{order_bulk}' for order_bulk")
+
+            self.epanet_api.setOptionsPipeBulkReactionOrder(order_bulk)
+
+        if order_tank is not None:
+            if not isinstance(order_tank, int):
+                raise TypeError("'order_tank' must be an instance of 'int' " +
+                                f"but not of '{type(order_tank)}'")
+            if order_tank not in [0, 1]:
+                raise ValueError(f"Invalid value '{order_tank}' for order_wall")
+
+            self.epanet_api.setOptionsTankBulkReactionOrder(order_tank)
+
+        if global_wall_reaction_coefficient is not None:
+            if not isinstance(global_wall_reaction_coefficient, float):
+                raise TypeError("'global_wall_reaction_coefficient' must be an instance of " +
+                                f"'float' but not of '{type(global_wall_reaction_coefficient)}'")
+
+            wall_reaction_coeff = self.epanet_api.getLinkWallReactionCoeff()
+            for i in range(len(wall_reaction_coeff)):
+                wall_reaction_coeff[i] = global_wall_reaction_coefficient
+
+            self.epanet_api.setLinkWallReactionCoeff(wall_reaction_coeff)
+
+        if global_bulk_reaction_coefficient is not None:
+            if not isinstance(global_bulk_reaction_coefficient, float):
+                raise TypeError("'global_bulk_reaction_coefficient' must be an instance of " +
+                                f"'float' but not of '{type(global_bulk_reaction_coefficient)}'")
+
+            bulk_reaction_coeff = self.epanet_api.getLinkBulkReactionCoeff()
+            for i in range(len(bulk_reaction_coeff)):
+                bulk_reaction_coeff[i] = global_bulk_reaction_coefficient
+
+            self.epanet_api.setLinkBulkReactionCoeff(bulk_reaction_coeff)
+
+        if local_wall_reaction_coefficient is not None:
+            if not isinstance(local_wall_reaction_coefficient, dict):
+                raise TypeError("'local_wall_reaction_coefficient' must be an instance " +
+                                "of 'dict[str, float]' but not of " +
+                                f"'{type(local_wall_reaction_coefficient)}'")
+            if any(not isinstance(key, str) or not isinstance(value, float)
+                   for key, value in local_wall_reaction_coefficient):
+                raise TypeError("'local_wall_reaction_coefficient' must be an instance " +
+                                "of 'dict[str, float]'")
+            for link_id, _ in local_wall_reaction_coefficient:
+                if link_id not in self._sensor_config.links:
+                    raise ValueError(f"Invalid link ID '{link_id}'")
+
+            for link_id, link_reaction_coeff in local_wall_reaction_coefficient:
+                link_idx = self.epanet_api.getLinkIndex(link_id)
+                self.epanet_api.setLinkWallReactionCoeff(link_idx, link_reaction_coeff)
+
+        if local_bulk_reaction_coefficient is not None:
+            if not isinstance(local_bulk_reaction_coefficient, dict):
+                raise TypeError("'local_bulk_reaction_coefficient' must be an instance " +
+                                "of 'dict[str, float]' but not of " +
+                                f"'{type(local_bulk_reaction_coefficient)}'")
+            if any(not isinstance(key, str) or not isinstance(value, float)
+                   for key, value in local_bulk_reaction_coefficient):
+                raise TypeError("'local_bulk_reaction_coefficient' must be an instance " +
+                                "of 'dict[str, float]'")
+            for link_id, _ in local_bulk_reaction_coefficient:
+                if link_id not in self._sensor_config.links:
+                    raise ValueError(f"Invalid link ID '{link_id}'")
+
+            for link_id, link_reaction_coeff in local_bulk_reaction_coefficient:
+                link_idx = self.epanet_api.getLinkIndex(link_id)
+                self.epanet_api.setLinkBulkReactionCoeff(link_idx, link_reaction_coeff)
+
+        if local_tank_reaction_coefficient is not None:
+            if not isinstance(local_tank_reaction_coefficient, dict):
+                raise TypeError("'local_tank_reaction_coefficient' must be an instance " +
+                                "of 'dict[str, float]' but not of " +
+                                f"'{type(local_tank_reaction_coefficient)}'")
+            if any(not isinstance(key, str) or not isinstance(value, float)
+                   for key, value in local_tank_reaction_coefficient):
+                raise TypeError("'local_tank_reaction_coefficient' must be an instance " +
+                                "of 'dict[str, float]'")
+            for tank_id, _ in local_tank_reaction_coefficient:
+                if tank_id not in self._sensor_config.tanks:
+                    raise ValueError(f"Invalid tank ID '{tank_id}'")
+
+            for tank_id, tank_reaction_coeff in local_tank_reaction_coefficient:
+                tank_idx = self.epanet_api.getNodeTankIndex(tank_id)
+                self.epanet_api.setNodeTankBulkReactionCoeff(tank_idx, tank_reaction_coeff)
+
+        if limiting_potential is not None:
+            if not isinstance(limiting_potential, float):
+                raise TypeError("'limiting_potential' must be an instance of 'float' " +
+                                f"but not of '{type(limiting_potential)}'")
+            if limiting_potential < 0:
+                raise ValueError("'limiting_potential' can not be negative")
+
+            self.epanet_api.setOptionsLimitingConcentration(limiting_potential)
+
     def enable_sourcetracing_analysis(self, trace_node_id: str) -> None:
         """
         Set source tracing analysis -- i.e. tracks the percentage of flow from a given node
