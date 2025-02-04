@@ -8,7 +8,13 @@ from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
 from enum import Enum
 
-from .scada.scada_data import ScadaData
+from epyt_flow.simulation.scada.scada_data import ScadaData
+
+stat_funcs = {
+        'mean': np.mean,
+        'min': np.min,
+        'max': np.max
+    }
 
 
 @dataclass
@@ -21,15 +27,10 @@ class JunctionObject:
 
     def add_frame(self, statistic: str, values: np.ndarray,
                                 pit: Union[int, Tuple[int]],
-                                intervals: Union[int, List[Union[int, float]]],
-                                all_junctions: List[str]):
+                                intervals: Union[int, List[Union[int, float]]]):
 
-        if statistic == 'mean':
-            stat_values = np.mean(values, axis=0)
-        elif statistic == 'min':
-            stat_values = np.min(values, axis=0)
-        elif statistic == 'max':
-            stat_values = np.max(values, axis=0)
+        if statistic in stat_funcs:
+            stat_values = stat_funcs[statistic](values, axis=0)
         elif statistic == 'time_step':
             if not pit and pit != 0:
                 raise ValueError(
@@ -53,8 +54,8 @@ class JunctionObject:
                 'Intervals must be either number of groups or list of interval'
                 ' boundary points')
 
-        value_dict = dict(zip(all_junctions, stat_values))
-        sorted_values = [value_dict[x] for x in self.nodelist]
+        # TODO self.nodelist oder sensor config nodes?? Je nachdem ob es eine sensor_config gibt?
+        sorted_values = [v for _, v in zip(self.nodelist, stat_values)]
 
         if isinstance(self.node_color, str):
             # First run of this method
@@ -138,7 +139,7 @@ class EdgeObject:
 
         if edge_param == 'edge_width' and not hasattr(self, 'width'):
             self.width = []
-        else:
+        elif edge_param == 'edge_color':
             if isinstance(self.edge_color, str):
                 self.edge_color = []
                 self.edge_vmin = float('inf')
@@ -148,6 +149,8 @@ class EdgeObject:
             values = scada_data.flow_data_raw
         elif parameter == 'link_quality':
             values = scada_data.link_quality_data_raw
+        elif parameter == 'custom_data':
+            values = scada_data
         elif parameter == 'diameter':
             value_dict = {
                 link[0]: topology.get_link_info(link[0])['diameter'] for
@@ -166,12 +169,8 @@ class EdgeObject:
         else:
             raise ValueError('Parameter must be flow_rate or link_quality')
 
-        if statistic == 'mean':
-            stat_values = np.mean(values, axis=0)
-        elif statistic == 'min':
-            stat_values = np.min(values, axis=0)
-        elif statistic == 'max':
-            stat_values = np.max(values, axis=0)
+        if statistic in stat_funcs:
+            stat_values = stat_funcs[statistic](values, axis=0)
         elif statistic == 'time_step':
             if not pit and pit != 0:
                 raise ValueError(
@@ -195,9 +194,7 @@ class EdgeObject:
                 'Intervals must be either number of groups or list of interval'
                 ' boundary points')
 
-        value_dict = dict(zip(scada_data.sensor_config.links,
-                              stat_values))
-        sorted_values = [value_dict[x[0]] for x in topology.get_all_links()]
+        sorted_values = list(stat_values)
 
         if edge_param == 'edge_width':
             self.width.append(sorted_values)
