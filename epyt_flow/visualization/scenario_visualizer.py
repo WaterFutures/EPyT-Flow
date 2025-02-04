@@ -239,6 +239,7 @@ class ScenarioVisualizer:
             The current frame number used to retrieve the data corresponding to
             that frame
         """
+        plt.clf()
         self.ax = self.fig.add_subplot(111)
         self.ax.axis('off')
 
