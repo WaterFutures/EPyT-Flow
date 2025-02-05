@@ -173,10 +173,7 @@ class ScenarioVisualizer:
         self.pos_dict = {x: self.topology.get_node_info(x)['coord'] for x in
                          self.topology.get_all_nodes()}
 
-        if isinstance(color_scheme, dict):
-            self.color_scheme = color_scheme
-        else:
-            self.color_scheme = color_scheme.get_color_values()
+        self.color_scheme = color_scheme
 
         self.pipe_parameters = EdgeObject([x[1] for x in self.topology.get_all_links()], self.color_scheme['pipe_color'])
         self.junction_parameters = JunctionObject(self.topology.get_all_junctions(), node_color=self.color_scheme['node_color'])

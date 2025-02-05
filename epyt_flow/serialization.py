@@ -52,6 +52,7 @@ SIMPLE_CONTROL_ID                       = 32
 COMPLEX_CONTROL_ID                      = 33
 COMPLEX_CONTROL_CONDITION_ID            = 34
 COMPLEX_CONTROL_ACTION_ID               = 35
+COLOR_SCHEMES_ID                        = 36
 
 
 def my_packb(data: Any) -> bytes:

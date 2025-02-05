@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from enum import Enum
 
 from epyt_flow.simulation.scada.scada_data import ScadaData
+from ..serialization import COLOR_SCHEMES_ID, JsonSerializable, serializable
 
 stat_funcs = {
         'mean': np.mean,
@@ -308,7 +309,8 @@ class EdgeObject:
         return [range_map(x) for x in values]
 
 
-class ColorScheme(Enum):
+@serializable(COLOR_SCHEMES_ID, ".epyt_flow_color_schemes")
+class ColorScheme(JsonSerializable):
     EPANET = {
         "pipe_color": "#0403ee",
         "node_color": "#0403ee",
@@ -334,5 +336,12 @@ class ColorScheme(Enum):
         "valve_color": "#000000",
     }
 
-    def get_color_values(self):
-        return self.value
+    def __init__(self):
+        super().__init__()
+
+    def get_attributes(self):
+        attr = {
+            k: v for k, v in self.__class__.__dict__.items()
+            if not k.startswith("__") and not callable(v)
+        }
+        return super().get_attributes() | attr
