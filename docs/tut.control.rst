@@ -11,6 +11,20 @@ Note that those custom control modules can go beyond IF-THEN-ELSE controls as su
 by EPANET -- i.e. arbitrary control logic can be implemented by the user, incl. AI-based controls
 where for instance a neural network is utlized to make control decisions.
 
+.. note::
+
+    We recommend checking out `EPyT-Control <https://github.com/WaterFutures/EPyT-Control>`_, if you
+    are interested in developing and benchmarking (data-driven) control algorithms such as
+    classic control or reinforcement learning.
+
+    EPyT-Control is a Python package building on top of
+    `EPyT-Flow <https://github.com/WaterFutures/EPyT-Flow>`_ for implementing and evaluating control
+    algorithms & strategies in water distribution networks (WDN).
+    A special focus of EPyT-Control Python package is Reinforcement Learning for data-driven control
+    in WDNs and therefore it provides full compatibility with the
+    `Stable-Baselines3 <https://stable-baselines3.readthedocs.io/en/master/>`_ package.
+
+
 .. _simple_controls:
 
 Simple EPANET Control Rules
