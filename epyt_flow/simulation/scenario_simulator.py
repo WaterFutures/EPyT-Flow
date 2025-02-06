@@ -3380,6 +3380,8 @@ class ScenarioSimulator():
         """
         Adds a new external (bulk or surface) species injection source at a particular node.
 
+        Only for EPANET-MSX scenarios.
+
         Parameters
         ----------
         species_id : `str`
@@ -3435,3 +3437,81 @@ class ScenarioSimulator():
         self.epanet_api.addMSXPattern(pattern_id, pattern)
         self.epanet_api.setMSXSources(node_id, species_id, source_type_, source_strength,
                                       pattern_id)
+
+    def set_bulk_species_node_initial_concentrations(self,
+                                                     inital_conc: dict[str, list[tuple[str, float]]]
+                                                     ) -> None:
+        """
+        Species the initial bulk species concentration at nodes.
+
+        Only for EPANET-MSX scenarios.
+
+        Parameters
+        ----------
+        inital_conc : `dict[str, list[tuple[str, float]]]`
+            Initial concentration of species (key) at nodes -- i.e.
+            value: list of node ID and initial concentration.
+        """
+        if not isinstance(inital_conc, dict) or \
+                any(not isinstance(species_id, str) or not isinstance(node_initial_conc, list)
+                    for species_id, node_initial_conc in inital_conc.items()) or \
+                any(not isinstance(node_initial_conc, tuple)
+                    for node_initial_conc in inital_conc.values()) or \
+                any(not isinstance(node_id, str) or not isinstance(conc, float)
+                    for node_id, conc in inital_conc.values()):
+            raise TypeError("'inital_conc' must be an instance of " +
+                            "'dict[str, list[tuple[str, float]]'")
+        if any(species_id not in self.sensor_config.bulk_species
+               for species_id in inital_conc.keys()):
+            raise ValueError("Unknown bulk species in 'inital_conc'")
+        if any(node_id not in self.sensor_config.nodes for node_id, _ in inital_conc.values()):
+            raise ValueError("Unknown node ID in 'inital_conc'")
+        if any(conc < 0 for _, conc in inital_conc.values()):
+            raise ValueError("Initial node concentration can not be negative")
+
+        for species_id, node_initial_conc in inital_conc.items():
+            species_idx, = self.epanet_api.getMSXSpeciesIndex([species_id])
+
+            for node_id, initial_conc in node_initial_conc:
+                node_idx = self.epanet_api.getNodeIndex(node_id)
+                self.epanet_api.msx.MSXsetinitqual(ToolkitConstants.MSX_NODE, node_idx, species_idx,
+                                                   initial_conc)
+
+    def set_species_link_initial_concentrations(self,
+                                                inital_conc: dict[str, list[tuple[str, float]]]
+                                                ) -> None:
+        """
+        Species the initial (bulk or surface) species concentration at links.
+
+        Only for EPANET-MSX scenarios.
+
+        Parameters
+        ----------
+        inital_conc : `dict[str, list[tuple[str, float]]]`
+            Initial concentration of species (key) at links -- i.e.
+            value: list of link ID and initial concentration.
+        """
+        if not isinstance(inital_conc, dict) or \
+                any(not isinstance(species_id, str) or not isinstance(link_initial_conc, list)
+                    for species_id, link_initial_conc in inital_conc.items()) or \
+                any(not isinstance(link_initial_conc, tuple)
+                    for link_initial_conc in inital_conc.values()) or \
+                any(not isinstance(link_id, str) or not isinstance(conc, float)
+                    for link_id, conc in inital_conc.values()):
+            raise TypeError("'inital_conc' must be an instance of " +
+                            "'dict[str, list[tuple[str, float]]'")
+        if any(species_id not in self.sensor_config.bulk_species
+               for species_id in inital_conc.keys()):
+            raise ValueError("Unknown bulk species in 'inital_conc'")
+        if any(link_id not in self.sensor_config.links for link_id, _ in inital_conc.values()):
+            raise ValueError("Unknown link ID in 'inital_conc'")
+        if any(conc < 0 for _, conc in inital_conc.values()):
+            raise ValueError("Initial link concentration can not be negative")
+
+        for species_id, link_initial_conc in inital_conc.items():
+            species_idx, = self.epanet_api.getMSXSpeciesIndex([species_id])
+
+            for link_id, initial_conc in link_initial_conc:
+                link_idx = self.epanet_api.getLinkIndex(link_id)
+                self.epanet_api.msx.MSXsetinitqual(ToolkitConstants.MSX_LINK, link_idx, species_idx,
+                                                   initial_conc)

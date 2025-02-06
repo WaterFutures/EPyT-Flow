@@ -160,6 +160,14 @@ The adavanced quality analysis requires an additional .msx file (`f_msx_in`) whe
 The .msx file contains the specifications of different species as well as their reaction dynamics.
 By passing an .msx file to `f_msx_in`, EPANET-MSX is loaded and initialized automatically.
 
+Specifying an injection of an existing species can be done by calling the function
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_species_injection_source`.
+In addition, note that :ref:`injection events <msx_events>` are also implemented.
+
+Specifying the initial concentration of bulk and surface species can be done by calling the functions 
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_bulk_species_node_initial_concentrations` and
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_species_link_initial_concentrations`
+
 When running the simulation by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.run_simulation`, first the
 hydraulics for the entire duration are simulated, and then the quality dynamics
