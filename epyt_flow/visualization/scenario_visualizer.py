@@ -258,8 +258,10 @@ class ScenarioVisualizer:
             ax=self.ax, label='Pumps', **self.pump_parameters.get_frame(frame_number))
 
         self.__draw_labels()
-
         self.ax.legend(fontsize=6)
+
+        for colorbar_stats in self.colorbars.values():
+            self.fig.colorbar(ax=self.ax, **colorbar_stats)
 
     def __interpolate_frames(self, num_inter_frames):
 
@@ -300,17 +302,17 @@ class ScenarioVisualizer:
             components = ['nodes']
 
         component_mapping = {
-            "nodes": self.junction_parameters,
-            "tanks": self.tank_parameters,
-            "reservoirs": self.reservoir_parameters,
-            "valves": self.valve_parameters,
-            "pumps": self.pump_parameters
+            'nodes': self.junction_parameters,
+            'tanks': self.tank_parameters,
+            'reservoirs': self.reservoir_parameters,
+            'valves': self.valve_parameters,
+            'pumps': self.pump_parameters
         }
 
         for component, parameters in component_mapping.items():
             if component in components:
                 labels = {n: str(n) for n in parameters.nodelist if sc_nodes is None or n in sc_nodes}
-                self.labels[component] = {"pos": parameters.pos, 'labels': labels, 'font_size': font_size}
+                self.labels[component] = {'pos': parameters.pos, 'labels': labels, 'font_size': font_size}
                 if component in ['pumps', 'valves']:
                     self.labels[component]['verticalalignment'] = 'bottom'
         if 'pipes' in components:
@@ -391,33 +393,8 @@ class ScenarioVisualizer:
             Default is `None`.
 
         """
-        # TODO: can I call get frame here?
-
         self.fig = plt.figure(figsize=(6.4, 4.8), dpi=200)
-        self.ax = self.fig.add_subplot(111)
-        self.ax.axis('off')
-
-        nxp.draw_networkx_edges(self.topology, ax=self.ax,
-                                label='Pipes', **self.pipe_parameters.get_frame())
-        nxp.draw_networkx_nodes(self.topology, ax=self.ax,
-                                label='Junctions', **self.junction_parameters.get_frame())
-        nxp.draw_networkx_nodes(self.topology, ax=self.ax,
-                                label='Tanks', **self.tank_parameters.get_frame())
-        nxp.draw_networkx_nodes(self.topology, ax=self.ax,
-                                label='Reservoirs',
-                                **self.reservoir_parameters.get_frame())
-        nxp.draw_networkx_nodes(
-            self.topology, ax=self.ax,
-            label='Valves', **self.valve_parameters.get_frame())
-        nxp.draw_networkx_nodes(
-            self.topology,
-            ax=self.ax, label='Pumps', **self.pump_parameters.get_frame())
-        self.ax.legend(fontsize=6)
-
-        self.__draw_labels()
-
-        for colorbar_stats in self.colorbars.values():
-            self.fig.colorbar(ax=self.ax, **colorbar_stats)
+        self.__get_next_frame(0)
 
         if export_to_file is not None:
             plt.savefig(export_to_file, transparent=True, bbox_inches='tight',
@@ -773,10 +750,10 @@ class ScenarioVisualizer:
 
         if isinstance(self.scada_data, ScadaData):
             values = self.scada_data.tanks_volume_data_raw
-            parameter = "tank volume"
+            parameter = 'tank volume'
         else:
             values = self.scada_data
-            parameter = "custom data"
+            parameter = 'custom data'
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
@@ -855,10 +832,10 @@ class ScenarioVisualizer:
 
         if isinstance(self.scada_data, ScadaData):
             values = self.scada_data.valves_state_data_raw
-            parameter = "valve state"
+            parameter = 'valve state'
         else:
             values = self.scada_data
-            parameter = "custom data"
+            parameter = 'custom data'
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
@@ -875,7 +852,7 @@ class ScenarioVisualizer:
 
         if show_colorbar:
             if statistic == 'time_step':
-                label = 'valve state'.capitalize() + ' at timestep ' + str(pit)
+                label = parameter.capitalize() + ' at timestep ' + str(pit)
             else:
                 label = str(statistic).capitalize() + ' ' + 'valve state'
             self.colorbars['valves'] = {'mappable': plt.cm.ScalarMappable(
