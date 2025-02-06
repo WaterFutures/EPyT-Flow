@@ -19,6 +19,7 @@ stat_funcs = {
 @dataclass
 class JunctionObject:
     nodelist: list
+    pos: dict
     node_shape: mpl.path.Path = None
     node_size: int = 10
     node_color: Union[str, list] = 'k' # list of lists with frames or single letter
@@ -115,6 +116,7 @@ class JunctionObject:
 @dataclass
 class EdgeObject:
     edgelist: list
+    pos: dict
     edge_color: Union[str, list] = 'k' # list of lists with frames or single letter
     interpolated = {}
 

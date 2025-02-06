@@ -170,17 +170,18 @@ class ScenarioVisualizer:
         self.scada_data = None
         markers = Marker()
         self.topology = self.__scenario.get_topology()
-        self.pos_dict = {x: self.topology.get_node_info(x)['coord'] for x in
+
+        pos_dict = {x: self.topology.get_node_info(x)['coord'] for x in
                          self.topology.get_all_nodes()}
 
         self.color_scheme = color_scheme
 
-        self.pipe_parameters = EdgeObject([x[1] for x in self.topology.get_all_links()], self.color_scheme['pipe_color'])
-        self.junction_parameters = JunctionObject(self.topology.get_all_junctions(), node_color=self.color_scheme['node_color'])
-        self.tank_parameters = JunctionObject(self.topology.get_all_tanks(), node_size=100, node_shape=markers.tank, node_color=self.color_scheme['tank_color'])
-        self.reservoir_parameters = JunctionObject(self.topology.get_all_reservoirs(), node_size=100, node_shape=markers.reservoir, node_color=self.color_scheme['reservoir_color'])
-        self.valve_parameters = JunctionObject(self.topology.get_all_valves(), node_size=50, node_shape=markers.valve, node_color=self.color_scheme['valve_color'])
-        self.pump_parameters = JunctionObject(self.topology.get_all_pumps(), node_size=50, node_shape=markers.pump, node_color=self.color_scheme['pump_color'])
+        self.pipe_parameters = EdgeObject([x[1] for x in self.topology.get_all_links()], pos_dict, self.color_scheme['pipe_color'])
+        self.junction_parameters = JunctionObject(self.topology.get_all_junctions(), pos_dict, node_color=self.color_scheme['node_color'])
+        self.tank_parameters = JunctionObject(self.topology.get_all_tanks(), pos_dict, node_size=100, node_shape=markers.tank, node_color=self.color_scheme['tank_color'])
+        self.reservoir_parameters = JunctionObject(self.topology.get_all_reservoirs(), pos_dict, node_size=100, node_shape=markers.reservoir, node_color=self.color_scheme['reservoir_color'])
+        self.valve_parameters = JunctionObject(self.topology.get_all_valves(), self.__get_midpoints(self.topology.get_all_valves()), node_size=50, node_shape=markers.valve, node_color=self.color_scheme['valve_color'])
+        self.pump_parameters = JunctionObject(self.topology.get_all_pumps(), self.__get_midpoints(self.topology.get_all_pumps()), node_size=50, node_shape=markers.pump, node_color=self.color_scheme['pump_color'])
 
         self.colorbars = {}
         self.labels = {}
@@ -240,21 +241,20 @@ class ScenarioVisualizer:
         self.ax = self.fig.add_subplot(111)
         self.ax.axis('off')
 
-        nxp.draw_networkx_edges(self.topology, self.pos_dict, ax=self.ax,
+        nxp.draw_networkx_edges(self.topology, ax=self.ax,
                                 label='Pipes', **self.pipe_parameters.get_frame(frame_number))
-        nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
+        nxp.draw_networkx_nodes(self.topology, ax=self.ax,
                                 label='Junctions', **self.junction_parameters.get_frame(frame_number))
-        nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
+        nxp.draw_networkx_nodes(self.topology, ax=self.ax,
                                 label='Tanks', **self.tank_parameters.get_frame(frame_number))
-        nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
+        nxp.draw_networkx_nodes(self.topology, ax=self.ax,
                                 label='Reservoirs',
                                 **self.reservoir_parameters.get_frame(frame_number))
         nxp.draw_networkx_nodes(
-            self.topology,
-            self.__get_midpoints(self.topology.get_all_valves()), ax=self.ax,
+            self.topology, ax=self.ax,
             label='Valves', **self.valve_parameters.get_frame(frame_number))
         nxp.draw_networkx_nodes(
-            self.topology, self.__get_midpoints(self.topology.get_all_pumps()),
+            self.topology,
             ax=self.ax, label='Pumps', **self.pump_parameters.get_frame(frame_number))
 
         self.__draw_labels()
@@ -299,42 +299,23 @@ class ScenarioVisualizer:
         elif len(components) == 0:
             components = ['nodes']
 
-        if 'nodes' in components:
-            labels = {}
-            for n in self.junction_parameters.nodelist:
-                if sc_nodes is None or (n in sc_nodes):
-                    labels[n] = str(n)
-            self.labels['nodes'] = {'pos': self.pos_dict, 'labels': labels, 'font_size': font_size}
-        if 'tanks' in components:
-            labels = {}
-            for n in self.tank_parameters.nodelist:
-                if sc_nodes is None or (n in sc_nodes):
-                    labels[n] = str(n)
-            self.labels['tanks'] = {'pos': self.pos_dict, 'labels': labels, 'font_size': font_size}
-        if 'reservoirs' in components:
-            labels = {}
-            for n in self.reservoir_parameters.nodelist:
-                if sc_nodes is None or (n in sc_nodes):
-                    labels[n] = str(n)
-            self.labels['reservoirs'] = {'pos': self.pos_dict, 'labels': labels, 'font_size': font_size}
+        component_mapping = {
+            "nodes": self.junction_parameters,
+            "tanks": self.tank_parameters,
+            "reservoirs": self.reservoir_parameters,
+            "valves": self.valve_parameters,
+            "pumps": self.pump_parameters
+        }
+
+        for component, parameters in component_mapping.items():
+            if component in components:
+                labels = {n: str(n) for n in parameters.nodelist if sc_nodes is None or n in sc_nodes}
+                self.labels[component] = {"pos": parameters.pos, 'labels': labels, 'font_size': font_size}
+                if component in ['pumps', 'valves']:
+                    self.labels[component]['verticalalignment'] = 'bottom'
         if 'pipes' in components:
-            labels = {}
-            for n in self.topology.get_all_links():
-                if sc_links is None or (n[0] in sc_links):
-                    labels[tuple(n[1])] = n[0]
-            self.labels['pipes'] = {'pos': self.pos_dict, 'edge_labels': labels, 'font_size': font_size}
-        if 'valves' in components:
-            labels = {}
-            for n in self.valve_parameters.nodelist:
-                if sc_nodes is None or (n in sc_nodes):
-                    labels[n] = str(n)
-            self.labels['valves'] = {'pos': self.__get_midpoints(self.topology.get_all_valves()), 'labels': labels, 'verticalalignment': 'bottom', 'font_size': font_size}
-        if 'pumps' in components:
-            labels = {}
-            for n in self.pump_parameters.nodelist:
-                if sc_nodes is None or (n in sc_nodes):
-                    labels[n] = str(n)
-            self.labels['pumps'] = {'pos': self.__get_midpoints(self.topology.get_all_pumps()), 'labels': labels, 'verticalalignment': 'bottom', 'font_size': font_size}
+            labels = {tuple(n[1]): n[0] for n in self.topology.get_all_links() if sc_links is None or n[0] in sc_links}
+            self.labels['pipes'] = {'pos': self.pipe_parameters.pos, 'edge_labels': labels, 'font_size': font_size}
 
     def show_animation(self, export_to_file: str = None,
                        return_animation: bool = False, duration: int = 5, fps=15, interpolate=True)\
@@ -410,25 +391,26 @@ class ScenarioVisualizer:
             Default is `None`.
 
         """
+        # TODO: can I call get frame here?
+
         self.fig = plt.figure(figsize=(6.4, 4.8), dpi=200)
         self.ax = self.fig.add_subplot(111)
         self.ax.axis('off')
 
-        nxp.draw_networkx_edges(self.topology, self.pos_dict, ax=self.ax,
+        nxp.draw_networkx_edges(self.topology, ax=self.ax,
                                 label='Pipes', **self.pipe_parameters.get_frame())
-        nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
+        nxp.draw_networkx_nodes(self.topology, ax=self.ax,
                                 label='Junctions', **self.junction_parameters.get_frame())
-        nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
+        nxp.draw_networkx_nodes(self.topology, ax=self.ax,
                                 label='Tanks', **self.tank_parameters.get_frame())
-        nxp.draw_networkx_nodes(self.topology, self.pos_dict, ax=self.ax,
+        nxp.draw_networkx_nodes(self.topology, ax=self.ax,
                                 label='Reservoirs',
                                 **self.reservoir_parameters.get_frame())
         nxp.draw_networkx_nodes(
-            self.topology,
-            self.__get_midpoints(self.topology.get_all_valves()), ax=self.ax,
+            self.topology, ax=self.ax,
             label='Valves', **self.valve_parameters.get_frame())
         nxp.draw_networkx_nodes(
-            self.topology, self.__get_midpoints(self.topology.get_all_pumps()),
+            self.topology,
             ax=self.ax, label='Pumps', **self.pump_parameters.get_frame())
         self.ax.legend(fontsize=6)
 
