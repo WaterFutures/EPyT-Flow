@@ -276,25 +276,65 @@ class ScenarioVisualizer:
                 continue
             nxp.draw_networkx_labels(self.topology, ax=self.ax, **v)
 
+    def __get_sensor_config_nodes_and_links(self):
+        highlighted_nodes = []
+        highlighted_links = []
+
+        sensor_config = self.__scenario.sensor_config
+        highlighted_nodes += (sensor_config.pressure_sensors
+                              + sensor_config.demand_sensors
+                              + sensor_config.quality_node_sensors)
+        highlighted_links += (sensor_config.flow_sensors
+                              + sensor_config.quality_link_sensors)
+        return highlighted_nodes, highlighted_links
+
     def add_labels(self, components: list or tuple = () or str, font_size=8):
+        sc_nodes, sc_links = None, None
         if components == 'all':
             components = ['nodes', 'tanks', 'reservoirs', 'pipes', 'valves', 'pumps']
+        elif components == 'sensor_config':
+            components = ['nodes', 'tanks', 'reservoirs', 'pipes', 'valves', 'pumps']
+            sc_nodes, sc_links = self.__get_sensor_config_nodes_and_links()
         # if list empty, do all nodes and nothing else
-        if len(components) == 0:
-            self.labels['nodes'] = {'pos': self.pos_dict, 'labels': {n: str(n) for n in self.junction_parameters.nodelist}, 'font_size': font_size}
-            return
+        elif len(components) == 0:
+            components = ['nodes']
+
         if 'nodes' in components:
-            self.labels['nodes'] = {'pos': self.pos_dict, 'labels': {n: str(n) for n in self.junction_parameters.nodelist}, 'font_size': font_size}
+            labels = {}
+            for n in self.junction_parameters.nodelist:
+                if sc_nodes is None or (n in sc_nodes):
+                    labels[n] = str(n)
+            self.labels['nodes'] = {'pos': self.pos_dict, 'labels': labels, 'font_size': font_size}
         if 'tanks' in components:
-            self.labels['tanks'] = {'pos': self.pos_dict, 'labels': {n: str(n) for n in self.tank_parameters.nodelist}, 'font_size': font_size}
+            labels = {}
+            for n in self.tank_parameters.nodelist:
+                if sc_nodes is None or (n in sc_nodes):
+                    labels[n] = str(n)
+            self.labels['tanks'] = {'pos': self.pos_dict, 'labels': labels, 'font_size': font_size}
         if 'reservoirs' in components:
-            self.labels['reservoirs'] = {'pos': self.pos_dict, 'labels': {n: str(n) for n in self.reservoir_parameters.nodelist}, 'font_size': font_size}
+            labels = {}
+            for n in self.reservoir_parameters.nodelist:
+                if sc_nodes is None or (n in sc_nodes):
+                    labels[n] = str(n)
+            self.labels['reservoirs'] = {'pos': self.pos_dict, 'labels': labels, 'font_size': font_size}
         if 'pipes' in components:
-            self.labels['pipes'] = {'pos': self.pos_dict, 'edge_labels': {tuple(n[1]): n[0] for n in self.topology.get_all_links()}, 'font_size': font_size}
+            labels = {}
+            for n in self.topology.get_all_links():
+                if sc_links is None or (n[0] in sc_links):
+                    labels[tuple(n[1])] = n[0]
+            self.labels['pipes'] = {'pos': self.pos_dict, 'edge_labels': labels, 'font_size': font_size}
         if 'valves' in components:
-            self.labels['valves'] = {'pos': self.__get_midpoints(self.topology.get_all_valves()), 'labels': {n: str(n) for n in self.valve_parameters.nodelist}, 'verticalalignment': 'bottom', 'font_size': font_size}
+            labels = {}
+            for n in self.valve_parameters.nodelist:
+                if sc_nodes is None or (n in sc_nodes):
+                    labels[n] = str(n)
+            self.labels['valves'] = {'pos': self.__get_midpoints(self.topology.get_all_valves()), 'labels': labels, 'verticalalignment': 'bottom', 'font_size': font_size}
         if 'pumps' in components:
-            self.labels['pumps'] = {'pos': self.__get_midpoints(self.topology.get_all_pumps()), 'labels': {n: str(n) for n in self.pump_parameters.nodelist}, 'verticalalignment': 'bottom', 'font_size': font_size}
+            labels = {}
+            for n in self.pump_parameters.nodelist:
+                if sc_nodes is None or (n in sc_nodes):
+                    labels[n] = str(n)
+            self.labels['pumps'] = {'pos': self.__get_midpoints(self.topology.get_all_pumps()), 'labels': labels, 'verticalalignment': 'bottom', 'font_size': font_size}
 
     def show_animation(self, export_to_file: str = None,
                        return_animation: bool = False, duration: int = 5, fps=15, interpolate=True)\
@@ -955,21 +995,13 @@ class ScenarioVisualizer:
         with an orange border, while links with sensors are displayed with a
         dashed line style.
         """
-        highlighted_nodes = []
-        highlighted_links = []
-
-        sensor_config = self.__scenario.sensor_config
-        highlighted_nodes += (sensor_config.pressure_sensors
-                              + sensor_config.demand_sensors
-                              + sensor_config.quality_node_sensors)
-        highlighted_links += (sensor_config.flow_sensors
-                              + sensor_config.quality_link_sensors)
+        highlighted_nodes, highlighted_links = self.__get_sensor_config_nodes_and_links()
 
         node_edges = [
             (17, 163, 252) if node in highlighted_nodes else (0, 0, 0) for node
             in self.topology]
-        pipe_style = ['dashed' if link in highlighted_links else 'solid' for
-                      link in self.topology]
+        pipe_style = ['dashed' if link[0] in highlighted_links else 'solid' for
+                      link in self.topology.get_all_links()]
 
         self.junction_parameters.add_attributes(
             {'linewidths': 1, 'edgecolors': node_edges})

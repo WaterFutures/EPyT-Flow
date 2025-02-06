@@ -5,8 +5,6 @@ import inspect
 import networkx.drawing.nx_pylab as nxp
 import matplotlib as mpl
 from scipy.interpolate import CubicSpline
-import matplotlib.pyplot as plt
-from enum import Enum
 
 from epyt_flow.simulation.scada.scada_data import ScadaData
 from ..serialization import COLOR_SCHEMES_ID, JsonSerializable, serializable
