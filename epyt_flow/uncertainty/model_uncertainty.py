@@ -120,15 +120,7 @@ class ModelUncertainty(JsonSerializable):
 
         Thed default is None.
     """
-    def __init__(self, pipe_length_uncertainty: Optional[Uncertainty] = None,
-                 pipe_roughness_uncertainty: Optional[Uncertainty] = None,
-                 pipe_diameter_uncertainty: Optional[Uncertainty] = None,
-                 base_demand_uncertainty: Optional[Uncertainty] = None,
-                 demand_pattern_uncertainty: Optional[Uncertainty] = None,
-                 elevation_uncertainty: Optional[Uncertainty] = None,
-                 constants_uncertainty: Optional[Uncertainty] = None,
-                 parameters_uncertainty: Optional[Uncertainty] = None,
-                 global_pipe_length_uncertainty: Optional[Uncertainty] = None,
+    def __init__(self, global_pipe_length_uncertainty: Optional[Uncertainty] = None,
                  global_pipe_roughness_uncertainty: Optional[Uncertainty] = None,
                  global_pipe_diameter_uncertainty: Optional[Uncertainty] = None,
                  global_base_demand_uncertainty: Optional[Uncertainty] = None,
@@ -148,39 +140,6 @@ class ModelUncertainty(JsonSerializable):
                  local_msx_patterns_uncertainty: Optional[dict[str, Uncertainty]] = None,
                  seed: Optional[int] = None,
                  **kwds):
-        if pipe_length_uncertainty is not None:
-            global_pipe_diameter_uncertainty = pipe_length_uncertainty
-            warnings.warn("'pipe_length_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
-        if pipe_roughness_uncertainty is not None:
-            global_pipe_roughness_uncertainty = pipe_roughness_uncertainty
-            warnings.warn("'pipe_roughness_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
-        if pipe_diameter_uncertainty is not None:
-            global_pipe_diameter_uncertainty = pipe_diameter_uncertainty
-            warnings.warn("'pipe_diameter_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
-        if base_demand_uncertainty is not None:
-            global_base_demand_uncertainty = base_demand_uncertainty
-            warnings.warn("'base_demand_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
-        if demand_pattern_uncertainty is not None:
-            global_demand_pattern_uncertainty = demand_pattern_uncertainty
-            warnings.warn("'demand_pattern_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
-        if elevation_uncertainty is not None:
-            global_elevation_uncertainty = elevation_uncertainty
-            warnings.warn("'elevation_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
-        if constants_uncertainty is not None:
-            global_constants_uncertainty = constants_uncertainty
-            warnings.warn("'constants_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
-        if parameters_uncertainty is not None:
-            global_parameters_uncertainty = parameters_uncertainty
-            warnings.warn("'parameters_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
-
         if global_pipe_length_uncertainty is not None:
             if not isinstance(global_pipe_length_uncertainty, Uncertainty):
                 raise TypeError("'global_pipe_length_uncertainty' must be an instance of " +
