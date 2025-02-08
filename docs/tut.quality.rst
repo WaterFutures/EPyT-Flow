@@ -1,20 +1,20 @@
 .. _tut.quality:
 
-*******
-Quality
-*******
+*************
+Water Quality
+*************
 
-EPyT-Flow supports :ref:`basic <basic_quality>` and :ref:`advanced <advanced_quality>` quality analysis -- the former is realized
+EPyT-Flow supports :ref:`basic <basic_quality>` and :ref:`advanced <advanced_quality>` water quality analysis -- the former is realized
 through `EPANET <https://github.com/USEPA/EPANET2.2>`__ and the latter one
 through the usage of `EPANET-MSX <https://github.com/USEPA/EPANETMSX/>`__.
 
 
 .. _basic_quality:
 
-Basic Quality Analysis
-++++++++++++++++++++++
+Basic Water Quality Analysis
+++++++++++++++++++++++++++++
 
-The basic quality analysis supports water age analysis, simple chemical analysis, 
+The basic water quality analysis supports water age analysis, simple chemical analysis, 
 and source tracing analysis.
 
 .. note::
@@ -134,10 +134,10 @@ is fixed over time.
 
 .. _advanced_quality:
 
-Advanced Quality Analysis
-+++++++++++++++++++++++++
+Advanced Water Quality Analysis
++++++++++++++++++++++++++++++++
 
-EPyT-Flow provides advanced quality analysis through
+EPyT-Flow provides advanced water quality analysis through
 `EPANET-MSX <https://github.com/OpenWaterAnalytics/epanet-msx>`_.
 
 The central concept in advanced quality analysis is the concept of a *species*.
