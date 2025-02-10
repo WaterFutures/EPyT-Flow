@@ -361,7 +361,7 @@ class ScenarioVisualizer:
 
         if total_frames == 0 or total_frames == float('inf'):
             raise RuntimeError("The color or resize functions must be called "
-                               "with a time_step range (pit) to enable "
+                               "with a time_step range (pit) > 1 to enable "
                                "animations")
 
         if interpolate:
@@ -378,7 +378,7 @@ class ScenarioVisualizer:
         plt.show()
         return None
 
-    def show_plot(self, export_to_file: str = None) -> None:
+    def show_plot(self, export_to_file: str = None, suppress_plot=False) -> None:
         """
         Displays a static plot of the water distribution network.
 
@@ -399,7 +399,8 @@ class ScenarioVisualizer:
         if export_to_file is not None:
             plt.savefig(export_to_file, transparent=True, bbox_inches='tight',
                         dpi=200)
-        plt.show()
+        if not suppress_plot:
+            plt.show()
 
     def color_nodes(
             self, data: Optional[ScadaData] = None,
@@ -580,7 +581,7 @@ class ScenarioVisualizer:
             if pit[1] == -1:
                 rng = (pit[0], sim_length)
             for frame in range(*rng):
-                if frame > sim_length - 1:
+                if frame >= sim_length:
                     break
                 self.pipe_parameters.add_frame(self.topology, 'edge_color',
                                                self.scada_data, parameter,
@@ -923,7 +924,7 @@ class ScenarioVisualizer:
             if pit[1] == -1:
                 rng = (pit[0], sim_length)
             for frame in range(*rng):
-                if frame > sim_length - 1:
+                if frame >= sim_length:
                     break
                 self.pipe_parameters.add_frame(self.topology, 'edge_width',
                                                self.scada_data, parameter,
