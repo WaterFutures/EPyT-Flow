@@ -14,7 +14,7 @@ from epyt_flow.simulation import ScenarioSimulator
 from epyt_flow.visualization import ScenarioVisualizer, ColorScheme
 
 SHOW_PLOTS = False
-print(f"NetworkX: {nx.__version__}, NumPy: {np.__version__}, Matplotlib: {mpl.__version__}")
+
 
 @pytest.fixture()
 def setup_simulator():

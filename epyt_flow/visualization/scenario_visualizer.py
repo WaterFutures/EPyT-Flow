@@ -401,6 +401,9 @@ class ScenarioVisualizer:
                         dpi=200)
         if not suppress_plot:
             plt.show()
+        else:
+            plt.close(self.fig)
+            plt.clf()
 
     def color_nodes(
             self, data: Optional[ScadaData] = None,
