@@ -5,15 +5,16 @@ if SHOW_PLOTS=True.
 
 import pytest
 import numpy as np
+import networkx as nx
+import matplotlib as mpl
 
 from epyt_flow.data.benchmarks import load_leakdb_scenarios
 from epyt_flow.data.networks import load_anytown, load_hanoi, load_micropolis, load_ctown
 from epyt_flow.simulation import ScenarioSimulator
-from epyt_flow.visualization import ScenarioVisualizer
-from epyt_flow.visualization.visualization_utils import ColorScheme
+from epyt_flow.visualization import ScenarioVisualizer, ColorScheme
 
 SHOW_PLOTS = False
-
+print(f"NetworkX: {nx.__version__}, NumPy: {np.__version__}, Matplotlib: {mpl.__version__}")
 
 @pytest.fixture()
 def setup_simulator():
@@ -94,11 +95,7 @@ def test_custom_table_animation(setup_simulator):
     custom_data_table = np.array([a * np.sin(f * t + p) for f, p, a in
                                   zip(frequencies, phases, amplitudes)]).T
 
-    # Should be timsteps * nodes
-    print(custom_data_table.shape)
-
     vis = ScenarioVisualizer(setup_simulator, color_scheme=ColorScheme.EPYT_FLOW)
-
     vis.color_links(data=custom_data_table, parameter='custom_data', statistic='time_step', pit=(0, -1))
     vis.resize_links(data=custom_data_table, parameter='custom_data', statistic='time_step', pit=(0, -1), line_widths=(1, 5))
 
@@ -142,11 +139,7 @@ def test_plot_with_custom_table(setup_simulator):
 
     custom_data_table = np.array([a * np.sin(f * t + p) for f, p, a in zip(frequencies, phases, amplitudes)]).T
 
-    # Should be timsteps * nodes
-    print(custom_data_table.shape)
-
     vis = ScenarioVisualizer(setup_simulator)
-
     vis.color_links(data=custom_data_table, parameter='custom_data', statistic='time_step', pit=(0, -1))
 
     if SHOW_PLOTS:
