@@ -112,7 +112,6 @@ class ScenarioSimulator():
         self._model_uncertainty = ModelUncertainty()
         self._sensor_noise = None
         self._sensor_config = None
-        self._advanced_controls = []
         self._custom_controls = []
         self._simple_controls = []
         self._complex_controls = []
@@ -190,9 +189,6 @@ class ScenarioSimulator():
             self._sensor_noise = scenario_config.sensor_noise
             self._sensor_config = scenario_config.sensor_config
 
-            if scenario_config.advanced_controls is not None:
-                for control in scenario_config.advanced_controls:
-                    self.add_advanced_control(control)
             for control in scenario_config.custom_controls:
                 self.add_custom_control(control)
             for control in scenario_config.simple_controls:
@@ -341,22 +337,6 @@ class ScenarioSimulator():
         sensor_config.validate(self.epanet_api)
 
         self._sensor_config = sensor_config
-
-    @property
-    def advanced_controls(self) -> list:
-        """
-        Returns all advanced control modules.
-
-        Returns
-        -------
-        list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`]
-            All advanced control modules.
-        """
-        warnings.warn("'AdvancedControlModule' is deprecated and will be removed in a " +
-                      "future release -- use 'CustomControlModule' instead")
-        self._adapt_to_network_changes()
-
-        return deepcopy(self._advanced_controls)
 
     @property
     def custom_controls(self) -> list[CustomControlModule]:
@@ -990,7 +970,6 @@ class ScenarioSimulator():
         return ScenarioConfig(f_inp_in=self.__f_inp_in, f_msx_in=self.__f_msx_in,
                               general_params=general_params, sensor_config=self.sensor_config,
                               memory_consumption_estimate=self.estimate_memory_consumption(),
-                              advanced_controls=None if len(self._advanced_controls) == 0 else self.advanced_controls,
                               custom_controls=self.custom_controls,
                               simple_controls=self.simple_controls,
                               complex_controls=self.complex_controls,
@@ -1260,25 +1239,6 @@ class ScenarioSimulator():
 
         self.epanet_api.setNodeJunctionData(node_idx, self.epanet_api.getNodeElevations(node_idx),
                                             base_demand, demand_pattern_id)
-
-    def add_advanced_control(self, control) -> None:
-        """
-        Adds an advanced control module to the scenario simulation.
-
-        Parameters
-        ----------
-        control : :class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`
-            Advanced control module.
-        """
-        self._adapt_to_network_changes()
-
-        from .scada.advanced_control import AdvancedControlModule
-        if not isinstance(control, AdvancedControlModule):
-            raise TypeError("'control' must be an instance of " +
-                            "'epyt_flow.simulation.scada.AdvancedControlModule' not of " +
-                            f"'{type(control)}'")
-
-        self._advanced_controls.append(control)
 
     def add_custom_control(self, control: CustomControlModule) -> None:
         """
@@ -1938,9 +1898,6 @@ class ScenarioSimulator():
         for event in self._system_events:
             event.reset()
 
-        if self._advanced_controls is not None:
-            for c in self._advanced_controls:
-                c.init(self.epanet_api)
         if self._custom_controls is not None:
             for control in self._custom_controls:
                 control.init(self.epanet_api)
@@ -2627,8 +2584,6 @@ class ScenarioSimulator():
                     yield data
 
                 # Apply control modules
-                for control in self._advanced_controls:
-                    control.step(scada_data)
                 for control in self._custom_controls:
                     control.step(scada_data)
 
@@ -2646,16 +2601,6 @@ class ScenarioSimulator():
         except Exception as ex:
             self.__running_simulation = False
             raise ex
-
-    def run_simulation_as_generator(self, hyd_export: str = None, verbose: bool = False,
-                                    support_abort: bool = False,
-                                    return_as_dict: bool = False,
-                                    frozen_sensor_config: bool = False,
-                                    ) -> Generator[Union[ScadaData, dict], bool, None]:
-        warnings.warn("'run_simulation_as_generator' is deprecated and will be removed in " +
-                      "future releases -- use 'run_hydraulic_simulation_as_generator' instead")
-        return self.run_hydraulic_simulation_as_generator(hyd_export, verbose, support_abort,
-                                                          return_as_dict, frozen_sensor_config)
 
     def run_simulation(self, hyd_export: str = None, verbose: bool = False,
                        frozen_sensor_config: bool = False) -> ScadaData:
