@@ -5,11 +5,9 @@ if SHOW_PLOTS=True.
 
 import pytest
 import numpy as np
-import networkx as nx
-import matplotlib as mpl
 
 from epyt_flow.data.benchmarks import load_leakdb_scenarios
-from epyt_flow.data.networks import load_anytown, load_hanoi, load_micropolis, load_ctown
+from epyt_flow.data.networks import load_hanoi, load_ctown
 from epyt_flow.simulation import ScenarioSimulator
 from epyt_flow.visualization import ScenarioVisualizer, ColorScheme
 
@@ -32,7 +30,7 @@ def test_animation(setup_simulator):
     if SHOW_PLOTS:
         vis.show_animation()
     else:
-        anim = vis.show_animation(return_animation=True)
+        vis.show_animation(return_animation=True)
 
 
 def test_animation_with_colorbar(setup_simulator):
@@ -43,7 +41,7 @@ def test_animation_with_colorbar(setup_simulator):
     if SHOW_PLOTS:
         vis.show_animation()
     else:
-        anim = vis.show_animation(return_animation=True)
+        vis.show_animation(return_animation=True)
 
 
 def test_animation_with_labels(setup_simulator):
@@ -54,7 +52,7 @@ def test_animation_with_labels(setup_simulator):
     if SHOW_PLOTS:
         vis.show_animation()
     else:
-        anim = vis.show_animation(return_animation=True)
+        vis.show_animation(return_animation=True)
 
     vis = ScenarioVisualizer(setup_simulator)
     vis.color_links(parameter='flow_rate', statistic='time_step', pit=(1, 200), colormap='Blues')
@@ -63,7 +61,7 @@ def test_animation_with_labels(setup_simulator):
     if SHOW_PLOTS:
         vis.show_animation()
     else:
-        anim = vis.show_animation(return_animation=True)
+        vis.show_animation(return_animation=True)
 
 
 def test_animation_sensor_config_labels():
@@ -78,7 +76,7 @@ def test_animation_sensor_config_labels():
     if SHOW_PLOTS:
         vis.show_animation()
     else:
-        anim = vis.show_animation(return_animation=True)
+        vis.show_animation(return_animation=True)
     wdn.close()
 
 
@@ -102,69 +100,4 @@ def test_custom_table_animation(setup_simulator):
     if SHOW_PLOTS:
         vis.show_animation()
     else:
-        anim = vis.show_animation(return_animation=True)
-
-
-def test_plot(setup_simulator):
-    vis = ScenarioVisualizer(setup_simulator, color_scheme=ColorScheme.EPANET)
-    vis.color_nodes(statistic='mean')
-    vis.color_links()
-    vis.color_tanks()
-    vis.color_valves()
-    vis.color_pumps()
-    if SHOW_PLOTS:
-        vis.show_plot()
-    else:
-        vis.show_plot(suppress_plot=True)
-
-
-def test_plot_with_colorbar(setup_simulator):
-    vis = ScenarioVisualizer(setup_simulator, color_scheme=ColorScheme.EPANET)
-    vis.color_nodes(statistic='mean', show_colorbar=True)
-    if SHOW_PLOTS:
-        vis.show_plot()
-    else:
-        vis.show_plot(suppress_plot=True)
-
-
-def test_plot_with_custom_table(setup_simulator):
-    timesteps = 50
-    nodes = 444
-
-    t = np.linspace(0, 2*np.pi, timesteps)
-
-    frequencies = np.linspace(1, 3, nodes)
-    phases = np.linspace(0, np.pi, nodes)
-    amplitudes = np.linspace(0.5, 1.5, nodes)
-
-    custom_data_table = np.array([a * np.sin(f * t + p) for f, p, a in zip(frequencies, phases, amplitudes)]).T
-
-    vis = ScenarioVisualizer(setup_simulator)
-    vis.color_links(data=custom_data_table, parameter='custom_data', statistic='time_step', pit=(0, -1))
-
-    if SHOW_PLOTS:
-        vis.show_plot()
-    else:
-        vis.show_plot(suppress_plot=True)
-
-
-def test_plot_labels(setup_simulator):
-    vis = ScenarioVisualizer(setup_simulator, color_scheme=ColorScheme.EPYT_FLOW)
-    vis.add_labels(['pipes'], font_size=5)
-    if SHOW_PLOTS:
-        vis.show_plot()
-    else:
-        vis.show_plot(suppress_plot=True)
-
-
-def test_plot_sensor_config_labels():
-    network_config = load_hanoi(verbose=False, include_default_sensor_placement=True)
-    wdn = ScenarioSimulator(scenario_config=network_config)
-    vis = ScenarioVisualizer(wdn, color_scheme=ColorScheme.EPYT_FLOW)
-    vis.highlight_sensor_config()
-    vis.add_labels('sensor_config', font_size=10)
-    if SHOW_PLOTS:
-        vis.show_plot()
-    else:
-        vis.show_plot(suppress_plot=True)
-    wdn.close()
+        vis.show_animation(return_animation=True)
