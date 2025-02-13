@@ -24,8 +24,10 @@ def setup_simulator():
 
 def test_animation(setup_simulator):
     vis = ScenarioVisualizer(setup_simulator)
-    vis.color_links(parameter='flow_rate', statistic='time_step', pit=(1, 200), colormap='Blues')
-    vis.resize_links(parameter='diameter', statistic='time_step', pit=(1, 200), line_widths=(1, 5))
+    vis.color_links(parameter='flow_rate', statistic='time_step', pit=(1, 200),
+                    colormap='Blues')
+    vis.resize_links(parameter='diameter', statistic='time_step', pit=(1, 200),
+                     line_widths=(1, 5))
     vis.hide_nodes()
     if SHOW_PLOTS:
         vis.show_animation()
@@ -35,8 +37,10 @@ def test_animation(setup_simulator):
 
 def test_animation_with_colorbar(setup_simulator):
     vis = ScenarioVisualizer(setup_simulator)
-    vis.color_links(parameter='flow_rate', statistic='time_step', pit=(1, 200), colormap='Blues', show_colorbar=True)
-    vis.resize_links(parameter='diameter', statistic='time_step', pit=(1, 200), line_widths=(1, 5))
+    vis.color_links(parameter='flow_rate', statistic='time_step', pit=(1, 200),
+                    colormap='Blues', show_colorbar=True)
+    vis.resize_links(parameter='diameter', statistic='time_step', pit=(1, 200),
+                     line_widths=(1, 5))
     vis.hide_nodes()
     if SHOW_PLOTS:
         vis.show_animation()
@@ -46,8 +50,10 @@ def test_animation_with_colorbar(setup_simulator):
 
 def test_animation_with_labels(setup_simulator):
     vis = ScenarioVisualizer(setup_simulator)
-    vis.color_links(parameter='flow_rate', statistic='time_step', pit=(1, 200), colormap='Blues')
-    vis.resize_links(parameter='diameter', statistic='time_step', pit=(1, 200), line_widths=(1, 5))
+    vis.color_links(parameter='flow_rate', statistic='time_step', pit=(1, 200),
+                    colormap='Blues')
+    vis.resize_links(parameter='diameter', statistic='time_step', pit=(1, 200),
+                     line_widths=(1, 5))
     vis.add_labels('all')
     if SHOW_PLOTS:
         vis.show_animation()
@@ -55,8 +61,10 @@ def test_animation_with_labels(setup_simulator):
         vis.show_animation(return_animation=True)
 
     vis = ScenarioVisualizer(setup_simulator)
-    vis.color_links(parameter='flow_rate', statistic='time_step', pit=(1, 200), colormap='Blues')
-    vis.resize_links(parameter='diameter', statistic='time_step', pit=(1, 200), line_widths=(1, 5))
+    vis.color_links(parameter='flow_rate', statistic='time_step', pit=(1, 200),
+                    colormap='Blues')
+    vis.resize_links(parameter='diameter', statistic='time_step', pit=(1, 200),
+                     line_widths=(1, 5))
     vis.add_labels(['valves', 'tanks'])
     if SHOW_PLOTS:
         vis.show_animation()
@@ -70,8 +78,10 @@ def test_animation_sensor_config_labels():
     wdn.set_pressure_sensors(sensor_locations=["13", "16", "22", "30"])
     wdn.set_flow_sensors(sensor_locations=["1"])
     vis = ScenarioVisualizer(wdn)
-    vis.color_links(parameter='flow_rate', statistic='time_step', pit=(0, 50), colormap='Blues')
-    vis.resize_links(parameter='diameter', statistic='time_step', pit=(0, 50), line_widths=(1, 5))
+    vis.color_links(parameter='flow_rate', statistic='time_step', pit=(0, 50),
+                    colormap='Blues')
+    vis.resize_links(parameter='diameter', statistic='time_step', pit=(0, 50),
+                     line_widths=(1, 5))
     vis.add_labels('sensor_config')
     if SHOW_PLOTS:
         vis.show_animation()
@@ -93,9 +103,12 @@ def test_custom_table_animation(setup_simulator):
     custom_data_table = np.array([a * np.sin(f * t + p) for f, p, a in
                                   zip(frequencies, phases, amplitudes)]).T
 
-    vis = ScenarioVisualizer(setup_simulator, color_scheme=ColorScheme.EPYT_FLOW)
-    vis.color_links(data=custom_data_table, parameter='custom_data', statistic='time_step', pit=(0, -1))
-    vis.resize_links(data=custom_data_table, parameter='custom_data', statistic='time_step', pit=(0, -1), line_widths=(1, 5))
+    vis = ScenarioVisualizer(setup_simulator,
+                             color_scheme=ColorScheme.EPYT_FLOW)
+    vis.color_links(data=custom_data_table, parameter='custom_data',
+                    statistic='time_step', pit=(0, -1))
+    vis.resize_links(data=custom_data_table, parameter='custom_data',
+                     statistic='time_step', pit=(0, -1), line_widths=(1, 5))
 
     if SHOW_PLOTS:
         vis.show_animation()
