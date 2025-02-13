@@ -2,18 +2,19 @@
 Module provides a class for visualizing scenarios.
 """
 from typing import Optional, Union, List, Tuple, Iterable
+
+import numpy as np
 from deprecated import deprecated
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import matplotlib as mpl
 import networkx.drawing.nx_pylab as nxp
-import numpy as np
 from svgpath2mpl import parse_path
 
-from epyt_flow.simulation.scenario_simulator import ScenarioSimulator
-from epyt_flow.simulation.scada.scada_data import ScadaData
-from epyt_flow.visualization.visualization_utils import JunctionObject, EdgeObject, ColorScheme
+from ..simulation.scenario_simulator import ScenarioSimulator
+from ..simulation.scada.scada_data import ScadaData
+from ..visualization import JunctionObject, EdgeObject, ColorScheme
 
 PUMP_PATH = ('M 202.5 93 A 41.5 42 0 0 0 161 135 A 41.5 42 0 0 0 202.5 177 A '
              '41.5 42 0 0 0 244 135 A 41.5 42 0 0 0 241.94922 122 L 278 122 '
@@ -54,6 +55,7 @@ class Marker:
         Loads and applies transformations to the marker shape from the given
         path.
     """
+
     def __init__(self):
         """
         Initializes the Marker class and assigns :class:`~matplotlib.path.Path`
@@ -96,10 +98,10 @@ class ScenarioVisualizer:
     This class provides the necessary function to generate visualizations in
     the form of plots or animations from water network data.
 
-    Given a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` object, this class
-    provides the necessary functions to plot the network topology and to color
-    hydraulic elements according to simulation data. The resulting plot can
-    then either be displayed or saved.
+    Given a :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
+    object, this class provides the necessary functions to plot the network
+    topology and to color hydraulic elements according to simulation data. The
+    resulting plot can then be displayed or saved.
 
     Attributes
     ----------
@@ -117,47 +119,58 @@ class ScenarioVisualizer:
     topology : :class:`~epyt_flow.topology.NetworkTopology`
         Topology object retrieved from the scenario, containing the structure
         of the water distribution network.
-    pos_dict : `dict`
-        A dictionary mapping nodes to their coordinates in the correct format
+    color_scheme : :class:`~epyt_flow.visualization.visualization_utils.ColorScheme`
+        Contains the selected ColorScheme for visualization.
+    pipe_parameters : :class:`~epyt_flow.visualization.visualization_utils.EdgeObject`
+        Class contains parameters for visualizing pipes in the correct format
         for drawing.
-    pipe_parameters : `dict`
-        Parameters for visualizing pipes in the correct format for drawing.
-    junction_parameters : `dict`
-        Parameters for visualizing junctions in the correct format for drawing.
-    tank_parameters : `dict`
-        Parameters for visualizing tanks in the correct format for drawing.
-    reservoir_parameters : `dict`
-        Parameters for visualizing reservoirs in the correct format for
+    junction_parameters : :class:`~epyt_flow.visualization.visualization_utils.JunctionObject`
+        Class contains parameters for visualizing junctions in the correct
+        format for drawing.
+    tank_parameters : :class:`~epyt_flow.visualization.visualization_utils.JunctionObject`
+        Class contains parameters for visualizing tanks in the correct format
+        for drawing.
+    reservoir_parameters : :class:`~epyt_flow.visualization.visualization_utils.JunctionObject`
+        Class contains parameters for visualizing reservoirs in the correct
+        format for
         drawing.
-    valve_parameters : `dict`
-        Parameters for visualizing valves in the correct format for drawing.
-    pump_parameters : `dict`
-        Parameters for visualizing pumps in the correct format for drawing.
-    animation_dict : `dict`
-        A dictionary containing frame by frame data for the animated
-        components.
+    valve_parameters : :class:`~epyt_flow.visualization.visualization_utils.JunctionObject`
+        Class contains parameters for visualizing valves in the correct format
+        for drawing.
+    pump_parameters : :class:`~epyt_flow.visualization.visualization_utils.JunctionObject`
+        Class contains parameters for visualizing pumps in the correct format
+        for drawing.
     colorbars : `dict`
         A dictionary containing the necessary data for drawing the required
         colorbars.
+    labels : `dict`
+        A dictionary containing components as keys and drawing information for
+        the labels as values.
+
     """
-    def __init__(self, scenario: ScenarioSimulator, color_scheme=ColorScheme.EPYT_FLOW) -> None:
+
+    def __init__(self, scenario: ScenarioSimulator,
+                 color_scheme=ColorScheme.EPYT_FLOW) -> None:
         """
         Initializes the class with a given scenario, sets up the topology,
-        SCADA data, and parameters for visualizing various hydraulic components
-        (pipes, junctions, tanks, reservoirs, valves, and pumps).
+        SCADA data, and the classes containing parameters for visualizing
+        various hydraulic components (pipes, junctions, tanks, reservoirs,
+        valves, and pumps).
 
         Parameters
         ----------
         scenario : :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
             An instance of the `ScenarioSimulator` class, used to simulate and
             retrieve the system topology.
+        color_scheme : :class:`~epyt_flow.visualization.visualization_utils.ColorScheme`
+            Contains the selected ColorScheme for visualization. Default is
+            EPYT_FLOW.
 
         Raises
         ------
         TypeError
             If `scenario` is not an instance of
             :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
-
         """
         if not isinstance(scenario, ScenarioSimulator):
             raise TypeError("'scenario' must be an instance of " +
@@ -172,21 +185,45 @@ class ScenarioVisualizer:
         self.topology = self.__scenario.get_topology()
 
         pos_dict = {x: self.topology.get_node_info(x)['coord'] for x in
-                         self.topology.get_all_nodes()}
+                    self.topology.get_all_nodes()}
 
         self.color_scheme = color_scheme
 
-        self.pipe_parameters = EdgeObject([x[1] for x in self.topology.get_all_links()], pos_dict, self.color_scheme['pipe_color'])
-        self.junction_parameters = JunctionObject(self.topology.get_all_junctions(), pos_dict, node_color=self.color_scheme['node_color'])
-        self.tank_parameters = JunctionObject(self.topology.get_all_tanks(), pos_dict, node_size=100, node_shape=markers.tank, node_color=self.color_scheme['tank_color'])
-        self.reservoir_parameters = JunctionObject(self.topology.get_all_reservoirs(), pos_dict, node_size=100, node_shape=markers.reservoir, node_color=self.color_scheme['reservoir_color'])
-        self.valve_parameters = JunctionObject(self.topology.get_all_valves(), self.__get_midpoints(self.topology.get_all_valves()), node_size=50, node_shape=markers.valve, node_color=self.color_scheme['valve_color'])
-        self.pump_parameters = JunctionObject(self.topology.get_all_pumps(), self.__get_midpoints(self.topology.get_all_pumps()), node_size=50, node_shape=markers.pump, node_color=self.color_scheme['pump_color'])
+        self.pipe_parameters = EdgeObject(
+            [x[1] for x in self.topology.get_all_links()], pos_dict,
+            self.color_scheme['pipe_color'])
+        self.junction_parameters = JunctionObject(
+            self.topology.get_all_junctions(), pos_dict,
+            node_color=self.color_scheme['node_color'])
+        self.tank_parameters = JunctionObject(self.topology.get_all_tanks(),
+                                              pos_dict, node_size=100,
+                                              node_shape=markers.tank,
+                                              node_color=self.color_scheme[
+                                                  'tank_color'])
+        self.reservoir_parameters = JunctionObject(
+            self.topology.get_all_reservoirs(), pos_dict, node_size=100,
+            node_shape=markers.reservoir,
+            node_color=self.color_scheme['reservoir_color'])
+        self.valve_parameters = JunctionObject(self.topology.get_all_valves(),
+                                               self.__get_midpoints(
+                                                   self.topology.get_all_valves()),
+                                               node_size=50,
+                                               node_shape=markers.valve,
+                                               node_color=self.color_scheme[
+                                                   'valve_color'])
+        self.pump_parameters = JunctionObject(self.topology.get_all_pumps(),
+                                              self.__get_midpoints(
+                                                  self.topology.get_all_pumps()),
+                                              node_size=50,
+                                              node_shape=markers.pump,
+                                              node_color=self.color_scheme[
+                                                  'pump_color'])
 
         self.colorbars = {}
         self.labels = {}
 
-    def __get_midpoints(self, elements: List[str]) -> dict[str, tuple[float, float]]:
+    def __get_midpoints(self, elements: List[str]) -> dict[
+        str, tuple[float, float]]:
         """
         Computes and returns the midpoints for drawing either valves or pumps
         in a water distribution network.
@@ -242,20 +279,26 @@ class ScenarioVisualizer:
         self.ax.axis('off')
 
         nxp.draw_networkx_edges(self.topology, ax=self.ax,
-                                label='Pipes', **self.pipe_parameters.get_frame(frame_number))
+                                label='Pipes',
+                                **self.pipe_parameters.get_frame(frame_number))
         nxp.draw_networkx_nodes(self.topology, ax=self.ax,
-                                label='Junctions', **self.junction_parameters.get_frame(frame_number))
+                                label='Junctions',
+                                **self.junction_parameters.get_frame(
+                                    frame_number))
         nxp.draw_networkx_nodes(self.topology, ax=self.ax,
-                                label='Tanks', **self.tank_parameters.get_frame(frame_number))
+                                label='Tanks',
+                                **self.tank_parameters.get_frame(frame_number))
         nxp.draw_networkx_nodes(self.topology, ax=self.ax,
                                 label='Reservoirs',
-                                **self.reservoir_parameters.get_frame(frame_number))
+                                **self.reservoir_parameters.get_frame(
+                                    frame_number))
         nxp.draw_networkx_nodes(
             self.topology, ax=self.ax,
             label='Valves', **self.valve_parameters.get_frame(frame_number))
         nxp.draw_networkx_nodes(
             self.topology,
-            ax=self.ax, label='Pumps', **self.pump_parameters.get_frame(frame_number))
+            ax=self.ax, label='Pumps',
+            **self.pump_parameters.get_frame(frame_number))
 
         self.__draw_labels()
         self.ax.legend(fontsize=6)
@@ -263,15 +306,34 @@ class ScenarioVisualizer:
         for colorbar_stats in self.colorbars.values():
             self.fig.colorbar(ax=self.ax, **colorbar_stats)
 
-    def __interpolate_frames(self, num_inter_frames):
+    def __interpolate_frames(self, num_inter_frames: int):
+        """
+        Interpolates intermediate values between frames using cubic spline
+        interpolation for smoother animation.
 
-        for node_source in [self.junction_parameters, self.tank_parameters, self.reservoir_parameters, self.valve_parameters, self.pump_parameters]:
+        Parameters
+        ----------
+        num_inter_frames : `int`
+            Number of total frames after interpolation.
+
+        Returns
+        -------
+        num_inter_frames : `int`
+            Number of total frames after interpolation.
+        """
+        for node_source in [self.junction_parameters, self.tank_parameters,
+                            self.reservoir_parameters, self.valve_parameters,
+                            self.pump_parameters]:
             node_source.interpolate(num_inter_frames)
         self.pipe_parameters.interpolate(num_inter_frames)
 
         return num_inter_frames
 
     def __draw_labels(self):
+        """
+        Method accesses the dict `self.labels` and draws all generated labels
+        within.
+        """
         for k, v in self.labels.items():
             if k in ['pipes']:
                 nxp.draw_networkx_edge_labels(self.topology, ax=self.ax, **v)
@@ -279,6 +341,17 @@ class ScenarioVisualizer:
             nxp.draw_networkx_labels(self.topology, ax=self.ax, **v)
 
     def __get_sensor_config_nodes_and_links(self):
+        """
+        Iterates through the sensor config and collects all nodes and links
+        within, that have a sensor attached.
+
+        Returns
+        -------
+        highlighted_links : `list`
+            List of all links with sensors.
+        highlighted_nodes : `list`
+            List of all nodes with sensors.
+        """
         highlighted_nodes = []
         highlighted_links = []
 
@@ -290,14 +363,31 @@ class ScenarioVisualizer:
                               + sensor_config.quality_link_sensors)
         return highlighted_nodes, highlighted_links
 
-    def add_labels(self, components: list or tuple = () or str, font_size=8):
+    def add_labels(self, components: list or tuple = () or str,
+                   font_size: int = 8):
+        """
+        Adds labels to hydraulic components according to the specified
+        components.
+
+        Parameters
+        ----------
+        components : `str` or `list` or `tuple`, default is ()
+            Can either be 'all': all components, 'sensor_config': all nodes and
+            pipes which have a sensor attached, or a list of the component
+            names that are to be labeled: nodes, tanks, reservoirs, pipes,
+            valves, pumps. If the list is empty, all nodes are labeled.
+        font_size : `int`, default is 8
+            Font size of the labels.
+        """
         sc_nodes, sc_links = None, None
         if components == 'all':
-            components = ['nodes', 'tanks', 'reservoirs', 'pipes', 'valves', 'pumps']
+            components = ['nodes', 'tanks', 'reservoirs', 'pipes', 'valves',
+                          'pumps']
         elif components == 'sensor_config':
-            components = ['nodes', 'tanks', 'reservoirs', 'pipes', 'valves', 'pumps']
+            components = ['nodes', 'tanks', 'reservoirs', 'pipes', 'valves',
+                          'pumps']
             sc_nodes, sc_links = self.__get_sensor_config_nodes_and_links()
-        # if list empty, do all nodes and nothing else
+
         elif len(components) == 0:
             components = ['nodes']
 
@@ -311,16 +401,23 @@ class ScenarioVisualizer:
 
         for component, parameters in component_mapping.items():
             if component in components:
-                labels = {n: str(n) for n in parameters.nodelist if sc_nodes is None or n in sc_nodes}
-                self.labels[component] = {'pos': parameters.pos, 'labels': labels, 'font_size': font_size}
+                labels = {n: str(n) for n in parameters.nodelist if
+                          sc_nodes is None or n in sc_nodes}
+                self.labels[component] = {'pos': parameters.pos,
+                                          'labels': labels,
+                                          'font_size': font_size}
                 if component in ['pumps', 'valves']:
                     self.labels[component]['verticalalignment'] = 'bottom'
         if 'pipes' in components:
-            labels = {tuple(n[1]): n[0] for n in self.topology.get_all_links() if sc_links is None or n[0] in sc_links}
-            self.labels['pipes'] = {'pos': self.pipe_parameters.pos, 'edge_labels': labels, 'font_size': font_size}
+            labels = {tuple(n[1]): n[0] for n in self.topology.get_all_links()
+                      if sc_links is None or n[0] in sc_links}
+            self.labels['pipes'] = {'pos': self.pipe_parameters.pos,
+                                    'edge_labels': labels,
+                                    'font_size': font_size}
 
     def show_animation(self, export_to_file: str = None,
-                       return_animation: bool = False, duration: int = 5, fps=15, interpolate=True)\
+                       return_animation: bool = False, duration: int = 5,
+                       fps: int = 15, interpolate: bool = True) \
             -> Optional[FuncAnimation]:
         """
         Displays, exports, or returns an animation of a water distribution
@@ -338,26 +435,39 @@ class ScenarioVisualizer:
         return_animation : `bool`, optional
             If `True`, the animation object is returned. If `False`, the
             animation will be shown, but not returned. Default is `False`.
+        duration : `int`, default is 5
+            Duration of the animation in seconds.
+        fps : `int`, default is 15
+            Frames per seconds, is achieved through interpolation.
+        interpolate : `bool`, default is True
+            Whether to allow interpolating the sensor values or not. Necessary
+            for fixed fps.
 
         Returns
         -------
         anim : :class:`~FuncAnimation` or None
             Returns the animation object if `return_animation` is `True`.
             Otherwise, returns `None`.
-
         """
         self.fig = plt.figure(figsize=(6.4, 4.8), dpi=200)
 
         total_frames = float('inf')
-        for node_source in [self.junction_parameters, self.tank_parameters, self.reservoir_parameters, self.valve_parameters, self.pump_parameters]:
-            if not isinstance(node_source.node_color, str) and len(node_source.node_color) > 1:
+        for node_source in [self.junction_parameters, self.tank_parameters,
+                            self.reservoir_parameters, self.valve_parameters,
+                            self.pump_parameters]:
+            if not isinstance(node_source.node_color, str) and len(
+                    node_source.node_color) > 1:
                 total_frames = min(total_frames, len(node_source.node_color))
         if hasattr(self.pipe_parameters, 'edge_color'):
-            if not isinstance(self.pipe_parameters.edge_color, str) and len(self.pipe_parameters.edge_color) > 1:
-                total_frames = min(total_frames, len(self.pipe_parameters.edge_color))
+            if not isinstance(self.pipe_parameters.edge_color, str) and len(
+                    self.pipe_parameters.edge_color) > 1:
+                total_frames = min(total_frames,
+                                   len(self.pipe_parameters.edge_color))
         if hasattr(self.pipe_parameters, 'width'):
-            if not isinstance(self.pipe_parameters.width, str) and len(self.pipe_parameters.width) > 1:
-                total_frames = min(total_frames, len(self.pipe_parameters.width))
+            if not isinstance(self.pipe_parameters.width, str) and len(
+                    self.pipe_parameters.width) > 1:
+                total_frames = min(total_frames,
+                                   len(self.pipe_parameters.width))
 
         if total_frames == 0 or total_frames == float('inf'):
             raise RuntimeError("The color or resize functions must be called "
@@ -365,10 +475,11 @@ class ScenarioVisualizer:
                                "animations")
 
         if interpolate:
-            total_frames = self.__interpolate_frames(fps*duration)
+            total_frames = self.__interpolate_frames(fps * duration)
 
         anim = FuncAnimation(self.fig, self.__get_next_frame,
-                             frames=total_frames, interval=round(duration*100/total_frames))
+                             frames=total_frames,
+                             interval=round(duration * 100 / total_frames))
 
         if export_to_file is not None:
             anim.save(export_to_file, writer='ffmpeg', fps=fps)
@@ -378,7 +489,8 @@ class ScenarioVisualizer:
         plt.show()
         return None
 
-    def show_plot(self, export_to_file: str = None, suppress_plot=False) -> None:
+    def show_plot(self, export_to_file: str = None,
+                  suppress_plot: bool = False) -> None:
         """
         Displays a static plot of the water distribution network.
 
@@ -391,7 +503,8 @@ class ScenarioVisualizer:
         export_to_file : `str`, optional
             The file path where the plot should be saved, if provided.
             Default is `None`.
-
+        suppress_plot : `bool`, default is False
+            If true, no plot is displayed after running this method.
         """
         self.fig = plt.figure(figsize=(6.4, 4.8), dpi=200)
         self.__get_next_frame(0)
@@ -406,13 +519,13 @@ class ScenarioVisualizer:
             plt.clf()
 
     def color_nodes(
-            self, data: Optional[ScadaData] = None,
+            self, data: Optional[Union[ScadaData, np.ndarray]] = None,
             parameter: str = 'pressure', statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int, int]]] = None,
             colormap: str = 'viridis',
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            conversion: Optional[dict] = None, show_colorbar: bool = False) ->\
-            None:
+            conversion: Optional[dict] = None,
+            show_colorbar: bool = False) -> None:
         """
         Colors the nodes (junctions) in the water distribution network based on
         the SCADA data and the specified parameters.
@@ -423,9 +536,11 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, optional
-            The SCADA data object containing node data. If `None`, a simulation
-            will be run to generate SCADA data. Default is `None`.
+        data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or
+            :class:`~numpy.ndarray`, optional
+            The SCADA data object containing node data or a numpy array of the
+            shape nodes*timesteps. If `None`, a simulation is run to generate
+            SCADA data. Default is `None`.
         parameter : `str`, optional
             The node data to visualize. Must be 'pressure', 'demand', or
             'node_quality'. Default is 'pressure'.
@@ -481,7 +596,8 @@ class ScenarioVisualizer:
             values = self.scada_data
         else:
             raise ValueError(
-                'Parameter must be pressure, demand, node_quality or custom_data.')
+                'Parameter must be pressure, demand, node_quality or custom_'
+                'data.')
 
         if statistic == 'time_step' and isinstance(pit, tuple) and len(
                 pit) == 2 and all(isinstance(i, int) for i in pit):
@@ -491,16 +607,19 @@ class ScenarioVisualizer:
             for frame in range(*rng):
                 if frame > values.shape[0] - 1:
                     break
-                self.junction_parameters.add_frame(statistic, values, frame, intervals)
+                self.junction_parameters.add_frame(statistic, values, frame,
+                                                   intervals)
         else:
-            self.junction_parameters.add_frame(statistic, values, pit, intervals)
+            self.junction_parameters.add_frame(statistic, values, pit,
+                                               intervals)
 
         if show_colorbar:
             if statistic == 'time_step':
                 label = str(parameter).capitalize() + ' at timestep ' + str(
                     pit)
             else:
-                label = str(statistic).capitalize() + ' ' + str(parameter).replace('_', ' ')
+                label = str(statistic).capitalize() + ' ' + str(
+                    parameter).replace('_', ' ')
             self.colorbars['junctions'] = {'mappable': plt.cm.ScalarMappable(
                 norm=mpl.colors.Normalize(
                     vmin=self.junction_parameters.vmin,
@@ -508,13 +627,13 @@ class ScenarioVisualizer:
                 'label': label}
 
     def color_links(
-            self, data: Optional[ScadaData] = None,
+            self, data: Optional[Union[ScadaData, np.ndarray]] = None,
             parameter: str = 'flow_rate', statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int]]] = None,
             colormap: str = 'coolwarm',
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            conversion: Optional[dict] = None, show_colorbar: bool = False) ->\
-            None:
+            conversion: Optional[dict] = None,
+            show_colorbar: bool = False) -> None:
         """
         Colors the links (pipes) in the water distribution network based on the
         SCADA data and the specified parameters.
@@ -525,9 +644,11 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, optional
-            The SCADA data object. If `None`, the method will run a simulation.
-            Default is `None`.
+        data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or
+            :class:`~numpy.ndarray`, optional
+            The SCADA data object containing link data or a numpy array of the
+            shape links*timesteps. If `None`, a simulation is run to generate
+            SCADA data. Default is `None`.
         parameter : `str`, optional
             The link data to visualize. Options are 'flow_rate', 'velocity', or
             'status'. Default is 'flow_rate'.
@@ -590,7 +711,9 @@ class ScenarioVisualizer:
                                                self.scada_data, parameter,
                                                statistic, frame, intervals)
         else:
-            self.pipe_parameters.add_frame(self.topology, 'edge_color', self.scada_data, parameter, statistic, pit, intervals)
+            self.pipe_parameters.add_frame(self.topology, 'edge_color',
+                                           self.scada_data, parameter,
+                                           statistic, pit, intervals)
 
         if show_colorbar:
             if statistic == 'time_step':
@@ -606,7 +729,7 @@ class ScenarioVisualizer:
                 'label': label}
 
     def color_pumps(
-            self, data: Optional[ScadaData] = None,
+            self, data: Optional[Union[ScadaData, np.ndarray]] = None,
             parameter: str = 'efficiency', statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
@@ -621,9 +744,11 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, optional
-            The SCADA data object containing the pump data. If `None`, a
-            simulation will be run to generate SCADA data. Default is `None`.
+        data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or
+            :class:`~numpy.ndarray`, optional
+            The SCADA data object containing pump data or a numpy array of the
+            shape pumps*timesteps. If `None`, a simulation is run to generate
+            SCADA data. Default is `None`.
         parameter : `str`, optional
             The pump data to visualize. Must be 'efficiency',
             'energy_consumption', or 'state'. Default is 'efficiency'.
@@ -683,7 +808,8 @@ class ScenarioVisualizer:
             for frame in range(*rng):
                 if frame > values.shape[0] - 1:
                     break
-                self.pump_parameters.add_frame(statistic, values, frame, intervals)
+                self.pump_parameters.add_frame(statistic, values, frame,
+                                               intervals)
         else:
             self.pump_parameters.add_frame(statistic, values, pit, intervals)
 
@@ -700,7 +826,7 @@ class ScenarioVisualizer:
                 cmap=colormap), 'label': label}
 
     def color_tanks(
-            self, data: Optional[ScadaData] = None,
+            self, data: Optional[Union[ScadaData, np.ndarray]] = None,
             statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
@@ -715,10 +841,11 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, optional
-            The SCADA data object containing tank volume data.
-            If `None`, a simulation will be run to generate it.
-            Default is `None`.
+        data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or
+            :class:`~numpy.ndarray`, optional
+            The SCADA data object containing tank data or a numpy array of the
+            shape tanks*timesteps. If `None`, a simulation is run to generate
+            SCADA data. Default is `None`.
         statistic : `str`, optional
             The statistic to calculate for the data. Can be 'mean', 'min',
             'max', or 'time_step'. Default is 'mean'.
@@ -767,7 +894,8 @@ class ScenarioVisualizer:
             for frame in range(*rng):
                 if frame > values.shape[0] - 1:
                     break
-                self.tank_parameters.add_frame(statistic, values, frame, intervals)
+                self.tank_parameters.add_frame(statistic, values, frame,
+                                               intervals)
         else:
             self.tank_parameters.add_frame(statistic, values, pit, intervals)
 
@@ -782,7 +910,7 @@ class ScenarioVisualizer:
                 cmap=colormap), 'label': label}
 
     def color_valves(
-            self, data: Optional[ScadaData] = None,
+            self, data: Optional[Union[ScadaData, np.ndarray]] = None,
             statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
@@ -797,9 +925,11 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, optional
-            The SCADA data object containing valve state data. If `None`, a
-            simulation is run to generate SCADA data. Default is `None`.
+        data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or
+            :class:`~numpy.ndarray`, optional
+            The SCADA data object containing valve data or a numpy array of the
+            shape valves*timesteps. If `None`, a simulation is run to generate
+            SCADA data. Default is `None`.
         statistic : `str`, optional
             The statistic to calculate for the data. Can be 'mean', 'min',
             'max', or 'time_step'. Default is 'mean'.
@@ -849,7 +979,8 @@ class ScenarioVisualizer:
             for frame in range(*rng):
                 if frame > values.shape[0] - 1:
                     break
-                self.valve_parameters.add_frame(statistic, values, frame, intervals)
+                self.valve_parameters.add_frame(statistic, values, frame,
+                                                intervals)
         else:
             self.valve_parameters.add_frame(statistic, values, pit,
                                             intervals)
@@ -865,7 +996,7 @@ class ScenarioVisualizer:
                 cmap=colormap), 'label': label}
 
     def resize_links(
-            self, data: Optional[ScadaData] = None,
+            self, data: Optional[Union[ScadaData, np.ndarray]] = None,
             parameter: str = 'flow_rate', statistic: str = 'mean',
             line_widths: Tuple[int] = (1, 2),
             pit: Optional[Union[int, Tuple[int]]] = None,
@@ -881,9 +1012,11 @@ class ScenarioVisualizer:
 
         Parameters
         ----------
-        scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, optional
-            The SCADA data object. If `None`, a simulation will be run to
-            generate it. Default is `None`.
+        data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or
+            :class:`~numpy.ndarray`, optional
+            The SCADA data object containing link data or a numpy array of the
+            shape links*timesteps. If `None`, a simulation is run to generate
+            SCADA data. Default is `None`.
         parameter : `str`, optional
             The data used to resize to. Default is 'flow_rate'.
         statistic : `str`, optional
@@ -933,7 +1066,9 @@ class ScenarioVisualizer:
                                                self.scada_data, parameter,
                                                statistic, frame, intervals)
         else:
-            self.pipe_parameters.add_frame(self.topology, 'edge_width', self.scada_data, parameter, statistic, pit, intervals)
+            self.pipe_parameters.add_frame(self.topology, 'edge_width',
+                                           self.scada_data, parameter,
+                                           statistic, pit, intervals)
         self.pipe_parameters.rescale_widths(line_widths)
 
     def hide_nodes(self) -> None:
@@ -942,7 +1077,7 @@ class ScenarioVisualizer:
         visualization.
 
         This method clears the node list from the `junction_parameters`
-        dictionary, effectively removing all nodes from view in the current
+        class, effectively removing all nodes from view in the current
         visualization.
         """
         self.junction_parameters.nodelist = []
@@ -953,7 +1088,8 @@ class ScenarioVisualizer:
         the water distribution network visualization.
 
         This method identifies nodes and links equipped with different types of
-        sensors from the :class:`~epyt_flow.simulation.sensor_config.SensorConfig` and
+        sensors from the
+        :class:`~epyt_flow.simulation.sensor_config.SensorConfig` and
         updates their visual appearance. Nodes with sensors are highlighted
         with an orange border, while links with sensors are displayed with a
         dashed line style.

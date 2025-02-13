@@ -1,3 +1,7 @@
+"""
+Module provides helper functions and data management classes for visualizing
+scenarios.
+"""
 import inspect
 from dataclasses import dataclass
 from typing import Optional, Union, List, Tuple
