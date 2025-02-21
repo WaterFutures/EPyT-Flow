@@ -22,6 +22,7 @@ from ..sensor_config import SensorConfig, is_flowunit_simetric, massunit_to_str,
 from ..events import SensorFault, SensorReadingAttack, SensorReadingEvent
 from ...uncertainty import SensorNoise
 from ...serialization import serializable, Serializable, SCADA_DATA_ID
+from ...topology import NetworkTopology
 from ...utils import plot_timeseries_data
 
 
@@ -127,6 +128,8 @@ class ScadaData(Serializable):
         will be stored -- this usually leads to a significant reduction in memory consumption.
 
         The default is False.
+    network_topo : :class:`~epyt_flow.topology.NetworkTopology`
+        Topology of the water distribution network.
     """
     def __init__(self, sensor_config: SensorConfig, sensor_readings_time: np.ndarray,
                  pressure_data_raw: Union[np.ndarray, bsr_array] = None,
@@ -148,7 +151,17 @@ class ScadaData(Serializable):
                  sensor_reading_attacks: list[SensorReadingAttack] = [],
                  sensor_reading_events: list[SensorReadingEvent] = [],
                  sensor_noise: SensorNoise = None, frozen_sensor_config: bool = False,
+                 network_topo: NetworkTopology = None,
                  **kwds):
+        if network_topo is not None:
+            if not isinstance(network_topo, NetworkTopology):
+                raise TypeError("'network_topo' must be an instance of " +
+                                "'epyt_flow.topology.NetworkTopology' but not " +
+                                f"of '{type(network_topo)}'")
+        else:
+            warnings.warn("You are loading a SCADA data instance that was created with an " +
+                          "outdated version of EPyT-Flow. Future releases will require " +
+                          "'network_topo' != None. Please upgrade!")
         if not isinstance(sensor_config, SensorConfig):
             raise TypeError("'sensor_config' must be an instance of " +
                             "'epyt_flow.simulation.SensorConfig' but not of " +
@@ -345,6 +358,7 @@ class ScadaData(Serializable):
             if pumps_efficiency_data_raw.shape[0] != n_time_steps:
                 __raise_shape_mismatch("pumps_efficiency_data_raw")
 
+        self.__network_topo = network_topo
         self.__sensor_config = sensor_config
         self.__sensor_noise = sensor_noise
         self.__sensor_reading_events = sensor_faults + sensor_reading_attacks + \
@@ -1030,7 +1044,8 @@ class ScadaData(Serializable):
                                      surface_species_mass_unit=new_surface_species_mass_unit,
                                      surface_species_area_unit=new_surface_species_area_unit)
 
-        return ScadaData(sensor_config=sensor_config,
+        return ScadaData(network_topo=self.network_topo,
+                         sensor_config=sensor_config,
                          sensor_readings_time=self.sensor_readings_time,
                          sensor_reading_events=self.sensor_reading_events,
                          sensor_noise=self.sensor_noise,
@@ -1048,6 +1063,18 @@ class ScadaData(Serializable):
                          bulk_species_node_concentration_raw=bulk_species_node_concentrations,
                          bulk_species_link_concentration_raw=bulk_species_link_concentrations,
                          surface_species_concentration_raw=surface_species_concentrations)
+
+    @property
+    def network_topo(self) -> NetworkTopology:
+        """
+        Returns the topology of the water distribution network.
+
+        Returns
+        -------
+        :class:`epyt_flow.topology.NetworkTopology`
+            Topology of the network.
+        """
+        return deepcopy(self.__network_topo)
 
     @property
     def frozen_sensor_config(self) -> bool:
@@ -1374,7 +1401,8 @@ class ScadaData(Serializable):
         self.__sensor_readings = None
 
     def get_attributes(self) -> dict:
-        attr = {"sensor_config": self.__sensor_config,
+        attr = {"network_topo": self.__network_topo,
+                "sensor_config": self.__sensor_config,
                 "frozen_sensor_config": self.__frozen_sensor_config,
                 "sensor_noise": self.__sensor_noise,
                 "sensor_reading_events": self.__sensor_reading_events,
@@ -1525,7 +1553,8 @@ class ScadaData(Serializable):
             raise TypeError(f"Can not compare 'ScadaData' instance to '{type(other)}' instance")
 
         try:
-            return self.__sensor_config == other.sensor_config \
+            return self.__network_topo == other.network_topo \
+                and self.__sensor_config == other.sensor_config \
                 and self.__frozen_sensor_config == other.frozen_sensor_config \
                 and self.__sensor_noise == other.sensor_noise \
                 and all(a == b for a, b in
@@ -1553,7 +1582,7 @@ class ScadaData(Serializable):
             return False
 
     def __str__(self) -> str:
-        return f"sensor_config: {self.__sensor_config} " + \
+        return f"network_topo: {self.__network_topo} sensor_config: {self.__sensor_config} " + \
             f"frozen_sensor_config: {self.__frozen_sensor_config} " + \
             f"sensor_noise: {self.__sensor_noise} " + \
             f"sensor_reading_events: {self.__sensor_reading_events} " + \
@@ -1751,7 +1780,7 @@ class ScadaData(Serializable):
         if self.__pumps_efficiency_data_raw is not None:
             pumps_efficiency_data_raw = self.__pumps_efficiency_data_raw[start_idx:end_idx, :]
 
-        return ScadaData(sensor_config=self.sensor_config,
+        return ScadaData(network_topo=self.network_topo, sensor_config=self.sensor_config,
                          sensor_readings_time=self.sensor_readings_time[start_idx:end_idx],
                          frozen_sensor_config=self.frozen_sensor_config,
                          sensor_noise=self.sensor_noise,
@@ -1789,6 +1818,8 @@ class ScadaData(Serializable):
         if not isinstance(other, ScadaData):
             raise TypeError("'other' must be an instance of 'ScadaData' " +
                             f"but not of '{type(other)}'")
+        if self.__network_topo != other.network_topo:
+            raise ValueError("Network topology must be the same in both instances")
         if self.__frozen_sensor_config != other.frozen_sensor_config:
             raise ValueError("Sensor configurations of both instances must be " +
                              "either frozen or not frozen")
@@ -1891,6 +1922,8 @@ class ScadaData(Serializable):
         """
         if not isinstance(other, ScadaData):
             raise TypeError(f"'other' must be an instance of 'ScadaData' but not of {type(other)}")
+        if self.__network_topo != other.network_topo:
+            raise ValueError("Network topology must be the same")
         if self.__sensor_config != other.sensor_config:
             raise ValueError("Sensor configurations must be the same!")
         if self.__frozen_sensor_config != other.frozen_sensor_config:
@@ -1966,6 +1999,19 @@ class ScadaData(Serializable):
             self.__pumps_efficiency_data_raw = np.concatenate(
                 (self.__pumps_efficiency_data_raw, other.pumps_efficiency_data_raw),
                 axis=0)
+
+    def topo_adj_matrix(self) -> bsr_array:
+        """
+        Returns the adjacency matrix of the network.
+
+        Nodes are ordered according to EPANET.
+
+        Returns
+        -------
+        `scipy.bsr_array <https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.bsr_array.html>`_
+            Adjacency matrix as a sparse array of shape [num_nodes, num_nodes].
+        """
+        return self.__network_topo.get_adj_matrix()
 
     def get_data(self) -> np.ndarray:
         """

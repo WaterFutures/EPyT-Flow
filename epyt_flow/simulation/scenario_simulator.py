@@ -1967,6 +1967,7 @@ class ScenarioSimulator():
                 result[data_type] = None
 
         return ScadaData(**result,
+                         network_topo=self.get_topology(),
                          sensor_config=self._sensor_config,
                          sensor_reading_events=self._sensor_reading_events,
                          sensor_noise=self._sensor_noise,
@@ -2120,7 +2121,7 @@ class ScenarioSimulator():
                         "surface_species_concentration_raw": surface_species_concentrations,
                         "sensor_readings_time": np.array([0])}
             else:
-                data = ScadaData(sensor_config=self._sensor_config,
+                data = ScadaData(network_topo=self.get_topology(), sensor_config=self._sensor_config,
                                  bulk_species_node_concentration_raw=bulk_species_node_concentrations,
                                  bulk_species_link_concentration_raw=bulk_species_link_concentrations,
                                  surface_species_concentration_raw=surface_species_concentrations,
@@ -2164,7 +2165,8 @@ class ScenarioSimulator():
                                 "surface_species_concentration_raw": surface_species_concentrations,
                                 "sensor_readings_time": np.array([total_time])}
                     else:
-                        data = ScadaData(sensor_config=self._sensor_config,
+                        data = ScadaData(network_topo=self.get_topology(),
+                                         sensor_config=self._sensor_config,
                                          bulk_species_node_concentration_raw=
                                             bulk_species_node_concentrations,
                                          bulk_species_link_concentration_raw=
@@ -2245,6 +2247,7 @@ class ScenarioSimulator():
             result[data_type] = np.concatenate(result[data_type], axis=0)
 
         return ScadaData(**result,
+                         network_topo=self.get_topology(),
                          sensor_config=self._sensor_config,
                          sensor_reading_events=self._sensor_reading_events,
                          sensor_noise=self._sensor_noise,
@@ -2346,7 +2349,8 @@ class ScenarioSimulator():
                             "link_quality_data_raw": quality_link_data,
                             "sensor_readings_time": np.array([total_time])}
                 else:
-                    data = ScadaData(sensor_config=self._sensor_config,
+                    data = ScadaData(network_topo=self.get_topology(),
+                                     sensor_config=self._sensor_config,
                                      node_quality_data_raw=quality_node_data,
                                      link_quality_data_raw=quality_link_data,
                                      sensor_readings_time=np.array([total_time]),
@@ -2422,6 +2426,7 @@ class ScenarioSimulator():
             result[data_type] = np.concatenate(result[data_type], axis=0)
 
         result = ScadaData(**result,
+                           network_topo=self.get_topology(),
                            sensor_config=self._sensor_config,
                            sensor_reading_events=self._sensor_reading_events,
                            sensor_noise=self._sensor_noise,
@@ -2543,7 +2548,8 @@ class ScenarioSimulator():
                 link_valve_idx = self.epanet_api.getLinkValveIndex()
                 valves_state_data = self.epanet_api.getLinkStatus(link_valve_idx).reshape(1, -1)
 
-                scada_data = ScadaData(sensor_config=self._sensor_config,
+                scada_data = ScadaData(network_topo=self.get_topology(),
+                                       sensor_config=self._sensor_config,
                                        pressure_data_raw=pressure_data,
                                        flow_data_raw=flow_data,
                                        demand_data_raw=demand_data,
