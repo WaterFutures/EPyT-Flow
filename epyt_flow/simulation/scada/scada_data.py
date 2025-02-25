@@ -2069,6 +2069,22 @@ class ScadaData(Serializable):
         Computes the final sensor readings -- note that those might be subject to
         given sensor faults and sensor noise/uncertainty.
 
+        Columns (i.e. sensor readings) are ordered as follows:
+
+            1. Pressures
+            2. Flows
+            3. Demands
+            4. Nodes quality
+            5. Links quality
+            6. Valve state
+            7. Pumps state
+            8. Pumps efficiency
+            9. Pumps energy consumption
+            10. Tanks volume
+            11. Surface species concentrations
+            12. Bulk species nodes concentrations
+            13. Bulk species links concentrations
+
         Returns
         -------
         `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
