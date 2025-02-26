@@ -1,7 +1,7 @@
 """
 Module provides a class for visualizing scenarios.
 """
-from typing import Optional, Union, List, Tuple, Iterable
+from typing import Optional, Union, List, Tuple
 
 import numpy as np
 from deprecated import deprecated
@@ -205,14 +205,14 @@ class ScenarioVisualizer:
             node_shape=markers.reservoir,
             node_color=self.color_scheme['reservoir_color'])
         self.valve_parameters = JunctionObject(self.topology.get_all_valves(),
-                                               self.__get_midpoints(
+                                               self._get_midpoints(
                                                    self.topology.get_all_valves()),
                                                node_size=50,
                                                node_shape=markers.valve,
                                                node_color=self.color_scheme[
                                                    'valve_color'])
         self.pump_parameters = JunctionObject(self.topology.get_all_pumps(),
-                                              self.__get_midpoints(
+                                              self._get_midpoints(
                                                   self.topology.get_all_pumps()),
                                               node_size=50,
                                               node_shape=markers.pump,
@@ -222,7 +222,7 @@ class ScenarioVisualizer:
         self.colorbars = {}
         self.labels = {}
 
-    def __get_midpoints(self, elements: List[str]) -> dict[
+    def _get_midpoints(self, elements: List[str]) -> dict[
         str, tuple[float, float]]:
         """
         Computes and returns the midpoints for drawing either valves or pumps
@@ -260,7 +260,7 @@ class ScenarioVisualizer:
             elements_pos_dict[element] = pos
         return elements_pos_dict
 
-    def __get_next_frame(self, frame_number: int) -> None:
+    def _get_next_frame(self, frame_number: int) -> None:
         """
         Draws the next frame of a water distribution network animation.
 
@@ -300,13 +300,13 @@ class ScenarioVisualizer:
             ax=self.ax, label='Pumps',
             **self.pump_parameters.get_frame(frame_number))
 
-        self.__draw_labels()
+        self._draw_labels()
         self.ax.legend(fontsize=6)
 
         for colorbar_stats in self.colorbars.values():
             self.fig.colorbar(ax=self.ax, **colorbar_stats)
 
-    def __interpolate_frames(self, num_inter_frames: int):
+    def _interpolate_frames(self, num_inter_frames: int):
         """
         Interpolates intermediate values between frames using cubic spline
         interpolation for smoother animation.
@@ -329,7 +329,7 @@ class ScenarioVisualizer:
 
         return num_inter_frames
 
-    def __draw_labels(self):
+    def _draw_labels(self):
         """
         Method accesses the dict `self.labels` and draws all generated labels
         within.
@@ -340,7 +340,7 @@ class ScenarioVisualizer:
                 continue
             nxp.draw_networkx_labels(self.topology, ax=self.ax, **v)
 
-    def __get_sensor_config_nodes_and_links(self):
+    def _get_sensor_config_nodes_and_links(self):
         """
         Iterates through the sensor config and collects all nodes and links
         within, that have a sensor attached.
@@ -386,7 +386,7 @@ class ScenarioVisualizer:
         elif components == 'sensor_config':
             components = ['nodes', 'tanks', 'reservoirs', 'pipes', 'valves',
                           'pumps']
-            sc_nodes, sc_links = self.__get_sensor_config_nodes_and_links()
+            sc_nodes, sc_links = self._get_sensor_config_nodes_and_links()
 
         elif len(components) == 0:
             components = ['nodes']
@@ -475,9 +475,9 @@ class ScenarioVisualizer:
                                "animations")
 
         if interpolate:
-            total_frames = self.__interpolate_frames(fps * duration)
+            total_frames = self._interpolate_frames(fps * duration)
 
-        anim = FuncAnimation(self.fig, self.__get_next_frame,
+        anim = FuncAnimation(self.fig, self._get_next_frame,
                              frames=total_frames,
                              interval=round(duration * 100 / total_frames))
 
@@ -507,7 +507,7 @@ class ScenarioVisualizer:
             If true, no plot is displayed after running this method.
         """
         self.fig = plt.figure(figsize=(6.4, 4.8), dpi=200)
-        self.__get_next_frame(0)
+        self._get_next_frame(0)
 
         if export_to_file is not None:
             plt.savefig(export_to_file, transparent=True, bbox_inches='tight',
@@ -1094,7 +1094,7 @@ class ScenarioVisualizer:
         with an orange border, while links with sensors are displayed with a
         dashed line style.
         """
-        highlighted_nodes, highlighted_links = self.__get_sensor_config_nodes_and_links()
+        highlighted_nodes, highlighted_links = self._get_sensor_config_nodes_and_links()
 
         node_edges = [
             (17, 163, 252) if node in highlighted_nodes else (0, 0, 0) for node
