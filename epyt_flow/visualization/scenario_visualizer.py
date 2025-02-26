@@ -14,7 +14,7 @@ from svgpath2mpl import parse_path
 
 from ..simulation.scenario_simulator import ScenarioSimulator
 from ..simulation.scada.scada_data import ScadaData
-from ..visualization import JunctionObject, EdgeObject, ColorScheme
+from ..visualization import JunctionObject, EdgeObject, ColorScheme, epyt_flow_colors
 
 PUMP_PATH = ('M 202.5 93 A 41.5 42 0 0 0 161 135 A 41.5 42 0 0 0 202.5 177 A '
              '41.5 42 0 0 0 244 135 A 41.5 42 0 0 0 241.94922 122 L 278 122 '
@@ -150,7 +150,7 @@ class ScenarioVisualizer:
     """
 
     def __init__(self, scenario: ScenarioSimulator,
-                 color_scheme=ColorScheme.EPYT_FLOW) -> None:
+                 color_scheme: ColorScheme = epyt_flow_colors) -> None:
         """
         Initializes the class with a given scenario, sets up the topology,
         SCADA data, and the classes containing parameters for visualizing
@@ -191,33 +191,30 @@ class ScenarioVisualizer:
 
         self.pipe_parameters = EdgeObject(
             [x[1] for x in self.topology.get_all_links()], pos_dict,
-            self.color_scheme['pipe_color'])
+            self.color_scheme.pipe_color)
         self.junction_parameters = JunctionObject(
             self.topology.get_all_junctions(), pos_dict,
-            node_color=self.color_scheme['node_color'])
+            node_color=self.color_scheme.node_color)
         self.tank_parameters = JunctionObject(self.topology.get_all_tanks(),
                                               pos_dict, node_size=100,
                                               node_shape=markers.tank,
-                                              node_color=self.color_scheme[
-                                                  'tank_color'])
+                                              node_color=self.color_scheme.tank_color)
         self.reservoir_parameters = JunctionObject(
             self.topology.get_all_reservoirs(), pos_dict, node_size=100,
             node_shape=markers.reservoir,
-            node_color=self.color_scheme['reservoir_color'])
+            node_color=self.color_scheme.reservoir_color)
         self.valve_parameters = JunctionObject(self.topology.get_all_valves(),
                                                self._get_midpoints(
                                                    self.topology.get_all_valves()),
                                                node_size=50,
                                                node_shape=markers.valve,
-                                               node_color=self.color_scheme[
-                                                   'valve_color'])
+                                               node_color=self.color_scheme.valve_color)
         self.pump_parameters = JunctionObject(self.topology.get_all_pumps(),
                                               self._get_midpoints(
                                                   self.topology.get_all_pumps()),
                                               node_size=50,
                                               node_shape=markers.pump,
-                                              node_color=self.color_scheme[
-                                                  'pump_color'])
+                                              node_color=self.color_scheme.pump_color)
 
         self.colorbars = {}
         self.labels = {}

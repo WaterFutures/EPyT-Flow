@@ -490,40 +490,20 @@ class EdgeObject:
         return [range_map(x) for x in values]
 
 
-@serializable(COLOR_SCHEMES_ID, ".epyt_flow_color_schemes")
+@serializable(COLOR_SCHEMES_ID, ".epyt_flow_color_scheme")
 class ColorScheme(JsonSerializable):
     """
-    A class containing predefined color schemes for the
+    A class containing the color scheme for the
     :class:`~epyt_flow.visualization.ScenarioVisualizer`.
-
-    Predefined schemes are: EPANET, EPYT_FLOW and BLACK.
     """
-    EPANET = {
-        "pipe_color": "#0403ee",
-        "node_color": "#0403ee",
-        "pump_color": "#fe00ff",
-        "tank_color": "#02fffd",
-        "reservoir_color": "#00ff00",
-        "valve_color": "#000000",
-    }
-    EPYT_FLOW = {
-        "pipe_color": "#29222f",
-        "node_color": "#29222f",
-        "pump_color": "#d79233",
-        "tank_color": "#607b80",
-        "reservoir_color": "#33483d",
-        "valve_color": "#a3320b",
-    }
-    BLACK = {
-        "pipe_color": "#000000",
-        "node_color": "#000000",
-        "pump_color": "#000000",
-        "tank_color": "#000000",
-        "reservoir_color": "#000000",
-        "valve_color": "#000000",
-    }
-
-    def __init__(self):
+    def __init__(self, pipe_color, node_color, pump_color, tank_color,
+                 reservoir_color, valve_color):
+        self.pipe_color = pipe_color
+        self.node_color = node_color
+        self.pump_color = pump_color
+        self.tank_color = tank_color
+        self.reservoir_color = reservoir_color
+        self.valve_color = valve_color
         super().__init__()
 
     def get_attributes(self):
@@ -535,7 +515,35 @@ class ColorScheme(JsonSerializable):
         attr : A dictionary containing all attributes to be serialized.
         """
         attr = {
-            k: v for k, v in self.__class__.__dict__.items()
-            if not k.startswith("__") and not callable(v)
+            k: v for k, v in self.__dict__.items()
+            if not (k.startswith("__") or k.startswith("_")) and not callable(v)
         }
         return super().get_attributes() | attr
+
+
+epanet_colors = ColorScheme(
+    pipe_color="#0403ee",
+    node_color="#0403ee",
+    pump_color="#fe00ff",
+    tank_color="#02fffd",
+    reservoir_color="#00ff00",
+    valve_color="#000000"
+)
+
+epyt_flow_colors = ColorScheme(
+    pipe_color="#29222f",
+    node_color="#29222f",
+    pump_color="#d79233",
+    tank_color="#607b80",
+    reservoir_color="#33483d",
+    valve_color="#a3320b"
+)
+
+black_colors = ColorScheme(
+    pipe_color="#000000",
+    node_color="#000000",
+    pump_color="#000000",
+    tank_color="#000000",
+    reservoir_color="#000000",
+    valve_color="#000000"
+)

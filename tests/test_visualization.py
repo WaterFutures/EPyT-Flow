@@ -9,7 +9,7 @@ import numpy as np
 from epyt_flow.data.benchmarks import load_leakdb_scenarios
 from epyt_flow.data.networks import load_hanoi, load_ctown
 from epyt_flow.simulation import ScenarioSimulator
-from epyt_flow.visualization import ScenarioVisualizer, ColorScheme
+from epyt_flow.visualization import ScenarioVisualizer, epanet_colors
 
 SHOW_PLOTS = False
 
@@ -114,3 +114,17 @@ def test_custom_table_animation(setup_simulator):
         vis.show_animation()
     else:
         vis.show_animation(return_animation=True)
+
+
+def test_color_scheme(setup_simulator):
+    vis = ScenarioVisualizer(setup_simulator, color_scheme=epanet_colors)
+    if SHOW_PLOTS:
+        vis.show_plot()
+    else:
+        vis.show_plot(suppress_plot=True)
+
+
+def test_color_scheme_serialization(setup_simulator):
+    attrs = epanet_colors.get_attributes()
+    assert isinstance(attrs, dict), ("get_attributes does not return"
+                                     " dictionary for serialization")
