@@ -9,7 +9,7 @@ import numpy as np
 from epyt_flow.data.benchmarks import load_leakdb_scenarios
 from epyt_flow.data.networks import load_hanoi, load_ctown
 from epyt_flow.simulation import ScenarioSimulator
-from epyt_flow.visualization import ScenarioVisualizer, epanet_colors
+from epyt_flow.visualization import ScenarioVisualizer, epanet_colors, epyt_flow_colors
 
 SHOW_PLOTS = False
 
@@ -104,7 +104,7 @@ def test_custom_table_animation(setup_simulator):
                                   zip(frequencies, phases, amplitudes)]).T
 
     vis = ScenarioVisualizer(setup_simulator,
-                             color_scheme=ColorScheme.EPYT_FLOW)
+                             color_scheme=epyt_flow_colors)
     vis.color_links(data=custom_data_table, parameter='custom_data',
                     statistic='time_step', pit=(0, -1))
     vis.resize_links(data=custom_data_table, parameter='custom_data',
