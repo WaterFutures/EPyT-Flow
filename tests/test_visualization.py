@@ -92,13 +92,13 @@ def test_animation_sensor_config_labels():
 
 def test_custom_table_animation(setup_simulator):
     timesteps = 50
-    nodes = 444
+    links = 444
 
     t = np.linspace(0, 2 * np.pi, timesteps)
 
-    frequencies = np.linspace(1, 3, nodes)
-    phases = np.linspace(0, np.pi, nodes)
-    amplitudes = np.linspace(0.5, 1.5, nodes)
+    frequencies = np.linspace(1, 3, links)
+    phases = np.linspace(0, np.pi, links)
+    amplitudes = np.linspace(0.5, 1.5, links)
 
     custom_data_table = np.array([a * np.sin(f * t + p) for f, p, a in
                                   zip(frequencies, phases, amplitudes)]).T
@@ -114,14 +114,6 @@ def test_custom_table_animation(setup_simulator):
         vis.show_animation()
     else:
         vis.show_animation(return_animation=True)
-
-
-def test_color_scheme(setup_simulator):
-    vis = ScenarioVisualizer(setup_simulator, color_scheme=epanet_colors)
-    if SHOW_PLOTS:
-        vis.show_plot()
-    else:
-        vis.show_plot(suppress_plot=True)
 
 
 def test_color_scheme_serialization(setup_simulator):

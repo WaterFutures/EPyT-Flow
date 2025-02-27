@@ -626,7 +626,7 @@ class ScenarioVisualizer:
     def color_links(
             self, data: Optional[Union[ScadaData, np.ndarray]] = None,
             parameter: str = 'flow_rate', statistic: str = 'mean',
-            pit: Optional[Union[int, Tuple[int]]] = None,
+            pit: Optional[Union[int, Tuple[int, int]]] = None,
             colormap: str = 'coolwarm',
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
             conversion: Optional[dict] = None,
@@ -825,7 +825,7 @@ class ScenarioVisualizer:
     def color_tanks(
             self, data: Optional[Union[ScadaData, np.ndarray]] = None,
             statistic: str = 'mean',
-            pit: Optional[Union[int, Tuple[int]]] = None,
+            pit: Optional[Union[int, Tuple[int, int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
             colormap: str = 'viridis', show_colorbar: bool = False) -> None:
         """
@@ -909,7 +909,7 @@ class ScenarioVisualizer:
     def color_valves(
             self, data: Optional[Union[ScadaData, np.ndarray]] = None,
             statistic: str = 'mean',
-            pit: Optional[Union[int, Tuple[int]]] = None,
+            pit: Optional[Union[int, Tuple[int, int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
             colormap: str = 'viridis', show_colorbar: bool = False) -> None:
         """
@@ -995,8 +995,8 @@ class ScenarioVisualizer:
     def resize_links(
             self, data: Optional[Union[ScadaData, np.ndarray]] = None,
             parameter: str = 'flow_rate', statistic: str = 'mean',
-            line_widths: Tuple[int] = (1, 2),
-            pit: Optional[Union[int, Tuple[int]]] = None,
+            line_widths: Tuple[int, int] = (1, 2),
+            pit: Optional[Union[int, Tuple[int, int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
             conversion: Optional[dict] = None) -> None:
         """
