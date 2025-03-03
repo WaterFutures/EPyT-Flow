@@ -1,9 +1,14 @@
 """
 This module provides different metrics for evaluation.
 """
+import warnings
 import numpy as np
 from sklearn.metrics import roc_auc_score as skelarn_roc_auc_score, f1_score as skelarn_f1_scpre, \
     mean_absolute_error, root_mean_squared_error, r2_score as sklearn_r2_score
+
+
+warnings.warn("'epyt_flow.metrics' is deprecated in favor of EPyT-Control " +
+              "and will be removed in future releases.")
 
 
 def r2_score(y_pred: np.ndarray, y: np.ndarray) -> float:
