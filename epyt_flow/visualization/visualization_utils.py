@@ -496,8 +496,29 @@ class ColorScheme(JsonSerializable):
     A class containing the color scheme for the
     :class:`~epyt_flow.visualization.ScenarioVisualizer`.
     """
-    def __init__(self, pipe_color, node_color, pump_color, tank_color,
-                 reservoir_color, valve_color):
+    def __init__(self, pipe_color: str, node_color: str, pump_color: str,
+                 tank_color: str, reservoir_color: str,
+                 valve_color: str) -> None:
+        """Initializes the ColorScheme class with the given component colors.
+
+        Accepted formats are the string representations accepted by matplotlib:
+        https://matplotlib.org/stable/users/explain/colors/colors.html#color-formats
+
+        Parameters
+        ----------
+        pipe_color : str
+            String color format accepted by matplotlib.
+        node_color : str
+            String color format accepted by matplotlib.
+        pump_color : str
+            String color format accepted by matplotlib.
+        tank_color : str
+            String color format accepted by matplotlib.
+        reservoir_color : str
+            String color format accepted by matplotlib.
+        valve_color : str
+            String color format accepted by matplotlib.
+        """
         self.pipe_color = pipe_color
         self.node_color = node_color
         self.pump_color = pump_color
@@ -506,7 +527,7 @@ class ColorScheme(JsonSerializable):
         self.valve_color = valve_color
         super().__init__()
 
-    def get_attributes(self):
+    def get_attributes(self) -> dict:
         """
         Gets all attributes needed for serialization.
 
@@ -519,6 +540,47 @@ class ColorScheme(JsonSerializable):
             if not (k.startswith("__") or k.startswith("_")) and not callable(v)
         }
         return super().get_attributes() | attr
+
+    def __eq__(self, other: any) -> bool:
+        """
+        Checks if two ColorScheme instances are equal.
+
+        Parameters
+        ----------
+        other : :class:`~epyt_flow.visualization_utils.ColorScheme`
+            The other ColorScheme instance to compare this one with.
+
+        Returns
+        -------
+        bool
+            True if all attributes are the same, False otherwise.
+        """
+        if not isinstance(other, ColorScheme):
+            return False
+        return (
+            self.pipe_color == other.pipe_color and
+            self.node_color == other.node_color and
+            self.pump_color == other.pump_color and
+            self.tank_color == other.tank_color and
+            self.reservoir_color == other.reservoir_color and
+            self.valve_color == other.valve_color
+        )
+
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the ColorScheme instance.
+
+        Returns
+        -------
+        str
+            A string describing the ColorScheme instance.
+        """
+        return (f"ColorScheme(pipe_color={self.pipe_color}, "
+                f"node_color={self.node_color}, "
+                f"pump_color={self.pump_color}, "
+                f"tank_color={self.tank_color}, "
+                f"reservoir_color={self.reservoir_color}, "
+                f"valve_color={self.valve_color})")
 
 
 epanet_colors = ColorScheme(
