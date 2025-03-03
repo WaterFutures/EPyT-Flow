@@ -27,15 +27,6 @@ epyt_flow.simulation.parallel_simulation
    :members:
    :show-inheritance:
 
-
-epyt_flow.simulation.visualizer
--------------------------------
-
-.. automodule:: epyt_flow.simulation.scenario_visualizer
-   :members:
-   :show-inheritance:
-
-
 epyt_flow.simulation.sensor_config
 ----------------------------------
 
