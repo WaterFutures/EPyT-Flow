@@ -3,7 +3,7 @@ Example of plotting the network topology.
 """
 from epyt_flow.data.networks import load_anytown
 from epyt_flow.simulation import ScenarioSimulator
-from epyt_flow.visualization ScenarioVisualizer
+from epyt_flow.visualization import ScenarioVisualizer
 
 
 if __name__ == "__main__":
