@@ -1093,7 +1093,7 @@ class ScenarioSimulator():
 
             The default is None.
         """
-        from .scenario_visualizer import ScenarioVisualizer
+        from ..visualization import ScenarioVisualizer
         ScenarioVisualizer(self).show_plot(export_to_file)
 
     def randomize_demands(self) -> None:
@@ -1166,7 +1166,10 @@ class ScenarioSimulator():
             raise ValueError(f"Inconsistent pattern shape '{pattern.shape}' " +
                              "detected. Expected a one dimensional array!")
 
-        self.epanet_api.addPattern(pattern_id, pattern)
+        pattern_idx = self.epanet_api.addPattern(pattern_id, pattern)
+        if pattern_idx == 0:
+            raise RuntimeError("Failed to add pattern! " +
+                               "Maybe pattern name contains invalid characters or is too long?")
 
     def get_node_demand_pattern(self, node_id: str) -> np.ndarray:
         """
