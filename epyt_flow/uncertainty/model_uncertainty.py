@@ -684,7 +684,7 @@ class ModelUncertainty(JsonSerializable):
                     epanet_api.setNodeBaseDemands(node_idx, demand_category + 1, base_demand)
 
         if self.__global_demand_pattern is not None:
-            self.__global_base_demand.set_random_generator(np_rand_gen)
+            self.__global_demand_pattern.set_random_generator(np_rand_gen)
 
             demand_patterns_idx = epanet_api.getNodeDemandPatternIndex()
             demand_patterns_id = np.unique([demand_patterns_idx[k]
