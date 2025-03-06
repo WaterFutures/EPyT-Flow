@@ -114,7 +114,7 @@ class JunctionObject:
 
         self.node_color.append(sorted_values)
         self.vmin = min(*sorted_values, self.vmin)
-        self.vmax = max(*sorted_values, self.vmin)
+        self.vmax = max(*sorted_values, self.vmax)
 
     def get_frame(self, frame_number: int = 0):
         """
@@ -220,7 +220,7 @@ class EdgeObject:
     edge_color: Union[str, list] = 'k'
     interpolated = {}
 
-    def rescale_widths(self, line_widths: Tuple[int] = (1, 2)):
+    def rescale_widths(self, line_widths: Tuple[int, int] = (1, 2)):
         """
         Rescales all edge widths to the given interval.
 
@@ -253,6 +253,7 @@ class EdgeObject:
             scada_data: Optional[ScadaData],
             parameter: str = 'flow_rate', statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int]]] = None,
+            species: str = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None):
         """
         Adds a new frame of edge_color or edge width based on the given data
@@ -277,6 +278,9 @@ class EdgeObject:
              'max' or 'time_step'.
         pit : `int`
             The point in time for the 'time_step' statistic.
+        species: `str`, optional
+            Key of the species. Necessary only for parameter
+            'bulk_species_concentration'.
         intervals : `int`, `list[int]` or `list[float]`
             If provided, the data will be grouped into intervals. It can be an
             integer specifying the number of groups or a list of boundary
@@ -301,6 +305,8 @@ class EdgeObject:
             values = scada_data.link_quality_data_raw
         elif parameter == 'custom_data':
             values = scada_data
+        elif parameter == 'bulk_species_concentration':
+            values = scada_data.bulk_species_link_concentration_raw[:, scada_data.sensor_config.bulk_species.index(species), :]
         elif parameter == 'diameter':
             value_dict = {
                 link[0]: topology.get_link_info(link[0])['diameter'] for

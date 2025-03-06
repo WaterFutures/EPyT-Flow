@@ -360,7 +360,7 @@ class ScenarioVisualizer:
                               + sensor_config.quality_link_sensors)
         return highlighted_nodes, highlighted_links
 
-    def add_labels(self, components: list or tuple = () or str,
+    def add_labels(self, components: str or list or tuple = (),
                    font_size: int = 8):
         """
         Adds labels to hydraulic components according to the specified
@@ -519,6 +519,7 @@ class ScenarioVisualizer:
             self, data: Optional[Union[ScadaData, np.ndarray]] = None,
             parameter: str = 'pressure', statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int, int]]] = None,
+            species: str = None,
             colormap: str = 'viridis',
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
             conversion: Optional[dict] = None,
@@ -550,6 +551,9 @@ class ScenarioVisualizer:
             representing the start and end time steps. A tuple is necessary to
             process the data for the :meth:`~ScenarioVisualizer.show_animation`
             method. Default is `None`.
+        species: `str`, optional
+            Key of species. Only necessary for parameter
+            'bulk_species_concentration'.
         colormap : `str`, optional
             The colormap to use for visualizing node values. Default is
             'viridis'.
@@ -591,6 +595,8 @@ class ScenarioVisualizer:
         elif parameter == 'custom_data':
             # Custom should have the dimensions (timesteps, nodes)
             values = self.scada_data
+        elif parameter == 'bulk_species_concentration':
+            values = self.scada_data.bulk_species_node_concentration_raw[:, self.scada_data.sensor_config.bulk_species.index(species), :]
         else:
             raise ValueError(
                 'Parameter must be pressure, demand, node_quality or custom_'
@@ -620,13 +626,14 @@ class ScenarioVisualizer:
             self.colorbars['junctions'] = {'mappable': plt.cm.ScalarMappable(
                 norm=mpl.colors.Normalize(
                     vmin=self.junction_parameters.vmin,
-                    vmax=self.junction_parameters.vmin), cmap=colormap),
+                    vmax=self.junction_parameters.vmax), cmap=colormap),
                 'label': label}
 
     def color_links(
             self, data: Optional[Union[ScadaData, np.ndarray]] = None,
             parameter: str = 'flow_rate', statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int, int]]] = None,
+            species: str = None,
             colormap: str = 'coolwarm',
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
             conversion: Optional[dict] = None,
@@ -658,6 +665,9 @@ class ScenarioVisualizer:
             representing the start and end time steps. A tuple is necessary to
             process the data for the :meth:`~ScenarioVisualizer.show_animation`
             method. Default is `None`.
+        species: `str`, optional
+            Key of species. Only necessary for parameter
+            'bulk_species_concentration'.
         colormap : `str`, optional
             The colormap to use for visualizing link values. Default is
             'coolwarm'.
@@ -706,11 +716,12 @@ class ScenarioVisualizer:
                     break
                 self.pipe_parameters.add_frame(self.topology, 'edge_color',
                                                self.scada_data, parameter,
-                                               statistic, frame, intervals)
+                                               statistic, frame, species,
+                                               intervals)
         else:
             self.pipe_parameters.add_frame(self.topology, 'edge_color',
                                            self.scada_data, parameter,
-                                           statistic, pit, intervals)
+                                           statistic, pit, species, intervals)
 
         if show_colorbar:
             if statistic == 'time_step':
@@ -997,6 +1008,7 @@ class ScenarioVisualizer:
             parameter: str = 'flow_rate', statistic: str = 'mean',
             line_widths: Tuple[int, int] = (1, 2),
             pit: Optional[Union[int, Tuple[int, int]]] = None,
+            species: str = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
             conversion: Optional[dict] = None) -> None:
         """
@@ -1061,11 +1073,12 @@ class ScenarioVisualizer:
                     break
                 self.pipe_parameters.add_frame(self.topology, 'edge_width',
                                                self.scada_data, parameter,
-                                               statistic, frame, intervals)
+                                               statistic, frame, species,
+                                               intervals)
         else:
             self.pipe_parameters.add_frame(self.topology, 'edge_width',
                                            self.scada_data, parameter,
-                                           statistic, pit, intervals)
+                                           statistic, pit, species, intervals)
         self.pipe_parameters.rescale_widths(line_widths)
 
     def hide_nodes(self) -> None:
