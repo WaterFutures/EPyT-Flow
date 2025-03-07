@@ -3211,7 +3211,7 @@ class ScenarioSimulator():
         if pattern is None and pattern_id is None:
             raise ValueError("'pattern_id' and 'pattern' can not be None at the same time")
         if pattern_id is None:
-            pattern_id = f"quality_source_pattern_node={node_id}"
+            pattern_id = f"qual_src_pat_{node_id}"
 
         node_idx = self.epanet_api.getNodeIndex(node_id)
 
@@ -3219,6 +3219,9 @@ class ScenarioSimulator():
             pattern_idx = self.epanet_api.getPatternIndex(pattern_id)
         else:
             pattern_idx = self.epanet_api.addPattern(pattern_id, pattern)
+        if pattern_idx == 0:
+            raise RuntimeError("Failed to add/get pattern! " +
+                               "Maybe pattern name contains invalid characters or is too long?")
 
         self.epanet_api.api.ENsetnodevalue(node_idx, ToolkitConstants.EN_SOURCETYPE, source_type)
         self.epanet_api.setNodeSourceQuality(node_idx, source_strength)
