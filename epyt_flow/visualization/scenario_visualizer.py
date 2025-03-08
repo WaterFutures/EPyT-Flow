@@ -35,18 +35,19 @@ class Marker:
     """
     The Marker class provides svg representations of hydraulic components
     (pump, reservoir, tank and valve), which are loaded from their respective
-    svg paths and transformed into :class:`~matplotlib.path.Path` objects in
-    order to be used with the matplotlib library.
+    svg paths and transformed into
+    `~matplotlib.path.Path <https://matplotlib.org/stable/api/path_api.html#matplotlib.path.Path>`_
+    objects in order to be used with the matplotlib library.
 
     Attributes
     ----------
-    pump : :class:`~matplotlib.path.Path` object
+    pump : `matplotlib.path.Path <https://matplotlib.org/stable/api/path_api.html#matplotlib.path.Path>`_
         Marker for the pump, loaded from PUMP_PATH.
-    reservoir : :class:`~matplotlib.path.Path` object
+    reservoir : `matplotlib.path.Path <https://matplotlib.org/stable/api/path_api.html#matplotlib.path.Path>`_
         Marker for the reservoir, loaded from RESERVOIR_PATH.
-    tank : :class:`~matplotlib.path.Path` object
+    tank : `matplotlib.path.Path <https://matplotlib.org/stable/api/path_api.html#matplotlib.path.Path>`_
         Marker for the tank, loaded from TANK_PATH.
-    valve : :class:`~matplotlib.path.Path` object
+    valve : `matplotlib.path.Path <https://matplotlib.org/stable/api/path_api.html#matplotlib.path.Path>`_
         Marker for the valve, loaded from VALVE_PATH.
 
     Methods
@@ -58,7 +59,8 @@ class Marker:
 
     def __init__(self):
         """
-        Initializes the Marker class and assigns :class:`~matplotlib.path.Path`
+        Initializes the Marker class and assigns
+        `matplotlib.path.Path <https://matplotlib.org/stable/api/path_api.html#matplotlib.path.Path>`_
         markers for pump, reservoir, tank, and valve components.
         """
         self.pump = self.__marker_from_path(PUMP_PATH, 2)
@@ -81,7 +83,7 @@ class Marker:
 
         Returns
         -------
-        marker_tmp : :class:`~matplotlib.path.Path` object
+        `matplotlib.path.Path <https://matplotlib.org/stable/api/path_api.html#matplotlib.path.Path>`_
             The transformed marker object after loading and adjusting it.
         """
         marker_tmp = parse_path(path)
@@ -108,10 +110,10 @@ class ScenarioVisualizer:
     __scenario : :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
         ScenarioSimulator object containing the network topology and
         configurations to obtain the simulation data which should be displayed.
-    fig : :class:`~matplotlib.pyplot.Figure` or None
+    fig : `matplotlib.pyplot.Figure <https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html#matplotlib.figure.Figure>`_ or None
         Figure object used for plotting, created and customized by calling the
         methods of this class, initialized as None.
-    ax : :class:`~matplotlib.axes.Axes` or None
+    ax : `~matplotlib.axes.Axes <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib-axes-axes>`_ or None
         The axes for plotting, initialized as None.
     scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or None
         SCADA data created by the ScenarioSimulator object, initialized as
@@ -219,8 +221,7 @@ class ScenarioVisualizer:
         self.colorbars = {}
         self.labels = {}
 
-    def _get_midpoints(self, elements: List[str]) -> dict[
-        str, tuple[float, float]]:
+    def _get_midpoints(self, elements: List[str]) -> dict[str, tuple[float, float]]:
         """
         Computes and returns the midpoints for drawing either valves or pumps
         in a water distribution network.
@@ -534,7 +535,7 @@ class ScenarioVisualizer:
         Parameters
         ----------
         data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or
-            :class:`~numpy.ndarray`, optional
+            `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
             The SCADA data object containing node data or a numpy array of the
             shape nodes*timesteps. If `None`, a simulation is run to generate
             SCADA data. Default is `None`.
@@ -642,7 +643,7 @@ class ScenarioVisualizer:
         Parameters
         ----------
         data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or
-            :class:`~numpy.ndarray`, optional
+            `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
             The SCADA data object containing link data or a numpy array of the
             shape links*timesteps. If `None`, a simulation is run to generate
             SCADA data. Default is `None`.
@@ -656,7 +657,7 @@ class ScenarioVisualizer:
             The point in time or range of time steps for the 'time_step'
             statistic. If a tuple is provided, it should contain two integers
             representing the start and end time steps. A tuple is necessary to
-            process the data for the :meth:`~ScenarioVisualizer.show_animation`
+            process the data for the :func:`~ScenarioVisualizer.show_animation`
             method. Default is `None`.
         colormap : `str`, optional
             The colormap to use for visualizing link values. Default is
@@ -742,7 +743,7 @@ class ScenarioVisualizer:
         Parameters
         ----------
         data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or
-            :class:`~numpy.ndarray`, optional
+            `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
             The SCADA data object containing pump data or a numpy array of the
             shape pumps*timesteps. If `None`, a simulation is run to generate
             SCADA data. Default is `None`.
@@ -839,7 +840,7 @@ class ScenarioVisualizer:
         Parameters
         ----------
         data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or
-            :class:`~numpy.ndarray`, optional
+            `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
             The SCADA data object containing tank data or a numpy array of the
             shape tanks*timesteps. If `None`, a simulation is run to generate
             SCADA data. Default is `None`.
@@ -923,7 +924,7 @@ class ScenarioVisualizer:
         Parameters
         ----------
         data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or
-            :class:`~numpy.ndarray`, optional
+            `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
             The SCADA data object containing valve data or a numpy array of the
             shape valves*timesteps. If `None`, a simulation is run to generate
             SCADA data. Default is `None`.
@@ -1010,7 +1011,7 @@ class ScenarioVisualizer:
         Parameters
         ----------
         data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` or
-            :class:`~numpy.ndarray`, optional
+            `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
             The SCADA data object containing link data or a numpy array of the
             shape links*timesteps. If `None`, a simulation is run to generate
             SCADA data. Default is `None`.

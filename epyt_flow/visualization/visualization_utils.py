@@ -64,7 +64,7 @@ class JunctionObject:
         statistic : `str`
             The statistic to calculate for the data. Can be 'mean', 'min',
              'max' or 'time_step'.
-        values : :class:`~numpy.ndarray`
+        values : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             The node values over time as extracted from the scada data.
         pit : `int`
             The point in time for the 'time_step' statistic.
@@ -132,7 +132,7 @@ class JunctionObject:
         -------
         valid_params : `dict`
             A dictionary containing all attributes that function as parameters
-            for :class:`~networkx.drawing.nx_pylab.draw_networkx_nodes()`.
+            for `networkx.drawing.nx_pylab.draw_networkx_nodes() <https://networkx.org/documentation/stable/reference/generated/networkx.drawing.nx_pylab.draw_networkx_nodes.html#draw-networkx-nodes>`_.
         """
 
         attributes = vars(self).copy()
@@ -267,8 +267,8 @@ class EdgeObject:
             Method can be called with edge_width or edge_color to calculate
             either the width or color for the next frame.
         scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
-            SCADA data created by the ScenarioSimulator object, is used to
-            retrieve data for the next frame.
+            SCADA data created by the :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
+            instance, is used to retrieve data for the next frame.
         parameter : `str`, default = 'flow_rate'
             The link data to visualize. Options are 'flow_rate', 'velocity', or
             'status'. Default is 'flow_rate'.
@@ -370,7 +370,7 @@ class EdgeObject:
         -------
         valid_params : `dict`
             A dictionary containing all attributes that function as parameters
-            for :class:`~networkx.drawing.nx_pylab.draw_networkx_edges()`.
+            for `networkx.drawing.nx_pylab.draw_networkx_edges() <https://networkx.org/documentation/stable/reference/generated/networkx.drawing.nx_pylab.draw_networkx_edges.html#draw-networkx-edges>`_.
         """
         attributes = vars(self).copy()
 
@@ -461,7 +461,7 @@ class EdgeObject:
 
         Parameters
         ----------
-        values : :class:`~np.ndarray` or `list`
+        values : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_ or `list`
             The array of numerical values to be rescaled.
         scale_min_max : `list` or `tuple`
             A list or tuple containing two elements: the minimum and maximum
