@@ -20,8 +20,9 @@ where for instance a neural network is utlized to make control decisions.
     EPyT-Control is a Python package building on top of
     `EPyT-Flow <https://github.com/WaterFutures/EPyT-Flow>`_ for implementing and evaluating control
     algorithms & strategies in water distribution networks (WDN).
-    A special focus of EPyT-Control Python package is Reinforcement Learning for data-driven control
-    in WDNs and therefore it provides full compatibility with the
+    Besides related control tasks such as state estimation and event diagnosis, a special focus of
+    the EPyT-Control Python package is Reinforcement Learning for data-driven control in WDNs and
+    therefore it provides full compatibility with the
     `Stable-Baselines3 <https://stable-baselines3.readthedocs.io/en/master/>`_ package.
 
 
