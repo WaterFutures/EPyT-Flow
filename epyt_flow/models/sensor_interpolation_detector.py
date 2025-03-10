@@ -1,6 +1,7 @@
 """
 Module provides a simple residual-based event detector that performs sensor interpolation.
 """
+import warnings
 from typing import Any, Union
 from copy import deepcopy
 import numpy as np
@@ -8,6 +9,10 @@ from sklearn.linear_model import LinearRegression
 
 from .event_detector import EventDetector
 from ..simulation.scada import ScadaData
+
+
+warnings.warn("'epyt_flow.models' is deprecated in favor of EPyT-Control " +
+              "and will be removed in future releases.")
 
 
 class SensorInterpolationDetector(EventDetector):

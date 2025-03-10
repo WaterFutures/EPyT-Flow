@@ -134,7 +134,13 @@ class PumpStateEvent(PumpEvent, JsonSerializable):
     def apply(self, cur_time: int) -> None:
         pump_idx = self._epanet_api.getLinkPumpNameID().index(self.pump_id) + 1
         pump_link_idx = self._epanet_api.getLinkPumpIndex(pump_idx)
-        self._epanet_api.setLinkStatus(pump_link_idx, self.__pump_state)
+
+        pattern_idx = self._epanet_api.getLinkPumpPatternIndex(pump_idx)
+        if pattern_idx != 0:
+            warnings.warn(f"Can not set pump state of pump {self.pump_id} " +
+                          "because a pump pattern exists")
+        else:
+            self._epanet_api.setLinkStatus(pump_link_idx, self.__pump_state)
 
 
 @serializable(PUMP_SPEED_EVENT_ID, ".epytflow_pump_speed_event")

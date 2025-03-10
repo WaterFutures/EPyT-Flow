@@ -1992,8 +1992,24 @@ class SensorConfig(JsonSerializable):
                          bulk_species_link_concentrations: np.ndarray,
                          surface_species_concentrations: np.ndarray) -> np.ndarray:
         """
-        Applies the sensor configuration to a set of raw simulation results --
-         i.e. computes the sensor readings as an array.
+        Applies the sensor configuration to a set of raw simulation results -- i.e. computes
+        the sensor readings as an array.
+
+        Columns (i.e. sensor readings) are ordered as follows:
+
+            1. Pressures
+            2. Flows
+            3. Demands
+            4. Nodes quality
+            5. Links quality
+            6. Valve state
+            7. Pumps state
+            8. Pumps efficiency
+            9. Pumps energy consumption
+            10. Tanks volume
+            11. Surface species concentrations
+            12. Bulk species nodes concentrations
+            13. Bulk species links concentrations
 
         Parameters
         ----------

@@ -22,6 +22,7 @@ from ..sensor_config import SensorConfig, is_flowunit_simetric, massunit_to_str,
 from ..events import SensorFault, SensorReadingAttack, SensorReadingEvent
 from ...uncertainty import SensorNoise
 from ...serialization import serializable, Serializable, SCADA_DATA_ID
+from ...topology import NetworkTopology
 from ...utils import plot_timeseries_data
 
 
@@ -127,6 +128,8 @@ class ScadaData(Serializable):
         will be stored -- this usually leads to a significant reduction in memory consumption.
 
         The default is False.
+    network_topo : :class:`~epyt_flow.topology.NetworkTopology`
+        Topology of the water distribution network.
     """
     def __init__(self, sensor_config: SensorConfig, sensor_readings_time: np.ndarray,
                  pressure_data_raw: Union[np.ndarray, bsr_array] = None,
@@ -148,7 +151,17 @@ class ScadaData(Serializable):
                  sensor_reading_attacks: list[SensorReadingAttack] = [],
                  sensor_reading_events: list[SensorReadingEvent] = [],
                  sensor_noise: SensorNoise = None, frozen_sensor_config: bool = False,
+                 network_topo: NetworkTopology = None,
                  **kwds):
+        if network_topo is not None:
+            if not isinstance(network_topo, NetworkTopology):
+                raise TypeError("'network_topo' must be an instance of " +
+                                "'epyt_flow.topology.NetworkTopology' but not " +
+                                f"of '{type(network_topo)}'")
+        else:
+            warnings.warn("You are loading a SCADA data instance that was created with an " +
+                          "outdated version of EPyT-Flow. Future releases will require " +
+                          "'network_topo' != None. Please upgrade!")
         if not isinstance(sensor_config, SensorConfig):
             raise TypeError("'sensor_config' must be an instance of " +
                             "'epyt_flow.simulation.SensorConfig' but not of " +
@@ -345,6 +358,7 @@ class ScadaData(Serializable):
             if pumps_efficiency_data_raw.shape[0] != n_time_steps:
                 __raise_shape_mismatch("pumps_efficiency_data_raw")
 
+        self.__network_topo = network_topo
         self.__sensor_config = sensor_config
         self.__sensor_noise = sensor_noise
         self.__sensor_reading_events = sensor_faults + sensor_reading_attacks + \
@@ -1030,7 +1044,8 @@ class ScadaData(Serializable):
                                      surface_species_mass_unit=new_surface_species_mass_unit,
                                      surface_species_area_unit=new_surface_species_area_unit)
 
-        return ScadaData(sensor_config=sensor_config,
+        return ScadaData(network_topo=self.network_topo,
+                         sensor_config=sensor_config,
                          sensor_readings_time=self.sensor_readings_time,
                          sensor_reading_events=self.sensor_reading_events,
                          sensor_noise=self.sensor_noise,
@@ -1048,6 +1063,18 @@ class ScadaData(Serializable):
                          bulk_species_node_concentration_raw=bulk_species_node_concentrations,
                          bulk_species_link_concentration_raw=bulk_species_link_concentrations,
                          surface_species_concentration_raw=surface_species_concentrations)
+
+    @property
+    def network_topo(self) -> NetworkTopology:
+        """
+        Returns the topology of the water distribution network.
+
+        Returns
+        -------
+        :class:`epyt_flow.topology.NetworkTopology`
+            Topology of the network.
+        """
+        return deepcopy(self.__network_topo)
 
     @property
     def frozen_sensor_config(self) -> bool:
@@ -1374,7 +1401,8 @@ class ScadaData(Serializable):
         self.__sensor_readings = None
 
     def get_attributes(self) -> dict:
-        attr = {"sensor_config": self.__sensor_config,
+        attr = {"network_topo": self.__network_topo,
+                "sensor_config": self.__sensor_config,
                 "frozen_sensor_config": self.__frozen_sensor_config,
                 "sensor_noise": self.__sensor_noise,
                 "sensor_reading_events": self.__sensor_reading_events,
@@ -1525,7 +1553,8 @@ class ScadaData(Serializable):
             raise TypeError(f"Can not compare 'ScadaData' instance to '{type(other)}' instance")
 
         try:
-            return self.__sensor_config == other.sensor_config \
+            return self.__network_topo == other.network_topo \
+                and self.__sensor_config == other.sensor_config \
                 and self.__frozen_sensor_config == other.frozen_sensor_config \
                 and self.__sensor_noise == other.sensor_noise \
                 and all(a == b for a, b in
@@ -1553,7 +1582,7 @@ class ScadaData(Serializable):
             return False
 
     def __str__(self) -> str:
-        return f"sensor_config: {self.__sensor_config} " + \
+        return f"network_topo: {self.__network_topo} sensor_config: {self.__sensor_config} " + \
             f"frozen_sensor_config: {self.__frozen_sensor_config} " + \
             f"sensor_noise: {self.__sensor_noise} " + \
             f"sensor_reading_events: {self.__sensor_reading_events} " + \
@@ -1751,7 +1780,7 @@ class ScadaData(Serializable):
         if self.__pumps_efficiency_data_raw is not None:
             pumps_efficiency_data_raw = self.__pumps_efficiency_data_raw[start_idx:end_idx, :]
 
-        return ScadaData(sensor_config=self.sensor_config,
+        return ScadaData(network_topo=self.network_topo, sensor_config=self.sensor_config,
                          sensor_readings_time=self.sensor_readings_time[start_idx:end_idx],
                          frozen_sensor_config=self.frozen_sensor_config,
                          sensor_noise=self.sensor_noise,
@@ -1789,6 +1818,8 @@ class ScadaData(Serializable):
         if not isinstance(other, ScadaData):
             raise TypeError("'other' must be an instance of 'ScadaData' " +
                             f"but not of '{type(other)}'")
+        if self.__network_topo != other.network_topo:
+            raise ValueError("Network topology must be the same in both instances")
         if self.__frozen_sensor_config != other.frozen_sensor_config:
             raise ValueError("Sensor configurations of both instances must be " +
                              "either frozen or not frozen")
@@ -1891,6 +1922,8 @@ class ScadaData(Serializable):
         """
         if not isinstance(other, ScadaData):
             raise TypeError(f"'other' must be an instance of 'ScadaData' but not of {type(other)}")
+        if self.__network_topo != other.network_topo:
+            raise ValueError("Network topology must be the same")
         if self.__sensor_config != other.sensor_config:
             raise ValueError("Sensor configurations must be the same!")
         if self.__frozen_sensor_config != other.frozen_sensor_config:
@@ -1967,10 +2000,90 @@ class ScadaData(Serializable):
                 (self.__pumps_efficiency_data_raw, other.pumps_efficiency_data_raw),
                 axis=0)
 
+    def topo_adj_matrix(self) -> bsr_array:
+        """
+        Returns the adjacency matrix of the network.
+
+        Nodes are ordered according to EPANET.
+
+        Returns
+        -------
+        `scipy.bsr_array <https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.bsr_array.html>`_
+            Adjacency matrix as a sparse array of shape [num_nodes, num_nodes].
+        """
+        return self.__network_topo.get_adj_matrix()
+
+    def map_link_id_to_edge_idx(self, link_id: str) -> tuple[int, int]:
+        """
+        Maps a given link to the corresponding two indices in the edge indices as computed by
+        :func:`epyt_flow.simulation.scada.scada_data.ScadaData.topo_edge_indices`.
+
+        Returns
+        -------
+        `tuple[int, int]`
+            Indices.
+        """
+        if not isinstance(link_id, str):
+            raise TypeError(f"'link_id' must be an instance of 'str' but not of '{type(link_id)}'")
+        if link_id not in self.__sensor_config.links:
+            raise ValueError(f"Unknown link '{link_id}'")
+
+        idx = 0
+        for l_id, [node_a_id, node_b_id] in self.__network_topo.get_all_links():
+            if l_id == link_id:
+                return (idx, idx+1)
+
+            idx += 2
+
+    def get_topo_edge_indices(self) -> np.ndarray:
+        """
+        Returns the edge indices -- i.e. a 2 dimensional array where the first dimension denotes
+        the source node indices and the second dimension denotes the target node indices
+        for all links in the network.
+        Nodes are ordered according to EPANET.
+
+        Note that the network is consideres as a directed graph -- i.e. one link corresponds to
+        two edges in opposite directions!
+
+        Returns
+        -------
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
+            Edge indices of shape [2, num_links * 2].
+        """
+        edge_indices = [[], []]
+
+        nodes_id = self.__network_topo.get_all_nodes()
+        links = self.__network_topo.get_all_links()
+
+        for _, [node_a_id, node_b_id] in self.__network_topo.get_all_links():
+            node_a_idx = nodes_id.index(node_a_id)
+            node_b_idx = nodes_id.index(node_b_id)
+
+            edge_indices[0] += [node_a_idx, node_b_idx]
+            edge_indices[1] += [node_b_idx, node_a_idx]
+
+        return np.array(edge_indices)
+
     def get_data(self) -> np.ndarray:
         """
         Computes the final sensor readings -- note that those might be subject to
         given sensor faults and sensor noise/uncertainty.
+
+        Columns (i.e. sensor readings) are ordered as follows:
+
+            1. Pressures
+            2. Flows
+            3. Demands
+            4. Nodes quality
+            5. Links quality
+            6. Valve state
+            7. Pumps state
+            8. Pumps efficiency
+            9. Pumps energy consumption
+            10. Tanks volume
+            11. Surface species concentrations
+            12. Bulk species nodes concentrations
+            13. Bulk species links concentrations
 
         Returns
         -------
@@ -2050,6 +2163,116 @@ class ScadaData(Serializable):
 
         return sensor_readings
 
+    def get_data_node_features(self, default_missing_value: float = 0.
+                               ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the sensor readings as node features together with a boolean mask indicating the
+        presence of a sensor -- i.e. pressure, demand, quality, bulk species concentration
+        at each node.
+
+        Note that only quantities with at least one sensor are considered.
+
+        Parameters
+        ----------
+        default_missing_value : `float`, optional
+            Default value (i.e. missing value) for nodes where no sensor is installed.
+
+            The default is 0.
+
+        Returns
+        -------
+        tuple[`numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_]
+            Node features of shape [num_nodes, num_time_steps, num_node_features], and
+            mask of shape [num_nodes, num_node_features].
+        """
+        node_features = []
+        node_features_mask = []
+
+        if len(self.__sensor_config.pressure_sensors) != 0:
+            features, node_mask = self.get_data_pressures_as_node_features(default_missing_value)
+            features = features.T
+            features = features.reshape(features.shape[0], features.shape[1], 1)
+            node_features.append(features)
+            node_features_mask.append(node_mask.reshape(-1, 1))
+
+        if len(self.__sensor_config.demand_sensors) != 0:
+            features, node_mask = self.get_data_demands_as_node_features(default_missing_value)
+            features = features.T
+            features = features.reshape(features.shape[0], features.shape[1], 1)
+            node_features.append(features)
+            node_features_mask.append(node_mask.reshape(-1, 1))
+
+        if len(self.__sensor_config.quality_node_sensors) != 0:
+            features, node_mask = self.get_data_nodes_quality_as_node_features(default_missing_value)
+            features = features.T
+            features = features.reshape(features.shape[0], features.shape[1], 1)
+            node_features.append(features)
+            node_features_mask.append(node_mask.reshape(-1, 1))
+
+        if len(self.__sensor_config.bulk_species_node_sensors) != 0:
+            features, node_mask = self.\
+                get_data_bulk_species_concentrations_as_node_features(default_missing_value)
+            features = np.swapaxes(features, 0, 1)
+            node_features.append(features)
+            node_features_mask.append(node_mask)
+
+        return np.concatenate(node_features, axis=2), np.concatenate(node_features_mask, axis=1)
+
+    def get_data_edge_features(self, default_missing_value: float = 0.
+                               ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the sensor readings as edge features together with a boolean mask indicating the
+        presence of a sensor -- i.e. flow, quality, surface species concentration,
+        bulk species concentration at each link.
+
+        Note that only quantities with at least one sensor are considered.
+
+        Parameters
+        ----------
+        default_missing_value : `float`, optional
+            Default value (i.e. missing value) for links where no sensor is installed.
+
+            The default is 0.
+
+        Returns
+        -------
+        tuple[`numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_]
+            Edge features of shape [num_links, num_time_steps, num_edge_features] and
+            mask of shape [num_links, num_edge_features].
+        """
+        edge_features = []
+        edge_features_mask = []
+
+        if len(self.__sensor_config.flow_sensors) != 0:
+            features, link_mask = self.get_data_flows_as_edge_features(default_missing_value)
+            features = features.T
+            features = features.reshape(features.shape[0], features.shape[1], 1)
+            edge_features.append(features)
+            edge_features_mask.append(link_mask.reshape(-1, 1))
+
+        if len(self.__sensor_config.quality_link_sensors) != 0:
+            features, link_mask = self.get_data_links_quality_as_edge_features(default_missing_value)
+            features = features.T
+            features = features.reshape(features.shape[0], features.shape[1], 1)
+            edge_features.append(features)
+            edge_features_mask.append(link_mask.reshape(-1, 1))
+
+        if len(self.__sensor_config.surface_species_sensors) != 0:
+            features, link_mask = self.\
+                get_data_surface_species_concentrations_as_edge_features(default_missing_value)
+            features = np.swapaxes(features, 0, 1)
+            edge_features.append(features)
+            edge_features_mask.append(link_mask)
+
+        if len(self.__sensor_config.bulk_species_link_sensors) != 0:
+            features, link_mask = self.\
+                get_data_bulk_species_concentrations_as_edge_features(default_missing_value)
+            features = np.swapaxes(features, 0, 1)
+            edge_features.append(features)
+            edge_features_mask.append(link_mask)
+
+        return np.concatenate(edge_features, axis=2), np.concatenate(edge_features_mask, axis=1)
+
     def __get_x_axis_label(self) -> str:
         if len(self.__sensor_readings_time) > 1:
             time_step = self.__sensor_readings_time[1] - self.__sensor_readings_time[0]
@@ -2100,6 +2323,38 @@ class ScadaData(Serializable):
         idx = [self.__sensor_config.get_index_of_reading(pressure_sensor=s_id)
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
+
+    def get_data_pressures_as_node_features(self,
+                                            default_missing_value: float = 0.
+                                            ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the pressures as node features together with a boolean mask indicating the
+        presence of a sensor.
+
+        Parameters
+        ----------
+        default_missing_value : `float`, optional
+            Default value (i.e. missing value) for nodes where no pressure sensor is installed.
+
+            The default is 0.
+
+        Returns
+        -------
+        tuple[`numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_]
+            Pressures as node features of shape [num_time_steps, num_nodes], and mask of shape [num_nodes].
+        """
+        mask = np.zeros(len(self.__sensor_config.nodes))
+        node_features = np.array([[default_missing_value] * len(self.__sensor_config.nodes)
+                                  for _ in range(len(self.__sensor_readings_time))])
+        nodes_id = self.__network_topo.get_all_nodes()
+
+        pressure_readings = self.get_data_pressures()
+        for pressures_idx, node_id in enumerate(self.__sensor_config.pressure_sensors):
+            idx = nodes_id.index(node_id)
+            node_features[:, idx] = pressure_readings[:, pressures_idx]
+            mask[idx] = 1
+
+        return node_features, mask
 
     def plot_pressures(self, sensor_locations: list[str] = None, show: bool = True,
                        save_to_file: str = None, ax: matplotlib.axes.Axes = None
@@ -2188,6 +2443,43 @@ class ScadaData(Serializable):
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
 
+    def get_data_flows_as_edge_features(self, default_missing_value: float = 0.
+                                        ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the flows as edge features together with a boolean mask indicating the
+        presence of a sensor.
+
+        Note that the second link has the opposite flow direction of the flow at the first link --
+        recall that we have an undirected graph, i.e. two edges per link.
+
+        Parameters
+        ----------
+        default_missing_value : `float`, optional
+            Default value (i.e. missing value) for links where no flow sensor is installed.
+
+            The default is 0.
+
+        Returns
+        -------
+        tuple[`numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_]
+            Flows as edge features of shape [num_time_steps, num_links * 2] and mask of shape [num_links * 2].
+        """
+        mask = np.zeros(2 * len(self.__sensor_config.links))
+        edge_features = np.array([[default_missing_value] * 2 * len(self.__sensor_config.links)
+                                  for _ in range(len(self.__sensor_readings_time))])
+
+        flow_readings = self.get_data_flows()
+        for flows_idx, link_id in enumerate(self.__sensor_config.flow_sensors):
+            idx1, idx2 = self.map_link_id_to_edge_idx(link_id)
+
+            mask[idx1] = 1
+            mask[idx2] = 1
+
+            edge_features[:, idx1] = flow_readings[:, flows_idx]
+            edge_features[:, idx2] = -1 * flow_readings[:, flows_idx]
+
+        return edge_features, mask
+
     def plot_flows(self, sensor_locations: list[str] = None, show: bool = True,
                    save_to_file: str = None, ax: matplotlib.axes.Axes = None
                    ) -> matplotlib.axes.Axes:
@@ -2273,6 +2565,38 @@ class ScadaData(Serializable):
         idx = [self.__sensor_config.get_index_of_reading(demand_sensor=s_id)
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
+
+    def get_data_demands_as_node_features(self,
+                                          default_missing_value: float = 0.
+                                          ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the demands as node features together with a boolean mask indicating the
+        presence of a sensor.
+
+        Parameters
+        ----------
+        default_missing_value : `float`, optional
+            Default value (i.e. missing value) for nodes where no demand sensor is installed.
+
+            The default is 0.
+
+        Returns
+        -------
+        tuple[`numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_]
+            Demands as node features of shape [num_time_steps, num_nodes], and mask of shape [num_nodes].
+        """
+        mask = np.zeros(len(self.__sensor_config.nodes))
+        node_features = np.array([[default_missing_value] * len(self.__sensor_config.nodes)
+                                  for _ in range(len(self.__sensor_readings_time))])
+        nodes_id = self.__network_topo.get_all_nodes()
+
+        demand_readings = self.get_data_demands()
+        for demands_idx, node_id in enumerate(self.__sensor_config.demand_sensors):
+            idx = nodes_id.index(node_id)
+            node_features[:, idx] = demand_readings[:, demands_idx]
+            mask[idx] = 1
+
+        return node_features, mask
 
     def plot_demands(self, sensor_locations: list[str] = None, show: bool = True,
                      save_to_file: str = None, ax: matplotlib.axes.Axes = None
@@ -2360,6 +2684,39 @@ class ScadaData(Serializable):
         idx = [self.__sensor_config.get_index_of_reading(node_quality_sensor=s_id)
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
+
+    def get_data_nodes_quality_as_node_features(self,
+                                                default_missing_value: float = 0
+                                                ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the nodes' quality as node features together with a boolean mask indicating the
+        presence of a sensor.
+
+        Parameters
+        ----------
+        default_missing_value : `float`, optional
+            Default value (i.e. missing value) for nodes where no quality sensor is installed.
+
+            The default is 0.
+
+        Returns
+        -------
+        tuple[`numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_]
+            Nodes' quality as node features of shape [num_time_steps, num_nodes], and mask of
+            shape [num_nodes].
+        """
+        mask = np.zeros(len(self.__sensor_config.nodes))
+        node_features = np.array([[default_missing_value] * len(self.__sensor_config.nodes)
+                                  for _ in range(len(self.__sensor_readings_time))])
+        nodes_id = self.__network_topo.get_all_nodes()
+
+        node_quality_readings = self.get_data_nodes_quality()
+        for quality_idx, node_id in enumerate(self.__sensor_config.quality_node_sensors):
+            idx = nodes_id.index(node_id)
+            node_features[:, idx] = node_quality_readings[:, quality_idx]
+            mask[idx] = 1
+
+        return node_features, mask
 
     def plot_nodes_quality(self, sensor_locations: list[str] = None, show: bool = True,
                            save_to_file: str = None, ax: matplotlib.axes.Axes = None
@@ -2449,6 +2806,38 @@ class ScadaData(Serializable):
         idx = [self.__sensor_config.get_index_of_reading(link_quality_sensor=s_id)
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
+
+    def get_data_links_quality_as_edge_features(self,
+                                                default_missing_value: float = 0
+                                                ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the links' quality as edge features together with a boolean mask indicating the
+        presence of a sensor.
+
+        Parameters
+        ----------
+        default_missing_value : `float`, optional
+            Default value (i.e. missing value) for links where no quality sensor is installed.
+
+            The default is 0.
+
+        Returns
+        -------
+        tuple[`numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_]
+            Links' quality as edge features of shape [num_time_steps, num_links * 2], and mask of
+            shape [num_links * 2].
+        """
+        mask = np.zeros(2 * len(self.__sensor_config.links))
+        edge_features = np.array([[default_missing_value] * 2 * len(self.__sensor_config.links)
+                                  for _ in range(len(self.__sensor_readings_time))])
+
+        links_quality_readings = self.get_data_links_quality()
+        for quality_idx, link_id in enumerate(self.__sensor_config.quality_link_sensors):
+            for idx in self.map_link_id_to_edge_idx(link_id):
+                edge_features[:, idx] = links_quality_readings[:, quality_idx]
+                mask[idx] = 1
+
+        return edge_features, mask
 
     def plot_links_quality(self, sensor_locations: list[str] = None, show: bool = True,
                            save_to_file: str = None, ax: matplotlib.axes.Axes = None
@@ -2988,6 +3377,50 @@ class ScadaData(Serializable):
                 for link_id in surface_species_sensor_locations[species_id]]
         return self.__sensor_readings[:, idx]
 
+    def get_data_surface_species_concentrations_as_edge_features(self,
+                                                                 default_missing_value: float = 0.
+                                                                 ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the concentrations of surface species as edge features together with a
+        boolean mask indicating the presence of a sensor.
+
+        Note that only surface species with at least one sensor are considered.
+
+        Parameters
+        ----------
+        default_missing_value : `float`, optional
+            Default value (i.e. missing value) for links where no surface species
+            sensor is installed.
+
+            The default is 0.
+
+        Returns
+        -------
+        tuple[`numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_]
+            Concentrations of surface species as edge features of shape
+            [num_time_steps, num_links * 2, num_species], and mask of
+            shape [num_links * 2, num_species].
+        """
+        masks = []
+        results = []
+
+        surface_species_sensor_locations = self.__sensor_config.surface_species_sensors
+        for species_id, links_id in surface_species_sensor_locations.items():
+            mask = np.zeros(2 * len(self.__sensor_config.links))
+            edge_features = np.array([[default_missing_value] * 2 * len(self.__sensor_config.links)
+                                      for _ in range(len(self.__sensor_readings_time))])
+            
+            sensor_readings = self.get_data_surface_species_concentration({species_id: links_id})
+            for sensor_readings_idx, link_id in enumerate(links_id):
+                for idx in self.map_link_id_to_edge_idx(link_id):
+                    edge_features[:, idx] = sensor_readings[:, sensor_readings_idx]
+                    mask[idx] = 1
+
+            results.append(edge_features.reshape(edge_features.shape[0], edge_features.shape[1], 1))
+            masks.append(mask.reshape(-1, 1))
+
+        return np.concatenate(results, axis=2), np.concatenate(masks, axis=1)
+
     def plot_surface_species_concentration(self, surface_species_sensor_locations: dict = None,
                                            show: bool = True, save_to_file: str = None,
                                            ax: matplotlib.axes.Axes = None
@@ -3104,6 +3537,51 @@ class ScadaData(Serializable):
                 for node_id in bulk_species_sensor_locations[species_id]]
         return self.__sensor_readings[:, idx]
 
+    def get_data_bulk_species_concentrations_as_node_features(self,
+                                                              default_missing_value: float = 0.
+                                                              ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the concentrations of bulk species as node features together with a boolean mask
+        indicating the presence of a sensor.
+
+        Note that only bulk species with at least one sensor are considered.
+
+        Parameters
+        ----------
+        default_missing_value : `float`, optional
+            Default value (i.e. missing value) for nodes where no bulk species
+            sensor is installed.
+
+            The default is 0.
+
+        Returns
+        -------
+        tuple[`numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_]
+            Concentrations of bulk species as node features of shape
+            [num_time_steps, num_nodes, num_species], and mask of shape [num_nodes, num_species].
+        """
+        masks = []
+        results = []
+
+        all_nodes_id = self.__network_topo.get_all_nodes()
+        bulk_species_sensor_locations = self.__sensor_config.bulk_species_node_sensors
+
+        for species_id, nodes_id in bulk_species_sensor_locations.items():
+            mask = np.zeros(len(self.__sensor_config.nodes))
+            node_features = np.array([[default_missing_value] * len(self.__sensor_config.nodes)
+                                      for _ in range(len(self.__sensor_readings_time))])
+            
+            sensor_readings = self.get_data_bulk_species_node_concentration({species_id: nodes_id})
+            for sensor_readings_idx, node_id in enumerate(nodes_id):
+                idx = all_nodes_id.index(node_id) 
+                node_features[:, idx] = sensor_readings[:, sensor_readings_idx]
+                mask[idx] = 1
+
+            results.append(node_features.reshape(node_features.shape[0], node_features.shape[1],1))
+            masks.append(mask.reshape(-1, 1))
+
+        return np.concatenate(results, axis=2), np.concatenate(masks, axis=1)
+
     def plot_bulk_species_node_concentration(self, bulk_species_node_sensors: dict = None,
                                              show: bool = True, save_to_file: str = None,
                                              ax: matplotlib.axes.Axes = None
@@ -3218,6 +3696,50 @@ class ScadaData(Serializable):
                 for species_id in bulk_species_sensor_locations
                 for node_id in bulk_species_sensor_locations[species_id]]
         return self.__sensor_readings[:, idx]
+
+    def get_data_bulk_species_concentrations_as_edge_features(self,
+                                                              default_missing_value: float = 0.
+                                                              ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the concentrations of bulk species as edge features together with a boolean mask
+        indicating the presence of a sensor.
+
+        Note that only bulk species with at least one sensor are considered.
+
+        Parameters
+        ----------
+        default_missing_value : `float`, optional
+            Default value (i.e. missing value) for links where no bulk species
+            sensor is installed.
+
+            The default is 0.
+
+        Returns
+        -------
+        tuple[`numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_]
+            Concentrations of bulk species as edge features of shape
+            [num_time_steps, num_links * 2, num_species], and mask of
+            shape [num_links * 2, num_species].
+        """
+        masks = []
+        results = []
+
+        bulk_species_sensor_locations = self.__sensor_config.bulk_species_link_sensors
+        for species_id, links_id in bulk_species_sensor_locations.items():
+            mask = np.zeros(2 * len(self.__sensor_config.links))
+            edge_features = np.array([[default_missing_value] * 2 * len(self.__sensor_config.links)
+                                      for _ in range(len(self.__sensor_readings_time))])
+            
+            sensor_readings = self.get_data_bulk_species_link_concentration({species_id: links_id})
+            for sensor_readings_idx, link_id in enumerate(links_id):
+                for idx in self.map_link_id_to_edge_idx(link_id):
+                    edge_features[:, idx] = sensor_readings[:, sensor_readings_idx]
+                    mask[idx] = 1
+
+            results.append(edge_features.reshape(edge_features.shape[0], edge_features.shape[1], 1))
+            masks.append(mask.reshape(-1, 1))
+
+        return np.concatenate(results, axis=2), np.concatenate(masks, axis=1)
 
     def plot_bulk_species_link_concentration(self, bulk_species_link_sensors: dict = None,
                                              show: bool = True, save_to_file: str = None,

@@ -1,9 +1,14 @@
 """
 Module provides a base class for event detectors.
 """
+import warnings
 from abc import abstractmethod, ABC
 
 from ..simulation.scada import ScadaData
+
+
+warnings.warn("'epyt_flow.models' is deprecated in favor of EPyT-Control " +
+              "and will be removed in future releases.")
 
 
 class EventDetector(ABC):

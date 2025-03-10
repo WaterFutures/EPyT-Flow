@@ -1,10 +1,11 @@
 """
 Module provides a class for implementing sensor noise (e.g. uncertainty in sensor readings).
 """
+from typing import Optional, Callable
 from copy import deepcopy
 import warnings
-from typing import Callable
 import numpy
+from numpy.random import default_rng
 
 from .uncertainties import Uncertainty
 from ..serialization import serializable, JsonSerializable, SENSOR_NOISE_ID
@@ -26,10 +27,15 @@ class SensorNoise(JsonSerializable):
         If None, no local sensor uncertainties are applied.
 
         The default is None.
+    seed : `int`, optional
+        Seed for the random number generator.
+
+        The default is None.
     """
-    def __init__(self, uncertainty: Uncertainty = None,
-                 global_uncertainty: Uncertainty = None,
-                 local_uncertainties: dict[int, str, Uncertainty] = None,
+    def __init__(self, uncertainty: Optional[Uncertainty] = None,
+                 global_uncertainty: Optional[Uncertainty] = None,
+                 local_uncertainties: Optional[dict[int, str, Uncertainty]] = None,
+                 seed: Optional[int] = None,
                  **kwds):
         if uncertainty is not None:
             global_uncertainty = uncertainty
@@ -53,6 +59,7 @@ class SensorNoise(JsonSerializable):
 
         self.__global_uncertainty = global_uncertainty
         self.__local_uncertainties = local_uncertainties
+        self.__np_rand_gen = default_rng(seed)
 
         super().__init__(**kwds)
 
@@ -118,6 +125,8 @@ class SensorNoise(JsonSerializable):
         if self.__local_uncertainties is None:
             return sensor_readings
         else:
+            self.__local_uncertainties.set_random_generator(self.__np_rand_gen)
+
             for (sensor_type, sensor_id), uncertainty in map_sensor_to_idx.items():
                 idx = map_sensor_to_idx(sensor_type, sensor_id)
                 sensor_readings[:, idx] = uncertainty.apply_batch(sensor_readings[:, idx])
@@ -145,4 +154,6 @@ class SensorNoise(JsonSerializable):
         if self.__global_uncertainty is None:
             return sensor_readings
         else:
+            self.__global_uncertainty.set_random_generator(self.__np_rand_gen)
+
             return self.__global_uncertainty.apply_batch(sensor_readings)

@@ -1,6 +1,7 @@
 """
 Module provides a class for implementing model uncertainty.
 """
+from typing import Optional
 from copy import deepcopy
 import warnings
 import epyt
@@ -114,67 +115,31 @@ class ModelUncertainty(JsonSerializable):
         None, in the case of no uncertainty.
 
         The default is None.
-    """
-    def __init__(self, pipe_length_uncertainty: Uncertainty = None,
-                 pipe_roughness_uncertainty: Uncertainty = None,
-                 pipe_diameter_uncertainty: Uncertainty = None,
-                 base_demand_uncertainty: Uncertainty = None,
-                 demand_pattern_uncertainty: Uncertainty = None,
-                 elevation_uncertainty: Uncertainty = None,
-                 constants_uncertainty: Uncertainty = None,
-                 parameters_uncertainty: Uncertainty = None,
-                 global_pipe_length_uncertainty: Uncertainty = None,
-                 global_pipe_roughness_uncertainty: Uncertainty = None,
-                 global_pipe_diameter_uncertainty: Uncertainty = None,
-                 global_base_demand_uncertainty: Uncertainty = None,
-                 global_demand_pattern_uncertainty: Uncertainty = None,
-                 global_elevation_uncertainty: Uncertainty = None,
-                 global_constants_uncertainty: Uncertainty = None,
-                 global_parameters_uncertainty: Uncertainty = None,
-                 local_pipe_length_uncertainty: dict[str, Uncertainty] = None,
-                 local_pipe_roughness_uncertainty: dict[str, Uncertainty] = None,
-                 local_pipe_diameter_uncertainty: dict[str, Uncertainty] = None,
-                 local_base_demand_uncertainty: dict[str, Uncertainty] = None,
-                 local_demand_pattern_uncertainty: dict[str, Uncertainty] = None,
-                 local_elevation_uncertainty: dict[str, Uncertainty] = None,
-                 local_constants_uncertainty: dict[str, Uncertainty] = None,
-                 local_parameters_uncertainty: dict[str, int, Uncertainty] = None,
-                 local_patterns_uncertainty: dict[str, Uncertainty] = None,
-                 local_msx_patterns_uncertainty: dict[str, Uncertainty] = None,
-                 **kwds):
-        if pipe_length_uncertainty is not None:
-            global_pipe_diameter_uncertainty = pipe_length_uncertainty
-            warnings.warn("'pipe_length_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
-        if pipe_roughness_uncertainty is not None:
-            global_pipe_roughness_uncertainty = pipe_roughness_uncertainty
-            warnings.warn("'pipe_roughness_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
-        if pipe_diameter_uncertainty is not None:
-            global_pipe_diameter_uncertainty = pipe_diameter_uncertainty
-            warnings.warn("'pipe_diameter_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
-        if base_demand_uncertainty is not None:
-            global_base_demand_uncertainty = base_demand_uncertainty
-            warnings.warn("'base_demand_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
-        if demand_pattern_uncertainty is not None:
-            global_demand_pattern_uncertainty = demand_pattern_uncertainty
-            warnings.warn("'demand_pattern_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
-        if elevation_uncertainty is not None:
-            global_elevation_uncertainty = elevation_uncertainty
-            warnings.warn("'elevation_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
-        if constants_uncertainty is not None:
-            global_constants_uncertainty = constants_uncertainty
-            warnings.warn("'constants_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
-        if parameters_uncertainty is not None:
-            global_parameters_uncertainty = parameters_uncertainty
-            warnings.warn("'parameters_uncertainty' is deprecated and " +
-                          "will be removed in future releases")
+    seed : `int`, optional
+        Seed for the random number generator.
 
+        Thed default is None.
+    """
+    def __init__(self, global_pipe_length_uncertainty: Optional[Uncertainty] = None,
+                 global_pipe_roughness_uncertainty: Optional[Uncertainty] = None,
+                 global_pipe_diameter_uncertainty: Optional[Uncertainty] = None,
+                 global_base_demand_uncertainty: Optional[Uncertainty] = None,
+                 global_demand_pattern_uncertainty: Optional[Uncertainty] = None,
+                 global_elevation_uncertainty: Optional[Uncertainty] = None,
+                 global_constants_uncertainty: Optional[Uncertainty] = None,
+                 global_parameters_uncertainty: Optional[Uncertainty] = None,
+                 local_pipe_length_uncertainty: Optional[dict[str, Uncertainty]] = None,
+                 local_pipe_roughness_uncertainty: Optional[dict[str, Uncertainty]] = None,
+                 local_pipe_diameter_uncertainty: Optional[dict[str, Uncertainty]] = None,
+                 local_base_demand_uncertainty: Optional[dict[str, Uncertainty]] = None,
+                 local_demand_pattern_uncertainty: Optional[dict[str, Uncertainty]] = None,
+                 local_elevation_uncertainty: Optional[dict[str, Uncertainty]] = None,
+                 local_constants_uncertainty: Optional[dict[str, Uncertainty]] = None,
+                 local_parameters_uncertainty: Optional[dict[str, int, Uncertainty]] = None,
+                 local_patterns_uncertainty: Optional[dict[str, Uncertainty]] = None,
+                 local_msx_patterns_uncertainty: Optional[dict[str, Uncertainty]] = None,
+                 seed: Optional[int] = None,
+                 **kwds):
         if global_pipe_length_uncertainty is not None:
             if not isinstance(global_pipe_length_uncertainty, Uncertainty):
                 raise TypeError("'global_pipe_length_uncertainty' must be an instance of " +
@@ -337,8 +302,21 @@ class ModelUncertainty(JsonSerializable):
         self.__local_parameters = local_parameters_uncertainty
         self.__local_patterns = local_patterns_uncertainty
         self.__local_msx_patterns = local_msx_patterns_uncertainty
+        self.__seed = seed
 
         super().__init__(**kwds)
+
+    @property
+    def seed(self) -> int:
+        """
+        Returns the seed used for the random number generator.
+
+        Returns
+        -------
+        `int`
+            Seed for the random number generator.
+        """
+        return self.__seed
 
     @property
     def global_pipe_length(self) -> Uncertainty:
@@ -574,7 +552,8 @@ class ModelUncertainty(JsonSerializable):
                    "local_constants_uncertainty": self.__local_constants,
                    "local_parameters_uncertainty": self.__local_parameters,
                    "local_patterns_uncertainty": self.__local_patterns,
-                   "local_msx_patterns_uncertainty": self.__local_msx_patterns}
+                   "local_msx_patterns_uncertainty": self.__local_msx_patterns,
+                   "seed": self.__seed}
 
         return super().get_attributes() | attribs
 
@@ -600,7 +579,8 @@ class ModelUncertainty(JsonSerializable):
             and self.__local_parameters == other.local_parameters \
             and self.__local_constants == other.local_constants \
             and self.__local_patterns == other.local_patterns \
-            and self.__local_msx_patterns == other.local_msx_patterns
+            and self.__local_msx_patterns == other.local_msx_patterns \
+            and self.__seed == other.seed
 
     def __str__(self) -> str:
         return f"global_pipe_length: {self.__global_pipe_length} " +\
@@ -620,7 +600,7 @@ class ModelUncertainty(JsonSerializable):
             f"local_constants: {self.__local_constants} " + \
             f"local_parameters: {self.__local_parameters} " + \
             f"local_patterns: {self.__local_patterns} " + \
-            f"local_msx_patterns: {self.__local_msx_patterns}"
+            f"local_msx_patterns: {self.__local_msx_patterns} + seed: {self.__seed}"
 
     def apply(self, epanet_api: epyt.epanet) -> None:
         """
@@ -631,12 +611,18 @@ class ModelUncertainty(JsonSerializable):
         epanet_api : `epyt.epanet <https://epanet-python-toolkit-epyt.readthedocs.io/en/stable/api.html#epyt.epanet.epanet>`_
             Interface to EPANET and EPANET-MSX.
         """
+        np_rand_gen = np.random.default_rng(seed=self.__seed)
+
         if self.__global_pipe_length is not None:
+            self.__global_pipe_length.set_random_generator(np_rand_gen)
+
             link_length = epanet_api.getLinkLength()
             link_length = self.__global_pipe_length.apply_batch(link_length)
             epanet_api.setLinkLength(link_length)
 
         if self.__local_pipe_length is not None:
+            self.__local_pipe_length.set_random_generator(np_rand_gen)
+
             for pipe_id, uncertainty in self.__local_pipe_length.items():
                 link_idx = epanet_api.getLinkIndex(pipe_id)
                 link_length = epanet_api.getLinkLength(link_idx)
@@ -644,11 +630,15 @@ class ModelUncertainty(JsonSerializable):
                 epanet_api.setLinkLength(link_idx, link_length)
 
         if self.__global_pipe_diameter is not None:
+            self.__global_pipe_diameter.set_random_generator(np_rand_gen)
+
             link_diameters = epanet_api.getLinkDiameter()
             link_diameters = self.__global_pipe_diameter.apply_batch(link_diameters)
             epanet_api.setLinkDiameter(link_diameters)
 
         if self.__local_pipe_diameter is not None:
+            self.__local_pipe_diameter.set_random_generator(np_rand_gen)
+
             for pipe_id, uncertainty in self.__local_pipe_diameter.items():
                 link_idx = epanet_api.getLinkIndex(pipe_id)
                 link_diameter = epanet_api.getLinkDiameter(link_idx)
@@ -656,11 +646,15 @@ class ModelUncertainty(JsonSerializable):
                 epanet_api.setLinkDiameter(link_idx, link_diameter)
 
         if self.__global_pipe_roughness is not None:
+            self.__global_pipe_roughness.set_random_generator(np_rand_gen)
+
             coeffs = epanet_api.getLinkRoughnessCoeff()
             coeffs = self.__global_pipe_roughness.apply_batch(coeffs)
             epanet_api.setLinkRoughnessCoeff(coeffs)
 
         if self.__local_pipe_roughness is not None:
+            self.__local_pipe_roughness.set_random_generator(np_rand_gen)
+
             for pipe_id, uncertainty in self.__local_pipe_roughness.items():
                 link_idx = epanet_api.getLinkIndex(pipe_id)
                 link_roughness_coeff = epanet_api.getLinkRoughnessCoeff(link_idx)
@@ -668,6 +662,8 @@ class ModelUncertainty(JsonSerializable):
                 epanet_api.setLinkRoughnessCoeff(link_idx, link_roughness_coeff)
 
         if self.__global_base_demand is not None:
+            self.__global_base_demand.set_random_generator(np_rand_gen)
+
             all_nodes_idx = epanet_api.getNodeIndex()
             for node_idx in all_nodes_idx:
                 n_demand_categories = epanet_api.getNodeDemandCategoriesNumber(node_idx)
@@ -677,6 +673,8 @@ class ModelUncertainty(JsonSerializable):
                     epanet_api.setNodeBaseDemands(node_idx, demand_category + 1, base_demand)
 
         if self.__local_base_demand is not None:
+            self.__local_base_demand.set_random_generator(np_rand_gen)
+
             for node_id, uncertainty in self.__local_base_demand.items():
                 node_idx = epanet_api.getNodeIndex(node_id)
                 n_demand_categories = epanet_api.getNodeDemandCategoriesNumber(node_idx)
@@ -686,6 +684,8 @@ class ModelUncertainty(JsonSerializable):
                     epanet_api.setNodeBaseDemands(node_idx, demand_category + 1, base_demand)
 
         if self.__global_demand_pattern is not None:
+            self.__global_demand_pattern.set_random_generator(np_rand_gen)
+
             demand_patterns_idx = epanet_api.getNodeDemandPatternIndex()
             demand_patterns_id = np.unique([demand_patterns_idx[k]
                                             for k in demand_patterns_idx.keys()])
@@ -699,6 +699,8 @@ class ModelUncertainty(JsonSerializable):
                     epanet_api.setPatternValue(pattern_id, t+1, v_)
 
         if self.__local_demand_pattern is not None:
+            self.__local_demand_pattern.set_random_generator(np_rand_gen)
+
             patterns_id = epanet_api.getPatternNameID()
             paterns_idx = epanet_api.getPatternIndex()
 
@@ -711,11 +713,15 @@ class ModelUncertainty(JsonSerializable):
                     epanet_api.setPatternValue(pattern_idx, t+1, v_)
 
         if self.__global_elevation is not None:
+            self.__global_elevation.set_random_generator(np_rand_gen)
+
             elevations = epanet_api.getNodeElevations()
             elevations = self.__global_elevation.apply_batch(elevations)
             epanet_api.setNodeElevations(elevations)
 
         if self.__local_elevation is not None:
+            self.__local_elevation.set_random_generator(np_rand_gen)
+
             for node_id, uncertainty in self.__local_elevation.items():
                 node_idx = epanet_api.getNodeIndex(node_id)
                 elevation = epanet_api.getNodeElevations(node_idx)
@@ -723,6 +729,8 @@ class ModelUncertainty(JsonSerializable):
                 epanet_api.setNodeElevations(node_idx, elevation)
 
         if self.__local_patterns is not None:
+            self.__local_patterns.set_random_generator(np_rand_gen)
+
             for pattern_id, uncertainty in self.__local_patterns.items():
                 pattern_idx = epanet_api.getPatternIndex(pattern_id)
                 pattern_length = epanet_api.getPatternLengths(pattern_idx)
@@ -733,11 +741,15 @@ class ModelUncertainty(JsonSerializable):
 
         if epanet_api.MSXFile is not None:
             if self.__global_constants is not None:
+                self.__global_constants.set_random_generator(np_rand_gen)
+
                 constants = np.array(epanet_api.getMSXConstantsValue())
                 constants = self.__global_constants.apply_batch(constants)
                 epanet_api.setMSXConstantsValue(constants)
 
             if self.__local_constants:
+                self.__local_constants.set_random_generator(np_rand_gen)
+
                 for constant_id, uncertainty in self.__local_constants.items():
                     idx = epanet_api.MSXgetindex(ToolkitConstants.MSX_CONSTANT, constant_id)
                     constant = epanet_api.msx.MSXgetconstant(idx)
@@ -745,6 +757,8 @@ class ModelUncertainty(JsonSerializable):
                     epanet_api.msx.MSXsetconstant(idx, constant)
 
             if self.__global_parameters is not None:
+                self.__global_parameters.set_random_generator(np_rand_gen)
+
                 parameters_pipes = epanet_api.getMSXParametersPipesValue()
                 for i, pipe_idx in enumerate(epanet_api.getLinkPipeIndex()):
                     if len(parameters_pipes[i]) == 0:
@@ -764,6 +778,8 @@ class ModelUncertainty(JsonSerializable):
                     epanet_api.setMSXParametersTanksValue(tank_idx, parameters_tanks_val)
 
             if self.__local_parameters is not None:
+                self.__local_parameters.set_random_generator(np_rand_gen)
+
                 for (param_id, item_type, item_id), uncertainty in self.__local_parameters.items():
                     idx, = epanet_api.getMSXParametersIndex([param_id])
 
@@ -780,6 +796,8 @@ class ModelUncertainty(JsonSerializable):
                     epanet_api.msx.MSXsetparameter(item_type, item_idx, idx, parameter)
 
             if self.__local_msx_patterns is not None:
+                self.__local_msx_patterns.set_random_generator(np_rand_gen)
+
                 for pattern_id, uncertainty in self.__local_msx_patterns.items():
                     pattern_idx, = epanet_api.getMSXPatternsIndex([pattern_id])
                     pattern = epanet_api.getMSXConstantsValue([pattern_idx])

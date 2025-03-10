@@ -1,6 +1,8 @@
 """
 Module provides functions for registering and creating control environments.
 """
+import warnings
+
 from .scenario_control_env import ScenarioControlEnv
 
 
@@ -18,6 +20,9 @@ def register(env_name: str, env: ScenarioControlEnv) -> None:
     env : :class:`~epyt_flow.gym.scenario_control_env.ScenarioControlEnv`
         Environment.
     """
+    warnings.warn("'register()' is deprecated and will be removed in future releases -- " +
+                  "please consider switching to the EPyT-Control package")
+
     if env_name in environments:
         raise ValueError(f"Environment '{env_name}' already exists.")
     if not issubclass(env, ScenarioControlEnv):
@@ -41,6 +46,9 @@ def make(env_name: str, **kwds) -> ScenarioControlEnv:
     :class:`~epyt_flow.gym.scenario_control_env.ScenarioControlEnv`
         Environment.
     """
+    warnings.warn("'make()' is deprecated and will be removed in future releases -- " +
+                  "please consider switching to the EPyT-Control package")
+
     if env_name not in environments:
         raise ValueError(f"Unknown environment '{env_name}'.")
 

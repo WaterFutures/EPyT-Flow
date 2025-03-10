@@ -2,7 +2,9 @@
 Module provides classes for implementing different types of uncertainties.
 """
 from abc import ABC, abstractmethod
+from copy import deepcopy
 import numpy as np
+from numpy.random import Generator, default_rng
 
 from .utils import generate_deep_random_gaussian_noise, create_deep_random_pattern
 from ..serialization import serializable, JsonSerializable, ABSOLUTE_GAUSSIAN_UNCERTAINTY_ID, \
@@ -34,6 +36,8 @@ class Uncertainty(ABC):
         self.__min_value = min_value
         self.__max_value = max_value
 
+        self._random_generator = default_rng()
+
     @property
     def min_value(self) -> float:
         """
@@ -58,6 +62,32 @@ class Uncertainty(ABC):
         """
         return self.__max_value
 
+    @property
+    def random_generator(self) -> Generator:
+        """
+        Returns the random number generator that is used for generating the uncertainties.
+
+        Returns
+        -------
+        `numpy.random.Generator <https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator>`_
+            The random number generator.
+        """
+        return deepcopy(self._random_generator)
+
+    def set_random_generator(self, np_rand_generator: Generator) -> None:
+        """
+        Sets the random number generator that is going to be used for generating the uncertainties.
+
+        Parameters
+        ----------
+        np_rand_generator : `numpy.random.Generator <https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator>`_, optional
+            The random number generator.
+
+            The default is the default BitGenerator (PCG64) as constructed by
+            `numpy.random.default_rng() <https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.default_rng>`_.
+        """
+        self._random_generator = np_rand_generator
+
     def get_attributes(self) -> dict:
         """
         Gets all attributes to be serialized -- these attributes are passed to the
@@ -75,7 +105,8 @@ class Uncertainty(ABC):
             raise TypeError("Can not compare 'Uncertainty' instance " +
                             f"with '{type(other)}' instance")
 
-        return self.__min_value == other.min_value and self.__max_value == other.max_value
+        return self.__min_value == other.min_value and self.__max_value == other.max_value and \
+            self._random_generator == other.random_generator
 
     def __str__(self) -> str:
         return f"min_value: {self.__min_value} max_value: {self.__max_value}"
@@ -159,8 +190,8 @@ class GaussianUncertainty(Uncertainty):
     def __init__(self, mean: float = None, scale: float = None, **kwds):
         super().__init__(**kwds)
 
-        self.__mean = np.random.rand() if mean is None else mean
-        self.__scale = np.random.rand() if scale is None else scale
+        self._mean = mean
+        self._scale = scale
 
     @property
     def mean(self) -> float:
@@ -172,7 +203,7 @@ class GaussianUncertainty(Uncertainty):
         `float`
             Mean of the Gaussian noise.
         """
-        return self.__mean
+        return self._mean
 
     @property
     def scale(self) -> float:
@@ -184,20 +215,20 @@ class GaussianUncertainty(Uncertainty):
         `float`
             Scale (i.e. standard deviation) of the Gaussian noise.
         """
-        return self.__scale
+        return self._scale
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"mean": self.__mean, "scale": self.__scale}
+        return super().get_attributes() | {"mean": self._mean, "scale": self._scale}
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, GaussianUncertainty):
             raise TypeError("Can not compare 'GaussianUncertainty' instance " +
                             f"with '{type(other)}' instance")
 
-        return super().__eq__(other) and self.__mean == other.mean and self.__scale == other.scale
+        return super().__eq__(other) and self._mean == other.mean and self._scale == other.scale
 
     def __str__(self) -> str:
-        return super().__str__() + f" mean: {self.__mean} scale: {self.__scale}"
+        return super().__str__() + f" mean: {self._mean} scale: {self._scale}"
 
 
 @serializable(ABSOLUTE_GAUSSIAN_UNCERTAINTY_ID, ".epytflow_uncertainty_absolute_gaussian")
@@ -206,7 +237,10 @@ class AbsoluteGaussianUncertainty(GaussianUncertainty, JsonSerializable):
     Class implementing absolute Gaussian uncertainty -- i.e. Gaussian noise is added to the data.
     """
     def apply(self, data: float) -> float:
-        data += np.random.normal(loc=self.mean, scale=self.scale)
+        self._mean = self._random_generator.rand() if self._mean is None else self._mean
+        self._scale = self._random_generator.rand() if self._scale is None else self._scale
+
+        data += self._random_generator.normal(loc=self._mean, scale=self._scale)
 
         return self.clip(data)
 
@@ -230,7 +264,9 @@ class RelativeGaussianUncertainty(GaussianUncertainty, JsonSerializable):
         super().__init__(mean=0., scale=scale, **kwds)
 
     def apply(self, data: float) -> float:
-        data += np.random.normal(loc=0, scale=self.scale)
+        self._scale = self._random_generator.rand() if self._scale is None else self._scale
+
+        data += self._random_generator.normal(loc=0, scale=self._scale)
 
         return self.clip(data)
 
@@ -300,7 +336,7 @@ class AbsoluteUniformUncertainty(UniformUncertainty, JsonSerializable):
     Class implementing absolute uniform uncertainty -- i.e. uniform noise is added to the data.
     """
     def apply(self, data: float) -> float:
-        data += np.random.uniform(low=self.low, high=self.high)
+        data += self._random_generator.uniform(low=self.low, high=self.high)
 
         return self.clip(data)
 
@@ -311,7 +347,7 @@ class RelativeUniformUncertainty(UniformUncertainty, JsonSerializable):
     Class implementing relative uniform uncertainty -- i.e. data is multiplied by uniform noise.
     """
     def apply(self, data: float) -> float:
-        data *= np.random.uniform(low=self.low, high=self.high)
+        data *= self._random_generator.uniform(low=self.low, high=self.high)
 
         return self.clip(data)
 
@@ -345,7 +381,7 @@ class PercentageDeviationUncertainty(UniformUncertainty, JsonSerializable):
         return super().get_attributes() | {"deviation_percentage": self.high - 1.}
 
     def apply(self, data: float) -> float:
-        data *= np.random.uniform(low=self.low, high=self.high)
+        data *= self._random_generator.uniform(low=self.low, high=self.high)
 
         return self.clip(data)
 
@@ -361,12 +397,17 @@ class DeepUniformUncertainty(Uncertainty):
 
     def __create_uncertainties(self, n_samples: int = 500):
         self._uncertainties_idx = 0
-        rand_low = create_deep_random_pattern(n_samples)
-        rand_high = create_deep_random_pattern(n_samples)
+        rand_low = create_deep_random_pattern(n_samples, np_rand_gen=self._random_generator)
+        rand_high = create_deep_random_pattern(n_samples, np_rand_gen=self._random_generator)
         rand_low = np.minimum(rand_low, rand_high)
         rand_high = np.maximum(rand_low, rand_high)
-        self._uncertainties = [np.random.uniform(low, high)
+        self._uncertainties = [self._random_generator.uniform(low, high)
                                for low, high in zip(rand_low, rand_high)]
+
+    def set_random_generator(self, np_rand_generator) -> None:
+        super().set_random_generator(np_rand_generator)
+
+        self.__create_uncertainties()
 
     @abstractmethod
     def apply(self, data: float) -> float:
@@ -422,7 +463,13 @@ class DeepGaussianUncertainty(Uncertainty, JsonSerializable):
 
     def __create_uncertainties(self, n_samples: int = 500) -> None:
         self._uncertainties_idx = 0
-        self._uncertainties = generate_deep_random_gaussian_noise(n_samples, self.__mean)
+        self._uncertainties = generate_deep_random_gaussian_noise(n_samples, self.__mean,
+                                                                  np_rand_gen=self._random_generator)
+
+    def set_random_generator(self, np_rand_generator) -> None:
+        super().set_random_generator(np_rand_generator)
+
+        self.__create_uncertainties()
 
     @abstractmethod
     def apply(self, data: float) -> float:
@@ -505,6 +552,11 @@ class DeepUncertainty(Uncertainty):
         """
         return self.__max_noise_value
 
+    def set_random_generator(self, np_rand_generator) -> None:
+        super().set_random_generator(np_rand_generator)
+
+        self.__create_uncertainties()
+
     def get_attributes(self) -> dict:
         return super().get_attributes() | {"min_noise_value": self.__min_noise_value,
                                            "max_noise_value": self.__max_noise_value}
@@ -528,7 +580,8 @@ class DeepUncertainty(Uncertainty):
 
         self._uncertainties_idx = 0
         self._uncertainties = create_deep_random_pattern(n_samples, self.__min_noise_value,
-                                                         self.__max_noise_value, init_value)
+                                                         self.__max_noise_value, init_value,
+                                                         np_rand_gen=self._random_generator)
 
     @abstractmethod
     def apply(self, data: float) -> float:

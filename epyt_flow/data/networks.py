@@ -154,8 +154,9 @@ def load_net1(download_dir: str = get_temp_folder(), verbose: bool = True,
     """
     f_in = os.path.join(download_dir, "Net1.inp")
     url = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/Net1.inp"
+    backup_urls = ["https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/dev/epyt/networks/asce-tf-wdst/Net1.inp"]
 
-    download_if_necessary(f_in, url, verbose)
+    download_if_necessary(f_in, url, verbose, backup_urls)
     return load_inp(f_in, flow_units_id=flow_units_id)
 
 
@@ -201,8 +202,9 @@ def load_net2(download_dir: str = get_temp_folder(), verbose: bool = True,
     """
     f_in = os.path.join(download_dir, "Net2.inp")
     url = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/Net2.inp"
+    backup_urls = ["https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/dev/epyt/networks/asce-tf-wdst/Net2.inp"]
 
-    download_if_necessary(f_in, url, verbose)
+    download_if_necessary(f_in, url, verbose, backup_urls)
     return load_inp(f_in, flow_units_id=flow_units_id)
 
 
@@ -248,8 +250,9 @@ def load_net3(download_dir: str = get_temp_folder(), verbose: bool = True,
     """
     f_in = os.path.join(download_dir, "Net3.inp")
     url = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/Net3.inp"
+    backup_urls = ["https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/dev/epyt/networks/asce-tf-wdst/Net3.inp"]
 
-    download_if_necessary(f_in, url, verbose)
+    download_if_necessary(f_in, url, verbose, backup_urls)
     return load_inp(f_in, flow_units_id=flow_units_id)
 
 
@@ -342,8 +345,9 @@ def load_richmond(download_dir: str = get_temp_folder(), verbose: bool = True,
     """
     f_in = os.path.join(download_dir, "Richmond_standard.inp")
     url = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/Richmond_standard.inp"
+    backup_urls = ["https://raw.githubusercontent.com/KIOS-Research/EPANET-Benchmarks/refs/heads/master/collect-epanet-inp/Richmond_standard.inp"]
 
-    download_if_necessary(f_in, url, verbose)
+    download_if_necessary(f_in, url, verbose, backup_urls)
     return load_inp(f_in, flow_units_id=flow_units_id)
 
 
@@ -389,8 +393,9 @@ def load_micropolis(download_dir: str = get_temp_folder(), verbose: bool = True,
     """
     f_in = os.path.join(download_dir, "MICROPOLIS_v1.inp")
     url = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/MICROPOLIS_v1.inp"
+    backup_urls = ["https://raw.githubusercontent.com/KIOS-Research/EPANET-Benchmarks/refs/heads/master/collect-epanet-inp/MICROPOLIS_v1.inp"]
 
-    download_if_necessary(f_in, url, verbose)
+    download_if_necessary(f_in, url, verbose, backup_urls)
     return load_inp(f_in, flow_units_id=flow_units_id)
 
 
@@ -436,8 +441,9 @@ def load_balerma(download_dir: str = get_temp_folder(), verbose: bool = True,
     """
     f_in = os.path.join(download_dir, "Balerma.inp")
     url = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/Balerma.inp"
+    backup_urls = ["https://raw.githubusercontent.com/KIOS-Research/EPANET-Benchmarks/refs/heads/master/collect-epanet-inp/Balerma.inp"]
 
-    download_if_necessary(f_in, url, verbose)
+    download_if_necessary(f_in, url, verbose, backup_urls)
     return load_inp(f_in, flow_units_id=flow_units_id)
 
 
@@ -483,8 +489,9 @@ def load_rural(download_dir: str = get_temp_folder(), verbose: bool = True,
     """
     f_in = os.path.join(download_dir, "RuralNetwork.inp")
     url = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/RuralNetwork.inp"
+    backup_urls = ["https://raw.githubusercontent.com/KIOS-Research/EPANET-Benchmarks/refs/heads/master/collect-epanet-inp/RuralNetwork.inp"]
 
-    download_if_necessary(f_in, url, verbose)
+    download_if_necessary(f_in, url, verbose, backup_urls)
     return load_inp(f_in, flow_units_id=flow_units_id)
 
 
@@ -530,8 +537,9 @@ def load_bwsn1(download_dir: str = get_temp_folder(), verbose: bool = True,
     """
     f_in = os.path.join(download_dir, "BWSN_Network_1.inp")
     url = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/BWSN_Network_1.inp"
+    backup_urls = ["https://raw.githubusercontent.com/KIOS-Research/EPANET-Benchmarks/refs/heads/master/collect-epanet-inp/BWSN_Network_1.inp"]
 
-    download_if_necessary(f_in, url, verbose)
+    download_if_necessary(f_in, url, verbose, backup_urls)
     return load_inp(f_in, flow_units_id=flow_units_id)
 
 
@@ -577,8 +585,9 @@ def load_bwsn2(download_dir: str = get_temp_folder(), verbose: bool = True,
     """
     f_in = os.path.join(download_dir, "BWSN_Network_2.inp")
     url = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/BWSN_Network_2.inp"
+    backup_urls = ["https://raw.githubusercontent.com/KIOS-Research/EPANET-Benchmarks/refs/heads/master/collect-epanet-inp/BWSN_Network_2.inp"]
 
-    download_if_necessary(f_in, url, verbose)
+    download_if_necessary(f_in, url, verbose, backup_urls)
     return load_inp(f_in, flow_units_id=flow_units_id)
 
 
@@ -624,8 +633,9 @@ def load_anytown(download_dir: str = get_temp_folder(), verbose: bool = True,
     """
     f_in = os.path.join(download_dir, "Anytown.inp")
     url = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/Anytown.inp"
+    backup_urls = ["https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/dev/epyt/networks/asce-tf-wdst/Anytown.inp"]
 
-    download_if_necessary(f_in, url, verbose)
+    download_if_necessary(f_in, url, verbose, backup_urls)
     return load_inp(f_in, flow_units_id=flow_units_id)
 
 
@@ -670,9 +680,10 @@ def load_dtown(download_dir: str = get_temp_folder(), verbose: bool = True,
         :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`.
     """
     f_in = os.path.join(download_dir, "d-town.inp")
-    url = "https://www.exeter.ac.uk/media/universityofexeter/emps/research/cws/downloads/d-town.inp"
+    url = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/d-town.inp"
+    backup_urls = ["https://raw.githubusercontent.com/KIOS-Research/EPANET-Benchmarks/refs/heads/master/collect-epanet-inp/d-town.inp"]
 
-    download_if_necessary(f_in, url, verbose)
+    download_if_necessary(f_in, url, verbose, backup_urls)
     return load_inp(f_in, flow_units_id=flow_units_id)
 
 
@@ -774,8 +785,9 @@ def load_kentucky(wdn_id: int = 1, download_dir: str = get_temp_folder(),
 
     f_in = os.path.join(download_dir, f"ky{wdn_id}.inp")
     url = f"https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/ky{wdn_id}.inp"
+    backup_urls = [f"https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/dev/epyt/networks/asce-tf-wdst/ky{wdn_id}.inp"]
 
-    download_if_necessary(f_in, url, verbose)
+    download_if_necessary(f_in, url, verbose, backup_urls)
     return load_inp(f_in, flow_units_id=flow_units_id)
 
 
@@ -826,8 +838,9 @@ def load_hanoi(download_dir: str = get_temp_folder(),
     """
     f_in = os.path.join(download_dir, "Hanoi.inp")
     url = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/Networks/Hanoi.inp"
+    backup_urls = ["https://raw.githubusercontent.com/OpenWaterAnalytics/EPyT/refs/heads/dev/epyt/networks/asce-tf-wdst/Hanoi.inp"]
 
-    download_if_necessary(f_in, url, verbose)
+    download_if_necessary(f_in, url, verbose, backup_urls)
     config = load_inp(f_in, flow_units_id=flow_units_id)
 
     if include_default_sensor_placement is True:

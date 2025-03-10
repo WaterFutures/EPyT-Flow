@@ -1,20 +1,20 @@
 .. _tut.quality:
 
-*******
-Quality
-*******
+*************
+Water Quality
+*************
 
-EPyT-Flow supports :ref:`basic <basic_quality>` and :ref:`advanced <advanced_quality>` quality analysis -- the former is realized
+EPyT-Flow supports :ref:`basic <basic_quality>` and :ref:`advanced <advanced_quality>` water quality analysis -- the former is realized
 through `EPANET <https://github.com/USEPA/EPANET2.2>`__ and the latter one
 through the usage of `EPANET-MSX <https://github.com/USEPA/EPANETMSX/>`__.
 
 
 .. _basic_quality:
 
-Basic Quality Analysis
-++++++++++++++++++++++
+Basic Water Quality Analysis
+++++++++++++++++++++++++++++
 
-The basic quality analysis supports water age analysis, simple chemical analysis, 
+The basic water quality analysis supports water age analysis, simple chemical analysis, 
 and source tracing analysis.
 
 .. note::
@@ -100,8 +100,9 @@ Different types of source patterns are supported:
 +--------------+------------------------------------------------------------+
 
 
-Furthermore, reaction options such as bulk and wall coefficients might be set as well by 
-either setting the options in the .inp file or by calling the corresponding EPANET functions.
+Furthermore, initial node concentrations, and reaction options such as bulk and wall coefficients
+can be set as well by either setting the options in the .inp file or by calling
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_quality_parameters`.
 
 Example of running a chemical analysis where the concentration at the reservoir
 is fixed over time.
@@ -133,10 +134,10 @@ is fixed over time.
 
 .. _advanced_quality:
 
-Advanced Quality Analysis
-+++++++++++++++++++++++++
+Advanced Water Quality Analysis
++++++++++++++++++++++++++++++++
 
-EPyT-Flow provides advanced quality analysis through
+EPyT-Flow provides advanced water quality analysis through
 `EPANET-MSX <https://github.com/OpenWaterAnalytics/epanet-msx>`_.
 
 The central concept in advanced quality analysis is the concept of a *species*.
@@ -158,6 +159,14 @@ The adavanced quality analysis requires an additional .msx file (`f_msx_in`) whe
 
 The .msx file contains the specifications of different species as well as their reaction dynamics.
 By passing an .msx file to `f_msx_in`, EPANET-MSX is loaded and initialized automatically.
+
+Specifying an injection of an existing species can be done by calling the function
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_species_injection_source`.
+In addition, note that :ref:`injection events <msx_events>` are also implemented.
+
+Specifying the initial concentration of bulk and surface species can be done by calling the functions 
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_bulk_species_node_initial_concentrations` and
+:func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_species_link_initial_concentrations`
 
 When running the simulation by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.run_simulation`, first the

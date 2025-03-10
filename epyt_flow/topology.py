@@ -653,6 +653,22 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
         return bsr_array((np.ones(len(row)), (row, col)), shape=(n_nodes, n_nodes))
 
+    def get_adj_list(self) -> dict[str, list[str]]:
+        """
+        Returns the connectivity of the nodes (node IDs) as an adjacency list.
+
+        Returns
+        -------
+        `dict[str, list[str]]`
+            Adjacency list as a dictionary.
+        """
+        adj_list = {}
+
+        for node_id in self.get_all_nodes():
+            adj_list[node_id] = self.get_neighbors(node_id)
+
+        return adj_list
+
     def get_neighbors(self, node_id: str) -> list[str]:
         """
         Gets all neighboring nodes of a given node.

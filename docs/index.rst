@@ -10,6 +10,10 @@ It aims to provide a high-level interface for the easy generation of hydraulic a
 However, it also provides access to low-level functions by `EPANET <https://github.com/USEPA/EPANET2.2>`_ 
 and `EPANET-MSX <https://github.com/USEPA/EPANETMSX/>`_.
 
+We recommend checking out `EPyT-Control <https://github.com/WaterFutures/EPyT-Control>`_
+if you are intersted in (data-driven) control and relates tasks such as state estimation
+and event diagnosis in Water Distribution Networks.
+
 Statement of need 
 -----------------
 
@@ -90,7 +94,6 @@ Examples
    examples/water_age
    examples/chlorine_injection
    examples/net2-cl2_example
-   examples/event_detection
    examples/visualization
 
 
