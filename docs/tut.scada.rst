@@ -6,6 +6,16 @@ SCADA Data
 
 Simulation results are stored in :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances.
 
+The topology of the simulated water distribution network can be accessed by the property
+:func:`~epyt_flow.simulation.scada.scada_data.ScadaData.network_topo` of a given
+:class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance.
+In addition to that, the function 
+:func:`~epyt_flow.simulation.scada.scada_data.ScadaData.topo_adj_matrix` returns the
+the adjacency matrix, and the function
+:func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_topo_edge_indices` returns the
+topology as edge indices.
+
+
 Sensor Placements
 +++++++++++++++++
 
@@ -192,6 +202,9 @@ of a :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
     scada_data.change_sensor_config(cur_sensor_config)  # Set new sensor configuration
 
 
+Accessing Sensor Readings
++++++++++++++++++++++++++
+
 If a sensor placement has been specified, the final sensor readings of all sensors (as a `numpy.array`) 
 can be obtained by calling :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data` 
 of a given :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instance:
@@ -275,6 +288,47 @@ Example for getting the pressure readings at node "5":
     # Access pressure readings at node "5"
     pressure_at_node_5 = scada_data.get_data_pressures(sensor_locations=["5"])
 
+
+Connecting sensor readings to the topology of the network
+---------------------------------------------------------
+
+Sensor readings can also be directly connected to the topology of the network,
+which for instance is useful when working with Graph Neural Networks (GNNs) -- also refer
+to :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_topo_edge_indices` for getting
+the topology of the network as edge indices (compatible with
+`PyTorch Geometric <https://github.com/pyg-team/pytorch_geometric>`_).
+
+For this purpose, :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances have
+dedicated functions for returning the sensor readings in topology consistent feature matrices
+and masks indicating the presence of a sensor:
+
++---------------------------------+-------------------------------------------------------------------------------------------------------------------+
+| Sensor type                     | Function for getting a topology consistent feature matrix                                                         |
++=================================+===================================================================================================================+
+| Pressure                        | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_pressures_as_node_features`                      |
++---------------------------------+-------------------------------------------------------------------------------------------------------------------+
+| Flow                            | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_flows_as_edge_features`                          |
++---------------------------------+-------------------------------------------------------------------------------------------------------------------+
+| Node quality                    | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_nodes_quality_as_node_features`                  |
++---------------------------------+-------------------------------------------------------------------------------------------------------------------+
+| Link quality                    | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_links_quality_as_edge_features`                  |
++---------------------------------+-------------------------------------------------------------------------------------------------------------------+
+| Surface species concentration   | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_surface_species_concentrations_as_edge_features` |
++---------------------------------+-------------------------------------------------------------------------------------------------------------------+
+| Bulk species node concentration | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_bulk_species_concentrations_as_node_features`    |
++---------------------------------+-------------------------------------------------------------------------------------------------------------------+
+| Bulk species link concentration | :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_bulk_species_concentrations_as_edge_features`    |
++---------------------------------+-------------------------------------------------------------------------------------------------------------------+
+
+For convience, :class:`~epyt_flow.simulation.scada.scada_data.ScadaData` instances also have
+functions for retrieving all node features 
+:func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_node_features`,
+and all edges features
+:func:`~epyt_flow.simulation.scada.scada_data.ScadaData.get_data_edge_features`.
+
+
+Plotting of sensor readings
+---------------------------
 
 Similar to the functions for retrieving the final sensor reading, there also exist
 dedicated functions for plotting the final sensor readings:

@@ -154,7 +154,8 @@ More Water Distribution Networks (WDNs) and benchmarks are available on the
 ## More on Control
 
 We recommend checking out [EPyT-Control](https://github.com/WaterFutures/EPyT-Control)
-if you are intersted in (data-driven) control for Water Distribution Networks.
+if you are intersted in (data-driven) control and relates tasks such as state estimation
+and event diagnosis in Water Distribution Networks.
 
 ## License
 

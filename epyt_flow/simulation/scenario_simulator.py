@@ -112,7 +112,6 @@ class ScenarioSimulator():
         self._model_uncertainty = ModelUncertainty()
         self._sensor_noise = None
         self._sensor_config = None
-        self._advanced_controls = []
         self._custom_controls = []
         self._simple_controls = []
         self._complex_controls = []
@@ -190,9 +189,6 @@ class ScenarioSimulator():
             self._sensor_noise = scenario_config.sensor_noise
             self._sensor_config = scenario_config.sensor_config
 
-            if scenario_config.advanced_controls is not None:
-                for control in scenario_config.advanced_controls:
-                    self.add_advanced_control(control)
             for control in scenario_config.custom_controls:
                 self.add_custom_control(control)
             for control in scenario_config.simple_controls:
@@ -341,22 +337,6 @@ class ScenarioSimulator():
         sensor_config.validate(self.epanet_api)
 
         self._sensor_config = sensor_config
-
-    @property
-    def advanced_controls(self) -> list:
-        """
-        Returns all advanced control modules.
-
-        Returns
-        -------
-        list[:class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`]
-            All advanced control modules.
-        """
-        warnings.warn("'AdvancedControlModule' is deprecated and will be removed in a " +
-                      "future release -- use 'CustomControlModule' instead")
-        self._adapt_to_network_changes()
-
-        return deepcopy(self._advanced_controls)
 
     @property
     def custom_controls(self) -> list[CustomControlModule]:
@@ -990,7 +970,6 @@ class ScenarioSimulator():
         return ScenarioConfig(f_inp_in=self.__f_inp_in, f_msx_in=self.__f_msx_in,
                               general_params=general_params, sensor_config=self.sensor_config,
                               memory_consumption_estimate=self.estimate_memory_consumption(),
-                              advanced_controls=None if len(self._advanced_controls) == 0 else self.advanced_controls,
                               custom_controls=self.custom_controls,
                               simple_controls=self.simple_controls,
                               complex_controls=self.complex_controls,
@@ -1114,7 +1093,7 @@ class ScenarioSimulator():
 
             The default is None.
         """
-        from .scenario_visualizer import ScenarioVisualizer
+        from ..visualization import ScenarioVisualizer
         ScenarioVisualizer(self).show_plot(export_to_file)
 
     def randomize_demands(self) -> None:
@@ -1187,7 +1166,10 @@ class ScenarioSimulator():
             raise ValueError(f"Inconsistent pattern shape '{pattern.shape}' " +
                              "detected. Expected a one dimensional array!")
 
-        self.epanet_api.addPattern(pattern_id, pattern)
+        pattern_idx = self.epanet_api.addPattern(pattern_id, pattern)
+        if pattern_idx == 0:
+            raise RuntimeError("Failed to add pattern! " +
+                               "Maybe pattern name contains invalid characters or is too long?")
 
     def get_node_demand_pattern(self, node_id: str) -> np.ndarray:
         """
@@ -1260,25 +1242,6 @@ class ScenarioSimulator():
 
         self.epanet_api.setNodeJunctionData(node_idx, self.epanet_api.getNodeElevations(node_idx),
                                             base_demand, demand_pattern_id)
-
-    def add_advanced_control(self, control) -> None:
-        """
-        Adds an advanced control module to the scenario simulation.
-
-        Parameters
-        ----------
-        control : :class:`~epyt_flow.simulation.scada.advanced_control.AdvancedControlModule`
-            Advanced control module.
-        """
-        self._adapt_to_network_changes()
-
-        from .scada.advanced_control import AdvancedControlModule
-        if not isinstance(control, AdvancedControlModule):
-            raise TypeError("'control' must be an instance of " +
-                            "'epyt_flow.simulation.scada.AdvancedControlModule' not of " +
-                            f"'{type(control)}'")
-
-        self._advanced_controls.append(control)
 
     def add_custom_control(self, control: CustomControlModule) -> None:
         """
@@ -1938,9 +1901,6 @@ class ScenarioSimulator():
         for event in self._system_events:
             event.reset()
 
-        if self._advanced_controls is not None:
-            for c in self._advanced_controls:
-                c.init(self.epanet_api)
         if self._custom_controls is not None:
             for control in self._custom_controls:
                 control.init(self.epanet_api)
@@ -2010,6 +1970,7 @@ class ScenarioSimulator():
                 result[data_type] = None
 
         return ScadaData(**result,
+                         network_topo=self.get_topology(),
                          sensor_config=self._sensor_config,
                          sensor_reading_events=self._sensor_reading_events,
                          sensor_noise=self._sensor_noise,
@@ -2163,7 +2124,7 @@ class ScenarioSimulator():
                         "surface_species_concentration_raw": surface_species_concentrations,
                         "sensor_readings_time": np.array([0])}
             else:
-                data = ScadaData(sensor_config=self._sensor_config,
+                data = ScadaData(network_topo=self.get_topology(), sensor_config=self._sensor_config,
                                  bulk_species_node_concentration_raw=bulk_species_node_concentrations,
                                  bulk_species_link_concentration_raw=bulk_species_link_concentrations,
                                  surface_species_concentration_raw=surface_species_concentrations,
@@ -2207,7 +2168,8 @@ class ScenarioSimulator():
                                 "surface_species_concentration_raw": surface_species_concentrations,
                                 "sensor_readings_time": np.array([total_time])}
                     else:
-                        data = ScadaData(sensor_config=self._sensor_config,
+                        data = ScadaData(network_topo=self.get_topology(),
+                                         sensor_config=self._sensor_config,
                                          bulk_species_node_concentration_raw=
                                             bulk_species_node_concentrations,
                                          bulk_species_link_concentration_raw=
@@ -2288,6 +2250,7 @@ class ScenarioSimulator():
             result[data_type] = np.concatenate(result[data_type], axis=0)
 
         return ScadaData(**result,
+                         network_topo=self.get_topology(),
                          sensor_config=self._sensor_config,
                          sensor_reading_events=self._sensor_reading_events,
                          sensor_noise=self._sensor_noise,
@@ -2389,7 +2352,8 @@ class ScenarioSimulator():
                             "link_quality_data_raw": quality_link_data,
                             "sensor_readings_time": np.array([total_time])}
                 else:
-                    data = ScadaData(sensor_config=self._sensor_config,
+                    data = ScadaData(network_topo=self.get_topology(),
+                                     sensor_config=self._sensor_config,
                                      node_quality_data_raw=quality_node_data,
                                      link_quality_data_raw=quality_link_data,
                                      sensor_readings_time=np.array([total_time]),
@@ -2465,6 +2429,7 @@ class ScenarioSimulator():
             result[data_type] = np.concatenate(result[data_type], axis=0)
 
         result = ScadaData(**result,
+                           network_topo=self.get_topology(),
                            sensor_config=self._sensor_config,
                            sensor_reading_events=self._sensor_reading_events,
                            sensor_noise=self._sensor_noise,
@@ -2586,7 +2551,8 @@ class ScenarioSimulator():
                 link_valve_idx = self.epanet_api.getLinkValveIndex()
                 valves_state_data = self.epanet_api.getLinkStatus(link_valve_idx).reshape(1, -1)
 
-                scada_data = ScadaData(sensor_config=self._sensor_config,
+                scada_data = ScadaData(network_topo=self.get_topology(),
+                                       sensor_config=self._sensor_config,
                                        pressure_data_raw=pressure_data,
                                        flow_data_raw=flow_data,
                                        demand_data_raw=demand_data,
@@ -2627,8 +2593,6 @@ class ScenarioSimulator():
                     yield data
 
                 # Apply control modules
-                for control in self._advanced_controls:
-                    control.step(scada_data)
                 for control in self._custom_controls:
                     control.step(scada_data)
 
@@ -2646,16 +2610,6 @@ class ScenarioSimulator():
         except Exception as ex:
             self.__running_simulation = False
             raise ex
-
-    def run_simulation_as_generator(self, hyd_export: str = None, verbose: bool = False,
-                                    support_abort: bool = False,
-                                    return_as_dict: bool = False,
-                                    frozen_sensor_config: bool = False,
-                                    ) -> Generator[Union[ScadaData, dict], bool, None]:
-        warnings.warn("'run_simulation_as_generator' is deprecated and will be removed in " +
-                      "future releases -- use 'run_hydraulic_simulation_as_generator' instead")
-        return self.run_hydraulic_simulation_as_generator(hyd_export, verbose, support_abort,
-                                                          return_as_dict, frozen_sensor_config)
 
     def run_simulation(self, hyd_export: str = None, verbose: bool = False,
                        frozen_sensor_config: bool = False) -> ScadaData:
@@ -2949,6 +2903,130 @@ class ScenarioSimulator():
 
         return list(set(events_times))
 
+    def set_pump_energy_price_pattern(self, pump_id: str, pattern: np.ndarray,
+                                      pattern_id: Optional[str] = None) -> None:
+        """
+        Specifies/sets the energy price pattern of a given pump.
+
+        Overwrites any existing (energy price) patterns of the given pump.
+
+        Parameters
+        ----------
+        pump_id : `str`
+            ID of the pump.
+        pattern : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
+            Pattern of multipliers.
+        pattern_id : `str`, optional
+            ID of the pattern.
+            If not specified, 'energy_price_{pump_id}' will be used as the pattern ID.
+
+            The default is None.
+        """
+        if not isinstance(pump_id, str):
+            raise TypeError(f"'pump_id' must be an instance of 'str' but not of '{type(pump_id)}'")
+        if pump_id not in self._sensor_config.pumps:
+            raise ValueError(f"Unknown pump '{pump_id}'")
+        if not isinstance(pattern, np.ndarray):
+            raise TypeError("'pattern' must be an instance of 'numpy.ndarray' " +
+                            f"but no of '{type(pattern)}'")
+        if len(pattern.shape) > 1:
+            raise ValueError("'pattern' must be 1-dimensional")
+        if pattern_id is not None:
+            if not isinstance(pattern_id, str):
+                raise TypeError("'pattern_id' must be an instance of 'str' " +
+                                f"but not of '{type(pattern_id)}'")
+        else:
+            pattern_id = f"energy_price_{pump_id}"
+
+        pattern_idx = self.epanet_api.getPatternIndex(pattern_id)
+        if pattern_idx != 0:
+            warnings.warn(f"Overwriting existing pattern '{pattern_id}'")
+
+        pump_idx = self.epanet_api.getLinkIndex(pump_id)
+        pattern_idx = self.epanet_api.getLinkPumpEPat(pump_idx)
+        if pattern_idx != 0:
+            warnings.warn(f"Overwriting existing energy price pattern of pump '{pump_id}'")
+
+        self.add_pattern(pattern_id, pattern)
+        pattern_idx = self.epanet_api.getPatternIndex(pattern_id)
+        self.epanet_api.setLinkPumpEPat(pattern_idx)
+
+    def get_pump_energy_price_pattern(self, pump_id: str) -> np.ndarray:
+        """
+        Returns the energy price pattern of a given pump.
+
+        Parameters
+        ----------
+        pump_id : `str`
+            ID of the pump.
+
+        Returns
+        -------
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
+            Energy price pattern. None, if none exists.
+        """
+        if not isinstance(pump_id, str):
+            raise TypeError(f"'pump_id' must be an instance of 'str' but not of '{type(pump_id)}'")
+        if pump_id not in self._sensor_config.pumps:
+            raise ValueError(f"Unknown pump '{pump_id}'")
+
+        pump_idx = self.epanet_api.getLinkIndex(pump_id)
+        pattern_idx = self.epanet_api.getLinkPumpEPat(pump_idx)
+        if pattern_idx == 0:
+            return None
+        else:
+            pattern_length = self.epanet_api.getPatternLengths(pattern_idx)
+            return np.array([self.epanet_api.getPatternValue(pattern_idx, t+1)
+                            for t in range(pattern_length)])
+
+    def get_pump_energy_price(self, pump_id: str) -> float:
+        """
+        Returns the energy price of a given pump.
+
+        Parameters
+        ----------
+        pump_id : `str`
+            ID of the pump.
+
+        Returns
+        -------
+        `float`
+            Energy price.
+        """
+        if not isinstance(pump_id, str):
+            raise TypeError(f"'pump_id' must be an instance of 'str' but not of '{type(pump_id)}'")
+        if pump_id not in self._sensor_config.pumps:
+            raise ValueError(f"Unknown pump '{pump_id}'")
+
+        pump_idx = self.epanet_api.getLinkIndex(pump_id)
+        return self.epanet_api.getLinkPumpECost(pump_idx)
+
+    def set_pump_energy_price(self, pump_id, price: float) -> None:
+        """
+        Sets the energy price of a given pump.
+
+        Parameters
+        ----------
+        pump_id : `str`
+            ID of the pump.
+        price : `float`
+            Energy price.
+        """
+        if not isinstance(pump_id, str):
+            raise TypeError(f"'pump_id' must be an instance of 'str' but not of '{type(pump_id)}'")
+        if pump_id not in self._sensor_config.pumps:
+            raise ValueError(f"Unknown pump '{pump_id}'")
+        if not isinstance(price, float):
+            raise TypeError(f"'price' must be an instance of 'float' but not of '{type(price)}'")
+        if price <= 0:
+            raise ValueError("'price' must be positive")
+
+        pump_idx = self._sensor_config.pumps.index(pump_id) + 1
+        pumps_energy_price = self.epanet_api.getLinkPumpECost()
+        pumps_energy_price[pump_idx - 1] = price
+
+        self.epanet_api.setLinkPumpECost(pumps_energy_price)
+
     def set_initial_link_status(self, link_id: str, status: int) -> None:
         """
         Sets the initial status (open or closed) of a given link.
@@ -3133,7 +3211,7 @@ class ScenarioSimulator():
         if pattern is None and pattern_id is None:
             raise ValueError("'pattern_id' and 'pattern' can not be None at the same time")
         if pattern_id is None:
-            pattern_id = f"quality_source_pattern_node={node_id}"
+            pattern_id = f"qual_src_pat_{node_id}"
 
         node_idx = self.epanet_api.getNodeIndex(node_id)
 
@@ -3141,6 +3219,9 @@ class ScenarioSimulator():
             pattern_idx = self.epanet_api.getPatternIndex(pattern_id)
         else:
             pattern_idx = self.epanet_api.addPattern(pattern_id, pattern)
+        if pattern_idx == 0:
+            raise RuntimeError("Failed to add/get pattern! " +
+                               "Maybe pattern name contains invalid characters or is too long?")
 
         self.epanet_api.api.ENsetnodevalue(node_idx, ToolkitConstants.EN_SOURCETYPE, source_type)
         self.epanet_api.setNodeSourceQuality(node_idx, source_strength)

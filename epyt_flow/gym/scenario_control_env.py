@@ -177,9 +177,14 @@ class ScenarioControlEnv(ABC):
             raise RuntimeError("Can not execute actions affecting the hydraulics "+
                                "when running EPANET-MSX")
 
-        pump_idx = self._scenario_sim.epanet_api.getLinkPumpNameID().index(pump_id)
-        pump_link_idx = self._scenario_sim.epanet_api.getLinkPumpIndex(pump_idx + 1)
-        self._scenario_sim.epanet_api.setLinkStatus(pump_link_idx, status)
+        pump_idx = self._scenario_sim.epanet_api.getLinkPumpNameID().index(pump_id) + 1
+        pump_link_idx = self._scenario_sim.epanet_api.getLinkPumpIndex(pump_idx)
+
+        pattern_idx = self._scenario_sim.epanet_api.getLinkPumpPatternIndex(pump_idx)
+        if pattern_idx != 0:
+            warnings.warn(f"Can not set pump state of pump {pump_id} because a pump pattern exists")
+        else:
+            self._scenario_sim.epanet_api.setLinkStatus(pump_link_idx, status)
 
     def set_pump_speed(self, pump_id: str, speed: float) -> None:
         """

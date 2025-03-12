@@ -2,7 +2,7 @@
 Example of plotting the network topology.
 """
 from epyt_flow.data.networks import load_anytown
-from epyt_flow.simulation import ScenarioSimulator, ScenarioVisualizer
+from epyt_flow.simulation import ScenarioSimulator
 
 
 if __name__ == "__main__":
@@ -12,4 +12,4 @@ if __name__ == "__main__":
     # Create scenario
     with ScenarioSimulator(scenario_config=network_config) as wdn:
         # Plot network topology
-        ScenarioVisualizer(wdn).plot_topology()
+        wdn.plot_topology()
