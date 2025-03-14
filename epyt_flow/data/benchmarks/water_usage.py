@@ -4,9 +4,9 @@ Module provides a function for loading the water usage data set by P. Pavlou et 
 import os
 import numpy as np
 import pandas as pd
+from sklearn.metrics import accuracy_score, precision_score, roc_auc_score, f1_score
 
 from ...utils import get_temp_folder, download_if_necessary
-from ...metrics import accuracy_score, precision_score, roc_auc_score, f1_micro_score
 
 
 def compute_evaluation_score(y_pred: np.ndarray, y: np.ndarray) -> dict:
@@ -32,8 +32,9 @@ def compute_evaluation_score(y_pred: np.ndarray, y: np.ndarray) -> dict:
     `dict`
         All evaluation scores.
     """
-    return {"accuracy": accuracy_score(y_pred, y), "precision": precision_score(y_pred, y),
-            "f1-micro": f1_micro_score(y_pred, y), "roc-auc": roc_auc_score(y_pred, y)}
+    return {"accuracy": accuracy_score(y, y_pred),
+            "precision": precision_score(y, y_pred, average="weighted"),
+            "f1-micro": f1_score(y, y_pred, average="micro"), "roc-auc": roc_auc_score(y, y_pred)}
 
 
 def load_water_usage(download_dir: str = None, return_X_y: bool = True, verbose: bool = True) -> dict:
