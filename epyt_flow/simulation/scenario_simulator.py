@@ -2718,6 +2718,7 @@ class ScenarioSimulator():
 
     def set_general_parameters(self, demand_model: dict = None, simulation_duration: int = None,
                                hydraulic_time_step: int = None, quality_time_step: int = None,
+                               advanced_quality_time_step: int = None,
                                reporting_time_step: int = None, reporting_time_start: int = None,
                                flow_units_id: int = None, quality_model: dict = None) -> None:
         """
@@ -2748,6 +2749,12 @@ class ScenarioSimulator():
             The default is None.
         quality_time_step : `int`, optional
             Quality time step -- i.e. the interval at which qualities are computed.
+            Should be much smaller than the hydraulic time step!
+
+            The default is None.
+        advanced_quality_time_step : `ìnt`, optional
+            Time step in the advanced quality simuliation -- i.e. EPANET-MSX simulation.
+            This number specifies the interval at which all species concentrations are.
             Should be much smaller than the hydraulic time step!
 
             The default is None.
@@ -2861,6 +2868,14 @@ class ScenarioSimulator():
                 raise ValueError("'quality_time_step' must be a positive integer that is not " +
                                  "greater than the hydraulic time step")
             self.epanet_api.setTimeQualityStep(quality_time_step)
+
+        if advanced_quality_time_step is not None:
+            if not isinstance(advanced_quality_time_step, int) or \
+                    advanced_quality_time_step <= 0 or \
+                    advanced_quality_time_step > self.epanet_api.getTimeHydraulicStep():
+                raise ValueError("'advanced_quality_time_step' must be a positive integer " +
+                                 "that is not greater than the hydraulic time step")
+            self.epanet_api.setMSXTimeStep(advanced_quality_time_step)
 
         if quality_model is not None:
             if quality_model["type"] == "NONE":
