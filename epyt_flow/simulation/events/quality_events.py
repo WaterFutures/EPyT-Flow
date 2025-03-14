@@ -198,7 +198,7 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
                                        pattern_id)
 
     def cleanup(self) -> None:
-        warnings.warn("Can not undo SpeciedInjectionEvent -- " +
+        warnings.warn("Can not undo SpeciesInjectionEvent -- " +
                       "EPANET-MSX does not support removing patterns")
 
     def apply(self, cur_time: int) -> None:
