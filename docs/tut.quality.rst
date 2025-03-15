@@ -72,8 +72,7 @@ if not already set in the .inp file. This can be done by calling
 of the :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
 Besides the location (i.e. node ID), the source pattern together with its type and (name, optional)
 must be specified as well.
-Note that the pattern repeats automatically when the simulation duration exceeds the
-pattern length.
+Note that the pattern repeats automatically when the simulation duration exceeds the pattern length.
 
 .. code-block:: python
 
@@ -163,6 +162,7 @@ By passing an .msx file to `f_msx_in`, EPANET-MSX is loaded and initialized auto
 Specifying an injection of an existing species can be done by calling the function
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.add_species_injection_source`.
 In addition, note that :ref:`injection events <msx_events>` are also implemented.
+In this context, note that the pattern time step is equivalent to the EPANET pattern time step.
 
 Specifying the initial concentration of bulk and surface species can be done by calling the functions 
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_bulk_species_node_initial_concentrations` and

@@ -3487,6 +3487,8 @@ class ScenarioSimulator():
             is placed.
         pattern : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             1d source pattern.
+
+            Note that the pattern time step is equivalent to the EPANET pattern time step.
         source_type : `int`,
             Type of the external (bulk or surface) species injection source -- must be one of
             the following EPANET toolkit constants:
