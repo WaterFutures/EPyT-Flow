@@ -5,6 +5,7 @@ import sys
 import os
 import pathlib
 import time
+import itertools
 from datetime import timedelta
 from datetime import datetime
 from typing import Generator, Union, Optional
@@ -3474,7 +3475,7 @@ class ScenarioSimulator():
                                      source_type: int, pattern_id: str = None,
                                      source_strength: int = 1.) -> None:
         """
-        Adds a new external (bulk or surface) species injection source at a particular node.
+        Adds a new external bulk species injection source at a particular node.
 
         Only for EPANET-MSX scenarios.
 
@@ -3554,17 +3555,18 @@ class ScenarioSimulator():
                 any(not isinstance(species_id, str) or not isinstance(node_initial_conc, list)
                     for species_id, node_initial_conc in inital_conc.items()) or \
                 any(not isinstance(node_initial_conc, tuple)
-                    for node_initial_conc in inital_conc.values()) or \
+                    for node_initial_conc in list(itertools.chain(*inital_conc.values()))) or \
                 any(not isinstance(node_id, str) or not isinstance(conc, float)
-                    for node_id, conc in inital_conc.values()):
+                    for node_id, conc in list(itertools.chain(*inital_conc.values()))):
             raise TypeError("'inital_conc' must be an instance of " +
                             "'dict[str, list[tuple[str, float]]'")
+        inital_conc_values = list(itertools.chain(*inital_conc.values()))
         if any(species_id not in self.sensor_config.bulk_species
                for species_id in inital_conc.keys()):
             raise ValueError("Unknown bulk species in 'inital_conc'")
-        if any(node_id not in self.sensor_config.nodes for node_id, _ in inital_conc.values()):
+        if any(node_id not in self.sensor_config.nodes for node_id, _ in inital_conc_values):
             raise ValueError("Unknown node ID in 'inital_conc'")
-        if any(conc < 0 for _, conc in inital_conc.values()):
+        if any(conc < 0 for _, conc in inital_conc_values):
             raise ValueError("Initial node concentration can not be negative")
 
         for species_id, node_initial_conc in inital_conc.items():
