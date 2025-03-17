@@ -1172,6 +1172,37 @@ class ScenarioSimulator():
             raise RuntimeError("Failed to add pattern! " +
                                "Maybe pattern name contains invalid characters or is too long?")
 
+    def get_node_base_demand(self, node_id: str) -> float:
+        """
+        Returns the base demand of a given node. None, if there does not exist any base demand.
+
+        Note that base demands are summed up in the case of different demand categories.
+
+        Parameters
+        ----------
+        node_id : `str`
+            ID of the node.
+
+        Returns
+        -------
+        `float`
+            Base demand.
+        """
+        if node_id not in self._sensor_config.nodes:
+            raise ValueError(f"Unknown node '{node_id}'")
+
+        node_idx = self.epanet_api.getNodeIndex(node_id)
+        n_demand_categories = self.epanet_api.getNodeDemandCategoriesNumber(node_idx)
+
+        if n_demand_categories == 0:
+            return None
+        else:
+            base_demand = 0
+            for demand_category in range(n_demand_categories):
+                base_demand += self.epanet_api.getNodeBaseDemands(node_idx)[demand_category + 1]
+
+            return base_demand
+
     def get_node_demand_pattern(self, node_id: str) -> np.ndarray:
         """
         Returns the values of the demand pattern of a given node --
