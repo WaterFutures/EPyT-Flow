@@ -220,6 +220,7 @@ class ScenarioVisualizer:
 
         self.colorbars = {}
         self.labels = {}
+        self.masks = {}
 
     def _get_midpoints(self, elements: List[str]) -> dict[str, tuple[float, float]]:
         """
@@ -283,6 +284,16 @@ class ScenarioVisualizer:
                                 label='Junctions',
                                 **self.junction_parameters.get_frame(
                                     frame_number))
+
+        # TODO: extend this
+        for key, value in self.masks.items():
+            if key == 'nodes':
+                nxp.draw_networkx_nodes(self.topology, ax=self.ax,
+                                        label='Junctions',
+                                        **self.junction_parameters.get_frame_mask(
+                                            value,
+                                            self.color_scheme.node_color))
+
         nxp.draw_networkx_nodes(self.topology, ax=self.ax,
                                 label='Tanks',
                                 **self.tank_parameters.get_frame(frame_number))
@@ -524,7 +535,8 @@ class ScenarioVisualizer:
             colormap: str = 'viridis',
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
             conversion: Optional[dict] = None,
-            show_colorbar: bool = False) -> None:
+            show_colorbar: bool = False,
+            use_sensor_data: bool = False) -> None:
         """
         Colors the nodes (junctions) in the water distribution network based on
         the SCADA data and the specified parameters.
@@ -587,17 +599,31 @@ class ScenarioVisualizer:
         if conversion:
             self.scada_data = self.scada_data.convert_units(**conversion)
 
+        # TODO: is there any way to make this look better (e.g. do a mapping somewhere??)
         if parameter == 'pressure':
-            values = self.scada_data.pressure_data_raw
+            if use_sensor_data:
+                values, self.masks['nodes'] = self.scada_data.get_data_pressures_as_node_features()
+            else:
+                values = self.scada_data.pressure_data_raw
         elif parameter == 'demand':
-            values = self.scada_data.demand_data_raw
+            if use_sensor_data:
+                values, self.masks['nodes'] = self.scada_data.get_data_demands_as_node_features()
+            else:
+                values = self.scada_data.demand_data_raw
         elif parameter == 'node_quality':
-            values = self.scada_data.node_quality_data_raw
+            if use_sensor_data:
+                values, self.masks['nodes'] = self.scada_data.get_data_nodes_quality_as_node_features()
+            else:
+                values = self.scada_data.node_quality_data_raw
         elif parameter == 'custom_data':
             # Custom should have the dimensions (timesteps, nodes)
             values = self.scada_data
         elif parameter == 'bulk_species_concentration':
-            values = self.scada_data.bulk_species_node_concentration_raw[:, self.scada_data.sensor_config.bulk_species.index(species), :]
+            # TODO: das hier testen!!!
+            if use_sensor_data:
+                values, self.masks['nodes'] = self.scada_data.get_data_bulk_species_concentrations_as_node_features()[:, self.scada_data.sensor_config.bulk_species.index(species), :]
+            else:
+                values = self.scada_data.bulk_species_node_concentration_raw[:, self.scada_data.sensor_config.bulk_species.index(species), :]
         else:
             raise ValueError(
                 'Parameter must be pressure, demand, node_quality or custom_'
@@ -742,7 +768,8 @@ class ScenarioVisualizer:
             parameter: str = 'efficiency', statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            colormap: str = 'viridis', show_colorbar: bool = False) -> None:
+            colormap: str = 'viridis', show_colorbar: bool = False,
+            use_sensor_data: bool = False) -> None:
         """
         Colors the pumps in the water distribution network based on SCADA data
         and the specified parameters.
@@ -798,11 +825,21 @@ class ScenarioVisualizer:
             self.scada_data = self.__scenario.run_simulation()
 
         if parameter == 'efficiency':
-            values = self.scada_data.pumps_efficiency_data_raw
+            if use_sensor_data:
+                # TODO: there is no mask here
+                values = self.scada_data.get_data_pumps_efficiency()
+            else:
+                values = self.scada_data.pumps_efficiency_data_raw
         elif parameter == 'energy_consumption':
-            values = self.scada_data.pumps_energyconsumption_data_raw
+            if use_sensor_data:
+                values = self.scada_data.get_data_pumps_energyconsumption()
+            else:
+                values = self.scada_data.pumps_energyconsumption_data_raw
         elif parameter == 'state':
-            values = self.scada_data.pumps_state_data_raw
+            if use_sensor_data:
+                values = self.scada_data.get_data_pumps_state()
+            else:
+                values = self.scada_data.pumps_state_data_raw
         elif parameter == 'custom_data':
             values = self.scada_data
         else:

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Optional, Union, List, Tuple
 
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 import networkx.drawing.nx_pylab as nxp
 import numpy as np
 from scipy.interpolate import CubicSpline
@@ -146,6 +147,41 @@ class JunctionObject:
                 if frame_number > len(self.node_color):
                     frame_number = -1
                 attributes['node_color'] = self.node_color[frame_number]
+
+        sig = inspect.signature(nxp.draw_networkx_nodes)
+
+        valid_params = {
+            key: value for key, value in attributes.items()
+            if key in sig.parameters and value is not None
+        }
+
+        return valid_params
+
+    def get_frame_mask(self, mask, color):
+        """
+        Returns all attributes necessary for networkx to draw the specified
+        frame mask. Meaning covering all masked junction objects with the
+        default value.
+
+        Parameters
+        ----------
+        mask: `np.ndarray`
+            An array consisting of 0 and 1, where 0 means no sensor. Nodes
+            without sensor are to be masked.
+        color:
+            The default color of masked nodes.
+            
+        Returns
+        -------
+        valid_params : `dict`
+            A dictionary containing all attributes that function as parameters
+            for `networkx.drawing.nx_pylab.draw_networkx_nodes() <https://networkx.org/documentation/stable/reference/generated/networkx.drawing.nx_pylab.draw_networkx_nodes.html#draw-networkx-nodes>`_.
+        """
+
+        attributes = vars(self).copy()
+
+        attributes['nodelist'] = [node for node, flag in zip(self.nodelist, mask) if not flag]
+        attributes['node_color'] = color
 
         sig = inspect.signature(nxp.draw_networkx_nodes)
 
