@@ -41,6 +41,8 @@ class ScadaData(Serializable):
 
         This parameter is expected to be a 1d array with the same size as
         the number of rows in `sensor_readings_data_raw`.
+    network_topo : :class:`~epyt_flow.topology.NetworkTopology`
+        Topology of the water distribution network.
     pressure_data_raw : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         Raw pressure values of all nodes as a two-dimensional array --
         first dimension encodes time, second dimension pressure at nodes.
@@ -128,10 +130,9 @@ class ScadaData(Serializable):
         will be stored -- this usually leads to a significant reduction in memory consumption.
 
         The default is False.
-    network_topo : :class:`~epyt_flow.topology.NetworkTopology`
-        Topology of the water distribution network.
     """
     def __init__(self, sensor_config: SensorConfig, sensor_readings_time: np.ndarray,
+                 network_topo: NetworkTopology,
                  pressure_data_raw: Union[np.ndarray, bsr_array] = None,
                  flow_data_raw: Union[np.ndarray, bsr_array] = None,
                  demand_data_raw: Union[np.ndarray, bsr_array] = None,
@@ -151,17 +152,11 @@ class ScadaData(Serializable):
                  sensor_reading_attacks: list[SensorReadingAttack] = [],
                  sensor_reading_events: list[SensorReadingEvent] = [],
                  sensor_noise: SensorNoise = None, frozen_sensor_config: bool = False,
-                 network_topo: NetworkTopology = None,
                  **kwds):
-        if network_topo is not None:
-            if not isinstance(network_topo, NetworkTopology):
-                raise TypeError("'network_topo' must be an instance of " +
-                                "'epyt_flow.topology.NetworkTopology' but not " +
-                                f"of '{type(network_topo)}'")
-        else:
-            warnings.warn("You are loading a SCADA data instance that was created with an " +
-                          "outdated version of EPyT-Flow. Future releases will require " +
-                          "'network_topo' != None. Please upgrade!")
+        if not isinstance(network_topo, NetworkTopology):
+            raise TypeError("'network_topo' must be an instance of " +
+                            "'epyt_flow.topology.NetworkTopology' but not " +
+                            f"of '{type(network_topo)}'")
         if not isinstance(sensor_config, SensorConfig):
             raise TypeError("'sensor_config' must be an instance of " +
                             "'epyt_flow.simulation.SensorConfig' but not of " +
