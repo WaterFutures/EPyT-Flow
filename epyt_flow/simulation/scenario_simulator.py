@@ -16,9 +16,8 @@ import random
 import math
 import uuid
 import numpy as np
-from epyt import epanet
-from epyt.epanet import ToolkitConstants
 from tqdm import tqdm
+from epyt.epanet import ToolkitConstants
 
 from .scenario_config import ScenarioConfig
 from .sensor_config import SensorConfig, areaunit_to_id, massunit_to_id, qualityunit_to_id, \
@@ -63,7 +62,7 @@ class ScenarioSimulator():
 
     Attributes
     ----------
-    epanet_api : `epyt.epanet`
+    epanet_api : :class:`~epyt_flow.simulation.backend.my_epyt.EPyT`
         API to EPANET and EPANET-MSX.
     _model_uncertainty : :class:`~epyt_flow.uncertainty.model_uncertainty.ModelUncertainty`, protected
         Model uncertainty.
@@ -120,6 +119,7 @@ class ScenarioSimulator():
         self._sensor_reading_events = []
         self.__running_simulation = False
 
+        # Check availability of custom EPANET libraries
         custom_epanet_lib = None
         custom_epanetmsx_lib = None
         if sys.platform.startswith("linux") or sys.platform.startswith("darwin") :
@@ -136,48 +136,49 @@ class ScenarioSimulator():
             if os.path.isfile(os.path.join(path_to_custom_libs, libepanetmsx_name)):
                 custom_epanetmsx_lib = os.path.join(path_to_custom_libs, libepanetmsx_name)
 
-        with warnings.catch_warnings():
-            # Treat all warnings as exceptions when trying to load .inp and .msx files
-            warnings.simplefilter('error')
+        # Workaround for EPyT bug concerning parallel simulations (see EPyT issue #54):
+        # 1. Create random tmp folder (make sure it is unique!)
+        # 2. Copy .inp and .msx file there
+        # 3. Use those copies  when loading EPyT
+        tmp_folder_path = os.path.join(get_temp_folder(), f"{random.randint(int(1e5), int(1e7))}{time.time()}")
+        pathlib.Path(tmp_folder_path).mkdir(parents=True, exist_ok=False)
 
-            # Workaround for EPyT bug concerning parallel simulations (see EPyT issue #54):
-            # 1. Create random tmp folder (make sure it is unique!)
-            # 2. Copy .inp and .msx file there
-            # 3. Use those copies  when loading EPyT
-            tmp_folder_path = os.path.join(get_temp_folder(), f"{random.randint(int(1e5), int(1e7))}{time.time()}")
-            pathlib.Path(tmp_folder_path).mkdir(parents=True, exist_ok=False)
+        def __file_exists(file_in: str) -> bool:
+            try:
+                return pathlib.Path(file_in).is_file()
+            except Exception:
+                return False
 
-            def __file_exists(file_in: str) -> bool:
-                try:
-                    return pathlib.Path(file_in).is_file()
-                except Exception:
-                    return False
+        if not __file_exists(self.__f_inp_in):
+            my_f_inp_in = self.__f_inp_in
+            self.__my_f_inp_in = None
+        else:
+            my_f_inp_in = os.path.join(tmp_folder_path, pathlib.Path(self.__f_inp_in).name)
+            shutil.copyfile(self.__f_inp_in, my_f_inp_in)
+            self.__my_f_inp_in = my_f_inp_in
 
-            if not __file_exists(self.__f_inp_in):
-                my_f_inp_in = self.__f_inp_in
-                self.__my_f_inp_in = None
+        if self.__f_msx_in is not None:
+            if not __file_exists(self.__f_msx_in):
+                my_f_msx_in = self.__f_msx_in
             else:
-                my_f_inp_in = os.path.join(tmp_folder_path, pathlib.Path(self.__f_inp_in).name)
-                shutil.copyfile(self.__f_inp_in, my_f_inp_in)
-                self.__my_f_inp_in = my_f_inp_in
+                my_f_msx_in = os.path.join(tmp_folder_path, pathlib.Path(self.__f_msx_in).name)
+                shutil.copyfile(self.__f_msx_in, my_f_msx_in)
+        else:
+            my_f_msx_in = None
 
-            if self.__f_msx_in is not None:
-                if not __file_exists(self.__f_msx_in):
-                    my_f_msx_in = self.__f_msx_in
-                else:
-                    my_f_msx_in = os.path.join(tmp_folder_path, pathlib.Path(self.__f_msx_in).name)
-                    shutil.copyfile(self.__f_msx_in, my_f_msx_in)
-            else:
-                my_f_msx_in = None
+        from .backend import EPyT   # Workaround: Sphinx autodoc "importlib.import_module TypeError: __mro_entries__"
+        self.epanet_api = EPyT(my_f_inp_in, ph=self.__f_msx_in is None,
+                               customlib=custom_epanet_lib, loadfile=True,
+                               display_msg=epanet_verbose,
+                               display_warnings=False)
 
-            self.epanet_api = epanet(my_f_inp_in, ph=self.__f_msx_in is None,
-                                     customlib=custom_epanet_lib, loadfile=True,
-                                     display_msg=epanet_verbose,
-                                     display_warnings=False)
+        if self.__f_msx_in is not None:
+            self.epanet_api.loadMSXFile(my_f_msx_in, customMSXlib=custom_epanetmsx_lib)
 
-            if self.__f_msx_in is not None:
-                self.epanet_api.loadMSXFile(my_f_msx_in, customMSXlib=custom_epanetmsx_lib)
+        # Do not raise exceptions in the case of EPANET warnings and errors
+        self.epanet_api.set_error_handling(False)
 
+        # Parse and initialize scenario
         self._simple_controls = self._parse_simple_control_rules()
         self._complex_controls = self._parse_complex_control_rules()
 
@@ -2370,10 +2371,11 @@ class ScenarioSimulator():
                         pass
 
             # Compute current time step
-            t = self.epanet_api.runQualityAnalysis()
+            t = self.epanet_api.api.ENrunQ()
             total_time = t
 
             # Fetch data
+            error_code = self.epanet_api.get_last_error_code()
             quality_node_data = self.epanet_api.getNodeActualQuality().reshape(1, -1)
             quality_link_data = self.epanet_api.getLinkActualQuality().reshape(1, -1)
 
@@ -2382,13 +2384,15 @@ class ScenarioSimulator():
                 if return_as_dict is True:
                     data = {"node_quality_data_raw": quality_node_data,
                             "link_quality_data_raw": quality_link_data,
-                            "sensor_readings_time": np.array([total_time])}
+                            "sensor_readings_time": np.array([total_time]),
+                            "warnings_code": np.array([error_code])}
                 else:
                     data = ScadaData(network_topo=self.get_topology(),
                                      sensor_config=self._sensor_config,
                                      node_quality_data_raw=quality_node_data,
                                      link_quality_data_raw=quality_link_data,
                                      sensor_readings_time=np.array([total_time]),
+                                     warnings_code=np.array([error_code]),
                                      sensor_reading_events=self._sensor_reading_events,
                                      sensor_noise=self._sensor_noise,
                                      frozen_sensor_config=frozen_sensor_config)
@@ -2401,9 +2405,9 @@ class ScenarioSimulator():
                 yield data
 
             # Next
-            tstep = self.epanet_api.stepQualityAnalysisTimeLeft()
+            tstep = self.epanet_api.api.ENstepQ()
 
-        self.epanet_api.closeHydraulicAnalysis()
+        self.epanet_api.closeQualityAnalysis()
 
     def run_hydraulic_simulation(self, hyd_export: str = None, verbose: bool = False,
                                  frozen_sensor_config: bool = False) -> ScadaData:
@@ -2525,8 +2529,8 @@ class ScenarioSimulator():
 
         self.__running_simulation = True
 
-        self.epanet_api.openHydraulicAnalysis()
-        self.epanet_api.openQualityAnalysis()
+        self.epanet_api.api.ENopenH()
+        self.epanet_api.api.ENopenQ()
         self.epanet_api.initializeHydraulicAnalysis(ToolkitConstants.EN_SAVE)
         self.epanet_api.initializeQualityAnalysis(ToolkitConstants.EN_SAVE)
 
@@ -2563,8 +2567,11 @@ class ScenarioSimulator():
                         event.step(total_time + tstep)
 
                 # Compute current time step
-                t = self.epanet_api.runHydraulicAnalysis()
-                self.epanet_api.runQualityAnalysis()
+                t = self.epanet_api.api.ENrunH()
+                error_code = self.epanet_api.get_last_error_code()
+                self.epanet_api.api.ENrunQ()
+                if error_code == 0:
+                    error_code = self.epanet_api.get_last_error_code()
                 total_time = t
 
                 # Fetch data
@@ -2596,6 +2603,7 @@ class ScenarioSimulator():
                                        pumps_energy_usage_data_raw=pumps_energy_usage_data,
                                        pumps_efficiency_data_raw=pumps_efficiency_data,
                                        sensor_readings_time=np.array([total_time]),
+                                       warnings_code=np.array([error_code]),
                                        sensor_reading_events=self._sensor_reading_events,
                                        sensor_noise=self._sensor_noise,
                                        frozen_sensor_config=frozen_sensor_config)
@@ -2613,7 +2621,8 @@ class ScenarioSimulator():
                                 "tanks_volume_data_raw": tanks_volume_data,
                                 "pumps_energy_usage_data_raw": pumps_energy_usage_data,
                                 "pumps_efficiency_data_raw": pumps_efficiency_data,
-                                "sensor_readings_time": np.array([total_time])}
+                                "sensor_readings_time": np.array([total_time]),
+                                "warnings_code": np.array([error_code])}
                     else:
                         data = scada_data
 
@@ -2629,11 +2638,11 @@ class ScenarioSimulator():
                     control.step(scada_data)
 
                 # Next
-                tstep = self.epanet_api.nextHydraulicAnalysisStep()
-                self.epanet_api.nextQualityAnalysisStep()
+                tstep = self.epanet_api.api.ENnextH()
+                self.epanet_api.api.ENnextQ()
 
-            self.epanet_api.closeQualityAnalysis()
-            self.epanet_api.closeHydraulicAnalysis()
+            self.epanet_api.api.ENcloseQ()
+            self.epanet_api.api.ENcloseH()
 
             self.__running_simulation = False
 
