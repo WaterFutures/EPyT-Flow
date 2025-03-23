@@ -3,7 +3,7 @@ This module contains a wrapper for EPyT that allows a better error/warning handl
 """
 from ctypes import byref, create_string_buffer
 from epyt import epanet
-from epyt.epanet import epanetapi
+from epyt.epanet import epanetapi, epanetmsxapi
 
 
 class EPyT(epanet):
@@ -29,6 +29,16 @@ class EPyT(epanet):
 
         self.LibEPANETpath = self.api.LibEPANETpath
         self.LibEPANET = self.api.LibEPANET
+
+    def loadMSXFile(self, msxname, customMSXlib=None, ignore_properties=False):
+        super().loadMSXFile(msxname, customMSXlib, ignore_properties)
+
+        # Inject custom EPANET-MSX API wrapper
+        self.msx.MSXclose()
+        self.msx = MyEpanetMsxAPI(msxfile=self.MSXTempFile, customMSXlib=customMSXlib,
+                                  display_msg=self.display_msg,
+                                  msxrealfile=self.MSXFile)
+        return self.msx
 
     def set_error_handling(self, raise_exception_on_error: bool) -> None:
         """
@@ -79,6 +89,196 @@ class EPyT(epanet):
             Error/warning code.
         """
         return self.api.get_last_error_code()
+
+
+class MyEpanetMsxAPI(epanetmsxapi):
+    """
+    Wrapper for the `epyt.epanet.epanetmsxapi <https://epanet-python-toolkit-epyt.readthedocs.io/en/latest/api.html#epyt.epanet.epanetmsxapi>`_
+    class adding error/warning storage functionalities.
+    """
+    def __init__(self, raise_on_error: bool = True, **kwds):
+        self.__raise_on_error = raise_on_error
+        self.__last_error_code = None
+        self.__last_error_desc = None
+
+        super().__init__(**kwds)
+
+    def set_error_handling(self, raise_on_error: bool) -> None:
+        """
+        Specifies the behavior in the case of an error/warning --
+        i.e. should an exception be raised or not?
+
+        Parameters
+        ----------
+        raise_exception_on_error : `bool`
+            True if an exception should be raise, False otherwise.
+        """
+        self.__raise_on_error = raise_on_error
+
+    def get_last_error_desc(self) -> str:
+        """
+        Returns the description of the last EPANET-MSX error/warning (if any).
+
+        Returns
+        -------
+        `str`
+            Description of the last error/warning. None, if there was no error/warning.
+        """
+        return self.__last_error_desc
+
+    def get_last_error_code(self) -> int:
+        """
+        Returns the code of the last EPANET-MSX error/warnning (if any).
+
+        Refer to the EPANET-MSX user manual for a list of all possible warning codes
+        and their meanings.
+
+        Returns
+        -------
+        `int`
+            Code of the last error/warning. 0, if there was no error/warning.
+        """
+        return self.__last_error_code
+
+    def was_last_func_successful(self) -> bool:
+        """
+        Checks if the last EPANET-MSX call was successful or not.
+
+        Parameters
+        ----------
+        `bool`
+            True if the last EPANET-MSX call returned an error/warning, False otherwise.
+        """
+        return self.__last_error_desc is None
+
+    def _reset_error(self) -> None:
+        self.__last_error_code = 0
+        self.__last_error_desc = None
+
+    def MSXerror(self, err_code: int) -> None:
+        error_desc = create_string_buffer(256)
+        self.msx_error(err_code, error_desc, 256)
+        self.__last_error_code = err_code
+        self.__last_error_desc = error_desc.value.decode()
+
+        if self.__raise_on_error:
+            raise RuntimeError(self.__last_error_desc)
+
+    def MSXopen(self, msxfile, msxrealfile):
+        self._reset_error()
+        super().MSXopen(msxfile, msxrealfile)
+
+    def MSXclose(self):
+        self._reset_error()
+        return super().MSXclose()
+
+    def MSXgetindex(self, obj_type, obj_id):
+        self._reset_error()
+        return super().MSXgetindex(obj_type, obj_id)
+
+    def MSXgetID(self, obj_type, index, id_len=80):
+        self._reset_error()
+        return super().MSXgetID(obj_type, index, id_len)
+
+    def MSXgetIDlen(self, obj_type, index):
+        self._reset_error()
+        return super().MSXgetIDlen(obj_type, index)
+
+    def MSXgetspecies(self, index):
+        self._reset_error()
+        return super().MSXgetspecies(index)
+
+    def MSXgetcount(self, code):
+        self._reset_error()
+        return super().MSXgetcount(code)
+
+    def MSXgetconstant(self, index):
+        self._reset_error()
+        return super().MSXgetconstant(index)
+
+    def MSXgetparameter(self, obj_type, index, param):
+        self._reset_error()
+        return super().MSXgetparameter(obj_type, index, param)
+
+    def MSXgetpatternlen(self, pattern_index):
+        self._reset_error()
+        return super().MSXgetpatternlen(pattern_index)
+
+    def MSXgetpatternvalue(self, pattern_index, period):
+        self._reset_error()
+        return super().MSXgetpatternvalue(pattern_index, period)
+
+    def MSXgetinitqual(self, obj_type, index, species):
+        self._reset_error()
+        return super().MSXgetinitqual(obj_type, index, species)
+
+    def MSXgetsource(self, node_index, species_index):
+        self._reset_error()
+        return super().MSXgetsource(node_index, species_index)
+
+    def MSXsaveoutfile(self, filename):
+        self._reset_error()
+        super().MSXsaveoutfile(filename)
+
+    def MSXsavemsxfile(self, filename):
+        self._reset_error()
+        super().MSXsavemsxfile(filename)
+
+    def MSXsetconstant(self, index, value):
+        self._reset_error()
+        super().MSXsetconstant(index, value)
+
+    def MSXsetparameter(self, obj_type, index, param, value):
+        self._reset_error()
+        super().MSXsetparameter(obj_type, index, param, value)
+
+    def MSXsetinitqual(self, obj_type, index, species, value):
+        self._reset_error()
+        super().MSXsetinitqual(obj_type, index, species, value)
+
+    def MSXsetpattern(self, index, factors, nfactors):
+        self._reset_error()
+        super().MSXsetpattern(index, factors, nfactors)
+
+    def MSXsetpatternvalue(self, pattern, period, value):
+        self._reset_error()
+        super().MSXsetpatternvalue(pattern, period, value)
+
+    def MSXsolveQ(self):
+        self._reset_error()
+        super().MSXsolveQ()
+
+    def MSXsolveH(self):
+        self._reset_error()
+        super().MSXsolveH()
+
+    def MSXaddpattern(self, pattern_id):
+        self._reset_error()
+        super().MSXaddpattern(pattern_id)
+
+    def MSXusehydfile(self, filename):
+        self._reset_error()
+        super().MSXusehydfile(filename)
+
+    def MSXstep(self):
+        self._reset_error()
+        return super().MSXstep()
+
+    def MSXinit(self, flag):
+        self._reset_error()
+        super().MSXinit(flag)
+
+    def MSXreport(self):
+        self._reset_error()
+        super().MSXreport()
+
+    def MSXgetqual(self, type, index, species):
+        self._reset_error()
+        return super().MSXgetqual(type, index, species)
+
+    def MSXsetsource(self, node, species, type, level, pat):
+        self._reset_error()
+        super().MSXsetsource(node, species, type, level, pat)
 
 
 class MyEpanetAPI(epanetapi):
@@ -132,7 +332,7 @@ class MyEpanetAPI(epanetapi):
 
     def was_last_func_successful(self) -> bool:
         """
-        Checks if the last EPANET class was successful or not.
+        Checks if the last EPANET call was successful or not.
 
         Parameters
         ----------
