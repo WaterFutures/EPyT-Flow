@@ -3015,6 +3015,38 @@ class ScadaData(Serializable):
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
 
+    def get_data_pumps_efficiency_as_node_features(self,
+                                            default_missing_value: float = 0.
+                                            ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the pump efficiency as node features together with a boolean mask indicating the
+        presence of a sensor.
+
+        Parameters
+        ----------
+        default_missing_value : `float`, optional
+            Default value (i.e. missing value) for nodes where no pump efficiency sensor is installed.
+
+            The default is 0.
+
+        Returns
+        -------
+        tuple[`numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_]
+            Pump efficiencies as node features of shape [num_time_steps, num_nodes], and mask of shape [num_nodes].
+        """
+        mask = np.zeros(len(self.__sensor_config.pumps))
+        pump_features = np.array([[default_missing_value] * len(self.__sensor_config.pumps)
+                                  for _ in range(len(self.__sensor_readings_time))])
+        pumps_id = self.__network_topo.get_all_pumps()
+
+        efficiency_readings = self.get_data_pumps_efficiency()
+        for pumps_efficiency_idx, pump_id in enumerate(self.__sensor_config.pump_efficiency_sensors):
+            idx = pumps_id.index(pump_id)
+            pump_features[:, idx] = efficiency_readings[:, pumps_efficiency_idx]
+            mask[idx] = 1
+
+        return pump_features, mask
+
     def plot_pumps_efficiency(self, sensor_locations: list[str] = None, show: bool = True,
                               save_to_file: str = None, ax: matplotlib.axes.Axes = None
                               ) -> matplotlib.axes.Axes:
@@ -3102,6 +3134,38 @@ class ScadaData(Serializable):
         idx = [self.__sensor_config.get_index_of_reading(pump_energyconsumption_sensor=s_id)
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
+
+    def get_data_pumps_energyconsumption_as_node_features(self,
+                                            default_missing_value: float = 0.
+                                            ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the pump energy consumption as node features together with a boolean mask indicating the
+        presence of a sensor.
+
+        Parameters
+        ----------
+        default_missing_value : `float`, optional
+            Default value (i.e. missing value) for nodes where no pump energy consumption sensor is installed.
+
+            The default is 0.
+
+        Returns
+        -------
+        tuple[`numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_]
+            Pump energy consumptions as node features of shape [num_time_steps, num_nodes], and mask of shape [num_nodes].
+        """
+        mask = np.zeros(len(self.__sensor_config.pumps))
+        pump_features = np.array([[default_missing_value] * len(self.__sensor_config.pumps)
+                                  for _ in range(len(self.__sensor_readings_time))])
+        pumps_id = self.__network_topo.get_all_pumps()
+
+        energyconsumption_readings = self.get_data_pumps_energyconsumption()
+        for pumps_energyconsumption_idx, pump_id in enumerate(self.__sensor_config.pump_energyconsumption_sensors):
+            idx = pumps_id.index(pump_id)
+            pump_features[:, idx] = energyconsumption_readings[:, pumps_energyconsumption_idx]
+            mask[idx] = 1
+
+        return pump_features, mask
 
     def plot_pumps_energyconsumption(self, sensor_locations: list[str] = None, show: bool = True,
                                      save_to_file: str = None, ax: matplotlib.axes.Axes = None
