@@ -520,7 +520,7 @@ class ScenarioVisualizer:
 
         if export_to_file is not None:
             plt.savefig(export_to_file, transparent=True, bbox_inches='tight',
-                        dpi=200)
+                        dpi=900)
         if not suppress_plot:
             plt.show()
         else:
