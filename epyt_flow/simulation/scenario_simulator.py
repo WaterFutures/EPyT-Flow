@@ -2067,6 +2067,8 @@ class ScenarioSimulator():
         reporting_time_step = self.epanet_api.getTimeReportingStep()
         hyd_time_step = self.epanet_api.getTimeHydraulicStep()
 
+        network_topo = self.get_topology()
+
         if use_quality_time_step_as_reporting_time_step is True:
             quality_time_step = self.epanet_api.getMSXTimeStep()
             reporting_time_step = quality_time_step
@@ -2157,7 +2159,7 @@ class ScenarioSimulator():
                         "surface_species_concentration_raw": surface_species_concentrations,
                         "sensor_readings_time": np.array([0])}
             else:
-                data = ScadaData(network_topo=self.get_topology(), sensor_config=self._sensor_config,
+                data = ScadaData(network_topo=network_topo, sensor_config=self._sensor_config,
                                  bulk_species_node_concentration_raw=bulk_species_node_concentrations,
                                  bulk_species_link_concentration_raw=bulk_species_link_concentrations,
                                  surface_species_concentration_raw=surface_species_concentrations,
@@ -2201,7 +2203,7 @@ class ScenarioSimulator():
                                 "surface_species_concentration_raw": surface_species_concentrations,
                                 "sensor_readings_time": np.array([total_time])}
                     else:
-                        data = ScadaData(network_topo=self.get_topology(),
+                        data = ScadaData(network_topo=network_topo,
                                          sensor_config=self._sensor_config,
                                          bulk_species_node_concentration_raw=
                                             bulk_species_node_concentrations,
@@ -2343,6 +2345,8 @@ class ScenarioSimulator():
             requested_time_step = quality_time_step
             reporting_time_step = quality_time_step
 
+        network_topo = self.get_topology()
+
         self.epanet_api.useHydraulicFile(hyd_file_in)
 
         self.epanet_api.openQualityAnalysis()
@@ -2387,7 +2391,7 @@ class ScenarioSimulator():
                             "sensor_readings_time": np.array([total_time]),
                             "warnings_code": np.array([error_code])}
                 else:
-                    data = ScadaData(network_topo=self.get_topology(),
+                    data = ScadaData(network_topo=network_topo,
                                      sensor_config=self._sensor_config,
                                      node_quality_data_raw=quality_node_data,
                                      link_quality_data_raw=quality_link_data,
@@ -2538,6 +2542,8 @@ class ScenarioSimulator():
         reporting_time_start = self.epanet_api.getTimeReportingStart()
         reporting_time_step = self.epanet_api.getTimeReportingStep()
 
+        network_topo = self.get_topology()
+
         if verbose is True:
             print("Running EPANET ...")
             n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
@@ -2590,7 +2596,7 @@ class ScenarioSimulator():
                 link_valve_idx = self.epanet_api.getLinkValveIndex()
                 valves_state_data = self.epanet_api.getLinkStatus(link_valve_idx).reshape(1, -1)
 
-                scada_data = ScadaData(network_topo=self.get_topology(),
+                scada_data = ScadaData(network_topo=network_topo,
                                        sensor_config=self._sensor_config,
                                        pressure_data_raw=pressure_data,
                                        flow_data_raw=flow_data,
