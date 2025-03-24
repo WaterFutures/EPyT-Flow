@@ -79,11 +79,13 @@ class ScenarioControlEnv(ABC):
             if self._sim_generator is not None:
                 next(self._sim_generator)
                 self._sim_generator.send(True)
+                self._sim_generator = None
         except StopIteration:
             pass
 
         if self._scenario_sim is not None:
             self._scenario_sim.close()
+            self._scenario_sim = None
 
     def contains_events(self) -> bool:
         """
