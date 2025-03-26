@@ -1140,7 +1140,14 @@ class ScenarioSimulator():
         `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             The pattern -- i.e. multiplier factors over time.
         """
+        if not isinstance(pattern_id, str):
+            raise TypeError("'pattern_id' must be an instance of 'str' " +
+                            f"but not of '{type(pattern_id)}'")
+
         pattern_idx = self.epanet_api.getPatternIndex(pattern_id)
+        if pattern_idx == 0:
+            raise ValueError(f"Unknown pattern '{pattern_id}'")
+
         pattern_length = self.epanet_api.getPatternLengths(pattern_idx)
         return np.array([self.epanet_api.getPatternValue(pattern_idx, t+1)
                          for t in range(pattern_length)])
@@ -1219,6 +1226,12 @@ class ScenarioSimulator():
         `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             The demand pattern -- i.e. multiplier factors over time.
         """
+        if not isinstance(node_id, str):
+            raise TypeError("'node_id' must be an instance of 'str' " +
+                            f"but not of '{type(node_id)}'")
+        if node_id not in self._sensor_config.nodes:
+            raise ValueError(f"Unknown node '{node_id}'")
+
         node_idx = self.epanet_api.getNodeIndex(node_id)
         demand_category = self.epanet_api.getNodeDemandCategoriesNumber()[node_idx]
         demand_pattern_id = self.epanet_api.getNodeDemandPatternNameID()[demand_category][node_idx - 1]
