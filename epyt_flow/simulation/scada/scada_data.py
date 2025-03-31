@@ -2928,6 +2928,38 @@ class ScadaData(Serializable):
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
 
+    def get_data_pumps_state_as_node_features(self,
+                                            default_missing_value: float = 0.
+                                            ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the pump state as node features together with a boolean mask indicating the
+        presence of a sensor.
+
+        Parameters
+        ----------
+        default_missing_value : `float`, optional
+            Default value (i.e. missing value) for nodes where no pump state sensor is installed.
+
+            The default is 0.
+
+        Returns
+        -------
+        tuple[`numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_]
+            Pump state as node features of shape [num_time_steps, num_nodes], and mask of shape [num_nodes].
+        """
+        mask = np.zeros(len(self.__sensor_config.pumps))
+        pump_features = np.array([[default_missing_value] * len(self.__sensor_config.pumps)
+                                  for _ in range(len(self.__sensor_readings_time))])
+        pumps_id = self.__network_topo.get_all_pumps()
+
+        state_readings = self.get_data_pumps_state()
+        for pumps_state_idx, pump_id in enumerate(self.__sensor_config.pump_state_sensors):
+            idx = pumps_id.index(pump_id)
+            pump_features[:, idx] = state_readings[:, pumps_state_idx]
+            mask[idx] = 1
+
+        return pump_features, mask
+
     def plot_pumps_state(self, sensor_locations: list[str] = None, show: bool = True,
                          save_to_file: str = None, ax: matplotlib.axes.Axes = None
                          ) -> matplotlib.axes.Axes:
@@ -3254,6 +3286,38 @@ class ScadaData(Serializable):
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
 
+    def get_data_valves_state_as_node_features(self,
+                                            default_missing_value: float = 0.
+                                            ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the valves state as node features together with a boolean mask indicating the
+        presence of a sensor.
+
+        Parameters
+        ----------
+        default_missing_value : `float`, optional
+            Default value (i.e. missing value) for nodes where no valves state sensor is installed.
+
+            The default is 0.
+
+        Returns
+        -------
+        tuple[`numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_]
+            Valves state as node features of shape [num_time_steps, num_nodes], and mask of shape [num_nodes].
+        """
+        mask = np.zeros(len(self.__sensor_config.valves))
+        valve_features = np.array([[default_missing_value] * len(self.__sensor_config.valves)
+                                  for _ in range(len(self.__sensor_readings_time))])
+        valves_id = self.__network_topo.get_all_valves()
+
+        state_readings = self.get_data_valves_state()
+        for valves_state_idx, valve_id in enumerate(self.__sensor_config.valve_state_sensors):
+            idx = valves_id.index(valve_id)
+            valve_features[:, idx] = state_readings[:, valves_state_idx]
+            mask[idx] = 1
+
+        return valve_features, mask
+
     def plot_valves_state(self, sensor_locations: list[str] = None, show: bool = True,
                           save_to_file: str = None, ax: matplotlib.axes.Axes = None
                           ) -> matplotlib.axes.Axes:
@@ -3340,6 +3404,38 @@ class ScadaData(Serializable):
         idx = [self.__sensor_config.get_index_of_reading(tank_volume_sensor=s_id)
                for s_id in sensor_locations]
         return self.__sensor_readings[:, idx]
+
+    def get_data_tanks_water_volume_as_node_features(self,
+                                            default_missing_value: float = 0.
+                                            ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Returns the tank water volume as node features together with a boolean mask indicating the
+        presence of a sensor.
+
+        Parameters
+        ----------
+        default_missing_value : `float`, optional
+            Default value (i.e. missing value) for nodes where no tank water volume sensor is installed.
+
+            The default is 0.
+
+        Returns
+        -------
+        tuple[`numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_]
+            Tank water volumes as node features of shape [num_time_steps, num_nodes], and mask of shape [num_nodes].
+        """
+        mask = np.zeros(len(self.__sensor_config.tanks))
+        tank_features = np.array([[default_missing_value] * len(self.__sensor_config.tanks)
+                                  for _ in range(len(self.__sensor_readings_time))])
+        tanks_id = self.__network_topo.get_all_tanks()
+
+        water_volume_readings = self.get_data_tanks_water_volume()
+        for tanks_water_volume_idx, tank_id in enumerate(self.__sensor_config.tank_volume_sensors):
+            idx = tanks_id.index(tank_id)
+            tank_features[:, idx] = water_volume_readings[:, tanks_water_volume_idx]
+            mask[idx] = 1
+
+        return tank_features, mask
 
     def plot_tanks_water_volume(self, sensor_locations: list[str] = None, show: bool = True,
                                 save_to_file: str = None, ax: matplotlib.axes.Axes = None
