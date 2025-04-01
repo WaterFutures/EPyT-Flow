@@ -284,16 +284,6 @@ class ScenarioVisualizer:
                                 label='Junctions',
                                 **self.junction_parameters.get_frame(
                                     frame_number))
-
-        # TODO: extend this
-        for key, value in self.masks.items():
-            if key == 'nodes':
-                nxp.draw_networkx_nodes(self.topology, ax=self.ax,
-                                        label='Junctions',
-                                        **self.junction_parameters.get_frame_mask(
-                                            value,
-                                            self.color_scheme.node_color))
-
         nxp.draw_networkx_nodes(self.topology, ax=self.ax,
                                 label='Tanks',
                                 **self.tank_parameters.get_frame(frame_number))
@@ -308,6 +298,30 @@ class ScenarioVisualizer:
             self.topology,
             ax=self.ax, label='Pumps',
             **self.pump_parameters.get_frame(frame_number))
+
+        for key, mask in self.masks.items():
+            if key == 'nodes':
+                nxp.draw_networkx_nodes(self.topology, ax=self.ax,
+                                        **self.junction_parameters.get_frame_mask(
+                                            mask,
+                                            self.color_scheme.node_color))
+            if key == 'pumps':
+                nxp.draw_networkx_nodes(
+                    self.topology,
+                    ax=self.ax,
+                    **self.pump_parameters.get_frame_mask(mask, self.color_scheme.pump_color))
+            if key == 'links':
+                nxp.draw_networkx_edges(self.topology, ax=self.ax,
+                                        **self.pipe_parameters.get_frame_mask(
+                                            frame_number,
+                                            self.color_scheme.pipe_color))
+            if key == 'tanks':
+                nxp.draw_networkx_nodes(self.topology, ax=self.ax,
+                                        **self.tank_parameters.get_frame_mask(mask, self.color_scheme.tank_color))
+            if key == 'valves':
+                nxp.draw_networkx_nodes(
+                    self.topology, ax=self.ax,
+                    **self.valve_parameters.get_frame_mask(mask, self.color_scheme.valve_color))
 
         self._draw_labels()
         self.ax.legend(fontsize=6)
@@ -619,7 +633,6 @@ class ScenarioVisualizer:
             # Custom should have the dimensions (timesteps, nodes)
             values = self.scada_data
         elif parameter == 'bulk_species_concentration':
-            # TODO: das hier testen!!!
             if use_sensor_data:
                 values, self.masks['nodes'] = self.scada_data.get_data_bulk_species_concentrations_as_node_features()[:, self.scada_data.sensor_config.bulk_species.index(species), :]
             else:
@@ -664,7 +677,8 @@ class ScenarioVisualizer:
             colormap: str = 'coolwarm',
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
             conversion: Optional[dict] = None,
-            show_colorbar: bool = False) -> None:
+            show_colorbar: bool = False,
+            use_sensor_data: bool = False) -> None:
         """
         Colors the links (pipes) in the water distribution network based on the
         SCADA data and the specified parameters.
@@ -744,11 +758,14 @@ class ScenarioVisualizer:
                 self.pipe_parameters.add_frame(self.topology, 'edge_color',
                                                self.scada_data, parameter,
                                                statistic, frame, species,
-                                               intervals)
+                                               intervals, use_sensor_data)
         else:
             self.pipe_parameters.add_frame(self.topology, 'edge_color',
                                            self.scada_data, parameter,
-                                           statistic, pit, species, intervals)
+                                           statistic, pit, species, intervals, use_sensor_data)
+
+        if hasattr(self.pipe_parameters, 'mask'):
+            self.masks['links'] = self.pipe_parameters.mask
 
         if show_colorbar:
             if statistic == 'time_step':
@@ -826,18 +843,17 @@ class ScenarioVisualizer:
 
         if parameter == 'efficiency':
             if use_sensor_data:
-                # TODO: there is no mask here
-                values = self.scada_data.get_data_pumps_efficiency()
+                values, self.masks['pumps'] = self.scada_data.get_data_pumps_efficiency_as_node_features()
             else:
                 values = self.scada_data.pumps_efficiency_data_raw
         elif parameter == 'energy_consumption':
             if use_sensor_data:
-                values = self.scada_data.get_data_pumps_energyconsumption()
+                values, self.masks['pumps'] = self.scada_data.get_data_pumps_energyconsumption_as_node_features()
             else:
                 values = self.scada_data.pumps_energyconsumption_data_raw
         elif parameter == 'state':
             if use_sensor_data:
-                values = self.scada_data.get_data_pumps_state()
+                values, self.masks['pumps'] = self.scada_data.get_data_pumps_state_as_node_features()
             else:
                 values = self.scada_data.pumps_state_data_raw
         elif parameter == 'custom_data':
@@ -876,7 +892,8 @@ class ScenarioVisualizer:
             statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int, int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            colormap: str = 'viridis', show_colorbar: bool = False) -> None:
+            colormap: str = 'viridis', show_colorbar: bool = False,
+            use_sensor_data: bool = False) -> None:
         """
         Colors the tanks in the water distribution network based on the SCADA
         tank volume data and the specified statistic.
@@ -926,7 +943,10 @@ class ScenarioVisualizer:
             self.scada_data = self.__scenario.run_simulation()
 
         if isinstance(self.scada_data, ScadaData):
-            values = self.scada_data.tanks_volume_data_raw
+            if use_sensor_data:
+                values, self.masks['tanks'] = self.scada_data.get_data_tanks_water_volume_as_node_features()
+            else:
+                values = self.scada_data.tanks_volume_data_raw
             parameter = 'tank volume'
         else:
             values = self.scada_data
@@ -960,7 +980,8 @@ class ScenarioVisualizer:
             statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int, int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            colormap: str = 'viridis', show_colorbar: bool = False) -> None:
+            colormap: str = 'viridis', show_colorbar: bool = False,
+            use_sensor_data: bool = False) -> None:
         """
         Colors the valves in the water distribution network based on SCADA
         valve state data and the specified statistic.
@@ -1011,7 +1032,10 @@ class ScenarioVisualizer:
             self.scada_data = self.__scenario.run_simulation()
 
         if isinstance(self.scada_data, ScadaData):
-            values = self.scada_data.valves_state_data_raw
+            if use_sensor_data:
+                values, self.masks['valves'] = self.scada_data.get_data_valves_state_as_node_features()
+            else:
+                values = self.scada_data.valves_state_data_raw
             parameter = 'valve state'
         else:
             values = self.scada_data
@@ -1048,7 +1072,8 @@ class ScenarioVisualizer:
             pit: Optional[Union[int, Tuple[int, int]]] = None,
             species: str = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            conversion: Optional[dict] = None) -> None:
+            conversion: Optional[dict] = None,
+            use_sensor_data: bool = False) -> None:
         """
         Resizes the width of the links (pipes) in the water distribution
         network based on SCADA data and the specified parameters.
@@ -1112,11 +1137,12 @@ class ScenarioVisualizer:
                 self.pipe_parameters.add_frame(self.topology, 'edge_width',
                                                self.scada_data, parameter,
                                                statistic, frame, species,
-                                               intervals)
+                                               intervals, use_sensor_data)
         else:
             self.pipe_parameters.add_frame(self.topology, 'edge_width',
                                            self.scada_data, parameter,
-                                           statistic, pit, species, intervals)
+                                           statistic, pit, species, intervals,
+                                           use_sensor_data)
         self.pipe_parameters.rescale_widths(line_widths)
 
     def hide_nodes(self) -> None:

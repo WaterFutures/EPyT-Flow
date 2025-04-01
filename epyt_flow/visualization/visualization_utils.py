@@ -170,7 +170,7 @@ class JunctionObject:
             without sensor are to be masked.
         color:
             The default color of masked nodes.
-            
+
         Returns
         -------
         valid_params : `dict`
@@ -290,7 +290,8 @@ class EdgeObject:
             parameter: str = 'flow_rate', statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int]]] = None,
             species: str = None,
-            intervals: Optional[Union[int, List[Union[int, float]]]] = None):
+            intervals: Optional[Union[int, List[Union[int, float]]]] = None,
+            use_sensor_data: bool = None):
         """
         Adds a new frame of edge_color or edge width based on the given data
         and statistic.
@@ -336,13 +337,22 @@ class EdgeObject:
                 self.edge_vmax = float('-inf')
 
         if parameter == 'flow_rate':
-            values = scada_data.flow_data_raw
+            if use_sensor_data:
+                values, self.mask = scada_data.get_data_flows_as_edge_features()
+            else:
+                values = scada_data.flow_data_raw
         elif parameter == 'link_quality':
-            values = scada_data.link_quality_data_raw
+            if use_sensor_data:
+                values, self.mask = scada_data.get_data_links_quality_as_edge_features()
+            else:
+                values = scada_data.link_quality_data_raw
         elif parameter == 'custom_data':
             values = scada_data
         elif parameter == 'bulk_species_concentration':
-            values = scada_data.bulk_species_link_concentration_raw[:, scada_data.sensor_config.bulk_species.index(species), :]
+            if use_sensor_data:
+                values, self.mask = scada_data.get_data_bulk_species_concentrations_as_edge_features()
+            else:
+                values = scada_data.bulk_species_link_concentration_raw[:, scada_data.sensor_config.bulk_species.index(species), :]
         elif parameter == 'diameter':
             value_dict = {
                 link[0]: topology.get_link_info(link[0])['diameter'] for
@@ -356,7 +366,6 @@ class EdgeObject:
                 self.edge_color.append(sorted_values)
                 self.edge_vmin = min(*sorted_values, self.edge_vmin)
                 self.edge_vmax = max(*sorted_values, self.edge_vmax)
-
             return
         else:
             raise ValueError('Parameter must be flow_rate, link_quality, '
@@ -446,6 +455,49 @@ class EdgeObject:
 
         return valid_params
 
+    def get_frame_mask(self, frame_number: int = 0, color ='k'):
+        """
+        Returns all attributes necessary for networkx to draw the specified
+        frame.
+
+        Parameters
+        ----------
+        frame_number : `int`, default = 0
+            The frame whose parameters should be returned. Default is 0, this
+            is also used if only 1 frame exists (e.g. for plots, not
+            animations).
+
+        Returns
+        -------
+        valid_params : `dict`
+            A dictionary containing all attributes that function as parameters
+            for `networkx.drawing.nx_pylab.draw_networkx_edges() <https://networkx.org/documentation/stable/reference/generated/networkx.drawing.nx_pylab.draw_networkx_edges.html#draw-networkx-edges>`_.
+        """
+        attributes = vars(self).copy()
+
+        attributes['edgelist'] = [edge for edge, flag in zip(self.edgelist, self.mask) if not flag]
+        attributes['node_color'] = color
+
+        if hasattr(self, 'width'):
+            if 'width' in self.interpolated.keys():
+                if frame_number > len(self.interpolated['width']):
+                    frame_number = -1
+                attributes['width'] = self.interpolated['width'][frame_number]
+            else:
+                if frame_number > len(self.width):
+                    frame_number = -1
+                attributes['width'] = self.width[frame_number]
+        attributes['width'] = [edge for edge, flag in zip(attributes['width'].copy(), self.mask) if not flag]
+
+        sig = inspect.signature(nxp.draw_networkx_edges)
+
+        valid_params = {
+            key: value for key, value in attributes.items()
+            if key in sig.parameters and value is not None
+        }
+
+        return valid_params
+
     def interpolate(self, num_inter_frames: int):
         """
         Interpolates edge_color and width values for smoother animations.
@@ -489,10 +541,9 @@ class EdgeObject:
         for key, value in attributes.items():
             setattr(self, key, value)
 
-    @staticmethod
-    def __rescale(values: Union[np.ndarray, list],
+    def __rescale(self, values: Union[np.ndarray, list],
                   scale_min_max: Union[List, Tuple[int]],
-                  values_min_max: Union[List, Tuple[int, int]] = None) -> List:
+                  values_min_max: Union[List, Tuple[int, int]] = None) -> np.ndarray:
         """
         Rescales the given values to a new range.
 
@@ -529,7 +580,14 @@ class EdgeObject:
             return scale_min_max[0] + (x - min_val) / (
                     max_val - min_val) * scale
 
-        return [range_map(x) for x in values]
+        vectorized_range_map = np.vectorize(range_map)
+        rescaled_widths = vectorized_range_map(np.array(values))
+
+        if hasattr(self, 'mask'):
+            rescaled_widths = np.where(self.mask == 1, rescaled_widths, 1.0)
+
+        # TODO: test, because return value changed from list to np.ndarray
+        return rescaled_widths
 
 
 @serializable(COLOR_SCHEMES_ID, ".epyt_flow_color_scheme")
