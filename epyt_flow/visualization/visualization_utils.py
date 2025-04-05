@@ -339,11 +339,15 @@ class EdgeObject:
         if parameter == 'flow_rate':
             if use_sensor_data:
                 values, self.mask = scada_data.get_data_flows_as_edge_features()
+                values = values[:, ::2]
+                self.mask = self.mask[::2]
             else:
                 values = scada_data.flow_data_raw
         elif parameter == 'link_quality':
             if use_sensor_data:
                 values, self.mask = scada_data.get_data_links_quality_as_edge_features()
+                values = values[:, ::2]
+                self.mask = self.mask[::2]
             else:
                 values = scada_data.link_quality_data_raw
         elif parameter == 'custom_data':
@@ -476,7 +480,7 @@ class EdgeObject:
         attributes = vars(self).copy()
 
         attributes['edgelist'] = [edge for edge, flag in zip(self.edgelist, self.mask) if not flag]
-        attributes['node_color'] = color
+        attributes['edge_color'] = color
 
         if hasattr(self, 'width'):
             if 'width' in self.interpolated.keys():
@@ -487,7 +491,7 @@ class EdgeObject:
                 if frame_number > len(self.width):
                     frame_number = -1
                 attributes['width'] = self.width[frame_number]
-        attributes['width'] = [edge for edge, flag in zip(attributes['width'].copy(), self.mask) if not flag]
+            attributes['width'] = [edge for edge, flag in zip(attributes['width'].copy(), self.mask) if not flag]
 
         sig = inspect.signature(nxp.draw_networkx_edges)
 
@@ -586,7 +590,6 @@ class EdgeObject:
         if hasattr(self, 'mask'):
             rescaled_widths = np.where(self.mask == 1, rescaled_widths, 1.0)
 
-        # TODO: test, because return value changed from list to np.ndarray
         return rescaled_widths
 
 
