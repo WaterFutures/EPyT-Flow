@@ -7,7 +7,7 @@ import falcon
 from .scenario.handlers import ScenarioManager, ScenarioNewHandler, \
     ScenarioRemoveHandler, ScenarioGeneralParamsHandler, ScenarioSensorConfigHandler, \
     ScenarioExportHandler, ScenarioTopologyHandler, ScenarioConfigHandler, \
-    ScenarioNodeDemandPatternHandler
+    ScenarioNodeDemandPatternHandler, ScenarioQualityParamsHandler
 from .scenario.uncertainty_handlers import ScenarioModelUncertaintyHandler, \
     ScenarioSensorUncertaintyHandler
 from .scenario.event_handlers import ScenarioLeakageHandler, ScenarioSensorFaultHandler
@@ -54,6 +54,8 @@ class RestApiService():
                            ScenarioConfigHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/general_params",
                            ScenarioGeneralParamsHandler(self.scenario_mgr))
+        self.app.add_route("/scenario/{scenario_id}/quality_params",
+                           ScenarioQualityParamsHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/sensor_config",
                            ScenarioSensorConfigHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/uncertainty/model",
