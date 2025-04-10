@@ -10,6 +10,7 @@ from .scenario.handlers import ScenarioManager, ScenarioNewHandler, \
     ScenarioNodeDemandPatternHandler, ScenarioQualityParamsHandler
 from .scenario.uncertainty_handlers import ScenarioModelUncertaintyHandler, \
     ScenarioSensorUncertaintyHandler
+from .scenario.control_handlers import ScenarioSimpleControlHandler, ScenarioComplexControlHandler
 from .scenario.event_handlers import ScenarioLeakageHandler, ScenarioSensorFaultHandler
 from .scenario.simulation_handlers import ScenarioSimulationHandler, \
     ScenarioBasicQualitySimulationHandler, ScenarioAdvancedQualitySimulationHandler
@@ -62,6 +63,10 @@ class RestApiService():
                            ScenarioModelUncertaintyHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/uncertainty/sensors",
                            ScenarioSensorUncertaintyHandler(self.scenario_mgr))
+        self.app.add_route("/scenario/{scenario_id}/controls/simple",
+                           ScenarioSimpleControlHandler(self.scenario_mgr))
+        self.app.add_route("/scenario/{scenario_id}/controls/complex",
+                           ScenarioComplexControlHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/events/leakages",
                            ScenarioLeakageHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/events/sensor_faults",
