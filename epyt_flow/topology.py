@@ -78,7 +78,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                  links: list[tuple[str, tuple[str, str], dict]],
                  pumps: dict,
                  valves: dict,
-                 units: int = None,
+                 units: int,
                  **kwds):
         super().__init__(name=f_inp, **kwds)
 
@@ -87,11 +87,6 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         self.__pumps = pumps
         self.__valves = valves
         self.__units = units
-
-        if units is None:
-            warnings.warn("Loading a file that was created with an outdated version of EPyT-Flow" +
-                          " -- support of such old files will be removed in the next release!",
-                          DeprecationWarning)
 
         for node_id, node_info in nodes:
             node_elevation = node_info["elevation"]

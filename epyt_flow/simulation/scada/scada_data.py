@@ -41,6 +41,10 @@ class ScadaData(Serializable):
 
         This parameter is expected to be a 1d array with the same size as
         the number of rows in `sensor_readings_data_raw`.
+    network_topo : :class:`~epyt_flow.topology.NetworkTopology`
+        Topology of the water distribution network.
+    warnings_code : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
+        Codes/IDs of EPANET errors/warnings (if any) for each time step.
     pressure_data_raw : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_, optional
         Raw pressure values of all nodes as a two-dimensional array --
         first dimension encodes time, second dimension pressure at nodes.
@@ -128,10 +132,9 @@ class ScadaData(Serializable):
         will be stored -- this usually leads to a significant reduction in memory consumption.
 
         The default is False.
-    network_topo : :class:`~epyt_flow.topology.NetworkTopology`
-        Topology of the water distribution network.
     """
     def __init__(self, sensor_config: SensorConfig, sensor_readings_time: np.ndarray,
+                 network_topo: NetworkTopology, warnings_code: np.ndarray = None,
                  pressure_data_raw: Union[np.ndarray, bsr_array] = None,
                  flow_data_raw: Union[np.ndarray, bsr_array] = None,
                  demand_data_raw: Union[np.ndarray, bsr_array] = None,
@@ -151,17 +154,11 @@ class ScadaData(Serializable):
                  sensor_reading_attacks: list[SensorReadingAttack] = [],
                  sensor_reading_events: list[SensorReadingEvent] = [],
                  sensor_noise: SensorNoise = None, frozen_sensor_config: bool = False,
-                 network_topo: NetworkTopology = None,
                  **kwds):
-        if network_topo is not None:
-            if not isinstance(network_topo, NetworkTopology):
-                raise TypeError("'network_topo' must be an instance of " +
-                                "'epyt_flow.topology.NetworkTopology' but not " +
-                                f"of '{type(network_topo)}'")
-        else:
-            warnings.warn("You are loading a SCADA data instance that was created with an " +
-                          "outdated version of EPyT-Flow. Future releases will require " +
-                          "'network_topo' != None. Please upgrade!")
+        if not isinstance(network_topo, NetworkTopology):
+            raise TypeError("'network_topo' must be an instance of " +
+                            "'epyt_flow.topology.NetworkTopology' but not " +
+                            f"of '{type(network_topo)}'")
         if not isinstance(sensor_config, SensorConfig):
             raise TypeError("'sensor_config' must be an instance of " +
                             "'epyt_flow.simulation.SensorConfig' but not of " +
@@ -169,6 +166,14 @@ class ScadaData(Serializable):
         if not isinstance(sensor_readings_time, np.ndarray):
             raise TypeError("'sensor_readings_time' must be an instance of 'numpy.ndarray' " +
                             f"but not of '{type(sensor_readings_time)}'")
+        if warnings_code is None:
+            warnings.warn("Loading a file that was created with an outdated version of EPyT-Flow" +
+                          " -- support of such old files will be removed in the next release!",
+                          DeprecationWarning)
+        else:
+            if not isinstance(warnings_code, np.ndarray):
+                raise TypeError("'warnings_code' must be an instance of 'numpy.ndarray' " +
+                                f"but not of '{type(warnings_code)}'")
         if pressure_data_raw is not None:
             if not isinstance(pressure_data_raw, np.ndarray) and \
                     not isinstance(pressure_data_raw, bsr_array):
@@ -306,6 +311,9 @@ class ScadaData(Serializable):
                              "must match number of raw measurements.")
 
         n_time_steps = sensor_readings_time.shape[0]
+        if warnings_code is not None:
+            if warnings_code.shape[0] != n_time_steps:
+                __raise_shape_mismatch("warnings_code")
         if pressure_data_raw is not None:
             if pressure_data_raw.shape[0] != n_time_steps:
                 __raise_shape_mismatch("pressure_data_raw")
@@ -360,6 +368,7 @@ class ScadaData(Serializable):
 
         self.__network_topo = network_topo
         self.__sensor_config = sensor_config
+        self.__warnings_code = warnings_code
         self.__sensor_noise = sensor_noise
         self.__sensor_reading_events = sensor_faults + sensor_reading_attacks + \
             sensor_reading_events
@@ -1045,6 +1054,7 @@ class ScadaData(Serializable):
                                      surface_species_area_unit=new_surface_species_area_unit)
 
         return ScadaData(network_topo=self.network_topo,
+                         warnings_code=self.warnings_code,
                          sensor_config=sensor_config,
                          sensor_readings_time=self.sensor_readings_time,
                          sensor_reading_events=self.sensor_reading_events,
@@ -1075,6 +1085,19 @@ class ScadaData(Serializable):
             Topology of the network.
         """
         return deepcopy(self.__network_topo)
+
+    @property
+    def warnings_code(self) -> np.ndarray:
+        """
+        Returns the codes/IDs of EPANET errors/warnings (if any) for each time step.
+        Note that zero denotes the absence of any error/warning.
+
+        Returns:
+        --------
+        `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
+            Codes/IDs of EPANET errors/warnings (if any) for each time step.
+        """
+        return deepcopy(self.__warnings_code)
 
     @property
     def frozen_sensor_config(self) -> bool:
@@ -1402,6 +1425,7 @@ class ScadaData(Serializable):
 
     def get_attributes(self) -> dict:
         attr = {"network_topo": self.__network_topo,
+                "warnings_code": self.__warnings_code,
                 "sensor_config": self.__sensor_config,
                 "frozen_sensor_config": self.__frozen_sensor_config,
                 "sensor_noise": self.__sensor_noise,
@@ -1554,6 +1578,7 @@ class ScadaData(Serializable):
 
         try:
             return self.__network_topo == other.network_topo \
+                and np.all(self.__warnings_code == other.warnings_code) \
                 and self.__sensor_config == other.sensor_config \
                 and self.__frozen_sensor_config == other.frozen_sensor_config \
                 and self.__sensor_noise == other.sensor_noise \
@@ -1583,6 +1608,7 @@ class ScadaData(Serializable):
 
     def __str__(self) -> str:
         return f"network_topo: {self.__network_topo} sensor_config: {self.__sensor_config} " + \
+            f"warnings_code: {self.__warnings_code} " + \
             f"frozen_sensor_config: {self.__frozen_sensor_config} " + \
             f"sensor_noise: {self.__sensor_noise} " + \
             f"sensor_reading_events: {self.__sensor_reading_events} " + \
@@ -1782,6 +1808,7 @@ class ScadaData(Serializable):
 
         return ScadaData(network_topo=self.network_topo, sensor_config=self.sensor_config,
                          sensor_readings_time=self.sensor_readings_time[start_idx:end_idx],
+                         warnings_code=self.__warnings_code[start_idx:end_idx],
                          frozen_sensor_config=self.frozen_sensor_config,
                          sensor_noise=self.sensor_noise,
                          sensor_reading_events=self.sensor_reading_events,
@@ -1939,6 +1966,8 @@ class ScadaData(Serializable):
 
         self.__sensor_readings_time = np.concatenate(
             (self.__sensor_readings_time, other.sensor_readings_time), axis=0)
+
+        self.__warnings_code = np.concatenate((self.__warnings_code, other.warnings_code), axis=0)
 
         if self.__pressure_data_raw is not None:
             self.__pressure_data_raw = np.concatenate(

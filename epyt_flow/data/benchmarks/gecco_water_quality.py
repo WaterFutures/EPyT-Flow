@@ -17,9 +17,9 @@ import os
 from typing import Union
 import numpy as np
 import pandas as pd
+from sklearn.metrics import f1_score
 
 from ...utils import get_temp_folder, download_if_necessary
-from ...metrics import f1_score
 
 
 def compute_evaluation_score(y_pred: np.ndarray, y: np.ndarray) -> float:
@@ -41,7 +41,7 @@ def compute_evaluation_score(y_pred: np.ndarray, y: np.ndarray) -> float:
     `float`
         Evaluation score.
     """
-    return f1_score(y_pred, y)
+    return f1_score(y, y_pred)
 
 
 def load_gecco2017_water_quality_data(download_dir: str = None, return_X_y: bool = True,

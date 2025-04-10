@@ -2,6 +2,7 @@ epyt_flow.simulation
 ====================
 
 .. toctree::
+   epyt_flow.simulation.backend
    epyt_flow.simulation.scada
    epyt_flow.simulation.events
 

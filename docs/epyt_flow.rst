@@ -32,11 +32,3 @@ epyt_flow.utils
 .. automodule:: epyt_flow.utils
    :members:
    :show-inheritance:
-
-
-epyt_flow.metrics
------------------
-
-.. automodule:: epyt_flow.metrics
-   :members:
-   :show-inheritance:
