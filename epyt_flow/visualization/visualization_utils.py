@@ -180,7 +180,8 @@ class JunctionObject:
 
         attributes = vars(self).copy()
 
-        attributes['nodelist'] = [node for node, flag in zip(self.nodelist, mask) if not flag]
+        attributes['nodelist'] = [node for node, flag in
+                                  zip(self.nodelist, mask) if not flag]
         attributes['node_color'] = color
 
         sig = inspect.signature(nxp.draw_networkx_nodes)
@@ -358,10 +359,15 @@ class EdgeObject:
                                  'bulk_species_concentration')
             if use_sensor_data:
                 values, self.mask = scada_data.get_data_bulk_species_concentrations_as_edge_features()
-                self.mask = self.mask[::2, scada_data.sensor_config.bulk_species.index(species)]
-                values = values[:, ::2, scada_data.sensor_config.bulk_species.index(species)]
+                self.mask = self.mask[::2,
+                            scada_data.sensor_config.bulk_species.index(
+                                species)]
+                values = values[:, ::2,
+                         scada_data.sensor_config.bulk_species.index(species)]
             else:
-                values = scada_data.bulk_species_link_concentration_raw[:, scada_data.sensor_config.bulk_species.index(species), :]
+                values = scada_data.bulk_species_link_concentration_raw[:,
+                         scada_data.sensor_config.bulk_species.index(species),
+                         :]
         elif parameter == 'diameter':
             value_dict = {
                 link[0]: topology.get_link_info(link[0])['diameter'] for
@@ -464,7 +470,7 @@ class EdgeObject:
 
         return valid_params
 
-    def get_frame_mask(self, frame_number: int = 0, color ='k'):
+    def get_frame_mask(self, frame_number: int = 0, color='k'):
         """
         Returns all attributes necessary for networkx to draw the specified
         frame.
@@ -484,7 +490,8 @@ class EdgeObject:
         """
         attributes = vars(self).copy()
 
-        attributes['edgelist'] = [edge for edge, flag in zip(self.edgelist, self.mask) if not flag]
+        attributes['edgelist'] = [edge for edge, flag in
+                                  zip(self.edgelist, self.mask) if not flag]
         attributes['edge_color'] = color
 
         if hasattr(self, 'width'):
@@ -496,7 +503,9 @@ class EdgeObject:
                 if frame_number > len(self.width):
                     frame_number = -1
                 attributes['width'] = self.width[frame_number]
-            attributes['width'] = [edge for edge, flag in zip(attributes['width'].copy(), self.mask) if not flag]
+            attributes['width'] = [edge for edge, flag in
+                                   zip(attributes['width'].copy(), self.mask)
+                                   if not flag]
 
         sig = inspect.signature(nxp.draw_networkx_edges)
 
@@ -552,7 +561,8 @@ class EdgeObject:
 
     def __rescale(self, values: Union[np.ndarray, list],
                   scale_min_max: Union[List, Tuple[int]],
-                  values_min_max: Union[List, Tuple[int, int]] = None) -> np.ndarray:
+                  values_min_max: Union[
+                      List, Tuple[int, int]] = None) -> np.ndarray:
         """
         Rescales the given values to a new range.
 
@@ -604,6 +614,7 @@ class ColorScheme(JsonSerializable):
     A class containing the color scheme for the
     :class:`~epyt_flow.visualization.ScenarioVisualizer`.
     """
+
     def __init__(self, pipe_color: str, node_color: str, pump_color: str,
                  tank_color: str, reservoir_color: str,
                  valve_color: str) -> None:
@@ -645,7 +656,8 @@ class ColorScheme(JsonSerializable):
         """
         attr = {
             k: v for k, v in self.__dict__.items()
-            if not (k.startswith("__") or k.startswith("_")) and not callable(v)
+            if
+            not (k.startswith("__") or k.startswith("_")) and not callable(v)
         }
         return super().get_attributes() | attr
 
@@ -666,12 +678,12 @@ class ColorScheme(JsonSerializable):
         if not isinstance(other, ColorScheme):
             return False
         return (
-            self.pipe_color == other.pipe_color and
-            self.node_color == other.node_color and
-            self.pump_color == other.pump_color and
-            self.tank_color == other.tank_color and
-            self.reservoir_color == other.reservoir_color and
-            self.valve_color == other.valve_color
+                self.pipe_color == other.pipe_color and
+                self.node_color == other.node_color and
+                self.pump_color == other.pump_color and
+                self.tank_color == other.tank_color and
+                self.reservoir_color == other.reservoir_color and
+                self.valve_color == other.valve_color
         )
 
     def __str__(self) -> str:
