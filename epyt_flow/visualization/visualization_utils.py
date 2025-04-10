@@ -353,8 +353,13 @@ class EdgeObject:
         elif parameter == 'custom_data':
             values = scada_data
         elif parameter == 'bulk_species_concentration':
+            if not species:
+                raise ValueError('Species must be given when using '
+                                 'bulk_species_concentration')
             if use_sensor_data:
                 values, self.mask = scada_data.get_data_bulk_species_concentrations_as_edge_features()
+                self.mask = self.mask[::2, scada_data.sensor_config.bulk_species.index(species)]
+                values = values[:, ::2, scada_data.sensor_config.bulk_species.index(species)]
             else:
                 values = scada_data.bulk_species_link_concentration_raw[:, scada_data.sensor_config.bulk_species.index(species), :]
         elif parameter == 'diameter':

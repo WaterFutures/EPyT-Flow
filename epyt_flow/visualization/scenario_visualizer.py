@@ -633,8 +633,13 @@ class ScenarioVisualizer:
             # Custom should have the dimensions (timesteps, nodes)
             values = self.scada_data
         elif parameter == 'bulk_species_concentration':
+            if not species:
+                raise ValueError('Species must be set when using bulk_species_'
+                                 'concentration.')
             if use_sensor_data:
-                values, self.masks['nodes'] = self.scada_data.get_data_bulk_species_concentrations_as_node_features()[:, self.scada_data.sensor_config.bulk_species.index(species), :]
+                values, self.masks['nodes'] = self.scada_data.get_data_bulk_species_concentrations_as_node_features()
+                self.masks['nodes'] = self.masks['nodes'][:, self.scada_data.sensor_config.bulk_species.index(species)]
+                values = values[:, :, self.scada_data.sensor_config.bulk_species.index(species)]
             else:
                 values = self.scada_data.bulk_species_node_concentration_raw[:, self.scada_data.sensor_config.bulk_species.index(species), :]
         else:
