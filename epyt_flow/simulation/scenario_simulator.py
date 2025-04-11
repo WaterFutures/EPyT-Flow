@@ -1052,6 +1052,11 @@ class ScenarioSimulator():
             if node_type == "TANK":
                 node_tank_idx = node_tank_names.index(node_id) + 1
                 node_info["diameter"] = float(self.epanet_api.getNodeTankDiameter(node_tank_idx))
+                node_info["volume"] = float(self.epanet_api.getNodeTankVolume(node_tank_idx))
+                node_info["max_level"] = float(self.epanet_api.getNodeTankMaximumWaterLevel(node_tank_idx))
+                node_info["min_level"] = float(self.epanet_api.getNodeTankMinimumWaterLevel(node_tank_idx))
+                node_info["mixing_fraction"] = float(self.epanet_api.getNodeTankMixingFraction(node_tank_idx))
+                #node_info["mixing_model"] = int(self.epanet_api.getNodeTankMixingModelCode(node_tank_idx)[0])
 
             nodes.append((node_id, node_info))
 
