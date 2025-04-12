@@ -67,6 +67,36 @@ def volume_to_level(tank_volume: float, tank_diameter: float) -> float:
     return (4. / (math.pow(tank_diameter, 2) * math.pi)) * tank_volume
 
 
+def level_to_volume(tank_level: float, tank_diameter: float) -> float:
+    """
+    Computes the volume of water in a tank given the water level in the tank.
+
+    Parameters
+    ----------
+    tank_level : `float`
+        Water level in the tank.
+    tank_diameter : `float`
+        Diameter of the tank.
+
+    Returns
+    -------
+    `float`
+        Water volume in tank.
+    """
+    if not isinstance(tank_level, float):
+        raise TypeError("'tank_level' must be an instace of 'float' " +
+                        f"but not of '{type(tank_level)}'")
+    if tank_level < 0:
+        raise ValueError("'tank_level' can not be negative")
+    if not isinstance(tank_diameter, float):
+        raise TypeError("'tank_diameter' must be an instace of 'float' " +
+                        f"but not of '{type(tank_diameter)}'")
+    if tank_diameter <= 0:
+        raise ValueError("'tank_diameter' must be greater than zero")
+
+    return tank_level * math.pow(0.5 * tank_diameter, 2) * math.pi
+
+
 def plot_timeseries_data(data: np.ndarray, labels: list[str] = None, x_axis_label: str = None,
                          y_axis_label: str = None, y_ticks: tuple[list[float], list[str]] = None,
                          show: bool = True, save_to_file: str = None,
