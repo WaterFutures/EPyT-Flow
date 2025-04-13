@@ -599,6 +599,11 @@ class ScenarioVisualizer:
         show_colorbar : `bool`, optional
             If `True`, a colorbar will be displayed on the plot to indicate the
             range of node values. Default is `False`.
+        use_sensor_data : `bool`, optional
+            If `True`, instead of using raw simulation data, the data recorded
+            by the corresponding sensors in the system is used for the
+            visualization. Note: Not all components may have a sensor attached
+            and sensors may be subject to sensor faults or noise.
 
         Raises
         ------
@@ -742,6 +747,11 @@ class ScenarioVisualizer:
         show_colorbar : `bool`, optional
             If `True`, a colorbar will be displayed on the plot to indicate the
             range of values. Default is `False`.
+        use_sensor_data : `bool`, optional
+            If `True`, instead of using raw simulation data, the data recorded
+            by the corresponding sensors in the system is used for the
+            visualization. Note: Not all components may have a sensor attached
+            and sensors may be subject to sensor faults or noise.
 
         Raises
         ------
@@ -845,6 +855,11 @@ class ScenarioVisualizer:
         show_colorbar : `bool`, optional
             If `True`, a colorbar will be displayed on the plot to indicate the
             range of pump values. Default is `False`.
+        use_sensor_data : `bool`, optional
+            If `True`, instead of using raw simulation data, the data recorded
+            by the corresponding sensors in the system is used for the
+            visualization. Note: Not all components may have a sensor attached
+            and sensors may be subject to sensor faults or noise.
 
         Raises
         ------
@@ -952,6 +967,11 @@ class ScenarioVisualizer:
         show_colorbar : `bool`, optional
             If `True`, a colorbar will be displayed on the plot to indicate the
             range of tank volume values. Default is `False`.
+        use_sensor_data : `bool`, optional
+            If `True`, instead of using raw simulation data, the data recorded
+            by the corresponding sensors in the system is used for the
+            visualization. Note: Not all components may have a sensor attached
+            and sensors may be subject to sensor faults or noise.
 
         Raises
         ------
@@ -1041,6 +1061,11 @@ class ScenarioVisualizer:
         show_colorbar : `bool`, optional
             If `True`, a colorbar will be displayed on the plot to indicate the
             range of valve state values. Default is `False`.
+        use_sensor_data : `bool`, optional
+            If `True`, instead of using raw simulation data, the data recorded
+            by the corresponding sensors in the system is used for the
+            visualization. Note: Not all components may have a sensor attached
+            and sensors may be subject to sensor faults or noise.
 
         Raises
         ------
@@ -1129,6 +1154,9 @@ class ScenarioVisualizer:
             representing the start and end time steps. A tuple is necessary to
             process the data for the :meth:`~ScenarioVisualizer.show_animation`
             method. Default is `None`.
+        species: `str`, optional
+            Key of species. Only necessary for parameter
+            'bulk_species_concentration'.
         intervals : `int` or `list[int]` or `list[float]`, optional
             If provided, the data will be grouped into intervals. It can be an
             integer specifying the number of groups or a list of boundary
@@ -1136,6 +1164,11 @@ class ScenarioVisualizer:
         conversion : `dict`, optional
             A dictionary of conversion parameters to convert SCADA data units.
             Default is `None`.
+        use_sensor_data : `bool`, optional
+            If `True`, instead of using raw simulation data, the data recorded
+            by the corresponding sensors in the system is used for the
+            visualization. Note: Not all components may have a sensor attached
+            and sensors may be subject to sensor faults or noise.
         """
         sim_length = None
 

@@ -323,6 +323,11 @@ class EdgeObject:
             If provided, the data will be grouped into intervals. It can be an
             integer specifying the number of groups or a list of boundary
             points.
+        use_sensor_data : `bool`, optional
+            If `True`, instead of using raw simulation data, the data recorded
+            by the corresponding sensors in the system is used for the
+            visualization. Note: Not all components may have a sensor attached
+            and sensors may be subject to sensor faults or noise.
 
         Raises
         ------
@@ -473,7 +478,7 @@ class EdgeObject:
     def get_frame_mask(self, frame_number: int = 0, color='k'):
         """
         Returns all attributes necessary for networkx to draw the specified
-        frame.
+        frame mask.
 
         Parameters
         ----------
@@ -481,6 +486,8 @@ class EdgeObject:
             The frame whose parameters should be returned. Default is 0, this
             is also used if only 1 frame exists (e.g. for plots, not
             animations).
+        color:
+            The default color of masked nodes.
 
         Returns
         -------
