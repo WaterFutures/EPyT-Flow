@@ -27,6 +27,8 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
     profile : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
         Injection strength profile -- i.e. every entry corresponds to the strength of the injection
         at a point in time. Pattern will repeat if it is shorter than the total injection time.
+
+        Note that the pattern time step is equivalent to the EPANET pattern time step.
     source_type : `int`
         Type of the bulk species injection source -- must be one of
         the following EPANET toolkit constants:
@@ -198,7 +200,7 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
                                        pattern_id)
 
     def cleanup(self) -> None:
-        warnings.warn("Can not undo SpeciedInjectionEvent -- " +
+        warnings.warn("Can not undo SpeciesInjectionEvent -- " +
                       "EPANET-MSX does not support removing patterns")
 
     def apply(self, cur_time: int) -> None:

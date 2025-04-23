@@ -79,11 +79,13 @@ class ScenarioControlEnv(ABC):
             if self._sim_generator is not None:
                 next(self._sim_generator)
                 self._sim_generator.send(True)
+                self._sim_generator = None
         except StopIteration:
             pass
 
         if self._scenario_sim is not None:
             self._scenario_sim.close()
+            self._scenario_sim = None
 
     def contains_events(self) -> bool:
         """
@@ -106,16 +108,7 @@ class ScenarioControlEnv(ABC):
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             Current SCADA data (i.e. sensor readings).
         """
-        if self._scenario_sim is not None:
-            # Abort current simulation if any is runing
-            try:
-                next(self._sim_generator)
-                self._sim_generator.send(True)
-            except StopIteration:
-                pass
-
-            # Close scenario
-            self._scenario_sim.close()
+        self.close()
 
         self._scenario_sim = ScenarioSimulator(
             scenario_config=self._scenario_config)

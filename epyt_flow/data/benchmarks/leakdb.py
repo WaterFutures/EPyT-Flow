@@ -13,8 +13,6 @@ This module provides functions for loading the original LeakDB data set
 The official scoring/evaluation is implemented in
 :func:`~epyt_flow.data.benchmarks.leakdb.compute_evaluation_score` -- i.e. those results can be
 directly compared to the official paper.
-Besides this, the user can choose to evaluate predictions using any other metric from
-:mod:`~epyt_flow.metrics`.
 """
 import os
 from typing import Union
@@ -24,17 +22,54 @@ import scipy
 import numpy as np
 import pandas as pd
 from scipy.sparse import bsr_array
+from sklearn.metrics import f1_score, recall_score as true_positive_rate
 
 from ..networks import load_net1, load_hanoi
 from .leakdb_data import NET1_LEAKAGES, HANOI_LEAKAGES
 from ...utils import get_temp_folder, to_seconds, unpack_zip_archive, create_path_if_not_exist, \
     download_if_necessary
-from ...metrics import f1_score, true_positive_rate, true_negative_rate
 from ...simulation import ScenarioSimulator, ToolkitConstants
 from ...simulation.events import AbruptLeakage, IncipientLeakage
 from ...simulation import ScenarioConfig
 from ...simulation.scada import ScadaData
 from ...uncertainty import ModelUncertainty, UniformUncertainty
+
+
+def true_negative_rate(y_pred: np.ndarray, y: np.ndarray) -> float:
+    """
+    Computes the true negative rate (also called specificity).
+
+    Parameters
+    ----------
+    y_pred : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
+        Predicted labels.
+    y : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
+        Ground truth labels.
+
+    Returns
+    -------
+    `float`
+        True negative rate.
+    """
+    if not isinstance(y_pred, np.ndarray):
+        raise TypeError("'y_pred' must be an instance of 'numpy.ndarray' " +
+                        f"but not of '{type(y_pred)}'")
+    if not isinstance(y, np.ndarray):
+        raise TypeError("'y' must be an instance of 'numpy.ndarray' " +
+                        f"but not of '{type(y)}'")
+    if y_pred.shape != y.shape:
+        raise ValueError(f"Shape mismatch: {y_pred.shape} vs. {y.shape}")
+    if len(y_pred.shape) > 1:
+        raise ValueError("'y_pred' must be a 1d array")
+    if len(y.shape) > 1:
+        raise ValueError("'y' must be a 1d array")
+    if set(np.unique(y_pred)) != set([0, 1]):
+        raise ValueError("Labels must be either '0' or '1'")
+
+    tn = np.sum((y == 0) & (y_pred == 0))
+    fp = np.sum((y == 0) & (y_pred == 1))
+
+    return tn / (tn + fp)
 
 
 def __leak_time_to_idx(t: int, round_up: bool = False, hydraulic_time_step: int = 1800):
@@ -134,8 +169,8 @@ def compute_evaluation_score(scenarios_id: list[int], use_net1: bool,
     y_pred = np.stack(y_pred_labels_per_scenario, axis=0)
 
     # Evaluate predictions
-    f1 = f1_score(y_pred, y_true)
-    tpr = true_positive_rate(y_pred, y_true)
+    f1 = f1_score(y_true, y_pred)
+    tpr = true_positive_rate(y_true, y_pred)
     tnr = true_negative_rate(y_pred, y_true)
 
     early_detection_score = 0

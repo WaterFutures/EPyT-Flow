@@ -278,6 +278,39 @@ class ScenarioGeneralParamsHandler(ScenarioBaseHandler):
             resp.status = falcon.HTTP_INTERNAL_SERVER_ERROR
 
 
+class ScenarioQualityParamsHandler(ScenarioBaseHandler):
+    """
+    Class for handling POST requests for specifying (EPANET) quality parameters of a given scenario.
+    """
+    def on_post(self, req: falcon.Request, resp: falcon.Response, scenario_id: str) -> None:
+        """
+        Specifies the (EPANET) quality parameters of a given scenario.
+
+        Parameters
+        ----------
+        req : `falcon.Request <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#request>`_
+            Request instance.
+        resp : `falcon.Response <https://falcon.readthedocs.io/en/stable/api/request_and_response_asgi.html#response>`_
+            Request instance.
+        scenario_id : `str`
+            UUID of the scenario.
+        """
+        try:
+            if self.scenario_mgr.validate_uuid(scenario_id) is False:
+                self.send_invalid_resource_id_error(resp)
+                return
+
+            quality_params = self.load_json_data_from_request(req)
+            if not isinstance(quality_params, dict):
+                self.send_json_parsing_error(resp)
+                return
+
+            self.scenario_mgr.get(scenario_id).set_quality_parameters(**quality_params)
+        except Exception as ex:
+            warnings.warn(str(ex))
+            resp.status = falcon.HTTP_INTERNAL_SERVER_ERROR
+
+
 class ScenarioSensorConfigHandler(ScenarioBaseHandler):
     """
     Class for handling GET and POST requests for the sensor configuration of a given scenario.

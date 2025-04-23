@@ -109,6 +109,14 @@ in the following table:
 | default                            | :attr:`~epyt_flow.simulation.scada.scada_data.ScadaData.valves_state_data_raw` |
 +------------------------------------+--------------------------------------------------------------------------------+
 
+.. note::
+
+    In the case, that the sensor data (instead of raw data) should be visualized,
+    the parameter `use_sensor_data` should be set to `True`. The sensor values
+    may include sensor faults or noise and are only available when there is a
+    corresponding sensor attached to the component, if that is not the case,
+    the component is displayed using its default color.
+
 The `statistic` decides how the simulation data over time is processed to one value which
 can be displayed. It has the following options:
 

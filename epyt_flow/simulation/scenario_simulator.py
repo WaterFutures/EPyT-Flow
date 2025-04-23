@@ -5,6 +5,7 @@ import sys
 import os
 import pathlib
 import time
+import itertools
 from datetime import timedelta
 from datetime import datetime
 from typing import Generator, Union, Optional
@@ -15,9 +16,8 @@ import random
 import math
 import uuid
 import numpy as np
-from epyt import epanet
-from epyt.epanet import ToolkitConstants
 from tqdm import tqdm
+from epyt.epanet import ToolkitConstants
 
 from .scenario_config import ScenarioConfig
 from .sensor_config import SensorConfig, areaunit_to_id, massunit_to_id, qualityunit_to_id, \
@@ -62,7 +62,7 @@ class ScenarioSimulator():
 
     Attributes
     ----------
-    epanet_api : `epyt.epanet`
+    epanet_api : :class:`~epyt_flow.simulation.backend.my_epyt.EPyT`
         API to EPANET and EPANET-MSX.
     _model_uncertainty : :class:`~epyt_flow.uncertainty.model_uncertainty.ModelUncertainty`, protected
         Model uncertainty.
@@ -119,6 +119,7 @@ class ScenarioSimulator():
         self._sensor_reading_events = []
         self.__running_simulation = False
 
+        # Check availability of custom EPANET libraries
         custom_epanet_lib = None
         custom_epanetmsx_lib = None
         if sys.platform.startswith("linux") or sys.platform.startswith("darwin") :
@@ -135,48 +136,49 @@ class ScenarioSimulator():
             if os.path.isfile(os.path.join(path_to_custom_libs, libepanetmsx_name)):
                 custom_epanetmsx_lib = os.path.join(path_to_custom_libs, libepanetmsx_name)
 
-        with warnings.catch_warnings():
-            # Treat all warnings as exceptions when trying to load .inp and .msx files
-            warnings.simplefilter('error')
+        # Workaround for EPyT bug concerning parallel simulations (see EPyT issue #54):
+        # 1. Create random tmp folder (make sure it is unique!)
+        # 2. Copy .inp and .msx file there
+        # 3. Use those copies  when loading EPyT
+        tmp_folder_path = os.path.join(get_temp_folder(), f"{random.randint(int(1e5), int(1e7))}{time.time()}")
+        pathlib.Path(tmp_folder_path).mkdir(parents=True, exist_ok=False)
 
-            # Workaround for EPyT bug concerning parallel simulations (see EPyT issue #54):
-            # 1. Create random tmp folder (make sure it is unique!)
-            # 2. Copy .inp and .msx file there
-            # 3. Use those copies  when loading EPyT
-            tmp_folder_path = os.path.join(get_temp_folder(), f"{random.randint(int(1e5), int(1e7))}{time.time()}")
-            pathlib.Path(tmp_folder_path).mkdir(parents=True, exist_ok=False)
+        def __file_exists(file_in: str) -> bool:
+            try:
+                return pathlib.Path(file_in).is_file()
+            except Exception:
+                return False
 
-            def __file_exists(file_in: str) -> bool:
-                try:
-                    return pathlib.Path(file_in).is_file()
-                except Exception:
-                    return False
+        if not __file_exists(self.__f_inp_in):
+            my_f_inp_in = self.__f_inp_in
+            self.__my_f_inp_in = None
+        else:
+            my_f_inp_in = os.path.join(tmp_folder_path, pathlib.Path(self.__f_inp_in).name)
+            shutil.copyfile(self.__f_inp_in, my_f_inp_in)
+            self.__my_f_inp_in = my_f_inp_in
 
-            if not __file_exists(self.__f_inp_in):
-                my_f_inp_in = self.__f_inp_in
-                self.__my_f_inp_in = None
+        if self.__f_msx_in is not None:
+            if not __file_exists(self.__f_msx_in):
+                my_f_msx_in = self.__f_msx_in
             else:
-                my_f_inp_in = os.path.join(tmp_folder_path, pathlib.Path(self.__f_inp_in).name)
-                shutil.copyfile(self.__f_inp_in, my_f_inp_in)
-                self.__my_f_inp_in = my_f_inp_in
+                my_f_msx_in = os.path.join(tmp_folder_path, pathlib.Path(self.__f_msx_in).name)
+                shutil.copyfile(self.__f_msx_in, my_f_msx_in)
+        else:
+            my_f_msx_in = None
 
-            if self.__f_msx_in is not None:
-                if not __file_exists(self.__f_msx_in):
-                    my_f_msx_in = self.__f_msx_in
-                else:
-                    my_f_msx_in = os.path.join(tmp_folder_path, pathlib.Path(self.__f_msx_in).name)
-                    shutil.copyfile(self.__f_msx_in, my_f_msx_in)
-            else:
-                my_f_msx_in = None
+        from .backend import EPyT   # Workaround: Sphinx autodoc "importlib.import_module TypeError: __mro_entries__"
+        self.epanet_api = EPyT(my_f_inp_in, ph=self.__f_msx_in is None,
+                               customlib=custom_epanet_lib, loadfile=True,
+                               display_msg=epanet_verbose,
+                               display_warnings=False)
 
-            self.epanet_api = epanet(my_f_inp_in, ph=self.__f_msx_in is None,
-                                     customlib=custom_epanet_lib, loadfile=True,
-                                     display_msg=epanet_verbose,
-                                     display_warnings=False)
+        if self.__f_msx_in is not None:
+            self.epanet_api.loadMSXFile(my_f_msx_in, customMSXlib=custom_epanetmsx_lib)
 
-            if self.__f_msx_in is not None:
-                self.epanet_api.loadMSXFile(my_f_msx_in, customMSXlib=custom_epanetmsx_lib)
+        # Do not raise exceptions in the case of EPANET warnings and errors
+        self.epanet_api.set_error_handling(False)
 
+        # Parse and initialize scenario
         self._simple_controls = self._parse_simple_control_rules()
         self._complex_controls = self._parse_complex_control_rules()
 
@@ -1050,6 +1052,11 @@ class ScenarioSimulator():
             if node_type == "TANK":
                 node_tank_idx = node_tank_names.index(node_id) + 1
                 node_info["diameter"] = float(self.epanet_api.getNodeTankDiameter(node_tank_idx))
+                node_info["volume"] = float(self.epanet_api.getNodeTankVolume(node_tank_idx))
+                node_info["max_level"] = float(self.epanet_api.getNodeTankMaximumWaterLevel(node_tank_idx))
+                node_info["min_level"] = float(self.epanet_api.getNodeTankMinimumWaterLevel(node_tank_idx))
+                node_info["mixing_fraction"] = float(self.epanet_api.getNodeTankMixingFraction(node_tank_idx))
+                #node_info["mixing_model"] = int(self.epanet_api.getNodeTankMixingModelCode(node_tank_idx)[0])
 
             nodes.append((node_id, node_info))
 
@@ -1138,7 +1145,14 @@ class ScenarioSimulator():
         `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             The pattern -- i.e. multiplier factors over time.
         """
+        if not isinstance(pattern_id, str):
+            raise TypeError("'pattern_id' must be an instance of 'str' " +
+                            f"but not of '{type(pattern_id)}'")
+
         pattern_idx = self.epanet_api.getPatternIndex(pattern_id)
+        if pattern_idx == 0:
+            raise ValueError(f"Unknown pattern '{pattern_id}'")
+
         pattern_length = self.epanet_api.getPatternLengths(pattern_idx)
         return np.array([self.epanet_api.getPatternValue(pattern_idx, t+1)
                          for t in range(pattern_length)])
@@ -1171,6 +1185,37 @@ class ScenarioSimulator():
             raise RuntimeError("Failed to add pattern! " +
                                "Maybe pattern name contains invalid characters or is too long?")
 
+    def get_node_base_demand(self, node_id: str) -> float:
+        """
+        Returns the base demand of a given node. None, if there does not exist any base demand.
+
+        Note that base demands are summed up in the case of different demand categories.
+
+        Parameters
+        ----------
+        node_id : `str`
+            ID of the node.
+
+        Returns
+        -------
+        `float`
+            Base demand.
+        """
+        if node_id not in self._sensor_config.nodes:
+            raise ValueError(f"Unknown node '{node_id}'")
+
+        node_idx = self.epanet_api.getNodeIndex(node_id)
+        n_demand_categories = self.epanet_api.getNodeDemandCategoriesNumber(node_idx)
+
+        if n_demand_categories == 0:
+            return None
+        else:
+            base_demand = 0
+            for demand_category in range(n_demand_categories):
+                base_demand += self.epanet_api.getNodeBaseDemands(node_idx)[demand_category + 1]
+
+            return base_demand
+
     def get_node_demand_pattern(self, node_id: str) -> np.ndarray:
         """
         Returns the values of the demand pattern of a given node --
@@ -1186,6 +1231,12 @@ class ScenarioSimulator():
         `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             The demand pattern -- i.e. multiplier factors over time.
         """
+        if not isinstance(node_id, str):
+            raise TypeError("'node_id' must be an instance of 'str' " +
+                            f"but not of '{type(node_id)}'")
+        if node_id not in self._sensor_config.nodes:
+            raise ValueError(f"Unknown node '{node_id}'")
+
         node_idx = self.epanet_api.getNodeIndex(node_id)
         demand_category = self.epanet_api.getNodeDemandCategoriesNumber()[node_idx]
         demand_pattern_id = self.epanet_api.getNodeDemandPatternNameID()[demand_category][node_idx - 1]
@@ -2034,6 +2085,8 @@ class ScenarioSimulator():
         reporting_time_step = self.epanet_api.getTimeReportingStep()
         hyd_time_step = self.epanet_api.getTimeHydraulicStep()
 
+        network_topo = self.get_topology()
+
         if use_quality_time_step_as_reporting_time_step is True:
             quality_time_step = self.epanet_api.getMSXTimeStep()
             reporting_time_step = quality_time_step
@@ -2124,7 +2177,7 @@ class ScenarioSimulator():
                         "surface_species_concentration_raw": surface_species_concentrations,
                         "sensor_readings_time": np.array([0])}
             else:
-                data = ScadaData(network_topo=self.get_topology(), sensor_config=self._sensor_config,
+                data = ScadaData(network_topo=network_topo, sensor_config=self._sensor_config,
                                  bulk_species_node_concentration_raw=bulk_species_node_concentrations,
                                  bulk_species_link_concentration_raw=bulk_species_link_concentrations,
                                  surface_species_concentration_raw=surface_species_concentrations,
@@ -2168,7 +2221,7 @@ class ScenarioSimulator():
                                 "surface_species_concentration_raw": surface_species_concentrations,
                                 "sensor_readings_time": np.array([total_time])}
                     else:
-                        data = ScadaData(network_topo=self.get_topology(),
+                        data = ScadaData(network_topo=network_topo,
                                          sensor_config=self._sensor_config,
                                          bulk_species_node_concentration_raw=
                                             bulk_species_node_concentrations,
@@ -2310,6 +2363,8 @@ class ScenarioSimulator():
             requested_time_step = quality_time_step
             reporting_time_step = quality_time_step
 
+        network_topo = self.get_topology()
+
         self.epanet_api.useHydraulicFile(hyd_file_in)
 
         self.epanet_api.openQualityAnalysis()
@@ -2338,10 +2393,11 @@ class ScenarioSimulator():
                         pass
 
             # Compute current time step
-            t = self.epanet_api.runQualityAnalysis()
+            t = self.epanet_api.api.ENrunQ()
             total_time = t
 
             # Fetch data
+            error_code = self.epanet_api.get_last_error_code()
             quality_node_data = self.epanet_api.getNodeActualQuality().reshape(1, -1)
             quality_link_data = self.epanet_api.getLinkActualQuality().reshape(1, -1)
 
@@ -2350,13 +2406,15 @@ class ScenarioSimulator():
                 if return_as_dict is True:
                     data = {"node_quality_data_raw": quality_node_data,
                             "link_quality_data_raw": quality_link_data,
-                            "sensor_readings_time": np.array([total_time])}
+                            "sensor_readings_time": np.array([total_time]),
+                            "warnings_code": np.array([error_code])}
                 else:
-                    data = ScadaData(network_topo=self.get_topology(),
+                    data = ScadaData(network_topo=network_topo,
                                      sensor_config=self._sensor_config,
                                      node_quality_data_raw=quality_node_data,
                                      link_quality_data_raw=quality_link_data,
                                      sensor_readings_time=np.array([total_time]),
+                                     warnings_code=np.array([error_code]),
                                      sensor_reading_events=self._sensor_reading_events,
                                      sensor_noise=self._sensor_noise,
                                      frozen_sensor_config=frozen_sensor_config)
@@ -2369,9 +2427,9 @@ class ScenarioSimulator():
                 yield data
 
             # Next
-            tstep = self.epanet_api.stepQualityAnalysisTimeLeft()
+            tstep = self.epanet_api.api.ENstepQ()
 
-        self.epanet_api.closeHydraulicAnalysis()
+        self.epanet_api.closeQualityAnalysis()
 
     def run_hydraulic_simulation(self, hyd_export: str = None, verbose: bool = False,
                                  frozen_sensor_config: bool = False) -> ScadaData:
@@ -2493,14 +2551,16 @@ class ScenarioSimulator():
 
         self.__running_simulation = True
 
-        self.epanet_api.openHydraulicAnalysis()
-        self.epanet_api.openQualityAnalysis()
+        self.epanet_api.api.ENopenH()
+        self.epanet_api.api.ENopenQ()
         self.epanet_api.initializeHydraulicAnalysis(ToolkitConstants.EN_SAVE)
         self.epanet_api.initializeQualityAnalysis(ToolkitConstants.EN_SAVE)
 
         requested_time_step = self.epanet_api.getTimeHydraulicStep()
         reporting_time_start = self.epanet_api.getTimeReportingStart()
         reporting_time_step = self.epanet_api.getTimeReportingStep()
+
+        network_topo = self.get_topology()
 
         if verbose is True:
             print("Running EPANET ...")
@@ -2531,8 +2591,11 @@ class ScenarioSimulator():
                         event.step(total_time + tstep)
 
                 # Compute current time step
-                t = self.epanet_api.runHydraulicAnalysis()
-                self.epanet_api.runQualityAnalysis()
+                t = self.epanet_api.api.ENrunH()
+                error_code = self.epanet_api.get_last_error_code()
+                self.epanet_api.api.ENrunQ()
+                if error_code == 0:
+                    error_code = self.epanet_api.get_last_error_code()
                 total_time = t
 
                 # Fetch data
@@ -2551,7 +2614,7 @@ class ScenarioSimulator():
                 link_valve_idx = self.epanet_api.getLinkValveIndex()
                 valves_state_data = self.epanet_api.getLinkStatus(link_valve_idx).reshape(1, -1)
 
-                scada_data = ScadaData(network_topo=self.get_topology(),
+                scada_data = ScadaData(network_topo=network_topo,
                                        sensor_config=self._sensor_config,
                                        pressure_data_raw=pressure_data,
                                        flow_data_raw=flow_data,
@@ -2564,6 +2627,7 @@ class ScenarioSimulator():
                                        pumps_energy_usage_data_raw=pumps_energy_usage_data,
                                        pumps_efficiency_data_raw=pumps_efficiency_data,
                                        sensor_readings_time=np.array([total_time]),
+                                       warnings_code=np.array([error_code]),
                                        sensor_reading_events=self._sensor_reading_events,
                                        sensor_noise=self._sensor_noise,
                                        frozen_sensor_config=frozen_sensor_config)
@@ -2581,7 +2645,8 @@ class ScenarioSimulator():
                                 "tanks_volume_data_raw": tanks_volume_data,
                                 "pumps_energy_usage_data_raw": pumps_energy_usage_data,
                                 "pumps_efficiency_data_raw": pumps_efficiency_data,
-                                "sensor_readings_time": np.array([total_time])}
+                                "sensor_readings_time": np.array([total_time]),
+                                "warnings_code": np.array([error_code])}
                     else:
                         data = scada_data
 
@@ -2597,11 +2662,11 @@ class ScenarioSimulator():
                     control.step(scada_data)
 
                 # Next
-                tstep = self.epanet_api.nextHydraulicAnalysisStep()
-                self.epanet_api.nextQualityAnalysisStep()
+                tstep = self.epanet_api.api.ENnextH()
+                self.epanet_api.api.ENnextQ()
 
-            self.epanet_api.closeQualityAnalysis()
-            self.epanet_api.closeHydraulicAnalysis()
+            self.epanet_api.api.ENcloseQ()
+            self.epanet_api.api.ENcloseH()
 
             self.__running_simulation = False
 
@@ -2718,6 +2783,7 @@ class ScenarioSimulator():
 
     def set_general_parameters(self, demand_model: dict = None, simulation_duration: int = None,
                                hydraulic_time_step: int = None, quality_time_step: int = None,
+                               advanced_quality_time_step: int = None,
                                reporting_time_step: int = None, reporting_time_start: int = None,
                                flow_units_id: int = None, quality_model: dict = None) -> None:
         """
@@ -2748,6 +2814,12 @@ class ScenarioSimulator():
             The default is None.
         quality_time_step : `int`, optional
             Quality time step -- i.e. the interval at which qualities are computed.
+            Should be much smaller than the hydraulic time step!
+
+            The default is None.
+        advanced_quality_time_step : `ìnt`, optional
+            Time step in the advanced quality simuliation -- i.e. EPANET-MSX simulation.
+            This number specifies the interval at which all species concentrations are.
             Should be much smaller than the hydraulic time step!
 
             The default is None.
@@ -2861,6 +2933,14 @@ class ScenarioSimulator():
                 raise ValueError("'quality_time_step' must be a positive integer that is not " +
                                  "greater than the hydraulic time step")
             self.epanet_api.setTimeQualityStep(quality_time_step)
+
+        if advanced_quality_time_step is not None:
+            if not isinstance(advanced_quality_time_step, int) or \
+                    advanced_quality_time_step <= 0 or \
+                    advanced_quality_time_step > self.epanet_api.getTimeHydraulicStep():
+                raise ValueError("'advanced_quality_time_step' must be a positive integer " +
+                                 "that is not greater than the hydraulic time step")
+            self.epanet_api.setMSXTimeStep(advanced_quality_time_step)
 
         if quality_model is not None:
             if quality_model["type"] == "NONE":
@@ -3459,7 +3539,7 @@ class ScenarioSimulator():
                                      source_type: int, pattern_id: str = None,
                                      source_strength: int = 1.) -> None:
         """
-        Adds a new external (bulk or surface) species injection source at a particular node.
+        Adds a new external bulk species injection source at a particular node.
 
         Only for EPANET-MSX scenarios.
 
@@ -3472,6 +3552,8 @@ class ScenarioSimulator():
             is placed.
         pattern : `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             1d source pattern.
+
+            Note that the pattern time step is equivalent to the EPANET pattern time step.
         source_type : `int`,
             Type of the external (bulk or surface) species injection source -- must be one of
             the following EPANET toolkit constants:
@@ -3537,17 +3619,18 @@ class ScenarioSimulator():
                 any(not isinstance(species_id, str) or not isinstance(node_initial_conc, list)
                     for species_id, node_initial_conc in inital_conc.items()) or \
                 any(not isinstance(node_initial_conc, tuple)
-                    for node_initial_conc in inital_conc.values()) or \
+                    for node_initial_conc in list(itertools.chain(*inital_conc.values()))) or \
                 any(not isinstance(node_id, str) or not isinstance(conc, float)
-                    for node_id, conc in inital_conc.values()):
+                    for node_id, conc in list(itertools.chain(*inital_conc.values()))):
             raise TypeError("'inital_conc' must be an instance of " +
                             "'dict[str, list[tuple[str, float]]'")
+        inital_conc_values = list(itertools.chain(*inital_conc.values()))
         if any(species_id not in self.sensor_config.bulk_species
                for species_id in inital_conc.keys()):
             raise ValueError("Unknown bulk species in 'inital_conc'")
-        if any(node_id not in self.sensor_config.nodes for node_id, _ in inital_conc.values()):
+        if any(node_id not in self.sensor_config.nodes for node_id, _ in inital_conc_values):
             raise ValueError("Unknown node ID in 'inital_conc'")
-        if any(conc < 0 for _, conc in inital_conc.values()):
+        if any(conc < 0 for _, conc in inital_conc_values):
             raise ValueError("Initial node concentration can not be negative")
 
         for species_id, node_initial_conc in inital_conc.items():

@@ -78,7 +78,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                  links: list[tuple[str, tuple[str, str], dict]],
                  pumps: dict,
                  valves: dict,
-                 units: int = None,
+                 units: int,
                  **kwds):
         super().__init__(name=f_inp, **kwds)
 
@@ -87,11 +87,6 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         self.__pumps = pumps
         self.__valves = valves
         self.__units = units
-
-        if units is None:
-            warnings.warn("Loading a file that was created with an outdated version of EPyT-Flow" +
-                          " -- support of such old files will be removed in the next release!",
-                          DeprecationWarning)
 
         for node_id, node_info in nodes:
             node_elevation = node_info["elevation"]
@@ -575,6 +570,11 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                 tank_data["id"].append(node_id)
                 tank_data["elevation"].append(node_info["elevation"])
                 tank_data["diameter"].append(node_info["diameter"])
+                tank_data["volume"].append(node_info["volume"])
+                tank_data["max_level"].append(node_info["max_level"])
+                tank_data["min_level"].append(node_info["min_level"])
+                tank_data["mixing_fraction"].append(node_info["mixing_fraction"])
+                #tank_data["mixing_model"].append(node_info["mixing_model"])
                 tank_data["geometry"].append(Point(node_info["coord"]))
             elif node_info["type"] == "RESERVOIR":
                 reservoir_data["id"].append(node_id)

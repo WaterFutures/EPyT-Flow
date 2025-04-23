@@ -7,10 +7,12 @@ import falcon
 from .scenario.handlers import ScenarioManager, ScenarioNewHandler, \
     ScenarioRemoveHandler, ScenarioGeneralParamsHandler, ScenarioSensorConfigHandler, \
     ScenarioExportHandler, ScenarioTopologyHandler, ScenarioConfigHandler, \
-    ScenarioNodeDemandPatternHandler
+    ScenarioNodeDemandPatternHandler, ScenarioQualityParamsHandler
 from .scenario.uncertainty_handlers import ScenarioModelUncertaintyHandler, \
     ScenarioSensorUncertaintyHandler
-from .scenario.event_handlers import ScenarioLeakageHandler, ScenarioSensorFaultHandler
+from .scenario.control_handlers import ScenarioSimpleControlHandler, ScenarioComplexControlHandler
+from .scenario.event_handlers import ScenarioLeakageHandler, ScenarioSensorFaultHandler, \
+    ScenarioQualityEventHandler, ScenarioSensorReadingAttackHandler
 from .scenario.simulation_handlers import ScenarioSimulationHandler, \
     ScenarioBasicQualitySimulationHandler, ScenarioAdvancedQualitySimulationHandler
 from .scada_data.handlers import ScadaDataManager, ScadaDataSensorConfigHandler, \
@@ -54,14 +56,24 @@ class RestApiService():
                            ScenarioConfigHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/general_params",
                            ScenarioGeneralParamsHandler(self.scenario_mgr))
+        self.app.add_route("/scenario/{scenario_id}/quality_params",
+                           ScenarioQualityParamsHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/sensor_config",
                            ScenarioSensorConfigHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/uncertainty/model",
                            ScenarioModelUncertaintyHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/uncertainty/sensors",
                            ScenarioSensorUncertaintyHandler(self.scenario_mgr))
+        self.app.add_route("/scenario/{scenario_id}/controls/simple",
+                           ScenarioSimpleControlHandler(self.scenario_mgr))
+        self.app.add_route("/scenario/{scenario_id}/controls/complex",
+                           ScenarioComplexControlHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/events/leakages",
                            ScenarioLeakageHandler(self.scenario_mgr))
+        self.app.add_route("/scenario/{scenario_id}/events/quality",
+                           ScenarioQualityEventHandler(self.scenario_mgr))
+        self.app.add_route("/scenario/{scenario_id}/events/sensor_reading_attacks",
+                           ScenarioSensorReadingAttackHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/events/sensor_faults",
                            ScenarioSensorFaultHandler(self.scenario_mgr))
         self.app.add_route("/scenario/{scenario_id}/node/{node_id}/demand_pattern",

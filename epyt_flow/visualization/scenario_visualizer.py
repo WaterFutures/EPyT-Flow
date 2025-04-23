@@ -4,7 +4,6 @@ Module provides a class for visualizing scenarios.
 from typing import Optional, Union, List, Tuple
 
 import numpy as np
-from deprecated import deprecated
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -14,7 +13,8 @@ from svgpath2mpl import parse_path
 
 from ..simulation.scenario_simulator import ScenarioSimulator
 from ..simulation.scada.scada_data import ScadaData
-from ..visualization import JunctionObject, EdgeObject, ColorScheme, epyt_flow_colors
+from ..visualization import JunctionObject, EdgeObject, ColorScheme, \
+    epyt_flow_colors
 
 PUMP_PATH = ('M 202.5 93 A 41.5 42 0 0 0 161 135 A 41.5 42 0 0 0 202.5 177 A '
              '41.5 42 0 0 0 244 135 A 41.5 42 0 0 0 241.94922 122 L 278 122 '
@@ -220,8 +220,10 @@ class ScenarioVisualizer:
 
         self.colorbars = {}
         self.labels = {}
+        self.masks = {}
 
-    def _get_midpoints(self, elements: List[str]) -> dict[str, tuple[float, float]]:
+    def _get_midpoints(self, elements: List[str]) -> dict[
+        str, tuple[float, float]]:
         """
         Computes and returns the midpoints for drawing either valves or pumps
         in a water distribution network.
@@ -298,6 +300,34 @@ class ScenarioVisualizer:
             ax=self.ax, label='Pumps',
             **self.pump_parameters.get_frame(frame_number))
 
+        for key, mask in self.masks.items():
+            if key == 'nodes':
+                nxp.draw_networkx_nodes(self.topology, ax=self.ax,
+                                        **self.junction_parameters.get_frame_mask(
+                                            mask,
+                                            self.color_scheme.node_color))
+            if key == 'pumps':
+                nxp.draw_networkx_nodes(
+                    self.topology,
+                    ax=self.ax,
+                    **self.pump_parameters.get_frame_mask(mask,
+                                                          self.color_scheme.pump_color))
+            if key == 'links':
+                nxp.draw_networkx_edges(self.topology, ax=self.ax,
+                                        **self.pipe_parameters.get_frame_mask(
+                                            frame_number,
+                                            self.color_scheme.pipe_color))
+            if key == 'tanks':
+                nxp.draw_networkx_nodes(self.topology, ax=self.ax,
+                                        **self.tank_parameters.get_frame_mask(
+                                            mask,
+                                            self.color_scheme.tank_color))
+            if key == 'valves':
+                nxp.draw_networkx_nodes(
+                    self.topology, ax=self.ax,
+                    **self.valve_parameters.get_frame_mask(mask,
+                                                           self.color_scheme.valve_color))
+
         self._draw_labels()
         self.ax.legend(fontsize=6)
 
@@ -361,7 +391,7 @@ class ScenarioVisualizer:
                               + sensor_config.quality_link_sensors)
         return highlighted_nodes, highlighted_links
 
-    def add_labels(self, components: list or tuple = () or str,
+    def add_labels(self, components: str or list or tuple = (),
                    font_size: int = 8):
         """
         Adds labels to hydraulic components according to the specified
@@ -509,7 +539,7 @@ class ScenarioVisualizer:
 
         if export_to_file is not None:
             plt.savefig(export_to_file, transparent=True, bbox_inches='tight',
-                        dpi=200)
+                        dpi=900)
         if not suppress_plot:
             plt.show()
         else:
@@ -520,10 +550,12 @@ class ScenarioVisualizer:
             self, data: Optional[Union[ScadaData, np.ndarray]] = None,
             parameter: str = 'pressure', statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int, int]]] = None,
+            species: str = None,
             colormap: str = 'viridis',
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
             conversion: Optional[dict] = None,
-            show_colorbar: bool = False) -> None:
+            show_colorbar: bool = False,
+            use_sensor_data: bool = False) -> None:
         """
         Colors the nodes (junctions) in the water distribution network based on
         the SCADA data and the specified parameters.
@@ -551,6 +583,9 @@ class ScenarioVisualizer:
             representing the start and end time steps. A tuple is necessary to
             process the data for the :meth:`~ScenarioVisualizer.show_animation`
             method. Default is `None`.
+        species: `str`, optional
+            Key of species. Only necessary for parameter
+            'bulk_species_concentration'.
         colormap : `str`, optional
             The colormap to use for visualizing node values. Default is
             'viridis'.
@@ -564,6 +599,11 @@ class ScenarioVisualizer:
         show_colorbar : `bool`, optional
             If `True`, a colorbar will be displayed on the plot to indicate the
             range of node values. Default is `False`.
+        use_sensor_data : `bool`, optional
+            If `True`, instead of using raw simulation data, the data recorded
+            by the corresponding sensors in the system is used for the
+            visualization. Note: Not all components may have a sensor attached
+            and sensors may be subject to sensor faults or noise.
 
         Raises
         ------
@@ -583,15 +623,45 @@ class ScenarioVisualizer:
         if conversion:
             self.scada_data = self.scada_data.convert_units(**conversion)
 
+        # TODO: is there any way to make this look better (e.g. do a mapping somewhere??)
         if parameter == 'pressure':
-            values = self.scada_data.pressure_data_raw
+            if use_sensor_data:
+                values, self.masks[
+                    'nodes'] = self.scada_data.get_data_pressures_as_node_features()
+            else:
+                values = self.scada_data.pressure_data_raw
         elif parameter == 'demand':
-            values = self.scada_data.demand_data_raw
+            if use_sensor_data:
+                values, self.masks[
+                    'nodes'] = self.scada_data.get_data_demands_as_node_features()
+            else:
+                values = self.scada_data.demand_data_raw
         elif parameter == 'node_quality':
-            values = self.scada_data.node_quality_data_raw
+            if use_sensor_data:
+                values, self.masks[
+                    'nodes'] = self.scada_data.get_data_nodes_quality_as_node_features()
+            else:
+                values = self.scada_data.node_quality_data_raw
         elif parameter == 'custom_data':
             # Custom should have the dimensions (timesteps, nodes)
             values = self.scada_data
+        elif parameter == 'bulk_species_concentration':
+            if not species:
+                raise ValueError('Species must be set when using bulk_species_'
+                                 'concentration.')
+            if use_sensor_data:
+                values, self.masks[
+                    'nodes'] = self.scada_data.get_data_bulk_species_concentrations_as_node_features()
+                self.masks['nodes'] = self.masks['nodes'][:,
+                                      self.scada_data.sensor_config.bulk_species.index(
+                                          species)]
+                values = values[:, :,
+                         self.scada_data.sensor_config.bulk_species.index(
+                             species)]
+            else:
+                values = self.scada_data.bulk_species_node_concentration_raw[:,
+                         self.scada_data.sensor_config.bulk_species.index(
+                             species), :]
         else:
             raise ValueError(
                 'Parameter must be pressure, demand, node_quality or custom_'
@@ -621,17 +691,19 @@ class ScenarioVisualizer:
             self.colorbars['junctions'] = {'mappable': plt.cm.ScalarMappable(
                 norm=mpl.colors.Normalize(
                     vmin=self.junction_parameters.vmin,
-                    vmax=self.junction_parameters.vmin), cmap=colormap),
+                    vmax=self.junction_parameters.vmax), cmap=colormap),
                 'label': label}
 
     def color_links(
             self, data: Optional[Union[ScadaData, np.ndarray]] = None,
             parameter: str = 'flow_rate', statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int, int]]] = None,
+            species: str = None,
             colormap: str = 'coolwarm',
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
             conversion: Optional[dict] = None,
-            show_colorbar: bool = False) -> None:
+            show_colorbar: bool = False,
+            use_sensor_data: bool = False) -> None:
         """
         Colors the links (pipes) in the water distribution network based on the
         SCADA data and the specified parameters.
@@ -659,6 +731,9 @@ class ScenarioVisualizer:
             representing the start and end time steps. A tuple is necessary to
             process the data for the :func:`~ScenarioVisualizer.show_animation`
             method. Default is `None`.
+        species: `str`, optional
+            Key of species. Only necessary for parameter
+            'bulk_species_concentration'.
         colormap : `str`, optional
             The colormap to use for visualizing link values. Default is
             'coolwarm'.
@@ -672,6 +747,11 @@ class ScenarioVisualizer:
         show_colorbar : `bool`, optional
             If `True`, a colorbar will be displayed on the plot to indicate the
             range of values. Default is `False`.
+        use_sensor_data : `bool`, optional
+            If `True`, instead of using raw simulation data, the data recorded
+            by the corresponding sensors in the system is used for the
+            visualization. Note: Not all components may have a sensor attached
+            and sensors may be subject to sensor faults or noise.
 
         Raises
         ------
@@ -707,11 +787,16 @@ class ScenarioVisualizer:
                     break
                 self.pipe_parameters.add_frame(self.topology, 'edge_color',
                                                self.scada_data, parameter,
-                                               statistic, frame, intervals)
+                                               statistic, frame, species,
+                                               intervals, use_sensor_data)
         else:
             self.pipe_parameters.add_frame(self.topology, 'edge_color',
                                            self.scada_data, parameter,
-                                           statistic, pit, intervals)
+                                           statistic, pit, species, intervals,
+                                           use_sensor_data)
+
+        if hasattr(self.pipe_parameters, 'mask'):
+            self.masks['links'] = self.pipe_parameters.mask
 
         if show_colorbar:
             if statistic == 'time_step':
@@ -731,7 +816,8 @@ class ScenarioVisualizer:
             parameter: str = 'efficiency', statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            colormap: str = 'viridis', show_colorbar: bool = False) -> None:
+            colormap: str = 'viridis', show_colorbar: bool = False,
+            use_sensor_data: bool = False) -> None:
         """
         Colors the pumps in the water distribution network based on SCADA data
         and the specified parameters.
@@ -769,6 +855,11 @@ class ScenarioVisualizer:
         show_colorbar : `bool`, optional
             If `True`, a colorbar will be displayed on the plot to indicate the
             range of pump values. Default is `False`.
+        use_sensor_data : `bool`, optional
+            If `True`, instead of using raw simulation data, the data recorded
+            by the corresponding sensors in the system is used for the
+            visualization. Note: Not all components may have a sensor attached
+            and sensors may be subject to sensor faults or noise.
 
         Raises
         ------
@@ -787,11 +878,23 @@ class ScenarioVisualizer:
             self.scada_data = self.__scenario.run_simulation()
 
         if parameter == 'efficiency':
-            values = self.scada_data.pumps_efficiency_data_raw
+            if use_sensor_data:
+                values, self.masks[
+                    'pumps'] = self.scada_data.get_data_pumps_efficiency_as_node_features()
+            else:
+                values = self.scada_data.pumps_efficiency_data_raw
         elif parameter == 'energy_consumption':
-            values = self.scada_data.pumps_energyconsumption_data_raw
+            if use_sensor_data:
+                values, self.masks[
+                    'pumps'] = self.scada_data.get_data_pumps_energyconsumption_as_node_features()
+            else:
+                values = self.scada_data.pumps_energyconsumption_data_raw
         elif parameter == 'state':
-            values = self.scada_data.pumps_state_data_raw
+            if use_sensor_data:
+                values, self.masks[
+                    'pumps'] = self.scada_data.get_data_pumps_state_as_node_features()
+            else:
+                values = self.scada_data.pumps_state_data_raw
         elif parameter == 'custom_data':
             values = self.scada_data
         else:
@@ -828,7 +931,8 @@ class ScenarioVisualizer:
             statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int, int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            colormap: str = 'viridis', show_colorbar: bool = False) -> None:
+            colormap: str = 'viridis', show_colorbar: bool = False,
+            use_sensor_data: bool = False) -> None:
         """
         Colors the tanks in the water distribution network based on the SCADA
         tank volume data and the specified statistic.
@@ -863,6 +967,11 @@ class ScenarioVisualizer:
         show_colorbar : `bool`, optional
             If `True`, a colorbar will be displayed on the plot to indicate the
             range of tank volume values. Default is `False`.
+        use_sensor_data : `bool`, optional
+            If `True`, instead of using raw simulation data, the data recorded
+            by the corresponding sensors in the system is used for the
+            visualization. Note: Not all components may have a sensor attached
+            and sensors may be subject to sensor faults or noise.
 
         Raises
         ------
@@ -878,7 +987,11 @@ class ScenarioVisualizer:
             self.scada_data = self.__scenario.run_simulation()
 
         if isinstance(self.scada_data, ScadaData):
-            values = self.scada_data.tanks_volume_data_raw
+            if use_sensor_data:
+                values, self.masks[
+                    'tanks'] = self.scada_data.get_data_tanks_water_volume_as_node_features()
+            else:
+                values = self.scada_data.tanks_volume_data_raw
             parameter = 'tank volume'
         else:
             values = self.scada_data
@@ -912,7 +1025,8 @@ class ScenarioVisualizer:
             statistic: str = 'mean',
             pit: Optional[Union[int, Tuple[int, int]]] = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            colormap: str = 'viridis', show_colorbar: bool = False) -> None:
+            colormap: str = 'viridis', show_colorbar: bool = False,
+            use_sensor_data: bool = False) -> None:
         """
         Colors the valves in the water distribution network based on SCADA
         valve state data and the specified statistic.
@@ -947,6 +1061,11 @@ class ScenarioVisualizer:
         show_colorbar : `bool`, optional
             If `True`, a colorbar will be displayed on the plot to indicate the
             range of valve state values. Default is `False`.
+        use_sensor_data : `bool`, optional
+            If `True`, instead of using raw simulation data, the data recorded
+            by the corresponding sensors in the system is used for the
+            visualization. Note: Not all components may have a sensor attached
+            and sensors may be subject to sensor faults or noise.
 
         Raises
         ------
@@ -963,7 +1082,11 @@ class ScenarioVisualizer:
             self.scada_data = self.__scenario.run_simulation()
 
         if isinstance(self.scada_data, ScadaData):
-            values = self.scada_data.valves_state_data_raw
+            if use_sensor_data:
+                values, self.masks[
+                    'valves'] = self.scada_data.get_data_valves_state_as_node_features()
+            else:
+                values = self.scada_data.valves_state_data_raw
             parameter = 'valve state'
         else:
             values = self.scada_data
@@ -998,8 +1121,10 @@ class ScenarioVisualizer:
             parameter: str = 'flow_rate', statistic: str = 'mean',
             line_widths: Tuple[int, int] = (1, 2),
             pit: Optional[Union[int, Tuple[int, int]]] = None,
+            species: str = None,
             intervals: Optional[Union[int, List[Union[int, float]]]] = None,
-            conversion: Optional[dict] = None) -> None:
+            conversion: Optional[dict] = None,
+            use_sensor_data: bool = False) -> None:
         """
         Resizes the width of the links (pipes) in the water distribution
         network based on SCADA data and the specified parameters.
@@ -1029,6 +1154,9 @@ class ScenarioVisualizer:
             representing the start and end time steps. A tuple is necessary to
             process the data for the :meth:`~ScenarioVisualizer.show_animation`
             method. Default is `None`.
+        species: `str`, optional
+            Key of species. Only necessary for parameter
+            'bulk_species_concentration'.
         intervals : `int` or `list[int]` or `list[float]`, optional
             If provided, the data will be grouped into intervals. It can be an
             integer specifying the number of groups or a list of boundary
@@ -1036,6 +1164,11 @@ class ScenarioVisualizer:
         conversion : `dict`, optional
             A dictionary of conversion parameters to convert SCADA data units.
             Default is `None`.
+        use_sensor_data : `bool`, optional
+            If `True`, instead of using raw simulation data, the data recorded
+            by the corresponding sensors in the system is used for the
+            visualization. Note: Not all components may have a sensor attached
+            and sensors may be subject to sensor faults or noise.
         """
         sim_length = None
 
@@ -1062,11 +1195,13 @@ class ScenarioVisualizer:
                     break
                 self.pipe_parameters.add_frame(self.topology, 'edge_width',
                                                self.scada_data, parameter,
-                                               statistic, frame, intervals)
+                                               statistic, frame, species,
+                                               intervals, use_sensor_data)
         else:
             self.pipe_parameters.add_frame(self.topology, 'edge_width',
                                            self.scada_data, parameter,
-                                           statistic, pit, intervals)
+                                           statistic, pit, species, intervals,
+                                           use_sensor_data)
         self.pipe_parameters.rescale_widths(line_widths)
 
     def hide_nodes(self) -> None:
@@ -1103,48 +1238,3 @@ class ScenarioVisualizer:
         self.junction_parameters.add_attributes(
             {'linewidths': 1, 'edgecolors': node_edges})
         self.pipe_parameters.add_attributes({'style': pipe_style})
-
-    @deprecated(reason="This function will be removed in feature versions, "
-                       "please use show_plot() instead.")
-    def plot_topology(self, show_sensor_config: bool = False,
-                      export_to_file: str = None) -> None:
-        """
-        Plots the topology of the water distribution network in the given
-        scenario.
-
-        Parameters
-        ----------
-        show_sensor_config : `bool`, optional
-            Indicates whether the sensor configuration should be shown as well.
-
-            The default is False.
-        export_to_file : `str`, optional
-            Path to the file where the visualization will be stored.
-            If None, visualization will be just shown but NOT be stored
-            anywhere.
-
-            The default is None.
-        """
-        _ = plt.figure()
-
-        highlighted_links = None
-        highlighted_nodes = None
-        if show_sensor_config is True:
-            highlighted_nodes = []
-            highlighted_links = []
-
-            sensor_config = self.__scenario.sensor_config
-            highlighted_nodes += (sensor_config.pressure_sensors
-                                  + sensor_config.demand_sensors
-                                  + sensor_config.quality_node_sensors)
-            highlighted_links += (sensor_config.flow_sensors
-                                  + sensor_config.quality_link_sensors)
-
-        self.__scenario.epanet_api.plot(highlightlink=highlighted_links,
-                                        highlightnode=highlighted_nodes,
-                                        figure=False)
-
-        if export_to_file is not None:
-            plt.savefig(export_to_file, transparent=True, bbox_inches='tight')
-        else:
-            plt.show()
