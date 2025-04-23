@@ -32,7 +32,6 @@ def test_batadal():
     assert data is not None
 
 
-"""
 def test_leakdb():
     # Net1
     configs = load_leakdb_scenarios(scenarios_id=range(1, 5), use_net1=True,
@@ -79,7 +78,7 @@ def test_leakdb():
                             download_dir=get_temp_folder(),
                             return_features_desc=True, return_leak_locations=True)
     assert data is not None
-"""
+
 
 def test_battledim():
     hist_scenario = load_battledim_scenario(return_test_scenario=False,
