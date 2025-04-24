@@ -18,6 +18,14 @@ epyt_flow.rest_api.scenario.simulation_handlers
    :show-inheritance:
 
 
+epyt_flow.rest_api.scenario.control_handlers
+--------------------------------------------
+
+.. automodule:: epyt_flow.rest_api.scenario.control_handlers
+   :members:
+   :show-inheritance:
+
+
 epyt_flow.rest_api.scenario.event_handlers
 ------------------------------------------
 
