@@ -556,7 +556,8 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
         # Nodes
         node_data = {"id": [], "type": [], "elevation": [], "geometry": []}
-        tank_data = {"id": [], "elevation": [], "diameter": [], "geometry": []}
+        tank_data = {"id": [], "volume": [], "max_level": [], "min_level": [], "mixing_fraction": [],
+                     "elevation": [], "diameter": [], "geometry": []}
         reservoir_data = {"id": [], "elevation": [], "geometry": []}
         for node_id in self.get_all_nodes():
             node_info = self.get_node_info(node_id)
