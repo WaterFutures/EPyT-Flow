@@ -2175,13 +2175,16 @@ class ScenarioSimulator():
                 data = {"bulk_species_node_concentration_raw": bulk_species_node_concentrations,
                         "bulk_species_link_concentration_raw": bulk_species_link_concentrations,
                         "surface_species_concentration_raw": surface_species_concentrations,
-                        "sensor_readings_time": np.array([0])}
+                        "sensor_readings_time": np.array([0]),
+                        "warnings_code": np.array([0]) # TODO: Replace with MSX error
+                        }
             else:
                 data = ScadaData(network_topo=network_topo, sensor_config=self._sensor_config,
                                  bulk_species_node_concentration_raw=bulk_species_node_concentrations,
                                  bulk_species_link_concentration_raw=bulk_species_link_concentrations,
                                  surface_species_concentration_raw=surface_species_concentrations,
                                  sensor_readings_time=np.array([0]),
+                                 warnings_code=np.array([0]), # TODO: Replace with MSX error
                                  sensor_reading_events=self._sensor_reading_events,
                                  sensor_noise=self._sensor_noise,
                                  frozen_sensor_config=frozen_sensor_config)
@@ -2219,7 +2222,9 @@ class ScenarioSimulator():
                                 "bulk_species_link_concentration_raw":
                                     bulk_species_link_concentrations,
                                 "surface_species_concentration_raw": surface_species_concentrations,
-                                "sensor_readings_time": np.array([total_time])}
+                                "sensor_readings_time": np.array([total_time]),
+                                "warnings_code": np.array([0]), # TODO: Replace with MSX error
+                                }
                     else:
                         data = ScadaData(network_topo=network_topo,
                                          sensor_config=self._sensor_config,
@@ -2230,6 +2235,7 @@ class ScenarioSimulator():
                                          surface_species_concentration_raw=
                                             surface_species_concentrations,
                                          sensor_readings_time=np.array([total_time]),
+                                         warnings_code=np.array([0]), # TODO: Replace with MSX error
                                          sensor_reading_events=self._sensor_reading_events,
                                          sensor_noise=self._sensor_noise,
                                          frozen_sensor_config=frozen_sensor_config)
