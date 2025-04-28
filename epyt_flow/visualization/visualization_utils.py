@@ -188,7 +188,8 @@ class JunctionObject:
 
         valid_params = {
             key: value for key, value in attributes.items()
-            if key in sig.parameters and value is not None
+            if key in sig.parameters and key not in ['vmin', 'vmax', 'cmap']
+            and value is not None
         }
 
         return valid_params
@@ -518,7 +519,8 @@ class EdgeObject:
 
         valid_params = {
             key: value for key, value in attributes.items()
-            if key in sig.parameters and value is not None
+            if key in sig.parameters and key not in ['vmin', 'vmax', 'cmap']
+            and value is not None
         }
 
         return valid_params
