@@ -1999,12 +1999,12 @@ class ScenarioSimulator():
         result = None
 
         gen = self.run_advanced_quality_simulation_as_generator
-        for scada_data in gen(hyd_file_in=hyd_file_in,
-                              verbose=verbose,
-                              return_as_dict=True,
-                              frozen_sensor_config=frozen_sensor_config,
-                              use_quality_time_step_as_reporting_time_step=
-                              use_quality_time_step_as_reporting_time_step):
+        for scada_data, _ in gen(hyd_file_in=hyd_file_in,
+                                 verbose=verbose,
+                                 return_as_dict=True,
+                                 frozen_sensor_config=frozen_sensor_config,
+                                 use_quality_time_step_as_reporting_time_step=
+                                 use_quality_time_step_as_reporting_time_step):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -2032,7 +2032,7 @@ class ScenarioSimulator():
                                                      return_as_dict: bool = False,
                                                      frozen_sensor_config: bool = False,
                                                      use_quality_time_step_as_reporting_time_step: bool = False,
-                                                     ) -> Generator[Union[ScadaData, dict], bool, None]:
+                                                     ) -> Generator[Union[tuple[ScadaData, bool], tuple[dict, bool]], bool, None]:
         """
         Runs an advanced quality analysis using EPANET-MSX.
 
@@ -2066,7 +2066,7 @@ class ScenarioSimulator():
         -------
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             Generator containing the current EPANET-MSX simulation results as SCADA data
-            (i.e. species concentrations).
+            (i.e. species concentrations) and a boolean indicating whether the simulation terminated or not.
         """
         if self.__running_simulation is True:
             raise RuntimeError("A simulation is already running.")
@@ -2194,7 +2194,7 @@ class ScenarioSimulator():
                 if abort is True:
                     return None
 
-            yield data
+            yield (data, False)
 
         # Run step-by-step simulation
         tleft = 1
@@ -2245,7 +2245,7 @@ class ScenarioSimulator():
                         if abort is not False:
                             break
 
-                    yield data
+                    yield (data, tleft <= 0)
 
         self.__running_simulation = False
 
@@ -2290,12 +2290,12 @@ class ScenarioSimulator():
 
         # Run simulation step-by-step
         gen = self.run_basic_quality_simulation_as_generator
-        for scada_data in gen(hyd_file_in=hyd_file_in,
-                              verbose=verbose,
-                              return_as_dict=True,
-                              frozen_sensor_config=frozen_sensor_config,
-                              use_quality_time_step_as_reporting_time_step=
-                              use_quality_time_step_as_reporting_time_step):
+        for scada_data, _ in gen(hyd_file_in=hyd_file_in,
+                                 verbose=verbose,
+                                 return_as_dict=True,
+                                 frozen_sensor_config=frozen_sensor_config,
+                                 use_quality_time_step_as_reporting_time_step=
+                                 use_quality_time_step_as_reporting_time_step):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -2320,7 +2320,7 @@ class ScenarioSimulator():
                                                   return_as_dict: bool = False,
                                                   frozen_sensor_config: bool = False,
                                                   use_quality_time_step_as_reporting_time_step: bool = False
-                                                  ) -> Generator[Union[ScadaData, dict], bool, None]:
+                                                  ) -> Generator[Union[tuple[ScadaData, bool], tuple[dict, bool]], bool, None]:
         """
         Runs a basic quality analysis using EPANET.
 
@@ -2355,11 +2355,13 @@ class ScenarioSimulator():
         Returns
         -------
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
-            Generator with the current simulation results/states as SCADA data.
+            Generator with the current simulation results/states as SCADA data and a
+            boolean indicating whether the simulation terminated or not.
         """
         if self.__running_simulation is True:
             raise RuntimeError("A simulation is already running.")
 
+        requested_total_time = self.epanet_api.getTimeSimulationDuration()
         requested_time_step = self.epanet_api.getTimeHydraulicStep()
         reporting_time_start = self.epanet_api.getTimeReportingStart()
         reporting_time_step = self.epanet_api.getTimeReportingStep()
@@ -2430,7 +2432,7 @@ class ScenarioSimulator():
                     if abort is True:
                         break
 
-                yield data
+                yield (data, total_time < requested_total_time)
 
             # Next
             tstep = self.epanet_api.api.ENstepQ()
@@ -2477,10 +2479,10 @@ class ScenarioSimulator():
 
         # Run hydraulic simulation step-by-step
         gen = self.run_hydraulic_simulation_as_generator
-        for scada_data in gen(hyd_export=hyd_export,
-                              verbose=verbose,
-                              return_as_dict=True,
-                              frozen_sensor_config=frozen_sensor_config):
+        for scada_data, _ in gen(hyd_export=hyd_export,
+                                 verbose=verbose,
+                                 return_as_dict=True,
+                                 frozen_sensor_config=frozen_sensor_config):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -2505,7 +2507,7 @@ class ScenarioSimulator():
                                               support_abort: bool = False,
                                               return_as_dict: bool = False,
                                               frozen_sensor_config: bool = False,
-                                              ) -> Generator[Union[ScadaData, dict], bool, None]:
+                                              ) -> Generator[Union[tuple[ScadaData, bool], tuple[dict, bool]], bool, None]:
         """
         Runs the hydraulic simulation of this scenario (incl. basic quality if set) and
         provides the results as a generator.
@@ -2546,7 +2548,7 @@ class ScenarioSimulator():
         -------
         :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`
             Generator with the current simulation results/states as SCADA data
-            (i.e. sensor readings).
+            (i.e. sensor readings) and a boolean indicating whether the simulation terminated or not.
         """
         if self.__running_simulation is True:
             raise RuntimeError("A simulation is already running.")
@@ -2562,6 +2564,7 @@ class ScenarioSimulator():
         self.epanet_api.initializeHydraulicAnalysis(ToolkitConstants.EN_SAVE)
         self.epanet_api.initializeQualityAnalysis(ToolkitConstants.EN_SAVE)
 
+        requested_total_time = self.epanet_api.getTimeSimulationDuration()
         requested_time_step = self.epanet_api.getTimeHydraulicStep()
         reporting_time_start = self.epanet_api.getTimeReportingStart()
         reporting_time_step = self.epanet_api.getTimeReportingStep()
@@ -2661,7 +2664,7 @@ class ScenarioSimulator():
                         if abort is True:
                             break
 
-                    yield data
+                    yield (data, total_time < requested_total_time)
 
                 # Apply control modules
                 for control in self._custom_controls:
