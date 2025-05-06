@@ -3,7 +3,6 @@ Module provides a class for implementing sensor noise (e.g. uncertainty in senso
 """
 from typing import Optional, Callable
 from copy import deepcopy
-import warnings
 import numpy
 from numpy.random import default_rng
 
@@ -32,18 +31,12 @@ class SensorNoise(JsonSerializable):
 
         The default is None.
     """
-    def __init__(self, uncertainty: Optional[Uncertainty] = None,
-                 global_uncertainty: Optional[Uncertainty] = None,
+    def __init__(self, global_uncertainty: Optional[Uncertainty] = None,
                  local_uncertainties: Optional[dict[int, str, Uncertainty]] = None,
                  seed: Optional[int] = None,
                  **kwds):
-        if uncertainty is not None:
-            global_uncertainty = uncertainty
-            warnings.warn("'uncertainty' is deprecated and will be removed in future releases. " +
-                          "Use 'global_uncertainty' instead")
-
         if not isinstance(global_uncertainty, Uncertainty):
-            raise TypeError("'uncertainty' must be an instance of " +
+            raise TypeError("'global_uncertainty' must be an instance of " +
                             "'epyt_flow.uncertainty.Uncertainty' but not of " +
                             f"'{type(global_uncertainty)}'")
         if local_uncertainties is not None:
