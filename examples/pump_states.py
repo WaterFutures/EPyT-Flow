@@ -3,7 +3,7 @@ Example of setting the state of a pump in an acutator event.
 """
 from epyt_flow.data.networks import load_net1
 from epyt_flow.simulation import ScenarioSimulator
-from epyt_flow.utils import to_seconds, plot_timeseries_data
+from epyt_flow.utils import to_seconds
 from epyt_flow.simulation.events import PumpStateEvent, ActuatorConstants
 
 
