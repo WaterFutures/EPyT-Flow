@@ -2432,7 +2432,7 @@ class ScenarioSimulator():
                     if abort is True:
                         break
 
-                yield (data, total_time < requested_total_time)
+                yield (data, total_time >= requested_total_time)
 
             # Next
             tstep = self.epanet_api.api.ENstepQ()
@@ -2664,7 +2664,7 @@ class ScenarioSimulator():
                         if abort is True:
                             break
 
-                    yield (data, total_time < requested_total_time)
+                    yield (data, total_time >= requested_total_time)
 
                 # Apply control modules
                 for control in self._custom_controls:
