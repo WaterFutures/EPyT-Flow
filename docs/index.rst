@@ -94,6 +94,7 @@ Examples
    examples/water_age
    examples/chlorine_injection
    examples/net2-cl2_example
+   examples/arsenic_contamination
    examples/visualization
 
 
