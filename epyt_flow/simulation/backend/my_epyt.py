@@ -1,6 +1,7 @@
 """
 This module contains a wrapper for EPyT that allows a better error/warning handling.
 """
+import warnings
 from ctypes import byref, create_string_buffer
 from epyt import epanet
 from epyt.epanet import epanetapi, epanetmsxapi
@@ -30,6 +31,10 @@ class EPyT(epanet):
         self.LibEPANETpath = self.api.LibEPANETpath
         self.LibEPANET = self.api.LibEPANET
 
+    def _logFunctionError(self, function_name):
+        # Do not print warnings.
+        pass
+
     def loadMSXFile(self, msxname, customMSXlib=None, ignore_properties=False):
         super().loadMSXFile(msxname, customMSXlib, ignore_properties)
 
@@ -40,17 +45,21 @@ class EPyT(epanet):
                                   msxrealfile=self.MSXFile)
         return self.msx
 
-    def set_error_handling(self, raise_exception_on_error: bool) -> None:
+    def set_error_handling(self, raise_exception_on_error: bool, warn_on_error: bool) -> None:
         """
         Specifies the behavior in the case of an error/warning --
-        i.e. should an exception be raised or not?
+        i.e. should an exception or warning be raised or not?
 
         Parameters
         ----------
         raise_exception_on_error : `bool`
             True if an exception should be raise, False otherwise.
+        warn_on_error : `bool`
+            True if a warning should be generated, False otherwise.
         """
-        self.api.set_error_handling(raise_exception_on_error)
+        self.api.set_error_handling(raise_exception_on_error, warn_on_error)
+        if self.msx is not None:
+            self.msx.set_error_handling(raise_exception_on_error, warn_on_error)
 
     def was_last_func_successful(self) -> bool:
         """
@@ -96,24 +105,32 @@ class MyEpanetMsxAPI(epanetmsxapi):
     Wrapper for the `epyt.epanet.epanetmsxapi <https://epanet-python-toolkit-epyt.readthedocs.io/en/latest/api.html#epyt.epanet.epanetmsxapi>`_
     class adding error/warning storage functionalities.
     """
-    def __init__(self, raise_on_error: bool = True, **kwds):
+    def __init__(self, raise_on_error: bool = True, warn_on_error: bool = False, **kwds):
         self.__raise_on_error = raise_on_error
+        self.__warn_on_error = warn_on_error
         self.__last_error_code = None
         self.__last_error_desc = None
 
         super().__init__(**kwds)
 
-    def set_error_handling(self, raise_on_error: bool) -> None:
+    def _logFunctionError(self, function_name):
+        # Do not print warnings.
+        pass
+
+    def set_error_handling(self, raise_on_error: bool, warn_on_error: bool) -> None:
         """
         Specifies the behavior in the case of an error/warning --
-        i.e. should an exception be raised or not?
+        i.e. should an exception or warning be raised or not?
 
         Parameters
         ----------
         raise_exception_on_error : `bool`
             True if an exception should be raise, False otherwise.
+        warn_on_error : `bool`
+            True if a warning should be generated, False otherwise.
         """
         self.__raise_on_error = raise_on_error
+        self.__warn_on_error = warn_on_error
 
     def get_last_error_desc(self) -> str:
         """
@@ -161,6 +178,8 @@ class MyEpanetMsxAPI(epanetmsxapi):
         self.__last_error_code = err_code
         self.__last_error_desc = error_desc.value.decode()
 
+        if self.__warn_on_error:
+            warnings.warn(self.__last_error_desc, RuntimeWarning)
         if self.__raise_on_error:
             raise RuntimeError(self.__last_error_desc)
 
@@ -286,24 +305,28 @@ class MyEpanetAPI(epanetapi):
     Wrapper for the `epyt.epanet.epanetapi <https://epanet-python-toolkit-epyt.readthedocs.io/en/latest/api.html#epyt.epanet.epanetapi>`_
     class adding error/warning storage functionalities.
     """
-    def __init__(self, raise_on_error: bool = True, **kwds):
+    def __init__(self, raise_on_error: bool = True, warn_on_error: bool = False, **kwds):
         self.__raise_on_error = raise_on_error
+        self.__warn_on_error = warn_on_error
         self.__last_error_code = None
         self.__last_error_desc = None
 
         super().__init__(**kwds)
 
-    def set_error_handling(self, raise_on_error: bool) -> None:
+    def set_error_handling(self, raise_on_error: bool, warn_on_error: bool) -> None:
         """
         Specifies the behavior in the case of an error/warning --
-        i.e. should an exception be raised or not?
+        i.e. should an exception or warning be raised or not?
 
         Parameters
         ----------
         raise_exception_on_error : `bool`
             True if an exception should be raise, False otherwise.
+        warn_on_error : `bool`
+            True if a warning should be generated, False otherwise.
         """
         self.__raise_on_error = raise_on_error
+        self.__warn_on_error = warn_on_error
 
     def get_last_error_desc(self) -> str:
         """
@@ -353,6 +376,8 @@ class MyEpanetAPI(epanetapi):
             self.__last_error_code = self.errcode
             self.__last_error_desc = error_desc.value.decode()
 
+            if self.__warn_on_error:
+                warnings.warn(self.__last_error_desc, RuntimeWarning)
             if self.__raise_on_error:
                 raise RuntimeError(self.__last_error_desc)
 

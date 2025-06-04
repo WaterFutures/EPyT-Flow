@@ -176,7 +176,8 @@ class ScenarioSimulator():
             self.epanet_api.loadMSXFile(my_f_msx_in, customMSXlib=custom_epanetmsx_lib)
 
         # Do not raise exceptions in the case of EPANET warnings and errors
-        self.epanet_api.set_error_handling(False)
+        self.epanet_api.set_error_handling(raise_exception_on_error=False,
+                                           warn_on_error=False)
 
         # Parse and initialize scenario
         self._simple_controls = self._parse_simple_control_rules()
