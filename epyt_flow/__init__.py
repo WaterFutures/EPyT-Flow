@@ -39,4 +39,4 @@ def compile_libraries_unix(lib_epanet_name: str, compile_script_name: str,
 if sys.platform.startswith("linux"):
     compile_libraries_unix("libepanet2_2.so", "compile_linux.sh")
 elif sys.platform.startswith("darwin"):
-    compile_libraries_unix("libepanet2_2.dylib", "compile_macos.sh", gcc_name="gcc-12")
+    compile_libraries_unix("libepanet2_2.dylib", "compile_macos.sh", gcc_name="gcc-15")

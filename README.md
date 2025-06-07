@@ -47,12 +47,12 @@ By this, we not only aim to achieve a better performance of the simulations but 
 compatibility issues of pre-compiled binaries.
 
 #### Prerequisites for macOS users
-The "true" *gcc* compiler (version 12) is needed which is not the
+The "true" *gcc* compiler (version 15) is needed which is not the
 *clang* compiler that is shipped with Xcode and is linked to gcc!
 
 The correct version of the "true" *gcc* can be installed via [brew](https://brew.sh/):
 ```
-brew install gcc@12
+brew install gcc@15
 ```
 
 ### PyPI
