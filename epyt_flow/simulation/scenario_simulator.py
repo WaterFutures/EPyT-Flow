@@ -59,6 +59,20 @@ class ScenarioSimulator():
         If True, EPyT is verbose and might print messages from time to time.
 
         The default is False.
+    raise_exception_on_error : `bool`, optional
+        If True, an exception is raised whenever an error occurs in EPANET or EPANET-MSX.
+
+        The default is False.
+    warn_on_error : `bool`, optional
+        If True, a warning is generated whenever an error occurs in EPANET or EPANET-MSX.
+
+        The default is False.
+    ignore_error_codes : `list[int]`, optional
+        List of error codes that should be ignored -- i.e., no exception or
+        warning will be generated.
+        However, error codes will still be included in the SCADA data.
+
+        The default is [].
 
     Attributes
     ----------
@@ -83,7 +97,9 @@ class ScenarioSimulator():
     """
 
     def __init__(self, f_inp_in: str = None, f_msx_in: str = None,
-                 scenario_config: ScenarioConfig = None, epanet_verbose: bool = False):
+                 scenario_config: ScenarioConfig = None, epanet_verbose: bool = False,
+                 raise_exception_on_error: bool = False, warn_on_error: bool = False,
+                 ignore_error_codes: list[int] = []):
         if f_msx_in is not None and f_inp_in is None:
             raise ValueError("'f_inp_in' must be set if 'f_msx_in' is set.")
         if f_inp_in is None and scenario_config is None:
@@ -176,8 +192,9 @@ class ScenarioSimulator():
             self.epanet_api.loadMSXFile(my_f_msx_in, customMSXlib=custom_epanetmsx_lib)
 
         # Do not raise exceptions in the case of EPANET warnings and errors
-        self.epanet_api.set_error_handling(raise_exception_on_error=False,
-                                           warn_on_error=False)
+        self.epanet_api.set_error_handling(raise_exception_on_error=raise_exception_on_error,
+                                           warn_on_error=warn_on_error,
+                                           ignore_error_codes=ignore_error_codes)
 
         # Parse and initialize scenario
         self._simple_controls = self._parse_simple_control_rules()
