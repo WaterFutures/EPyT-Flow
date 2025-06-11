@@ -45,7 +45,8 @@ class EPyT(epanet):
                                   msxrealfile=self.MSXFile)
         return self.msx
 
-    def set_error_handling(self, raise_exception_on_error: bool, warn_on_error: bool) -> None:
+    def set_error_handling(self, raise_exception_on_error: bool, warn_on_error: bool,
+                           ignore_error_codes: list[int]) -> None:
         """
         Specifies the behavior in the case of an error/warning --
         i.e. should an exception or warning be raised or not?
@@ -56,10 +57,13 @@ class EPyT(epanet):
             True if an exception should be raise, False otherwise.
         warn_on_error : `bool`
             True if a warning should be generated, False otherwise.
+        ignore_error_codes : `list[int]`
+            List of error codes that should be ignored -- i.e., no exception or
+            warning will be generated.
         """
-        self.api.set_error_handling(raise_exception_on_error, warn_on_error)
+        self.api.set_error_handling(raise_exception_on_error, warn_on_error, ignore_error_codes)
         if self.msx is not None:
-            self.msx.set_error_handling(raise_exception_on_error, warn_on_error)
+            self.msx.set_error_handling(raise_exception_on_error, warn_on_error, ignore_error_codes)
 
     def was_last_func_successful(self) -> bool:
         """
@@ -105,9 +109,11 @@ class MyEpanetMsxAPI(epanetmsxapi):
     Wrapper for the `epyt.epanet.epanetmsxapi <https://epanet-python-toolkit-epyt.readthedocs.io/en/latest/api.html#epyt.epanet.epanetmsxapi>`_
     class adding error/warning storage functionalities.
     """
-    def __init__(self, raise_on_error: bool = True, warn_on_error: bool = False, **kwds):
+    def __init__(self, raise_on_error: bool = True, warn_on_error: bool = False,
+                 ignore_error_codes: list[int] = [], **kwds):
         self.__raise_on_error = raise_on_error
         self.__warn_on_error = warn_on_error
+        self.__ignore_error_codes = ignore_error_codes
         self.__last_error_code = None
         self.__last_error_desc = None
 
@@ -117,7 +123,8 @@ class MyEpanetMsxAPI(epanetmsxapi):
         # Do not print warnings.
         pass
 
-    def set_error_handling(self, raise_on_error: bool, warn_on_error: bool) -> None:
+    def set_error_handling(self, raise_on_error: bool, warn_on_error: bool,
+                           ignore_error_codes: list[int] = []) -> None:
         """
         Specifies the behavior in the case of an error/warning --
         i.e. should an exception or warning be raised or not?
@@ -128,9 +135,13 @@ class MyEpanetMsxAPI(epanetmsxapi):
             True if an exception should be raise, False otherwise.
         warn_on_error : `bool`
             True if a warning should be generated, False otherwise.
+        ignore_error_codes : `list[int]`
+            List of error codes that should be ignored -- i.e., no exception or
+            warning will be generated.
         """
         self.__raise_on_error = raise_on_error
         self.__warn_on_error = warn_on_error
+        self.__ignore_error_codes = ignore_error_codes
 
     def get_last_error_desc(self) -> str:
         """
@@ -178,10 +189,11 @@ class MyEpanetMsxAPI(epanetmsxapi):
         self.__last_error_code = err_code
         self.__last_error_desc = error_desc.value.decode()
 
-        if self.__warn_on_error:
-            warnings.warn(self.__last_error_desc, RuntimeWarning)
-        if self.__raise_on_error:
-            raise RuntimeError(self.__last_error_desc)
+        if self.__last_error_code not in self.__ignore_error_codes:
+            if self.__warn_on_error:
+                warnings.warn(self.__last_error_desc, RuntimeWarning)
+            if self.__raise_on_error:
+                raise RuntimeError(self.__last_error_desc)
 
     def MSXopen(self, msxfile, msxrealfile):
         self._reset_error()
@@ -305,15 +317,18 @@ class MyEpanetAPI(epanetapi):
     Wrapper for the `epyt.epanet.epanetapi <https://epanet-python-toolkit-epyt.readthedocs.io/en/latest/api.html#epyt.epanet.epanetapi>`_
     class adding error/warning storage functionalities.
     """
-    def __init__(self, raise_on_error: bool = True, warn_on_error: bool = False, **kwds):
+    def __init__(self, raise_on_error: bool = True, warn_on_error: bool = False,
+                 ignore_error_codes: list[int] = [], **kwds):
         self.__raise_on_error = raise_on_error
         self.__warn_on_error = warn_on_error
+        self.__ignore_error_codes = ignore_error_codes
         self.__last_error_code = None
         self.__last_error_desc = None
 
         super().__init__(**kwds)
 
-    def set_error_handling(self, raise_on_error: bool, warn_on_error: bool) -> None:
+    def set_error_handling(self, raise_on_error: bool, warn_on_error: bool,
+                           ignore_error_codes: list[int] = []) -> None:
         """
         Specifies the behavior in the case of an error/warning --
         i.e. should an exception or warning be raised or not?
@@ -324,9 +339,13 @@ class MyEpanetAPI(epanetapi):
             True if an exception should be raise, False otherwise.
         warn_on_error : `bool`
             True if a warning should be generated, False otherwise.
+        ignore_error_codes : `list[int]`
+            List of error codes that should be ignored -- i.e., no exception or
+            warning will be generated.
         """
         self.__raise_on_error = raise_on_error
         self.__warn_on_error = warn_on_error
+        self.__ignore_error_codes = ignore_error_codes
 
     def get_last_error_desc(self) -> str:
         """
@@ -376,10 +395,11 @@ class MyEpanetAPI(epanetapi):
             self.__last_error_code = self.errcode
             self.__last_error_desc = error_desc.value.decode()
 
-            if self.__warn_on_error:
-                warnings.warn(self.__last_error_desc, RuntimeWarning)
-            if self.__raise_on_error:
-                raise RuntimeError(self.__last_error_desc)
+            if self.__last_error_code not in self.__ignore_error_codes:
+                if self.__warn_on_error:
+                    warnings.warn(self.__last_error_desc, RuntimeWarning)
+                if self.__raise_on_error:
+                    raise RuntimeError(self.__last_error_desc)
 
     def ENepanet(self, inpfile="", rptfile="", binfile=""):
         self._reset_error()
