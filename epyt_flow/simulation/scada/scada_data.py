@@ -376,6 +376,8 @@ class ScadaData(Serializable):
         self.__sensor_readings = None
         self.__frozen_sensor_config = frozen_sensor_config
         self.__sensor_readings_time = sensor_readings_time
+        self.__sensor_readings_time_to_idx = {time: idx for idx, time in
+                                              enumerate(self.__sensor_readings_time)}
 
         if self.__frozen_sensor_config is False:
             self.__pressure_data_raw = pressure_data_raw
@@ -1748,8 +1750,8 @@ class ScadaData(Serializable):
         else:
             end_time = self.__sensor_readings_time[-1]
 
-        start_idx = self.__sensor_readings_time.tolist().index(start_time)
-        end_idx = self.__sensor_readings_time.tolist().index(end_time) + 1
+        start_idx = self.__sensor_readings_time_to_idx[start_time]
+        end_idx = self.__sensor_readings_time_to_idx[end_time] + 1
 
         pressure_data_raw = None
         if self.__pressure_data_raw is not None:
