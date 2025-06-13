@@ -2219,9 +2219,13 @@ class ScenarioSimulator():
         # Run step-by-step simulation
         tleft = 1
         total_time = 0
+        last_msx_error_code = 0
         while tleft > 0:
             # Compute current time step
             total_time, tleft = self.epanet_api.stepMSXQualityAnalysisTimeLeft()
+            msx_error_code = self.epanet_api.msx.get_last_error_code()
+            if last_msx_error_code == 0:
+                last_msx_error_code = msx_error_code
 
             # Fetch data at regular time intervals
             if total_time % hyd_time_step == 0:
@@ -2230,8 +2234,6 @@ class ScenarioSimulator():
                         next(progress_bar)
                     except StopIteration:
                         pass
-
-                msx_error_code = self.epanet_api.msx.get_last_error_code()
 
                 bulk_species_node_concentrations, bulk_species_link_concentrations, \
                     surface_species_concentrations = __get_concentrations()
@@ -2245,7 +2247,7 @@ class ScenarioSimulator():
                                     bulk_species_link_concentrations,
                                 "surface_species_concentration_raw": surface_species_concentrations,
                                 "sensor_readings_time": np.array([total_time]),
-                                "warnings_code": np.array([msx_error_code]),
+                                "warnings_code": np.array([last_msx_error_code]),
                                 }
                     else:
                         data = ScadaData(network_topo=network_topo,
@@ -2257,7 +2259,7 @@ class ScenarioSimulator():
                                          surface_species_concentration_raw=
                                             surface_species_concentrations,
                                          sensor_readings_time=np.array([total_time]),
-                                         warnings_code=np.array([msx_error_code]),
+                                         warnings_code=np.array([last_msx_error_code]),
                                          sensor_reading_events=self._sensor_reading_events,
                                          sensor_noise=self._sensor_noise,
                                          frozen_sensor_config=frozen_sensor_config)
@@ -2410,6 +2412,7 @@ class ScenarioSimulator():
         total_time = 0
         tstep = 1
         first_itr = True
+        last_error_code = 0
         while tstep > 0:
             if first_itr is True:  # Fix current time in the first iteration
                 tstep = 0
@@ -2428,6 +2431,8 @@ class ScenarioSimulator():
 
             # Fetch data
             error_code = self.epanet_api.get_last_error_code()
+            if last_error_code == 0:
+                last_error_code = error_code
             quality_node_data = self.epanet_api.getNodeActualQuality().reshape(1, -1)
             quality_link_data = self.epanet_api.getLinkActualQuality().reshape(1, -1)
 
@@ -2437,14 +2442,14 @@ class ScenarioSimulator():
                     data = {"node_quality_data_raw": quality_node_data,
                             "link_quality_data_raw": quality_link_data,
                             "sensor_readings_time": np.array([total_time]),
-                            "warnings_code": np.array([error_code])}
+                            "warnings_code": np.array([last_error_code])}
                 else:
                     data = ScadaData(network_topo=network_topo,
                                      sensor_config=self._sensor_config,
                                      node_quality_data_raw=quality_node_data,
                                      link_quality_data_raw=quality_link_data,
                                      sensor_readings_time=np.array([total_time]),
-                                     warnings_code=np.array([error_code]),
+                                     warnings_code=np.array([last_error_code]),
                                      sensor_reading_events=self._sensor_reading_events,
                                      sensor_noise=self._sensor_noise,
                                      frozen_sensor_config=frozen_sensor_config)
@@ -2458,6 +2463,9 @@ class ScenarioSimulator():
 
             # Next
             tstep = self.epanet_api.api.ENstepQ()
+            error_code = self.epanet_api.get_last_error_code()
+            if last_error_code == 0:
+                last_error_code = error_code
 
         self.epanet_api.closeQualityAnalysis()
 
@@ -2604,6 +2612,7 @@ class ScenarioSimulator():
             total_time = 0
             tstep = 1
             first_itr = True
+            last_error_code = 0
             while tstep > 0:
                 if first_itr is True:  # Fix current time in the first iteration
                     tstep = 0
@@ -2628,6 +2637,8 @@ class ScenarioSimulator():
                 if error_code == 0:
                     error_code = self.epanet_api.get_last_error_code()
                 total_time = t
+                if last_error_code == 0:
+                    last_error_code = error_code
 
                 # Fetch data
                 pressure_data = self.epanet_api.getNodePressure().reshape(1, -1)
@@ -2658,7 +2669,7 @@ class ScenarioSimulator():
                                        pumps_energy_usage_data_raw=pumps_energy_usage_data,
                                        pumps_efficiency_data_raw=pumps_efficiency_data,
                                        sensor_readings_time=np.array([total_time]),
-                                       warnings_code=np.array([error_code]),
+                                       warnings_code=np.array([last_error_code]),
                                        sensor_reading_events=self._sensor_reading_events,
                                        sensor_noise=self._sensor_noise,
                                        frozen_sensor_config=frozen_sensor_config)
@@ -2677,9 +2688,11 @@ class ScenarioSimulator():
                                 "pumps_energy_usage_data_raw": pumps_energy_usage_data,
                                 "pumps_efficiency_data_raw": pumps_efficiency_data,
                                 "sensor_readings_time": np.array([total_time]),
-                                "warnings_code": np.array([error_code])}
+                                "warnings_code": np.array([last_error_code])}
                     else:
                         data = scada_data
+
+                    last_error_code = 0
 
                     if support_abort is True:  # Can the simulation be aborted? If so, handle it.
                         abort = yield
@@ -2694,7 +2707,14 @@ class ScenarioSimulator():
 
                 # Next
                 tstep = self.epanet_api.api.ENnextH()
+                error_code = self.epanet_api.get_last_error_code()
+                if last_error_code == 0:
+                    last_error_code = error_code
+
                 self.epanet_api.api.ENnextQ()
+                error_code = self.epanet_api.get_last_error_code()
+                if last_error_code == 0:
+                    last_error_code = error_code
 
             self.epanet_api.api.ENcloseQ()
             self.epanet_api.api.ENcloseH()
