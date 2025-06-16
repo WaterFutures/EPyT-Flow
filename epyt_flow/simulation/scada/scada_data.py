@@ -167,9 +167,7 @@ class ScadaData(Serializable):
             raise TypeError("'sensor_readings_time' must be an instance of 'numpy.ndarray' " +
                             f"but not of '{type(sensor_readings_time)}'")
         if warnings_code is None:
-            warnings.warn("Loading a file that was created with an outdated version of EPyT-Flow" +
-                          " -- support of such old files will be removed in the next release!",
-                          DeprecationWarning)
+            warnings_code = [0] * len(sensor_readings_time)
         else:
             if not isinstance(warnings_code, np.ndarray):
                 raise TypeError("'warnings_code' must be an instance of 'numpy.ndarray' " +
