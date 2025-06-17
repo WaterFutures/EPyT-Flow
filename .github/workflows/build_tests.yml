@@ -23,7 +23,7 @@ jobs:
           pip install -r REQUIREMENTS-DEV.txt
       - name: Install gcc on macOS
         if: runner.os == 'macOS'
-        run: brew install gcc-15
+        run: brew install gcc@15
       - name: Install libomp on macOS
         if: runner.os == 'macOS'
         run: brew install libomp
