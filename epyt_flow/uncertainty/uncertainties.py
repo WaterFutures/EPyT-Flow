@@ -126,9 +126,9 @@ class Uncertainty(ABC):
             Clipped data.
         """
         if self.__min_value is not None:
-            data = np.min([data, self.__min_value])
+            data = np.max([data, self.__min_value])
         if self.__max_value is not None:
-            data = np.max([data, self.__max_value])
+            data = np.min([data, self.__max_value])
 
         return data
 
