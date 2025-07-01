@@ -66,7 +66,7 @@ class ScenarioSimulator():
     warn_on_error : `bool`, optional
         If True, a warning is generated whenever an error occurs in EPANET or EPANET-MSX.
 
-        The default is False.
+        The default is True.
     ignore_error_codes : `list[int]`, optional
         List of error codes that should be ignored -- i.e., no exception or
         warning will be generated.
@@ -98,7 +98,7 @@ class ScenarioSimulator():
 
     def __init__(self, f_inp_in: str = None, f_msx_in: str = None,
                  scenario_config: ScenarioConfig = None, epanet_verbose: bool = False,
-                 raise_exception_on_error: bool = False, warn_on_error: bool = False,
+                 raise_exception_on_error: bool = False, warn_on_error: bool = True,
                  ignore_error_codes: list[int] = []):
         if f_msx_in is not None and f_inp_in is None:
             raise ValueError("'f_inp_in' must be set if 'f_msx_in' is set.")
