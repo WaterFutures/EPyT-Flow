@@ -134,6 +134,7 @@ class ScenarioSimulator():
         self._system_events = []
         self._sensor_reading_events = []
         self.__running_simulation = False
+        self.__uncertainties_applied = False
 
         # Check availability of custom EPANET libraries
         custom_epanet_lib = None
@@ -1961,11 +1962,13 @@ class ScenarioSimulator():
         """
         self._sensor_config.place_sensors_everywhere()
 
-    def _prepare_simulation(self) -> None:
+    def _prepare_simulation(self, reapply_uncertainties: bool = False) -> None:
         self._adapt_to_network_changes()
 
         if self._model_uncertainty is not None:
-            self._model_uncertainty.apply(self.epanet_api)
+            if self.__uncertainties_applied is True and reapply_uncertainties is True:
+                self._model_uncertainty.apply(self.epanet_api)
+                self.__uncertainties_applied = True
 
         for event in self._system_events:
             event.reset()
@@ -1976,7 +1979,8 @@ class ScenarioSimulator():
 
     def run_advanced_quality_simulation(self, hyd_file_in: str, verbose: bool = False,
                                         frozen_sensor_config: bool = False,
-                                        use_quality_time_step_as_reporting_time_step: bool = False
+                                        use_quality_time_step_as_reporting_time_step: bool = False,
+                                        reapply_uncertainties: bool = False
                                         ) -> ScadaData:
         """
         Runs an advanced quality analysis using EPANET-MSX.
@@ -2002,6 +2006,10 @@ class ScenarioSimulator():
             with the hydraulic simulation.
 
             The default is False.
+        reapply_uncertainties: bool = False : `bool`, optional
+            If True, the uncertainties are re-applied.
+
+            The default is False.
 
         Returns
         -------
@@ -2022,7 +2030,8 @@ class ScenarioSimulator():
                                  return_as_dict=True,
                                  frozen_sensor_config=frozen_sensor_config,
                                  use_quality_time_step_as_reporting_time_step=
-                                 use_quality_time_step_as_reporting_time_step):
+                                 use_quality_time_step_as_reporting_time_step,
+                                 reapply_uncertainties=reapply_uncertainties):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -2050,6 +2059,7 @@ class ScenarioSimulator():
                                                      return_as_dict: bool = False,
                                                      frozen_sensor_config: bool = False,
                                                      use_quality_time_step_as_reporting_time_step: bool = False,
+                                                     reapply_uncertainties: bool = False
                                                      ) -> Generator[Union[tuple[ScadaData, bool], tuple[dict, bool]], bool, None]:
         """
         Runs an advanced quality analysis using EPANET-MSX.
@@ -2079,6 +2089,10 @@ class ScenarioSimulator():
             with the hydraulic simulation.
 
             The default is False.
+        reapply_uncertainties: bool = False : `bool`, optional
+            If True, the uncertainties are re-applied.
+
+            The default is False.
 
         Returns
         -------
@@ -2091,6 +2105,8 @@ class ScenarioSimulator():
 
         if self.__f_msx_in is None:
             raise ValueError("No .msx file specified")
+
+        self._prepare_simulation(reapply_uncertainties)
 
         # Load pre-computed hydraulics
         self.epanet_api.useMSXHydraulicFile(hyd_file_in)
@@ -2470,7 +2486,8 @@ class ScenarioSimulator():
         self.epanet_api.closeQualityAnalysis()
 
     def run_hydraulic_simulation(self, hyd_export: str = None, verbose: bool = False,
-                                 frozen_sensor_config: bool = False) -> ScadaData:
+                                 frozen_sensor_config: bool = False,
+                                 reapply_uncertainties: bool = False) -> ScadaData:
         """
         Runs the hydraulic simulation of this scenario (incl. basic quality if set).
 
@@ -2494,6 +2511,10 @@ class ScenarioSimulator():
             will be stored -- this usually leads to a significant reduction in memory consumption.
 
             The default is False.
+        reapply_uncertainties: bool = False : `bool`, optional
+            If True, the uncertainties are re-applied.
+
+            The default is False.
 
         Returns
         -------
@@ -2512,7 +2533,8 @@ class ScenarioSimulator():
         for scada_data, _ in gen(hyd_export=hyd_export,
                                  verbose=verbose,
                                  return_as_dict=True,
-                                 frozen_sensor_config=frozen_sensor_config):
+                                 frozen_sensor_config=frozen_sensor_config,
+                                 reapply_uncertainties=reapply_uncertainties):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -2537,6 +2559,7 @@ class ScenarioSimulator():
                                               support_abort: bool = False,
                                               return_as_dict: bool = False,
                                               frozen_sensor_config: bool = False,
+                                              reapply_uncertainties: bool = False
                                               ) -> Generator[Union[tuple[ScadaData, bool], tuple[dict, bool]], bool, None]:
         """
         Runs the hydraulic simulation of this scenario (incl. basic quality if set) and
@@ -2573,6 +2596,10 @@ class ScenarioSimulator():
             will be stored -- this usually leads to a significant reduction in memory consumption.
 
             The default is False.
+        reapply_uncertainties: bool = False : `bool`, optional
+            If True, the uncertainties are re-applied.
+
+            The default is False.
 
         Returns
         -------
@@ -2585,7 +2612,7 @@ class ScenarioSimulator():
 
         self._adapt_to_network_changes()
 
-        self._prepare_simulation()
+        self._prepare_simulation(reapply_uncertainties)
 
         self.__running_simulation = True
 
@@ -2728,7 +2755,8 @@ class ScenarioSimulator():
             raise ex
 
     def run_simulation(self, hyd_export: str = None, verbose: bool = False,
-                       frozen_sensor_config: bool = False) -> ScadaData:
+                       frozen_sensor_config: bool = False,
+                       reapply_uncertainties: bool = False) -> ScadaData:
         """
         Runs the simulation of this scenario.
 
@@ -2750,6 +2778,10 @@ class ScenarioSimulator():
             will be stored -- this usually leads to a significant reduction in memory consumption.
 
             The default is False.
+        reapply_uncertainties: bool = False : `bool`, optional
+            If True, the uncertainties are re-applied.
+
+            The default is False.
 
         Returns
         -------
@@ -2769,14 +2801,16 @@ class ScenarioSimulator():
 
         # Run hydraulic simulation step-by-step
         result = self.run_hydraulic_simulation(hyd_export=hyd_export, verbose=verbose,
-                                               frozen_sensor_config=frozen_sensor_config)
+                                               frozen_sensor_config=frozen_sensor_config,
+                                               reapply_uncertainties=reapply_uncertainties)
 
         # If necessary, run advanced quality simulation utilizing the computed hydraulics
         if self.f_msx_in is not None:
             gen = self.run_advanced_quality_simulation
             result_msx = gen(hyd_file_in=hyd_export,
                              verbose=verbose,
-                             frozen_sensor_config=frozen_sensor_config)
+                             frozen_sensor_config=frozen_sensor_config,
+                             reapply_uncertainties=reapply_uncertainties)
             result.join(result_msx)
 
             if hyd_export_old is not None:
@@ -2810,6 +2844,7 @@ class ScenarioSimulator():
                             f"'{type(model_uncertainty)}'")
 
         self._model_uncertainty = model_uncertainty
+        self.__uncertainties_applied = False
 
     def set_sensor_noise(self, sensor_noise: SensorNoise) -> None:
         """
