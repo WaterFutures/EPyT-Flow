@@ -13,13 +13,13 @@ Note that EPyT-Flow supports Python 3.9 - 3.13
     the *gcc* compiler is available -- i.e. Linux user can simply install the
     *build-essentials* package.
 
-    **Attention macOS users:** The "true" *gcc* compiler (version 12) is needed which is not the
+    **Attention macOS users:** The "true" *gcc* compiler (version 15) is needed which is not the
     *clang* compiler that is shipped with Xcode and is linked to gcc!
     The correct version of the "true" *gcc* can be installed via `brew <https://brew.sh/>`_:
     
     .. code:: bash
 
-        brew install gcc@12
+        brew install gcc@15
 
 PyPI
 ----

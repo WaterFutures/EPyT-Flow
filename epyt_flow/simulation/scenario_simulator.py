@@ -59,6 +59,20 @@ class ScenarioSimulator():
         If True, EPyT is verbose and might print messages from time to time.
 
         The default is False.
+    raise_exception_on_error : `bool`, optional
+        If True, an exception is raised whenever an error occurs in EPANET or EPANET-MSX.
+
+        The default is False.
+    warn_on_error : `bool`, optional
+        If True, a warning is generated whenever an error occurs in EPANET or EPANET-MSX.
+
+        The default is True.
+    ignore_error_codes : `list[int]`, optional
+        List of error codes that should be ignored -- i.e., no exception or
+        warning will be generated.
+        However, error codes will still be included in the SCADA data.
+
+        The default is [].
 
     Attributes
     ----------
@@ -83,7 +97,9 @@ class ScenarioSimulator():
     """
 
     def __init__(self, f_inp_in: str = None, f_msx_in: str = None,
-                 scenario_config: ScenarioConfig = None, epanet_verbose: bool = False):
+                 scenario_config: ScenarioConfig = None, epanet_verbose: bool = False,
+                 raise_exception_on_error: bool = False, warn_on_error: bool = True,
+                 ignore_error_codes: list[int] = []):
         if f_msx_in is not None and f_inp_in is None:
             raise ValueError("'f_inp_in' must be set if 'f_msx_in' is set.")
         if f_inp_in is None and scenario_config is None:
@@ -118,6 +134,7 @@ class ScenarioSimulator():
         self._system_events = []
         self._sensor_reading_events = []
         self.__running_simulation = False
+        self.__uncertainties_applied = False
 
         # Check availability of custom EPANET libraries
         custom_epanet_lib = None
@@ -176,7 +193,9 @@ class ScenarioSimulator():
             self.epanet_api.loadMSXFile(my_f_msx_in, customMSXlib=custom_epanetmsx_lib)
 
         # Do not raise exceptions in the case of EPANET warnings and errors
-        self.epanet_api.set_error_handling(False)
+        self.epanet_api.set_error_handling(raise_exception_on_error=raise_exception_on_error,
+                                           warn_on_error=warn_on_error,
+                                           ignore_error_codes=ignore_error_codes)
 
         # Parse and initialize scenario
         self._simple_controls = self._parse_simple_control_rules()
@@ -1943,11 +1962,13 @@ class ScenarioSimulator():
         """
         self._sensor_config.place_sensors_everywhere()
 
-    def _prepare_simulation(self) -> None:
+    def _prepare_simulation(self, reapply_uncertainties: bool = False) -> None:
         self._adapt_to_network_changes()
 
         if self._model_uncertainty is not None:
-            self._model_uncertainty.apply(self.epanet_api)
+            if self.__uncertainties_applied is True and reapply_uncertainties is True:
+                self._model_uncertainty.apply(self.epanet_api)
+                self.__uncertainties_applied = True
 
         for event in self._system_events:
             event.reset()
@@ -1958,7 +1979,8 @@ class ScenarioSimulator():
 
     def run_advanced_quality_simulation(self, hyd_file_in: str, verbose: bool = False,
                                         frozen_sensor_config: bool = False,
-                                        use_quality_time_step_as_reporting_time_step: bool = False
+                                        use_quality_time_step_as_reporting_time_step: bool = False,
+                                        reapply_uncertainties: bool = False
                                         ) -> ScadaData:
         """
         Runs an advanced quality analysis using EPANET-MSX.
@@ -1984,6 +2006,10 @@ class ScenarioSimulator():
             with the hydraulic simulation.
 
             The default is False.
+        reapply_uncertainties: bool = False : `bool`, optional
+            If True, the uncertainties are re-applied.
+
+            The default is False.
 
         Returns
         -------
@@ -2004,7 +2030,8 @@ class ScenarioSimulator():
                                  return_as_dict=True,
                                  frozen_sensor_config=frozen_sensor_config,
                                  use_quality_time_step_as_reporting_time_step=
-                                 use_quality_time_step_as_reporting_time_step):
+                                 use_quality_time_step_as_reporting_time_step,
+                                 reapply_uncertainties=reapply_uncertainties):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -2032,6 +2059,7 @@ class ScenarioSimulator():
                                                      return_as_dict: bool = False,
                                                      frozen_sensor_config: bool = False,
                                                      use_quality_time_step_as_reporting_time_step: bool = False,
+                                                     reapply_uncertainties: bool = False
                                                      ) -> Generator[Union[tuple[ScadaData, bool], tuple[dict, bool]], bool, None]:
         """
         Runs an advanced quality analysis using EPANET-MSX.
@@ -2061,6 +2089,10 @@ class ScenarioSimulator():
             with the hydraulic simulation.
 
             The default is False.
+        reapply_uncertainties: bool = False : `bool`, optional
+            If True, the uncertainties are re-applied.
+
+            The default is False.
 
         Returns
         -------
@@ -2073,6 +2105,8 @@ class ScenarioSimulator():
 
         if self.__f_msx_in is None:
             raise ValueError("No .msx file specified")
+
+        self._prepare_simulation(reapply_uncertainties)
 
         # Load pre-computed hydraulics
         self.epanet_api.useMSXHydraulicFile(hyd_file_in)
@@ -2171,12 +2205,14 @@ class ScenarioSimulator():
                 pass
 
         if reporting_time_start == 0:
+            msx_error_code = self.epanet_api.msx.get_last_error_code()
+
             if return_as_dict is True:
                 data = {"bulk_species_node_concentration_raw": bulk_species_node_concentrations,
                         "bulk_species_link_concentration_raw": bulk_species_link_concentrations,
                         "surface_species_concentration_raw": surface_species_concentrations,
                         "sensor_readings_time": np.array([0]),
-                        "warnings_code": np.array([0]) # TODO: Replace with MSX error
+                        "warnings_code": np.array([msx_error_code])
                         }
             else:
                 data = ScadaData(network_topo=network_topo, sensor_config=self._sensor_config,
@@ -2184,7 +2220,7 @@ class ScenarioSimulator():
                                  bulk_species_link_concentration_raw=bulk_species_link_concentrations,
                                  surface_species_concentration_raw=surface_species_concentrations,
                                  sensor_readings_time=np.array([0]),
-                                 warnings_code=np.array([0]), # TODO: Replace with MSX error
+                                 warnings_code=np.array([msx_error_code]),
                                  sensor_reading_events=self._sensor_reading_events,
                                  sensor_noise=self._sensor_noise,
                                  frozen_sensor_config=frozen_sensor_config)
@@ -2199,9 +2235,13 @@ class ScenarioSimulator():
         # Run step-by-step simulation
         tleft = 1
         total_time = 0
+        last_msx_error_code = 0
         while tleft > 0:
             # Compute current time step
             total_time, tleft = self.epanet_api.stepMSXQualityAnalysisTimeLeft()
+            msx_error_code = self.epanet_api.msx.get_last_error_code()
+            if last_msx_error_code == 0:
+                last_msx_error_code = msx_error_code
 
             # Fetch data at regular time intervals
             if total_time % hyd_time_step == 0:
@@ -2223,7 +2263,7 @@ class ScenarioSimulator():
                                     bulk_species_link_concentrations,
                                 "surface_species_concentration_raw": surface_species_concentrations,
                                 "sensor_readings_time": np.array([total_time]),
-                                "warnings_code": np.array([0]), # TODO: Replace with MSX error
+                                "warnings_code": np.array([last_msx_error_code]),
                                 }
                     else:
                         data = ScadaData(network_topo=network_topo,
@@ -2235,7 +2275,7 @@ class ScenarioSimulator():
                                          surface_species_concentration_raw=
                                             surface_species_concentrations,
                                          sensor_readings_time=np.array([total_time]),
-                                         warnings_code=np.array([0]), # TODO: Replace with MSX error
+                                         warnings_code=np.array([last_msx_error_code]),
                                          sensor_reading_events=self._sensor_reading_events,
                                          sensor_noise=self._sensor_noise,
                                          frozen_sensor_config=frozen_sensor_config)
@@ -2388,6 +2428,7 @@ class ScenarioSimulator():
         total_time = 0
         tstep = 1
         first_itr = True
+        last_error_code = 0
         while tstep > 0:
             if first_itr is True:  # Fix current time in the first iteration
                 tstep = 0
@@ -2406,6 +2447,8 @@ class ScenarioSimulator():
 
             # Fetch data
             error_code = self.epanet_api.get_last_error_code()
+            if last_error_code == 0:
+                last_error_code = error_code
             quality_node_data = self.epanet_api.getNodeActualQuality().reshape(1, -1)
             quality_link_data = self.epanet_api.getLinkActualQuality().reshape(1, -1)
 
@@ -2415,14 +2458,14 @@ class ScenarioSimulator():
                     data = {"node_quality_data_raw": quality_node_data,
                             "link_quality_data_raw": quality_link_data,
                             "sensor_readings_time": np.array([total_time]),
-                            "warnings_code": np.array([error_code])}
+                            "warnings_code": np.array([last_error_code])}
                 else:
                     data = ScadaData(network_topo=network_topo,
                                      sensor_config=self._sensor_config,
                                      node_quality_data_raw=quality_node_data,
                                      link_quality_data_raw=quality_link_data,
                                      sensor_readings_time=np.array([total_time]),
-                                     warnings_code=np.array([error_code]),
+                                     warnings_code=np.array([last_error_code]),
                                      sensor_reading_events=self._sensor_reading_events,
                                      sensor_noise=self._sensor_noise,
                                      frozen_sensor_config=frozen_sensor_config)
@@ -2436,11 +2479,15 @@ class ScenarioSimulator():
 
             # Next
             tstep = self.epanet_api.api.ENstepQ()
+            error_code = self.epanet_api.get_last_error_code()
+            if last_error_code == 0:
+                last_error_code = error_code
 
         self.epanet_api.closeQualityAnalysis()
 
     def run_hydraulic_simulation(self, hyd_export: str = None, verbose: bool = False,
-                                 frozen_sensor_config: bool = False) -> ScadaData:
+                                 frozen_sensor_config: bool = False,
+                                 reapply_uncertainties: bool = False) -> ScadaData:
         """
         Runs the hydraulic simulation of this scenario (incl. basic quality if set).
 
@@ -2464,6 +2511,10 @@ class ScenarioSimulator():
             will be stored -- this usually leads to a significant reduction in memory consumption.
 
             The default is False.
+        reapply_uncertainties: bool = False : `bool`, optional
+            If True, the uncertainties are re-applied.
+
+            The default is False.
 
         Returns
         -------
@@ -2482,7 +2533,8 @@ class ScenarioSimulator():
         for scada_data, _ in gen(hyd_export=hyd_export,
                                  verbose=verbose,
                                  return_as_dict=True,
-                                 frozen_sensor_config=frozen_sensor_config):
+                                 frozen_sensor_config=frozen_sensor_config,
+                                 reapply_uncertainties=reapply_uncertainties):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -2507,6 +2559,7 @@ class ScenarioSimulator():
                                               support_abort: bool = False,
                                               return_as_dict: bool = False,
                                               frozen_sensor_config: bool = False,
+                                              reapply_uncertainties: bool = False
                                               ) -> Generator[Union[tuple[ScadaData, bool], tuple[dict, bool]], bool, None]:
         """
         Runs the hydraulic simulation of this scenario (incl. basic quality if set) and
@@ -2543,6 +2596,10 @@ class ScenarioSimulator():
             will be stored -- this usually leads to a significant reduction in memory consumption.
 
             The default is False.
+        reapply_uncertainties: bool = False : `bool`, optional
+            If True, the uncertainties are re-applied.
+
+            The default is False.
 
         Returns
         -------
@@ -2555,7 +2612,7 @@ class ScenarioSimulator():
 
         self._adapt_to_network_changes()
 
-        self._prepare_simulation()
+        self._prepare_simulation(reapply_uncertainties)
 
         self.__running_simulation = True
 
@@ -2582,6 +2639,7 @@ class ScenarioSimulator():
             total_time = 0
             tstep = 1
             first_itr = True
+            last_error_code = 0
             while tstep > 0:
                 if first_itr is True:  # Fix current time in the first iteration
                     tstep = 0
@@ -2606,6 +2664,8 @@ class ScenarioSimulator():
                 if error_code == 0:
                     error_code = self.epanet_api.get_last_error_code()
                 total_time = t
+                if last_error_code == 0:
+                    last_error_code = error_code
 
                 # Fetch data
                 pressure_data = self.epanet_api.getNodePressure().reshape(1, -1)
@@ -2636,7 +2696,7 @@ class ScenarioSimulator():
                                        pumps_energy_usage_data_raw=pumps_energy_usage_data,
                                        pumps_efficiency_data_raw=pumps_efficiency_data,
                                        sensor_readings_time=np.array([total_time]),
-                                       warnings_code=np.array([error_code]),
+                                       warnings_code=np.array([last_error_code]),
                                        sensor_reading_events=self._sensor_reading_events,
                                        sensor_noise=self._sensor_noise,
                                        frozen_sensor_config=frozen_sensor_config)
@@ -2655,9 +2715,11 @@ class ScenarioSimulator():
                                 "pumps_energy_usage_data_raw": pumps_energy_usage_data,
                                 "pumps_efficiency_data_raw": pumps_efficiency_data,
                                 "sensor_readings_time": np.array([total_time]),
-                                "warnings_code": np.array([error_code])}
+                                "warnings_code": np.array([last_error_code])}
                     else:
                         data = scada_data
+
+                    last_error_code = 0
 
                     if support_abort is True:  # Can the simulation be aborted? If so, handle it.
                         abort = yield
@@ -2672,7 +2734,14 @@ class ScenarioSimulator():
 
                 # Next
                 tstep = self.epanet_api.api.ENnextH()
+                error_code = self.epanet_api.get_last_error_code()
+                if last_error_code == 0:
+                    last_error_code = error_code
+
                 self.epanet_api.api.ENnextQ()
+                error_code = self.epanet_api.get_last_error_code()
+                if last_error_code == 0:
+                    last_error_code = error_code
 
             self.epanet_api.api.ENcloseQ()
             self.epanet_api.api.ENcloseH()
@@ -2686,7 +2755,8 @@ class ScenarioSimulator():
             raise ex
 
     def run_simulation(self, hyd_export: str = None, verbose: bool = False,
-                       frozen_sensor_config: bool = False) -> ScadaData:
+                       frozen_sensor_config: bool = False,
+                       reapply_uncertainties: bool = False) -> ScadaData:
         """
         Runs the simulation of this scenario.
 
@@ -2708,6 +2778,10 @@ class ScenarioSimulator():
             will be stored -- this usually leads to a significant reduction in memory consumption.
 
             The default is False.
+        reapply_uncertainties: bool = False : `bool`, optional
+            If True, the uncertainties are re-applied.
+
+            The default is False.
 
         Returns
         -------
@@ -2727,14 +2801,16 @@ class ScenarioSimulator():
 
         # Run hydraulic simulation step-by-step
         result = self.run_hydraulic_simulation(hyd_export=hyd_export, verbose=verbose,
-                                               frozen_sensor_config=frozen_sensor_config)
+                                               frozen_sensor_config=frozen_sensor_config,
+                                               reapply_uncertainties=reapply_uncertainties)
 
         # If necessary, run advanced quality simulation utilizing the computed hydraulics
         if self.f_msx_in is not None:
             gen = self.run_advanced_quality_simulation
             result_msx = gen(hyd_file_in=hyd_export,
                              verbose=verbose,
-                             frozen_sensor_config=frozen_sensor_config)
+                             frozen_sensor_config=frozen_sensor_config,
+                             reapply_uncertainties=reapply_uncertainties)
             result.join(result_msx)
 
             if hyd_export_old is not None:
@@ -2768,6 +2844,7 @@ class ScenarioSimulator():
                             f"'{type(model_uncertainty)}'")
 
         self._model_uncertainty = model_uncertainty
+        self.__uncertainties_applied = False
 
     def set_sensor_noise(self, sensor_noise: SensorNoise) -> None:
         """

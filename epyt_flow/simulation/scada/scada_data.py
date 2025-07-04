@@ -167,9 +167,7 @@ class ScadaData(Serializable):
             raise TypeError("'sensor_readings_time' must be an instance of 'numpy.ndarray' " +
                             f"but not of '{type(sensor_readings_time)}'")
         if warnings_code is None:
-            warnings.warn("Loading a file that was created with an outdated version of EPyT-Flow" +
-                          " -- support of such old files will be removed in the next release!",
-                          DeprecationWarning)
+            warnings_code = [0] * len(sensor_readings_time)
         else:
             if not isinstance(warnings_code, np.ndarray):
                 raise TypeError("'warnings_code' must be an instance of 'numpy.ndarray' " +
@@ -376,6 +374,8 @@ class ScadaData(Serializable):
         self.__sensor_readings = None
         self.__frozen_sensor_config = frozen_sensor_config
         self.__sensor_readings_time = sensor_readings_time
+        self.__sensor_readings_time_to_idx = {time: idx for idx, time in
+                                              enumerate(self.__sensor_readings_time)}
 
         if self.__frozen_sensor_config is False:
             self.__pressure_data_raw = pressure_data_raw
@@ -1748,8 +1748,8 @@ class ScadaData(Serializable):
         else:
             end_time = self.__sensor_readings_time[-1]
 
-        start_idx = self.__sensor_readings_time.tolist().index(start_time)
-        end_idx = self.__sensor_readings_time.tolist().index(end_time) + 1
+        start_idx = self.__sensor_readings_time_to_idx[start_time]
+        end_idx = self.__sensor_readings_time_to_idx[end_time] + 1
 
         pressure_data_raw = None
         if self.__pressure_data_raw is not None:
@@ -2375,11 +2375,10 @@ class ScadaData(Serializable):
         mask = np.zeros(len(self.__sensor_config.nodes))
         node_features = np.array([[default_missing_value] * len(self.__sensor_config.nodes)
                                   for _ in range(len(self.__sensor_readings_time))])
-        nodes_id = self.__network_topo.get_all_nodes()
 
         pressure_readings = self.get_data_pressures()
         for pressures_idx, node_id in enumerate(self.__sensor_config.pressure_sensors):
-            idx = nodes_id.index(node_id)
+            idx = self.__sensor_config.map_node_id_to_idx(node_id)
             node_features[:, idx] = pressure_readings[:, pressures_idx]
             mask[idx] = 1
 
@@ -2617,11 +2616,10 @@ class ScadaData(Serializable):
         mask = np.zeros(len(self.__sensor_config.nodes))
         node_features = np.array([[default_missing_value] * len(self.__sensor_config.nodes)
                                   for _ in range(len(self.__sensor_readings_time))])
-        nodes_id = self.__network_topo.get_all_nodes()
 
         demand_readings = self.get_data_demands()
         for demands_idx, node_id in enumerate(self.__sensor_config.demand_sensors):
-            idx = nodes_id.index(node_id)
+            idx = self.__sensor_config.map_node_id_to_idx(node_id)
             node_features[:, idx] = demand_readings[:, demands_idx]
             mask[idx] = 1
 
@@ -2737,11 +2735,10 @@ class ScadaData(Serializable):
         mask = np.zeros(len(self.__sensor_config.nodes))
         node_features = np.array([[default_missing_value] * len(self.__sensor_config.nodes)
                                   for _ in range(len(self.__sensor_readings_time))])
-        nodes_id = self.__network_topo.get_all_nodes()
 
         node_quality_readings = self.get_data_nodes_quality()
         for quality_idx, node_id in enumerate(self.__sensor_config.quality_node_sensors):
-            idx = nodes_id.index(node_id)
+            idx = self.__sensor_config.map_node_id_to_idx(node_id)
             node_features[:, idx] = node_quality_readings[:, quality_idx]
             mask[idx] = 1
 
@@ -3752,7 +3749,6 @@ class ScadaData(Serializable):
         masks = []
         results = []
 
-        all_nodes_id = self.__network_topo.get_all_nodes()
         bulk_species_sensor_locations = self.__sensor_config.bulk_species_node_sensors
 
         for species_id, nodes_id in bulk_species_sensor_locations.items():
@@ -3762,7 +3758,7 @@ class ScadaData(Serializable):
             
             sensor_readings = self.get_data_bulk_species_node_concentration({species_id: nodes_id})
             for sensor_readings_idx, node_id in enumerate(nodes_id):
-                idx = all_nodes_id.index(node_id) 
+                idx = self.__sensor_config.map_node_id_to_idx(node_id) 
                 node_features[:, idx] = sensor_readings[:, sensor_readings_idx]
                 mask[idx] = 1
 

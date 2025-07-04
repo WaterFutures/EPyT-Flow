@@ -58,7 +58,10 @@ EPyT-Flow allows the user to specify model uncertainties by instantiating
 to the scenario simulator
 (instance of :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`) by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_model_uncertainty` BEFORE
-the simulation is run. As a consequence, the simulation runs are no longer deterministic.
+the simulation is run. Note that by default, uncertainties are only applied once even if the
+simulation is run multiple times -- this can be changed by setting the parameter
+`reapply_uncertainties` to True.
+As a consequence, the simulation runs might no longer be deterministic.
 See below for a full list of all quantities that can be affected by uncertainties:
 
 +-------------------------------------------------+
