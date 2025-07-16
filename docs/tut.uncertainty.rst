@@ -59,9 +59,12 @@ to the scenario simulator
 (instance of :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`) by calling
 :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.set_model_uncertainty` BEFORE
 the simulation is run. Note that by default, uncertainties are only applied once even if the
-simulation is run multiple times -- this can be changed by setting the parameter
-`reapply_uncertainties` to True.
+simulation is run multiple times. If the parameter `reapply_uncertainties`
+(in the :func:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator.run_simulation` function)
+is set to True, the uncertainties are re-applied to the original properties before every
+simulation run.
 As a consequence, the simulation runs might no longer be deterministic.
+
 See below for a full list of all quantities that can be affected by uncertainties:
 
 +-------------------------------------------------+

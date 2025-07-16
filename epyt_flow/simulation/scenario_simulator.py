@@ -1966,9 +1966,12 @@ class ScenarioSimulator():
         self._adapt_to_network_changes()
 
         if self._model_uncertainty is not None:
-            if self.__uncertainties_applied is True and reapply_uncertainties is True:
+            if self.__uncertainties_applied is False:
                 self._model_uncertainty.apply(self.epanet_api)
                 self.__uncertainties_applied = True
+            elif self.__uncertainties_applied is True and reapply_uncertainties is True:
+                self._model_uncertainty.undo(self.epanet_api)
+                self._model_uncertainty.apply(self.epanet_api)
 
         for event in self._system_events:
             event.reset()
@@ -2006,8 +2009,8 @@ class ScenarioSimulator():
             with the hydraulic simulation.
 
             The default is False.
-        reapply_uncertainties: bool = False : `bool`, optional
-            If True, the uncertainties are re-applied.
+        reapply_uncertainties: `bool`, optional
+            If True, the uncertainties are re-applied on the original properties.
 
             The default is False.
 
@@ -2089,8 +2092,8 @@ class ScenarioSimulator():
             with the hydraulic simulation.
 
             The default is False.
-        reapply_uncertainties: bool = False : `bool`, optional
-            If True, the uncertainties are re-applied.
+        reapply_uncertainties : `bool`, optional
+            If True, the uncertainties are re-applied on the original properties.
 
             The default is False.
 
@@ -2511,8 +2514,8 @@ class ScenarioSimulator():
             will be stored -- this usually leads to a significant reduction in memory consumption.
 
             The default is False.
-        reapply_uncertainties: bool = False : `bool`, optional
-            If True, the uncertainties are re-applied.
+        reapply_uncertainties : `bool`, optional
+            If True, the uncertainties are re-applied on the original properties.
 
             The default is False.
 
@@ -2596,8 +2599,8 @@ class ScenarioSimulator():
             will be stored -- this usually leads to a significant reduction in memory consumption.
 
             The default is False.
-        reapply_uncertainties: bool = False : `bool`, optional
-            If True, the uncertainties are re-applied.
+        reapply_uncertainties : `bool`, optional
+            If True, the uncertainties are re-applied on the original properties.
 
             The default is False.
 
@@ -2778,8 +2781,8 @@ class ScenarioSimulator():
             will be stored -- this usually leads to a significant reduction in memory consumption.
 
             The default is False.
-        reapply_uncertainties: bool = False : `bool`, optional
-            If True, the uncertainties are re-applied.
+        reapply_uncertainties: `bool`, optional
+            If True, the uncertainties are re-applied on the original properties.
 
             The default is False.
 
