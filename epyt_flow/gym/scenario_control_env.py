@@ -24,6 +24,10 @@ class ScenarioControlEnv(ABC):
         If True, environment is automatically reset if terminated.
 
         The default is False.
+    reapply_uncertainties_at_reset : `bool`, optional
+        If True, the uncertainties are re-applied to the original properties at each reset.
+
+        The default is False.
 
     Attributes
     ----------
@@ -36,7 +40,9 @@ class ScenarioControlEnv(ABC):
     _hydraulic_scada_data : :class:`~epyt_flow.simulation.scada.scada_data.ScadaData`, protected
         SCADA data from the hydraulic simulation -- only used if EPANET-MSX is used in the control scenario.
     """
-    def __init__(self, scenario_config: ScenarioConfig, autoreset: bool = False, **kwds):
+    def __init__(self, scenario_config: ScenarioConfig, autoreset: bool = False,
+                 reapply_uncertainties_at_reset: bool = False,
+                 **kwds):
         if not isinstance(scenario_config, ScenarioConfig):
             raise TypeError("'scenario_config' must be an instance of " +
                             "'epyt_flow.simulation.ScenarioConfig' " +
@@ -44,12 +50,15 @@ class ScenarioControlEnv(ABC):
         if not isinstance(autoreset, bool):
             raise TypeError("'autoreset' must be an instance of 'bool' " +
                             f"but not of '{type(autoreset)}'")
+        if not isinstance(reapply_uncertainties_at_reset, bool):
+            raise TypeError("")
 
         self._scenario_config = scenario_config
         self._scenario_sim = None
         self._sim_generator = None
         self.__autoreset = autoreset
         self._hydraulic_scada_data = None
+        self.__reapply_uncertainties_at_reset = reapply_uncertainties_at_reset
 
         super().__init__(**kwds)
 
@@ -64,6 +73,18 @@ class ScenarioControlEnv(ABC):
             True, if environment automatically resets after it terminated.
         """
         return self.__autoreset
+
+    @property
+    def reapply_uncertainties_at_reset(self) -> bool:
+        """
+        True, if the uncertainties are re-applied to the original properties at each reset.
+
+        Returns
+        -------
+        `bool`
+            True, if the uncertainties are re-applied to the original properties at each reset.
+        """
+        return self.__reapply_uncertainties_at_reset
 
     def __enter__(self):
         return self
@@ -117,14 +138,16 @@ class ScenarioControlEnv(ABC):
             # Run hydraulic simulation first
             hyd_export = os.path.join(get_temp_folder(), f"epytflow_env_MSX_{uuid.uuid4()}.hyd")
             sim = self._scenario_sim.run_hydraulic_simulation
-            self._hydraulic_scada_data = sim(hyd_export=hyd_export)
+            self._hydraulic_scada_data = sim(hyd_export=hyd_export,
+                                             reapply_uncertainties=self.__reapply_uncertainties_at_reset)
 
             # Run advanced quality analysis (EPANET-MSX) on top of the computed hydraulics
             gen = self._scenario_sim.run_advanced_quality_simulation_as_generator
             self._sim_generator = gen(hyd_export, support_abort=True)
         else:
             gen = self._scenario_sim.run_hydraulic_simulation_as_generator
-            self._sim_generator = gen(support_abort=True)
+            self._sim_generator = gen(support_abort=True,
+                                      reapply_uncertainties=self.__reapply_uncertainties_at_reset)
 
         return self._next_sim_itr()
 
