@@ -40,6 +40,44 @@ def test_model_uncertainty():
         assert res.get_data() is not None
 
 
+def test_model_uncertainty_reset():
+    hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
+                                        include_default_sensor_placement=True)
+
+    uncertainties = {"global_pipe_length_uncertainty": RelativeUniformUncertainty(low=0.9,
+                                                                                  high=1.1),
+                    "global_pipe_roughness_uncertainty": RelativeUniformUncertainty(low=0.75,
+                                                                                    high=1.25),
+                    "global_pipe_diameter_uncertainty": AbsoluteGaussianUncertainty(mean=0.,
+                                                                                    scale=.05),
+                    "global_base_demand_uncertainty": RelativeUniformUncertainty(low=0.75,
+                                                                                 high=1.25),
+                    "global_demand_pattern_uncertainty": RelativeUniformUncertainty(low=0.75,
+                                                                                    high=1.25),
+                    "global_elevation_uncertainty": AbsoluteGaussianUncertainty(mean=0.,
+                                                                                scale=0.1)}
+
+    # reapply_uncertainty=True
+    with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
+        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
+        sim.set_model_uncertainty(ModelUncertainty(**uncertainties))
+
+        r1 = sim.run_simulation(reapply_uncertainties=True).get_data()
+        r2 = sim.run_simulation(reapply_uncertainties=True).get_data()
+
+        assert not np.all(r1 == r2)
+
+    # reapply_uncertainty=False
+    with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
+        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
+        sim.set_model_uncertainty(ModelUncertainty(**uncertainties))
+
+        r1 = sim.run_simulation().get_data()
+        r2 = sim.run_simulation().get_data()
+
+        assert np.all(r1 == r2)
+
+
 def test_model_uncertainty_seed():
     def run_sim() -> np.ndarray:
         hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
