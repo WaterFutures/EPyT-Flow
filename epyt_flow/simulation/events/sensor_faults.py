@@ -93,7 +93,7 @@ class SensorFaultConstant(SensorFault, JsonSerializable):
             raise TypeError("'constant_shift' must be an instance of 'float' but no of " +
                             f"'{type(constant_shift)}'")
 
-        self.__constant_shift = constant_shift
+        self._constant_shift = constant_shift
 
         super().__init__(**kwds)
 
@@ -107,20 +107,20 @@ class SensorFaultConstant(SensorFault, JsonSerializable):
         `float`
             Constant that is added to the sensor reading.
         """
-        return self.__constant_shift
+        return self._constant_shift
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"constant_shift": self.__constant_shift}
+        return super().get_attributes() | {"constant_shift": self._constant_shift}
 
     def __eq__(self, other) -> bool:
-        return super().__eq__(other) and self.__constant_shift == other.constant_shift
+        return super().__eq__(other) and self._constant_shift == other.constant_shift
 
     def __str__(self) -> str:
-        return f"{type(self).__name__} {super().__str__()} constant: {self.__constant_shift}"
+        return f"{type(self).__name__} {super().__str__()} constant: {self._constant_shift}"
 
     def apply_sensor_fault(self, cur_multiplier: float, sensor_reading: float,
                            cur_time: int) -> float:
-        return sensor_reading + cur_multiplier * self.__constant_shift
+        return sensor_reading + cur_multiplier * self._constant_shift
 
 
 @serializable(SENSOR_FAULT_DRIFT_ID, ".epytflow_sensorfault_drift")
@@ -134,7 +134,7 @@ class SensorFaultDrift(SensorFault, JsonSerializable):
         Coefficient of the drift.
     """
     def __init__(self, coef: float, **kwds):
-        self.__coef = coef
+        self._coef = coef
 
         super().__init__(**kwds)
 
@@ -148,20 +148,20 @@ class SensorFaultDrift(SensorFault, JsonSerializable):
         `float`
             Coefficient of the drift.
         """
-        return self.__coef
+        return self._coef
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"coef": self.__coef}
+        return super().get_attributes() | {"coef": self._coef}
 
     def __eq__(self, other) -> bool:
-        return super().__eq__(other) and self.__coef == other.coef
+        return super().__eq__(other) and self._coef == other.coef
 
     def __str__(self) -> str:
-        return f"{type(self).__name__} {super().__str__()} coef: {self.__coef}"
+        return f"{type(self).__name__} {super().__str__()} coef: {self._coef}"
 
     def apply_sensor_fault(self, cur_multiplier: float, sensor_reading: float,
                            cur_time: int) -> float:
-        return sensor_reading + cur_multiplier * (self.__coef * (cur_time - self.start_time))
+        return sensor_reading + cur_multiplier * (self._coef * (cur_time - self.start_time))
 
 
 @serializable(SENSOR_FAULT_GAUSSIAN_ID, ".epytflow_sensorfault_gaussian")
@@ -179,7 +179,7 @@ class SensorFaultGaussian(SensorFault, JsonSerializable):
         if not isinstance(std, float) or not std > 0:
             raise ValueError("'std' must be an instance of 'float' and be greater than 0")
 
-        self.__std = std
+        self._std = std
 
         super().__init__(**kwds)
 
@@ -193,20 +193,20 @@ class SensorFaultGaussian(SensorFault, JsonSerializable):
         `float`
             Standard deviation of the Gaussian noise.
         """
-        return self.__std
+        return self._std
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"std": self.__std}
+        return super().get_attributes() | {"std": self._std}
 
     def __eq__(self, other) -> bool:
-        return super().__eq__(other) and self.__std == other.std
+        return super().__eq__(other) and self._std == other.std
 
     def __str__(self) -> str:
-        return f"{type(self).__name__} {super().__str__()} std: {self.__std}"
+        return f"{type(self).__name__} {super().__str__()} std: {self._std}"
 
     def apply_sensor_fault(self, cur_multiplier: float, sensor_reading: float,
                            cur_time: int) -> float:
-        return sensor_reading + cur_multiplier * np.random.normal(loc=0, scale=self.__std)
+        return sensor_reading + cur_multiplier * np.random.normal(loc=0, scale=self._std)
 
 
 @serializable(SENSOR_FAULT_PERCENTAGE_ID, ".epytflow_sensorfault_percentage",)
@@ -223,7 +223,7 @@ class SensorFaultPercentage(SensorFault, JsonSerializable):
         if not isinstance(coef, float) or not coef > 0:
             raise ValueError("'coef' must be an instance of 'float' and be greater than zero.")
 
-        self.__coef = coef
+        self._coef = coef
 
         super().__init__(**kwds)
 
@@ -237,20 +237,20 @@ class SensorFaultPercentage(SensorFault, JsonSerializable):
         `float`
             Coefficient (percentage) of the shift.
         """
-        return self.__coef
+        return self._coef
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"coef": self.__coef}
+        return super().get_attributes() | {"coef": self._coef}
 
     def __eq__(self, other) -> bool:
-        return super().__eq__(other) and self.__coef == other.coef
+        return super().__eq__(other) and self._coef == other.coef
 
     def __str__(self) -> str:
-        return f"{type(self).__name__} {super().__str__()} coef: {self.__coef}"
+        return f"{type(self).__name__} {super().__str__()} coef: {self._coef}"
 
     def apply_sensor_fault(self, cur_multiplier: float, sensor_reading: float,
                            cur_time: int) -> float:
-        return sensor_reading + cur_multiplier * self.__coef * sensor_reading
+        return sensor_reading + cur_multiplier * self._coef * sensor_reading
 
 
 @serializable(SENSOR_FAULT_STUCKATZERO_ID, ".epytflow_sensorfault_zero")

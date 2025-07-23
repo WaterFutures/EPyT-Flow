@@ -13,7 +13,7 @@ class SystemEvent(Event):
     """
     def __init__(self, **kwds):
         self._epanet_api = None
-        self.__exit_called = False
+        self._exit_called = False
 
         super().__init__(**kwds)
 
@@ -52,9 +52,9 @@ class SystemEvent(Event):
         if self.start_time <= cur_time < self.end_time:
             self.apply(cur_time)
         elif cur_time > self.end_time:
-            if self.__exit_called is False:
+            if self._exit_called is False:
                 self.exit(cur_time)
-                self.__exit_called = True
+                self._exit_called = True
 
     def reset(self) -> None:
         """

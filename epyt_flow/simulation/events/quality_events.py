@@ -64,7 +64,7 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
 
         self.__species_id = species_id
         self.__node_id = node_id
-        self.__profile = profile
+        self._profile = profile
         self.__source_type = source_type
 
         super().__init__(**kwds)
@@ -103,7 +103,7 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
         `numpy.ndarray`
             Pattern of the injection.
         """
-        return deepcopy(self.__profile)
+        return deepcopy(self._profile)
 
     @property
     def source_type(self) -> int:
@@ -125,17 +125,17 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
 
     def get_attributes(self) -> dict:
         return super().get_attributes() | {"species_id": self.__species_id,
-                                           "node_id": self.__node_id, "profile": self.__profile,
+                                           "node_id": self.__node_id, "profile": self._profile,
                                            "source_type": self.__source_type}
 
     def __eq__(self, other) -> bool:
         return super().__eq__(other) and self.__species_id == other.species_id and \
-            self.__node_id == other.node_id and np.all(self.__profile == other.profile) and \
+            self.__node_id == other.node_id and np.all(self._profile == other.profile) and \
             self.__source_type == other.source_type
 
     def __str__(self) -> str:
         return f"{super().__str__()} species_id: {self.__species_id} " +\
-            f"node_id: {self.__node_id} profile: {self.__profile} source_type: {self.__source_type}"
+            f"node_id: {self.__node_id} profile: {self._profile} source_type: {self.__source_type}"
 
     def _get_pattern_id(self) -> str:
         return f"{self.__species_id}_{self.__node_id}"
@@ -160,7 +160,7 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
         injection_time_start_idx = int(self.start_time / time_step)
 
         injection_pattern = None
-        if len(self.__profile) == injection_pattern_length:
+        if len(self._profile) == injection_pattern_length:
             injection_pattern = self.profile
         else:
             injection_pattern = np.tile(self.profile,
