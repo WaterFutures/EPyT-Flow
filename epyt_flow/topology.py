@@ -500,8 +500,15 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             raise TypeError("Can not compare 'NetworkTopology' instance to " +
                             f"'{type(other)}' instance")
 
+        adj_matrix = self.get_adj_matrix()
+        other_adj_matrix = other.get_adj_matrix()
+
         return super().__eq__(other) and \
-            self.get_all_nodes() == other.get_all_nodes() \
+            self.name == other.name \
+            and not np.any(adj_matrix.data != other_adj_matrix.data) \
+            and not np.any(adj_matrix.indices != other_adj_matrix.indices) \
+            and not np.any(adj_matrix.indptr != other_adj_matrix.indptr) \
+            and self.get_all_nodes() == other.get_all_nodes() \
             and all(link_a[0] == link_b[0] and link_a[1] == link_b[1]
                     for link_a, link_b in zip(self.get_all_links(), other.get_all_links())) \
             and self.__units == other.units \
