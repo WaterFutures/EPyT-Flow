@@ -1713,7 +1713,7 @@ class ScadaData(Serializable):
         self.__sensor_reading_events = sensor_reading_events
         self.__init()
 
-    def extract_time_window(self, start_time: int, end_time: int):
+    def extract_time_window(self, start_time: int, end_time: int = None):
         """
         Extracts a time window of SCADA data from this SCADA data instance --
         i.e. creating a new SCADA data instance containing data from the requested
