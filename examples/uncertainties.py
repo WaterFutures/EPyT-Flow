@@ -23,10 +23,12 @@ if __name__ == "__main__":
         uc = RelativeUniformUncertainty(low=0.75, high=1.25)
         sim.set_model_uncertainty(ModelUncertainty(global_demand_pattern_uncertainty=uc))
 
-        # Run simulation three times and retrieve sensor readings at node "n105"
+        # Run simulation three times and retrieve sensor readings at node "n105" -- do not
+        # forget to set reapply_uncertainties=True for resetting the uncertainties
+        # before each simulation run
         measurements = []
         for _ in range(3):
-            scada_data = sim.run_simulation()
+            scada_data = sim.run_simulation(reapply_uncertainties=True)
             measurements.append(scada_data.get_data_pressures(sensor_locations=["n105"]).
                                 flatten().tolist())
         print(np.mean(measurements, axis=0), np.var(measurements, axis=0))
