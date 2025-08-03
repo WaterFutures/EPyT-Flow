@@ -81,6 +81,7 @@ Examples
 
    examples/basic_usage
    examples/plot_network
+   examples/visualization
    examples/network_topology
    examples/uncertainties
    examples/abrupt_leakage
@@ -95,7 +96,6 @@ Examples
    examples/chlorine_injection
    examples/net2-cl2_example
    examples/arsenic_contamination
-   examples/visualization
 
 
 API Reference
