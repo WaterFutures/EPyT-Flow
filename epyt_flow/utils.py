@@ -6,6 +6,7 @@ import math
 import tempfile
 import zipfile
 from pathlib import Path
+import re
 import requests
 from tqdm import tqdm
 import numpy as np
@@ -342,6 +343,71 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
             fig.savefig(save_to_file, bbox_inches='tight')
 
     return ax
+
+
+def download_from_gdrive_if_necessary(download_path: str, url: str, verbose: bool = True) -> None:
+    """
+    Downloads a file from a google drive repository if it does not already exist
+    in a given path.
+
+    Note that if the path (folder) does not already exist, it will be created.
+
+    Parameters
+    ----------
+    download_path : `str`
+        Local path to the file -- if this path does not exist, the file will be downloaded from
+        the provided 'url' and stored in 'download_dir'.
+    url : `str`
+        Web-URL of the google drive repository.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
+    """
+    folder_path = str(Path(download_path).parent.absolute())
+    create_path_if_not_exist(folder_path)
+
+    if not os.path.isfile(download_path):
+        session = requests.Session()
+
+        response = session.get(url)
+        html = response.text
+
+        def extract(pattern):
+            match = re.search(pattern, html)
+            return match.group(1) if match else None
+
+        file_id = extract(r'name="id" value="([^"]+)"')
+        file_confirm = extract(r'name="confirm" value="([^"]+)"')
+        file_uuid = extract(r'name="uuid" value="([^"]+)"')
+
+        if not all([file_id, file_confirm, file_uuid]):
+            raise SystemError("Failed to extract download parameters")
+
+        download_url = (
+            f"https://drive.usercontent.google.com/download"
+            f"?id={file_id}&export=download&confirm={file_confirm}&uuid={file_uuid}"
+        )
+
+        response = session.get(download_url, stream=True)
+
+        if response.status_code != 200:
+            raise SystemError(f"Failed to download -- {response.status_code}")
+
+        if verbose is True:
+            content_length = int(response.headers.get('content-length', 0))
+            with open(download_path, "wb") as file, tqdm(desc=download_path,
+                                                         total=content_length,
+                                                         ascii=True,
+                                                         unit='B',
+                                                         unit_scale=True,
+                                                         unit_divisor=1024) as progress_bar:
+                for data in response.iter_content(chunk_size=1024):
+                    size = file.write(data)
+                    progress_bar.update(size)
+        else:
+            with open(download_path, "wb") as f_out:
+                f_out.write(response.content)
 
 
 def download_if_necessary(download_path: str, url: str, verbose: bool = True,
