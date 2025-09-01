@@ -1,13 +1,13 @@
 /*
  ******************************************************************************
  Project:      OWA EPANET
- Version:      2.3
+ Version:      2.2
  Module:       funcs.h
  Description:  prototypes of external functions called by various modules
  Authors:      see AUTHORS
  Copyright:    see AUTHORS
  License:      see LICENSE
- Last Updated: 04/23/2025
+ Last Updated: 11/15/2019
  ******************************************************************************
 */
 #ifndef FUNCS_H
@@ -19,7 +19,6 @@ void    initpointers(Project *);
 int     allocdata(Project *);
 void    freedata(Project *);
 
-int     openproject(Project *, const char *, const char *, const char *, int);
 int     openfiles(Project *, const char *, const char *,const char *);
 int     openhydfile(Project *);
 int     openoutfile(Project *);
@@ -29,20 +28,17 @@ int     buildadjlists(Network *);
 void    freeadjlists(Network *);
 
 int     incontrols(Project *, int, int);
-int     changevalvetype(Project *, int, int);
 int     valvecheck(Project *, int, int, int, int);
-int     unlinked(Project *);
-
-int     findnode(Network *, const char *);
-int     findlink(Network *, const char *);
+int     findnode(Network *, char *);
+int     findlink(Network *, char *);
 int     findtank(Network *, int);
 int     findvalve(Network *, int);
 int     findpump(Network *, int);
-int     findpattern(Network *, const char *);
-int     findcurve(Network *, const char *);
+int     findpattern(Network *, char *);
+int     findcurve(Network *, char *);
 
 Pdemand finddemand(Pdemand, int);
-int     adddemand(Snode *, double, int, const char *);
+int     adddemand(Snode *, double, int, char *);
 void    freedemands(Snode *);
 
 int     addlinkvertex(Slink *, double, double);
@@ -50,13 +46,11 @@ void    freelinkvertices(Slink *);
 
 void    adjustpatterns(Network *, int);
 void    adjustcurves(Network *, int);
+int     adjustpumpparams(Project *, int);
 int     resizecurve(Scurve *, int);
-int     setcontrol(Project *, int, int, double, int, double, Scontrol *);
 
 int     getcomment(Network *, int, int, char *);
 int     setcomment(Network *, int, int, const char *);
-int     gettag(Network *, int, int, char *);
-int     settag(Network *, int, int, const char *);                                                  
 
 int     namevalid(const char *);
 void    getTmpName(char *);
@@ -73,7 +67,7 @@ int     getdata(Project *);
 void    setdefaults(Project *);
 void    initreport(Report *);
 void    adjustdata(Project *);
-void    inittanks(Project *);
+int     inittanks(Project *);
 void    initunits(Project *);
 void    convertunits(Project *);
 
@@ -81,6 +75,7 @@ void    convertunits(Project *);
 
 int     netsize(Project *);
 int     readdata(Project *);
+int     updatepumpparams(Project *, int);
 int     findmatch(char *, char *[]);
 int     match(const char *, const char *);
 int     gettokens(char *, char **, int, char *);
@@ -103,7 +98,6 @@ int     controldata(Project *);
 int     energydata(Project *);
 int     sourcedata(Project *);
 int     emitterdata(Project *);
-int     leakagedata(Project *);
 int     qualdata(Project *);
 int     reactdata(Project *);
 int     mixingdata(Project *);
@@ -112,7 +106,6 @@ int     reportdata(Project *);
 int     timedata(Project *);
 int     optiondata(Project *);
 int     vertexdata(Project *);
-int     tagdata(Project *);
 
 // ------- RULES.C ------------------
 
@@ -124,30 +117,28 @@ void    freerules(Project *);
 int     ruledata(Project *);
 void    ruleerrmsg(Project *);
 void    adjustrules(Project *, int, int);
-void    adjusttankrules(Project *, int);
+void    adjusttankrules(Project *);
 Spremise *getpremise(Spremise *, int);
 Saction  *getaction(Saction *, int);
 int     writerule(Project *, FILE *, int);
 int     checkrules(Project *, long);
-void    updateruleunits(Project *pr, double dcf, double pcf, double hcf, double qcf);
 
 // ------- REPORT.C -----------------
 
 int     clearreport(Project *);
-int     copyreport(Project *, const char *);
+int     copyreport(Project *, char *);
 int     writereport(Project *);
 void    writelogo(Project *);
 void    writesummary(Project *);
 void    writehydstat(Project *, int, double);
 void    writeheader(Project *, int,int);
-void    writeline(Project *, const char *);
+void    writeline(Project *, char *);
 void    writerelerr(Project *, int, double);
 void    writestatchange(Project *, int,char,char);
 void    writecontrolaction(Project *, int, int);
 void    writeruleaction(Project *, int, char *);
 int     writehydwarn(Project *, int,double);
 void    writehyderr(Project *, int);
-void    writeflowbalance(Project *);
 void    writemassbalance(Project *);
 void    writetime(Project *, char *);
 char    *clocktime(char *, long);
@@ -162,7 +153,6 @@ void    closehyd(Project *);
 void    setlinkstatus(Project *, int, char, StatusType *, double *);
 void    setlinksetting(Project *, int, double, StatusType *, double *);
 int     tanktimestep(Project *, long *);
-int     controltimestep(Project *, long *);
 void    getenergy(Project *, int, double *, double *);
 double  tankvolume(Project *, int, double);
 double  tankgrade(Project *, int, double);
@@ -172,9 +162,8 @@ double  tankgrade(Project *, int, double);
 void    resistcoeff(Project *, int);
 void    headlosscoeffs(Project *);
 void    matrixcoeffs(Project *);
-void    emitterheadloss(Project *, int, double *, double *);
+void    emitterheadloss(Project *, int, double *, double *);           
 void    demandheadloss(Project *, int, double, double, double *, double *);
-double  pcvlosscoeff(Project *, int, double);
 
 // ------- QUALITY.C --------------------
 
@@ -200,20 +189,5 @@ int     savefinaloutput(Project *);
 // ------- INPFILE.C --------------------
 
 int     saveinpfile(Project *, const char *);
-
-// ------- LEAKAGE.C --------------------
-
-int     openleakage(Project *);
-void    closeleakage(Project *);
-double  findlinkleakage(Project *, int);
-void    leakagecoeffs(Project *);
-double  leakageflowchange(Project *, int);
-int     leakagehasconverged(Project *);
-
-// ------- FLOWBALANCE.C-----------------
-
-void    startflowbalance(Project *);
-void    updateflowbalance(Project *, long);
-void    endflowbalance(Project *);
 
 #endif

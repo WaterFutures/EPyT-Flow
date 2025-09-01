@@ -1,13 +1,13 @@
 /*
  *****************************************************************************
  Project:      OWA EPANET
- Version:      2.3
+ Version:      2.2
  Module:       enumstxt.h
  Description:  text strings for enumerated data types
  Authors:      see AUTHORS
  Copyright:    see AUTHORS
  License:      see LICENSE
- Last Updated: 03/10/2025
+ Last Updated: 06/20/2019
  ******************************************************************************
 */
 
@@ -27,8 +27,7 @@ char *LinkTxt[]         = {w_CV,
                            w_PBV,
                            w_FCV,
                            w_TCV,
-                           w_GPV,
-                           w_PCV};
+                           w_GPV};
 
 char *StatTxt[]         = {t_XHEAD,
                            t_TEMPCLOSED,
@@ -59,8 +58,7 @@ char *RptFlowUnitsTxt[] = {u_CFS,
                            u_LPM,
                            u_MLD,
                            u_CMH,
-                           u_CMD,
-                           u_CMS};
+                           u_CMD};
 
 char *FlowUnitsTxt[]    = {w_CFS,
                            w_GPM, 
@@ -71,14 +69,11 @@ char *FlowUnitsTxt[]    = {w_CFS,
                            w_LPM, 
                            w_MLD, 
                            w_CMH,
-                           w_CMD,
-                           w_CMS};
+                           w_CMD};
 
 char *PressUnitsTxt[]   = {w_PSI,
                            w_KPA,
-                           w_METERS,
-                           w_BAR,
-                           w_FEET};
+                           w_METERS};
 
 char *DemandModelTxt[] = { w_DDA,
                            w_PDA,
@@ -115,18 +110,6 @@ char *MixTxt[]          = {w_MIXED,
 char *RptFlagTxt[]      = {w_NO,
                            w_YES,
                            w_FULL};
-                           
-char *BackflowTxt[]     = {w_NO,
-                           w_YES,
-                           NULL};
-                           
-char *CurveTypeTxt[]    = {c_VOLUME,
-                           c_PUMP,
-                           c_EFFIC,
-                           c_HEADLOSS,
-                           c_GENERIC,
-                           c_VALVE,
-                           NULL};                           
 
 char *SectTxt[]         = {s_TITLE,     s_JUNCTIONS, s_RESERVOIRS,
                            s_TANKS,     s_PIPES,     s_PUMPS,
@@ -137,7 +120,7 @@ char *SectTxt[]         = {s_TITLE,     s_JUNCTIONS, s_RESERVOIRS,
                            s_REACTIONS, s_MIXING,    s_REPORT,
                            s_TIMES,     s_OPTIONS,   s_COORDS,
                            s_VERTICES,  s_LABELS,    s_BACKDROP,
-                           s_TAGS,      s_LEAKAGE,   s_END,
+                           s_TAGS,      s_END,
                            NULL};
 
 char *Fldname[]         = {t_ELEV,      t_DEMAND,    t_HEAD,

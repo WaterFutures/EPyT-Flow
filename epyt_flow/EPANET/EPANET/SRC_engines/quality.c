@@ -1,13 +1,13 @@
 /*
 ******************************************************************************
 Project:      OWA EPANET
-Version:      2.3
+Version:      2.2
 Module:       quality.c
 Description:  implements EPANET's water quality engine
 Authors:      see AUTHORS
 Copyright:    see AUTHORS
 License:      see LICENSE
-Last Updated: 02/14/2025
+Last Updated: 05/15/2019
 ******************************************************************************
 */
 
@@ -63,16 +63,8 @@ int openqual(Project *pr)
     // Build nodal adjacency lists if they don't already exist
     if (net->Adjlist == NULL)
     {
-        // Check for too few nodes & no fixed grade nodes
-        if (net->Nnodes < 2) return 223;
-        if (net->Ntanks == 0) return 224;
-    
-        // Build adjacency lists
         errcode = buildadjlists(net);
         if (errcode ) return errcode;
-
-        // Check for unconnected nodes
-        if (errcode = unlinked(pr)) return errcode;
     }
 
     // Create a memory pool for water quality segments
@@ -183,7 +175,6 @@ int initqual(Project *pr)
     qual->MassBalance.reacted = 0.0;
     qual->MassBalance.final = 0.0;
     qual->MassBalance.ratio = 0.0;
-    qual->MassBalance.segCount = 0;
     return errcode;
 }
 
@@ -411,7 +402,6 @@ int closequal(Project *pr)
         FREE(qual->FlowDir);
         FREE(qual->SortedNodes);
     }
-    freeadjlists(&pr->network);
     return errcode;
 }
 
