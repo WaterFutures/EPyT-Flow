@@ -4,7 +4,7 @@ Module contains a class for representing complex control rules as implemented in
 from copy import deepcopy
 from typing import Any
 import numpy as np
-from epyt.epanet import ToolkitConstants
+from epanet_plus import EpanetConstants
 
 from ...serialization import JsonSerializable, COMPLEX_CONTROL_ID, COMPLEX_CONTROL_CONDITION_ID, \
     COMPLEX_CONTROL_ACTION_ID, serializable
@@ -41,6 +41,8 @@ EN_R_ACTION_SETTING       = -1
 EN_R_ACTION_STATUS_OPEN   = 1
 EN_R_ACTION_STATUS_CLOSED = 2
 EN_R_ACTION_STATUS_ACTIVE = 3
+
+RULESTATUS = ['OPEN', 'CLOSED', 'ACTIVE']
 
 
 @serializable(COMPLEX_CONTROL_CONDITION_ID, ".epytflow_complex_control_condition")
@@ -99,8 +101,8 @@ class RuleCondition(JsonSerializable):
         if not isinstance(object_type_id, int):
             raise TypeError("'object_type_id' must be an instance of 'int' " +
                             f"but not of '{type(object_type_id)}'")
-        if object_type_id not in [ToolkitConstants.EN_R_NODE, ToolkitConstants.EN_R_LINK,
-                                  ToolkitConstants.EN_R_SYSTEM]:
+        if object_type_id not in [EpanetConstants.EN_R_NODE, EpanetConstants.EN_R_LINK,
+                                  EpanetConstants.EN_R_SYSTEM]:
             raise ValueError(f"Invalid value '{object_type_id}' for 'object_type_id'")
         if not isinstance(object_id, str):
             raise TypeError("'object_id' must be an instance of 'str' " +
@@ -236,9 +238,9 @@ class RuleCondition(JsonSerializable):
         desc = ""
 
         if self.__attribute_id == EN_R_DEMAND:
-            if self.__object_type_id == ToolkitConstants.EN_R_NODE:
+            if self.__object_type_id == EpanetConstants.EN_R_NODE:
                 desc += f"JUNCTION {self.__object_id} DEMAND "
-            elif self.__object_type_id == ToolkitConstants.EN_R_SYSTEM:
+            elif self.__object_type_id == EpanetConstants.EN_R_SYSTEM:
                 desc += "SYSTEM DEMAND "
         elif self.__attribute_id == EN_R_HEAD:
             desc += f"JUNCTION {self.__object_id} HEAD "
@@ -326,11 +328,11 @@ class RuleAction(JsonSerializable):
         if not isinstance(link_type_id, int):
             raise TypeError("'link_type_id' must be an istanace of 'int' " +
                             f"but not of '{type(link_type_id)}'")
-        if link_type_id not in [ToolkitConstants.EN_CVPIPE, ToolkitConstants.EN_PIPE,
-                                ToolkitConstants.EN_PUMP, ToolkitConstants.EN_PRV,
-                                ToolkitConstants.EN_PSV, ToolkitConstants.EN_PBV,
-                                ToolkitConstants.EN_FCV, ToolkitConstants.EN_TCV,
-                                ToolkitConstants.EN_GPV]:
+        if link_type_id not in [EpanetConstants.EN_CVPIPE, EpanetConstants.EN_PIPE,
+                                EpanetConstants.EN_PUMP, EpanetConstants.EN_PRV,
+                                EpanetConstants.EN_PSV, EpanetConstants.EN_PBV,
+                                EpanetConstants.EN_FCV, EpanetConstants.EN_TCV,
+                                EpanetConstants.EN_GPV]:
             raise ValueError(f"Invalid value '{link_type_id}' for 'link_type_id'")
         if not isinstance(link_id, str):
             raise TypeError("'link_id' must be an instance of 'str' " +
@@ -432,9 +434,9 @@ class RuleAction(JsonSerializable):
     def __str__(self) -> str:
         desc = ""
 
-        if self.__link_type_id in [ToolkitConstants.EN_CVPIPE, ToolkitConstants.EN_PIPE]:
+        if self.__link_type_id in [EpanetConstants.EN_CVPIPE, EpanetConstants.EN_PIPE]:
             desc += "PIPE "
-        elif self.__link_type_id == ToolkitConstants.EN_PUMP:
+        elif self.__link_type_id == EpanetConstants.EN_PUMP:
             desc += "PUMP "
         else:
             desc += "VALVE "

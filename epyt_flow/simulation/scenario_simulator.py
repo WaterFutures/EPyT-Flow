@@ -17,7 +17,7 @@ import math
 import uuid
 import numpy as np
 from tqdm import tqdm
-from epyt.epanet import ToolkitConstants
+from epanet_plus import EPyT, EpanetConstants
 
 from .scenario_config import ScenarioConfig
 from .sensor_config import SensorConfig, areaunit_to_id, massunit_to_id, qualityunit_to_id, \
@@ -31,7 +31,7 @@ from ..uncertainty import ModelUncertainty, SensorNoise
 from .events import SystemEvent, Leakage, ActuatorEvent, SensorFault, SensorReadingAttack, \
     SensorReadingEvent
 from .scada import ScadaData, CustomControlModule, SimpleControlModule, ComplexControlModule, \
-    RuleCondition, RuleAction, ActuatorConstants, EN_R_ACTION_SETTING
+    RuleCondition, RuleAction, ActuatorConstants, EN_R_ACTION_SETTING, RULESTATUS
 from ..topology import NetworkTopology, UNITS_SIMETRIC, UNITS_USCUSTOM
 from ..utils import get_temp_folder
 
@@ -136,23 +136,6 @@ class ScenarioSimulator():
         self.__running_simulation = False
         self.__uncertainties_applied = False
 
-        # Check availability of custom EPANET libraries
-        custom_epanet_lib = None
-        custom_epanetmsx_lib = None
-        if sys.platform.startswith("linux") or sys.platform.startswith("darwin") :
-            path_to_custom_libs = os.path.join(pathlib.Path(__file__).parent.resolve(),
-                                               "..", "customlibs")
-
-            libepanet_name = "libepanet2_2.so" if sys.platform.startswith("linux") \
-                else "libepanet2_2.dylib"
-            libepanetmsx_name = "libepanetmsx2_2_0.so" if sys.platform.startswith("linux") \
-                else "libepanetmsx2_2_0.dylib"
-
-            if os.path.isfile(os.path.join(path_to_custom_libs, libepanet_name)):
-                custom_epanet_lib = os.path.join(path_to_custom_libs, libepanet_name)
-            if os.path.isfile(os.path.join(path_to_custom_libs, libepanetmsx_name)):
-                custom_epanetmsx_lib = os.path.join(path_to_custom_libs, libepanetmsx_name)
-
         # Workaround for EPyT bug concerning parallel simulations (see EPyT issue #54):
         # 1. Create random tmp folder (make sure it is unique!)
         # 2. Copy .inp and .msx file there
@@ -183,14 +166,11 @@ class ScenarioSimulator():
         else:
             my_f_msx_in = None
 
-        from .backend import EPyT   # Workaround: Sphinx autodoc "importlib.import_module TypeError: __mro_entries__"
-        self.epanet_api = EPyT(my_f_inp_in, ph=self.__f_msx_in is None,
-                               customlib=custom_epanet_lib, loadfile=True,
-                               display_msg=epanet_verbose,
-                               display_warnings=False)
+        from epanet_plus import EPyT   # Workaround: Sphinx autodoc "importlib.import_module TypeError: __mro_entries__"
+        self.epanet_api = EPyT(my_f_inp_in, use_project=self.__f_msx_in is None)
 
         if self.__f_msx_in is not None:
-            self.epanet_api.loadMSXFile(my_f_msx_in, customMSXlib=custom_epanetmsx_lib)
+            self.epanet_api.load_msx_file(my_f_msx_in)
 
         # Do not raise exceptions in the case of EPANET warnings and errors
         self.epanet_api.set_error_handling(raise_exception_on_error=raise_exception_on_error,
@@ -225,8 +205,8 @@ class ScenarioSimulator():
                                  valve_id_to_idx: dict = None, pump_id_to_idx: dict = None,
                                  tank_id_to_idx: dict = None, bulkspecies_id_to_idx: dict = None,
                                  surfacespecies_id_to_idx: dict = None) -> SensorConfig:
-        flow_unit = self.epanet_api.api.ENgetflowunits()
-        quality_unit = qualityunit_to_id(self.epanet_api.getQualityInfo().QualityChemUnits)
+        flow_unit = self.epanet_api.getflowunits()
+        quality_unit = qualityunit_to_id(self.epanet_api.get_quality_info()["chemUnits"])
         bulk_species = []
         surface_species = []
         bulk_species_mass_unit = []
@@ -234,23 +214,22 @@ class ScenarioSimulator():
         surface_species_area_unit = None
 
         if self.__f_msx_in is not None:
-            surface_species_area_unit = areaunit_to_id(self.epanet_api.getMSXAreaUnits())
+            surface_species_area_unit = areaunit_to_id("FT2")#self.epanet_api.get_msx_options()["areaUnits"])
 
-            for species_id, species_type, mass_unit in zip(self.epanet_api.getMSXSpeciesNameID(),
-                                                           self.epanet_api.getMSXSpeciesType(),
-                                                           self.epanet_api.getMSXSpeciesUnits()):
-                if species_type == "BULK":
+            for species_id, species_info in zip(self.epanet_api.get_all_msx_species_id(),
+                                                self.epanet_api.get_all_msx_species_info()):
+                if species_info["type"] == EpanetConstants.MSX_BULK:
                     bulk_species.append(species_id)
-                    bulk_species_mass_unit.append(massunit_to_id(mass_unit))
-                elif species_type == "WALL":
+                    bulk_species_mass_unit.append(massunit_to_id(species_info["units"]))
+                elif species_info["type"] == EpanetConstants.MSX_WALL:
                     surface_species.append(species_id)
-                    surface_species_mass_unit.append(massunit_to_id(mass_unit))
+                    surface_species_mass_unit.append(massunit_to_id(species_info["units"]))
 
-        return SensorConfig(nodes=self.epanet_api.getNodeNameID(),
-                            links=self.epanet_api.getLinkNameID(),
-                            valves=self.epanet_api.getLinkValveNameID(),
-                            pumps=self.epanet_api.getLinkPumpNameID(),
-                            tanks=self.epanet_api.getNodeTankNameID(),
+        return SensorConfig(nodes=self.epanet_api.get_all_nodes_id(),
+                            links=self.epanet_api.get_all_links_id(),
+                            valves=self.epanet_api.get_all_valves_id(),
+                            pumps=self.epanet_api.get_all_pumps_id(),
+                            tanks=self.epanet_api.get_all_tanks_id(),
                             bulk_species=bulk_species,
                             surface_species=surface_species,
                             flow_unit=flow_unit,
@@ -490,31 +469,18 @@ class ScenarioSimulator():
     def _parse_simple_control_rules(self) -> list[SimpleControlModule]:
         controls = []
 
-        for idx in self.epanet_api.getControls():
-            control = self.epanet_api.getControls(idx)
+        for idx in range(self.epanet_api.get_num_controls()):
+            cond_type, link_idx, link_status, node_idx, level = \
+                self.epanet_api.getcontrol(idx + 1)
 
-            if control.Setting == "OPEN":
-                link_status = ActuatorConstants.EN_OPEN
+            if node_idx != 0:
+                cond_var_value = self.epanet_api.get_node_id(node_idx)
+                cond_comp_value = level
             else:
-                link_status = ActuatorConstants.EN_CLOSED
-
-            if control.Type == "LOWLEVEL":
-                cond_type = ToolkitConstants.EN_LOWLEVEL
-            elif control.Type == "HIGHLEVEL":
-                cond_type = ToolkitConstants.EN_HILEVEL
-            elif control.Type == "TIMER":
-                cond_type = ToolkitConstants.EN_TIMER
-            elif control.Type == "TIMEOFDAY":
-                cond_type = ToolkitConstants.EN_TIMEOFDAY
-
-            if control.NodeID is not None:
-                cond_var_value = control.NodeID
-                cond_comp_value = control.Value
-            else:
-                if cond_type == ToolkitConstants.EN_TIMER:
-                    cond_var_value = int(control.Value / 3600)
-                elif cond_type == ToolkitConstants.EN_TIMEOFDAY:
-                    sec = control.Value
+                if cond_type == EpanetConstants.EN_TIMER:
+                    cond_var_value = int(level / 3600)
+                elif cond_type == EpanetConstants.EN_TIMEOFDAY:
+                    sec = level
                     if sec <= 43200:
                         cond_var_value = \
                             f"{':'.join(str(timedelta(seconds=sec)).split(':')[:2])} AM"
@@ -524,7 +490,7 @@ class ScenarioSimulator():
                             f"{':'.join(str(timedelta(seconds=sec)).split(':')[:2])} PM"
                 cond_comp_value = None
 
-            controls.append(SimpleControlModule(link_id=control.LinkID,
+            controls.append(SimpleControlModule(link_id=self.epanet_api.get_link_id(link_idx),
                                                 link_status=link_status,
                                                 cond_type=cond_type,
                                                 cond_var_value=cond_var_value,
@@ -535,35 +501,30 @@ class ScenarioSimulator():
     def _parse_complex_control_rules(self) -> list[ComplexControlModule]:
         controls = []
 
-        rules = self.epanet_api.getRules()
-        for rule_idx, rule in rules.items():
-            rule_info = self.epanet_api.getRuleInfo(rule_idx)
-
-            rule_id = rule["Rule_ID"]
-            rule_priority, *_ = rule_info.Priority
-
-            # Parse conditions
-            n_rule_premises, *_ = rule_info.Premises
+        all_rules_id = self.epanet_api.get_all_rules_id()
+        for rule_idx, rule_id in enumerate(all_rules_id, start=1):
+            n_rule_premises, n_rule_then_actions, n_rule_else_actions, rule_priority = \
+                self.epanet_api.getrule(rule_idx)
 
             condition_1 = None
             additional_conditions = []
             for j in range(1, n_rule_premises + 1):
                 [logop, object_type_id, obj_idx, variable_type_id, relop, status, value_premise] = \
-                    self.epanet_api.api.ENgetpremise(rule_idx, j)
+                    self.epanet_api.getpremise(rule_idx, j)
 
                 object_id = None
-                if object_type_id == ToolkitConstants.EN_R_NODE:
-                    object_id = self.epanet_api.getNodeNameID(obj_idx)
-                elif object_type_id == ToolkitConstants.EN_R_LINK:
-                    object_id = self.epanet_api.getLinkNameID(obj_idx)
-                elif object_type_id == ToolkitConstants.EN_R_SYSTEM:
+                if object_type_id == EpanetConstants.EN_R_NODE:
+                    object_id = self.epanet_api.get_node_id(obj_idx)
+                elif object_type_id == EpanetConstants.EN_R_LINK:
+                    object_id = self.epanet_api.get_link_id(obj_idx)
+                elif object_type_id == EpanetConstants.EN_R_SYSTEM:
                     object_id = ""
 
-                if variable_type_id >= ToolkitConstants.EN_R_TIME:
+                if variable_type_id >= EpanetConstants.EN_R_TIME:
                     value_premise = datetime.fromtimestamp(value_premise)\
                         .strftime("%I:%M %p")
                 if status != 0:
-                    value_premise = self.epanet_api.RULESTATUS[status - 1]
+                    value_premise = RULESTATUS[status - 1]
 
                 condition = RuleCondition(object_type_id, object_id, variable_type_id,
                                           relop, value_premise)
@@ -573,14 +534,13 @@ class ScenarioSimulator():
                     additional_conditions.append((logop, condition))
 
             # Parse actions
-            n_rule_then_actions, *_ = rule_info.ThenActions
             actions = []
             for j in range(1, n_rule_then_actions + 1):
                 [link_idx, link_status, link_setting] = \
-                    self.epanet_api.api.ENgetthenaction(rule_idx, j)
+                    self.epanet_api.getthenaction(rule_idx, j)
 
-                link_type_id = self.epanet_api.getLinkTypeIndex(link_idx)
-                link_id = self.epanet_api.getLinkNameID(link_idx)
+                link_type_id = self.epanet_api.getlinktype(link_idx)
+                link_id = self.epanet_api.get_link_id(link_idx)
                 if link_status >= 0:
                     action_type_id = link_status
                     action_value = link_status
@@ -590,14 +550,13 @@ class ScenarioSimulator():
 
                 actions.append(RuleAction(link_type_id, link_id, action_type_id, action_value))
 
-            n_rule_else_actions, *_ = rule_info.ElseActions
             else_actions = []
             for j in range(1, n_rule_else_actions + 1):
                 [link_idx, link_status, link_setting] = \
-                    self.epanet_api.api.ENgetelseaction(rule_idx, j)
+                    self.epanet_api.getelseaction(rule_idx, j)
 
-                link_type_id = self.epanet_api.getLinkType(link_idx)
-                link_id = self.epanet_api.getLinkNameID(link_idx)
+                link_type_id = self.epanet_api.getlinktype(link_idx)
+                link_id = self.epanet_api.get_link_id(link_idx)
                 if link_status <= 3:
                     action_type_id = link_status
                     action_value = link_status
@@ -614,11 +573,11 @@ class ScenarioSimulator():
         return controls
 
     def _adapt_to_network_changes(self):
-        nodes = self.epanet_api.getNodeNameID()
-        links = self.epanet_api.getLinkNameID()
+        nodes = self.epanet_api.get_all_nodes_id()
+        links = self.epanet_api.get_all_links_id()
 
-        node_id_to_idx = {node_id: self.epanet_api.getNodeIndex(node_id) - 1 for node_id in nodes}
-        link_id_to_idx = {link_id: self.epanet_api.getLinkIndex(link_id) - 1 for link_id in links}
+        node_id_to_idx = {node_id: self.epanet_api.get_node_idx(node_id) - 1 for node_id in nodes}
+        link_id_to_idx = {link_id: self.epanet_api.get_link_idx(link_id) - 1 for link_id in links}
         valve_id_to_idx = None  # {valve_id: self.epanet_api.getLinkValveIndex(valve_id) for valve_id in valves}
         pump_id_to_idx = None  # {pump_id: self.epanet_api.getLinkPumpIndex(pump_id) - 1 for pump_id in pumps}
         tank_id_to_idx = None  # {tank_id: self.epanet_api.getNodeTankIndex(tank_id) - 1 for tank_id in tanks}
@@ -653,10 +612,7 @@ class ScenarioSimulator():
 
         Call this function after the simulation is done -- do not call this function before!
         """
-        if self.__f_msx_in is not None:
-            self.epanet_api.unloadMSX()
-
-        self.epanet_api.unload()
+        self.epanet_api.close()
 
         if self.__my_f_inp_in is not None:
             shutil.rmtree(pathlib.Path(self.__my_f_inp_in).parent)
@@ -737,7 +693,7 @@ class ScenarioSimulator():
                 event.cleanup()
 
         if inp_file_path is not None:
-            self.epanet_api.saveInputFile(inp_file_path)
+            self.epanet_api.saveinpfile(inp_file_path)
             self.__f_inp_in = inp_file_path
 
             if export_sensor_config is True:
@@ -792,7 +748,7 @@ class ScenarioSimulator():
                 __override_report_section(inp_file_path, report_desc)
 
         if self.__f_msx_in is not None and msx_file_path is not None:
-            self.epanet_api.saveMSXFile(msx_file_path)
+            self.epanet_api.MSXsavemsxfile(msx_file_path)
             self.__f_msx_in = msx_file_path
 
             if export_sensor_config is True:
@@ -845,7 +801,7 @@ class ScenarioSimulator():
         """
         Gets the flow units.
 
-        Will be one of the following EPANET toolkit constants:
+        Will be one of the following EPANET constants:
 
             - EN_CFS = 0 (cu foot/sec)
             - EN_GPM = 1 (gal/min)
@@ -863,7 +819,7 @@ class ScenarioSimulator():
         `int`
             Flow units.
         """
-        return self.epanet_api.api.ENgetflowunits()
+        return self.epanet_api.getflowunits()
 
     def get_units_category(self) -> int:
         """
@@ -879,9 +835,9 @@ class ScenarioSimulator():
         `int`
             Units category.
         """
-        if self.get_flow_units() in [ToolkitConstants.EN_CFS, ToolkitConstants.EN_GPM,
-                                     ToolkitConstants.EN_MGD, ToolkitConstants.EN_IMGD,
-                                     ToolkitConstants.EN_AFD]:
+        if self.get_flow_units() in [EpanetConstants.EN_CFS, EpanetConstants.EN_GPM,
+                                     EpanetConstants.EN_MGD, EpanetConstants.EN_IMGD,
+                                     EpanetConstants.EN_AFD]:
             return UNITS_USCUSTOM
         else:
             return UNITS_SIMETRIC
@@ -895,7 +851,7 @@ class ScenarioSimulator():
         `int`
             Hydraulic time step in seconds.
         """
-        return self.epanet_api.getTimeHydraulicStep()
+        return self.epanet_api.get_hydraulic_time_step()
 
     def get_quality_time_step(self) -> int:
         """
@@ -906,7 +862,7 @@ class ScenarioSimulator():
         `int`
             Quality time step in seconds.
         """
-        return self.epanet_api.getTimeQualityStep()
+        return self.epanet_api.get_quality_time_step()
 
     def get_simulation_duration(self) -> int:
         """
@@ -917,7 +873,7 @@ class ScenarioSimulator():
         `int`
             Simulation duration in seconds.
         """
-        return self.epanet_api.getTimeSimulationDuration()
+        return self.epanet_api.get_simulation_duration()
 
     def get_demand_model(self) -> dict:
         """
@@ -928,12 +884,12 @@ class ScenarioSimulator():
         `dict`
             Demand model.
         """
-        demand_info = self.epanet_api.getDemandModel()
+        demand_info = self.epanet_api.get_demand_model()
 
-        return {"type": "PDA" if demand_info.DemandModelCode == 1 else "DDA",
-                "pressure_min": demand_info.DemandModelPmin,
-                "pressure_required": demand_info.DemandModelPreq,
-                "pressure_exponent": demand_info.DemandModelPexp}
+        return {"type": demand_info["type"],
+                "pressure_min": demand_info["pmin"],
+                "pressure_required": demand_info["preq"],
+                "pressure_exponent": demand_info["pexp"]}
 
     def get_quality_model(self) -> dict:
         """
@@ -947,13 +903,13 @@ class ScenarioSimulator():
         `dict`
             Quality model.
         """
-        qual_info = self.epanet_api.getQualityInfo()
+        qual_info = self.epanet_api.get_quality_info()
 
-        return {"code": qual_info.QualityCode,
-                "type": qual_info.QualityType,
-                "chemical_name": qual_info.QualityChemName,
-                "units": qualityunit_to_id(qual_info.QualityChemUnits),
-                "trace_node_id": qual_info.TraceNode}
+        return {"code": self.epanet_api.getqualtype(),
+                "type": qual_info["qualType"],
+                "chemical_name": qual_info["chemName"],
+                "units": qualityunit_to_id(qual_info["chemUnits"]),
+                "trace_node_id": qual_info["traceNode"]}
 
     def get_reporting_time_step(self) -> int:
         """
@@ -966,7 +922,7 @@ class ScenarioSimulator():
         `int`
             Reporting time steps in seconds.
         """
-        return self.epanet_api.getTimeReportingStep()
+        return self.epanet_api.get_reporting_time_step()
 
     def get_scenario_config(self) -> ScenarioConfig:
         """
@@ -1011,14 +967,15 @@ class ScenarioSimulator():
         """
         self._adapt_to_network_changes()
 
-        n_time_steps = int(self.epanet_api.getTimeSimulationDuration() /
-                           self.epanet_api.getTimeReportingStep())
-        n_quantities = self.epanet_api.getNodeCount() * 3 + self.epanet_api.getNodeTankCount() + \
-                       self.epanet_api.getLinkValveCount() + self.epanet_api.getLinkPumpCount() + \
-                       self.epanet_api.getLinkCount() * 2
+        n_time_steps = int(self.epanet_api.get_simulation_duration() /
+                           self.epanet_api.get_reporting_time_step())
+        n_quantities = self.epanet_api.get_num_nodes() * 3 + self.epanet_api.get_num_tanks() + \
+                       self.epanet_api.get_num_valves() + self.epanet_api.get_num_pumps() + \
+                       self.epanet_api.get_num_links() * 2
 
         if self.__f_msx_in is not None:
-            n_quantities += self.epanet_api.getLinkCount() * 2 + self.epanet_api.getNodeCount()
+            n_quantities += self.epanet_api.get_num_links() * 2 * self.epanet_api.get_num_msx_species() + \
+                self.epanet_api.get_num_nodes() * self.epanet_api.get_num_msx_species()
 
         n_bytes_per_quantity = 64
 
@@ -1036,28 +993,39 @@ class ScenarioSimulator():
         self._adapt_to_network_changes()
 
         # Collect information about the topology of the water distribution network
-        nodes_id = self.epanet_api.getNodeNameID()
-        nodes_elevation = self.epanet_api.getNodeElevations()
-        nodes_type = [self.epanet_api.TYPENODE[i] for i in self.epanet_api.getNodeTypeIndex()]
-        nodes_coord = [self.epanet_api.api.ENgetcoord(node_idx)
-                       for node_idx in self.epanet_api.getNodeIndex()]
-        nodes_comments = self.epanet_api.getNodeComment()
-        node_tank_names = self.epanet_api.getNodeTankNameID()
+        nodes_id = self.epanet_api.get_all_nodes_id()
+        nodes_elevation = [self.epanet_api.get_node_elevation(node_idx)
+                           for node_idx in self.epanet_api.get_all_nodes_idx()]
+        nodes_type = [self.epanet_api.get_node_type(node_idx)
+                      for node_idx in self.epanet_api.get_all_nodes_idx()]
+        nodes_coord = [self.epanet_api.getcoord(node_idx)
+                       for node_idx in self.epanet_api.get_all_nodes_idx()]
+        nodes_comments = [self.epanet_api.get_node_comment(node_idx)
+                          for node_idx in self.epanet_api.get_all_nodes_idx()]
+        node_tank_names = self.epanet_api.get_all_tanks_id()
 
-        links_id = self.epanet_api.getLinkNameID()
-        links_type = self.epanet_api.getLinkType()
-        links_data = self.epanet_api.getNodesConnectingLinksID()
-        links_diameter = self.epanet_api.getLinkDiameter()
-        links_length = self.epanet_api.getLinkLength()
-        links_roughness_coeff = self.epanet_api.getLinkRoughnessCoeff()
-        links_bulk_coeff = self.epanet_api.getLinkBulkReactionCoeff()
-        links_wall_coeff = self.epanet_api.getLinkWallReactionCoeff()
-        links_loss_coeff = self.epanet_api.getLinkMinorLossCoeff()
+        links_id = self.epanet_api.get_all_links_id()
+        links_type = [self.epanet_api.get_link_type(link_idx)
+                      for link_idx in self.epanet_api.get_all_links_idx()]
+        links_data = self.epanet_api.get_all_links_connecting_nodes_id()
+        links_diameter = [self.epanet_api.get_link_diameter(link_idx)
+                          for link_idx in self.epanet_api.get_all_links_idx()]
+        links_length = [self.epanet_api.get_link_length(link_idx)
+                        for link_idx in self.epanet_api.get_all_links_idx()]
+        links_roughness_coeff = [self.epanet_api.get_link_roughness(link_idx)
+                                 for link_idx in self.epanet_api.get_all_links_idx()]
+        links_bulk_coeff = [self.epanet_api.get_link_bulk_raction_coeff(link_idx)
+                            for link_idx in self.epanet_api.get_all_links_idx()]
+        links_wall_coeff = [self.epanet_api.get_link_wall_raction_coeff(link_idx)
+                            for link_idx in self.epanet_api.get_all_links_idx()]
+        links_loss_coeff = [self.epanet_api.get_link_minorloss(link_idx)
+                            for link_idx in self.epanet_api.get_all_links_idx()]
 
-        pumps_id = self.epanet_api.getLinkPumpNameID()
-        pumps_type = self.epanet_api.getLinkPumpType()
+        pumps_id = self.epanet_api.get_all_pumps_id()
+        pumps_type = [self.epanet_api.get_pump_type(pump_idx)
+                      for pump_idx in self.epanet_api.get_all_pumps_idx()]
 
-        valves_id = self.epanet_api.getLinkValveNameID()
+        valves_id = self.epanet_api.get_all_valves_id()
 
         # Build graph describing the topology
         nodes = []
@@ -1068,14 +1036,14 @@ class ScenarioSimulator():
                          "coord": node_coord,
                          "comment": node_comment,
                          "type": node_type}
-            if node_type == "TANK":
-                node_tank_idx = node_tank_names.index(node_id) + 1
-                node_info["diameter"] = float(self.epanet_api.getNodeTankDiameter(node_tank_idx))
-                node_info["volume"] = float(self.epanet_api.getNodeTankVolume(node_tank_idx))
-                node_info["max_level"] = float(self.epanet_api.getNodeTankMaximumWaterLevel(node_tank_idx))
-                node_info["min_level"] = float(self.epanet_api.getNodeTankMinimumWaterLevel(node_tank_idx))
-                node_info["mixing_fraction"] = float(self.epanet_api.getNodeTankMixingFraction(node_tank_idx))
-                node_info["mixing_model"] = int(self.epanet_api.getNodeTankMixingModelCode(node_tank_idx)[0])
+            if node_type == EpanetConstants.EN_TANK:
+                node_tank_idx = self.epanet_api.get_node_idx(node_id)
+                node_info["diameter"] = float(self.epanet_api.get_tank_diameter(node_tank_idx))
+                node_info["volume"] = float(self.epanet_api.get_tank_volume(node_tank_idx))
+                node_info["max_level"] = float(self.epanet_api.get_tank_max_level(node_tank_idx))
+                node_info["min_level"] = float(self.epanet_api.get_tank_min_level(node_tank_idx))
+                node_info["mixing_fraction"] = float(self.epanet_api.get_tank_mix_fraction(node_tank_idx))
+                node_info["mixing_model"] = int(self.epanet_api.get_tank_mix_model(node_tank_idx))
 
             nodes.append((node_id, node_info))
 
@@ -1132,23 +1100,21 @@ class ScenarioSimulator():
         self._adapt_to_network_changes()
 
         # Get all demand patterns
-        demand_patterns_idx = self.epanet_api.getNodeDemandPatternIndex()
-        demand_patterns_id = np.unique([idx for _, idx in demand_patterns_idx.items()])
+        demand_patterns_idx = [self.epanet_api.get_node_demand_patterns_idx(node_idx)
+                               for node_idx in self.epanet_api.get_all_nodes_idx()]
+        demand_patterns_idx = list(set(itertools.chain.from_iterable(demand_patterns_idx)))
 
         # Process each pattern separately
-        for pattern_id in demand_patterns_id:
-            if pattern_id == 0:
-                continue
-
-            pattern_length = self.epanet_api.getPatternLengths(pattern_id)
+        for pattern_idx in demand_patterns_idx:
+            pattern_length = self.epanet_api.getpatternlen(pattern_idx)
             pattern = []
             for t in range(pattern_length):  # Get pattern
-                pattern.append(self.epanet_api.getPatternValue(pattern_id, t + 1))
+                pattern.append(self.epanet_api.getpatternvalue(pattern_idx, t + 1))
 
             random.shuffle(pattern)  # Shuffle pattern
 
             for t in range(pattern_length):  # Set shuffled/randomized pattern
-                self.epanet_api.setPatternValue(pattern_id, t + 1, pattern[t])
+                self.epanet_api.setpatternvalue(pattern_idx, t + 1, pattern[t])
 
     def get_pattern(self, pattern_id: str) -> np.ndarray:
         """
@@ -1168,13 +1134,11 @@ class ScenarioSimulator():
             raise TypeError("'pattern_id' must be an instance of 'str' " +
                             f"but not of '{type(pattern_id)}'")
 
-        pattern_idx = self.epanet_api.getPatternIndex(pattern_id)
+        pattern_idx = self.epanet_api.getpatternindex(pattern_id)
         if pattern_idx == 0:
             raise ValueError(f"Unknown pattern '{pattern_id}'")
 
-        pattern_length = self.epanet_api.getPatternLengths(pattern_idx)
-        return np.array([self.epanet_api.getPatternValue(pattern_idx, t+1)
-                         for t in range(pattern_length)])
+        return np.array(self.epanet_api.get_pattern(pattern_idx))
 
     def add_pattern(self, pattern_id: str, pattern: np.ndarray) -> None:
         """
@@ -1199,7 +1163,7 @@ class ScenarioSimulator():
             raise ValueError(f"Inconsistent pattern shape '{pattern.shape}' " +
                              "detected. Expected a one dimensional array!")
 
-        pattern_idx = self.epanet_api.addPattern(pattern_id, pattern)
+        pattern_idx = self.epanet_api.add_pattern(pattern_id, pattern.tolist())
         if pattern_idx == 0:
             raise RuntimeError("Failed to add pattern! " +
                                "Maybe pattern name contains invalid characters or is too long?")
@@ -1223,21 +1187,21 @@ class ScenarioSimulator():
         if node_id not in self._sensor_config.nodes:
             raise ValueError(f"Unknown node '{node_id}'")
 
-        node_idx = self.epanet_api.getNodeIndex(node_id)
-        n_demand_categories = self.epanet_api.getNodeDemandCategoriesNumber(node_idx)
+        node_idx = self.epanet_api.get_node_idx(node_id)
+        n_demand_categories = self.epanet_api.getnumdemands(node_idx)
 
         if n_demand_categories == 0:
             return None
         else:
             base_demand = 0
-            for demand_category in range(n_demand_categories):
-                base_demand += self.epanet_api.getNodeBaseDemands(node_idx)[demand_category + 1]
+            for demand_idx in range(n_demand_categories):
+                base_demand += self.epanet_api.getbasedemand(node_idx)[demand_idx + 1]
 
             return base_demand
 
     def get_node_demand_pattern(self, node_id: str) -> np.ndarray:
         """
-        Returns the values of the demand pattern of a given node --
+        Returns the values of the primary demand pattern of a given node --
         i.e. multiplier factors that are applied to the base demand.
 
         Parameters
@@ -1256,10 +1220,14 @@ class ScenarioSimulator():
         if node_id not in self._sensor_config.nodes:
             raise ValueError(f"Unknown node '{node_id}'")
 
-        node_idx = self.epanet_api.getNodeIndex(node_id)
-        demand_category = self.epanet_api.getNodeDemandCategoriesNumber()[node_idx]
-        demand_pattern_id = self.epanet_api.getNodeDemandPatternNameID()[demand_category][node_idx - 1]
-        return self.get_pattern(demand_pattern_id)
+        node_idx = self.epanet_api.get_node_idx(node_id)
+
+        if self.epanet_api.getnodetype(node_idx) != EpanetConstants.EN_RESERVOIR:
+            demand_pattern_idx = self.epanet_api.getdemandpattern(node_idx)
+        else:
+            demand_pattern_idx = self.epanet_api.getnodevalue(node_idx, EpanetConstants.EN_PATTERN)
+
+        return self.get_pattern(self.epanet_api.getpatternid(demand_pattern_idx))
 
     def set_node_demand_pattern(self, node_id: str, base_demand: float, demand_pattern_id: str,
                                 demand_pattern: np.ndarray = None) -> None:
@@ -1298,20 +1266,20 @@ class ScenarioSimulator():
                 raise ValueError(f"Inconsistent demand pattern shape '{demand_pattern.shape}' " +
                                  "detected. Expected a one dimensional array!")
 
-        node_idx = self.epanet_api.getNodeIndex(node_id)
+        node_idx = self.epanet_api.get_node_idx(node_id)
 
-        if demand_pattern_id not in self.epanet_api.getPatternNameID():
+        if demand_pattern_id not in self.epanet_api.get_all_patterns_id():
             if demand_pattern is None:
                 raise ValueError("'demand_pattern' can not be None if " +
                                  "'demand_pattern_id' does not already exist.")
-            self.epanet_api.addPattern(demand_pattern_id, demand_pattern)
+            self.epanet_api.add_pattern(demand_pattern_id, demand_pattern.tolist())
         else:
             if demand_pattern is not None:
-                pattern_idx = self.epanet_api.getPatternIndex(demand_pattern_id)
-                self.epanet_api.setPattern(pattern_idx, demand_pattern)
+                pattern_idx = self.epanet_api.get_node_pattern_idx(demand_pattern_id)
+                self.epanet_api.set_pattern(pattern_idx, demand_pattern.tolist())
 
-        self.epanet_api.setNodeJunctionData(node_idx, self.epanet_api.getNodeElevations(node_idx),
-                                            base_demand, demand_pattern_id)
+        self.epanet_api.setjuncdata(node_idx, self.epanet_api.get_node_elevation(node_idx),
+                                    base_demand, demand_pattern_id)
 
     def add_custom_control(self, control: CustomControlModule) -> None:
         """
@@ -1349,13 +1317,20 @@ class ScenarioSimulator():
 
         if not any(c == control for c in self._simple_controls):
             self._simple_controls.append(control)
-            self.epanet_api.addControls(str(control))
+
+            link_idx = self.epanet_api.get_link_idx(control.link_id)
+            cond_var_value = control.cond_var_value
+            if control.cond_type == EpanetConstants.EN_LOWLEVEL or \
+                    control.cond_type == EpanetConstants.EN_HILEVEL:
+                cond_var_value = self.epanet_api.get_node_idx(cond_var_value)
+            self.epanet_api.addcontrol(control.cond_type, link_idx, control.link_status,
+                                       cond_var_value, control.cond_comp_value)
 
     def remove_all_simple_controls(self) -> None:
         """
         Removes all simple EPANET controls from the scenario.
         """
-        self.epanet_api.deleteControls()
+        self.epanet_api.remove_all_controls()
         self._simple_controls = []
 
     def remove_simple_control(self, control: SimpleControlModule) -> None:
@@ -1382,7 +1357,7 @@ class ScenarioSimulator():
         if control_idx is None:
             raise ValueError("Invalid/Unknown control module.")
 
-        self.epanet_api.deleteControls(control_idx)
+        self.epanet_api.deletecontrol(control_idx)
         self._simple_controls.remove(control)
 
     def add_complex_control(self, control: ComplexControlModule) -> None:
@@ -1403,13 +1378,13 @@ class ScenarioSimulator():
 
         if not any(c == control for c in self._complex_controls):
             self._complex_controls.append(control)
-            self.epanet_api.addRules(str(control))
+            self.epanet_api.addrule(str(control))
 
     def remove_all_complex_controls(self) -> None:
         """
         Removes all complex EPANET controls from the scenario.
         """
-        self.epanet_api.deleteRules()
+        self.epanet_api.remove_all_rules()
         self._complex_controls = []
 
     def remove_complex_control(self, control: ComplexControlModule) -> None:
@@ -1428,12 +1403,13 @@ class ScenarioSimulator():
                             "'epyt_flow.simulation.scada.ComplexControlModule' not of " +
                             f"'{type(control)}'")
 
-        if control.rule_id not in self.epanet_api.getRuleID():
+        all_rules_id = self.epanet_api.get_all_rules_id()
+        if control.rule_id not in all_rules_id:
             raise ValueError("Invalid/Unknown control module. " +
                              f"Can not find rule ID '{control.rule_id}'")
 
-        rule_idx = self.epanet_api.getRuleID().index(control.rule_id) + 1
-        self.epanet_api.deleteRules(rule_idx)
+        rule_idx = all_rules_id.index(control.rule_id) + 1
+        self.epanet_api.deleterule(rule_idx)
         self._complex_controls.remove(control)
 
     def add_leakage(self, leakage_event: Leakage) -> None:
@@ -1643,7 +1619,7 @@ class ScenarioSimulator():
             The default is False.
         """
         if junctions_only is True:
-            self.set_pressure_sensors(self.epanet_api.getNodeJunctionNameID())
+            self.set_pressure_sensors(self.epanet_api.get_all_junctions_id())
         else:
             self.set_pressure_sensors(self._sensor_config.nodes)
 
@@ -2112,42 +2088,43 @@ class ScenarioSimulator():
         self._prepare_simulation(reapply_uncertainties)
 
         # Load pre-computed hydraulics
-        self.epanet_api.useMSXHydraulicFile(hyd_file_in)
+        self.epanet_api.MSXusehydfile(hyd_file_in)
 
         # Initialize simulation
-        n_nodes = self.epanet_api.getNodeCount()
-        n_links = self.epanet_api.getLinkCount()
+        n_nodes = self.epanet_api.get_num_nodes()
+        n_links = self.epanet_api.get_num_links()
 
-        reporting_time_start = self.epanet_api.getTimeReportingStart()
-        reporting_time_step = self.epanet_api.getTimeReportingStep()
-        hyd_time_step = self.epanet_api.getTimeHydraulicStep()
+        reporting_time_start = self.epanet_api.get_reporting_start_time()
+        reporting_time_step = self.epanet_api.get_reporting_time_step()
+        hyd_time_step = self.epanet_api.get_hydraulic_time_step()
 
         network_topo = self.get_topology()
 
         if use_quality_time_step_as_reporting_time_step is True:
-            quality_time_step = self.epanet_api.getMSXTimeStep()
+            quality_time_step = self.epanet_api.get_msx_time_step()
             reporting_time_step = quality_time_step
             hyd_time_step = quality_time_step
 
-        self.epanet_api.initializeMSXQualityAnalysis(ToolkitConstants.EN_NOSAVE)
+        self.epanet_api.MSXinit(EpanetConstants.EN_NOSAVE)
 
         self.__running_simulation = True
 
-        bulk_species_idx = self.epanet_api.getMSXSpeciesIndex(self._sensor_config.bulk_species)
-        surface_species_idx = self.epanet_api.getMSXSpeciesIndex(
-            self._sensor_config.surface_species)
+        bulk_species_idx = [self.epanet_api.get_msx_species_idx(species_id)
+                            for species_id in self._sensor_config.bulk_species]
+        surface_species_idx = [self.epanet_api.get_msx_species_idx(species_id)
+                               for species_id in self._sensor_config.surface_species]
 
         if verbose is True:
             print("Running EPANET-MSX ...")
-            n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
+            n_iterations = math.ceil(self.epanet_api.get_simulation_duration() /
                                      hyd_time_step)
             progress_bar = iter(tqdm(range(n_iterations + 1), ascii=True, desc="Time steps"))
 
         def __get_concentrations(init_qual=False):
             if init_qual is True:
-                msx_get_cur_value = self.epanet_api.msx.MSXgetinitqual
+                msx_get_cur_value = self.epanet_api.MSXgetinitqual
             else:
-                msx_get_cur_value = self.epanet_api.getMSXSpeciesConcentration
+                msx_get_cur_value = self.epanet_api.get_msx_species_concentration
 
             # Bulk species
             bulk_species_node_concentrations = []
@@ -2155,13 +2132,13 @@ class ScenarioSimulator():
             for species_idx in bulk_species_idx:
                 cur_species_concentrations = []
                 for node_idx in range(1, n_nodes + 1):
-                    concen = msx_get_cur_value(0, node_idx, species_idx)
+                    concen = msx_get_cur_value(EpanetConstants.MSX_NODE, node_idx, species_idx)
                     cur_species_concentrations.append(concen)
                 bulk_species_node_concentrations.append(cur_species_concentrations)
 
                 cur_species_concentrations = []
                 for link_idx in range(1, n_links + 1):
-                    concen = msx_get_cur_value(1, link_idx, species_idx)
+                    concen = msx_get_cur_value(EpanetConstants.MSX_LINK, link_idx, species_idx)
                     cur_species_concentrations.append(concen)
                 bulk_species_link_concentrations.append(cur_species_concentrations)
 
@@ -2183,7 +2160,7 @@ class ScenarioSimulator():
                 cur_species_concentrations = []
 
                 for link_idx in range(1, n_links + 1):
-                    concen = msx_get_cur_value(1, link_idx, species_idx)
+                    concen = msx_get_cur_value(EpanetConstants.MSX_LINK, link_idx, species_idx)
                     cur_species_concentrations.append(concen)
 
                 surface_species_concentrations.append(cur_species_concentrations)
@@ -2208,7 +2185,7 @@ class ScenarioSimulator():
                 pass
 
         if reporting_time_start == 0:
-            msx_error_code = self.epanet_api.msx.get_last_error_code()
+            msx_error_code = self.epanet_api.get_last_error_code()
 
             if return_as_dict is True:
                 data = {"bulk_species_node_concentration_raw": bulk_species_node_concentrations,
@@ -2241,8 +2218,8 @@ class ScenarioSimulator():
         last_msx_error_code = 0
         while tleft > 0:
             # Compute current time step
-            total_time, tleft = self.epanet_api.stepMSXQualityAnalysisTimeLeft()
-            msx_error_code = self.epanet_api.msx.get_last_error_code()
+            total_time, tleft = self.epanet_api.MSXstep()
+            msx_error_code = self.epanet_api.get_last_error_code()
             if last_msx_error_code == 0:
                 last_msx_error_code = msx_error_code
 
@@ -2404,26 +2381,26 @@ class ScenarioSimulator():
         if self.__running_simulation is True:
             raise RuntimeError("A simulation is already running.")
 
-        requested_total_time = self.epanet_api.getTimeSimulationDuration()
-        requested_time_step = self.epanet_api.getTimeHydraulicStep()
-        reporting_time_start = self.epanet_api.getTimeReportingStart()
-        reporting_time_step = self.epanet_api.getTimeReportingStep()
+        requested_total_time = self.epanet_api.get_simulation_duration()
+        requested_time_step = self.epanet_api.get_hydraulic_time_step()
+        reporting_time_start = self.epanet_api.get_reporting_start_time()
+        reporting_time_step = self.epanet_api.get_reporting_time_step()
 
         if use_quality_time_step_as_reporting_time_step is True:
-            quality_time_step = self.epanet_api.getTimeQualityStep()
+            quality_time_step = self.epanet_api.get_quality_time_step()
             requested_time_step = quality_time_step
             reporting_time_step = quality_time_step
 
         network_topo = self.get_topology()
 
-        self.epanet_api.useHydraulicFile(hyd_file_in)
+        self.epanet_api.usehydfile(hyd_file_in)
 
-        self.epanet_api.openQualityAnalysis()
-        self.epanet_api.initializeQualityAnalysis(ToolkitConstants.EN_NOSAVE)
+        self.epanet_api.openQ()
+        self.epanet_api.initQ(EpanetConstants.EN_NOSAVE)
 
         if verbose is True:
             print("Running basic quality analysis using EPANET ...")
-            n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
+            n_iterations = math.ceil(self.epanet_api.get_simulation_duration() /
                                      requested_time_step)
             progress_bar = iter(tqdm(range(n_iterations + 1), ascii=True, desc="Time steps"))
 
@@ -2445,15 +2422,15 @@ class ScenarioSimulator():
                         pass
 
             # Compute current time step
-            t = self.epanet_api.api.ENrunQ()
+            t = self.epanet_api.runQ()
             total_time = t
 
             # Fetch data
             error_code = self.epanet_api.get_last_error_code()
             if last_error_code == 0:
                 last_error_code = error_code
-            quality_node_data = self.epanet_api.getNodeActualQuality().reshape(1, -1)
-            quality_link_data = self.epanet_api.getLinkActualQuality().reshape(1, -1)
+            quality_node_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_QUALITY)).reshape(1, -1)
+            quality_link_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_QUALITY)).reshape(1, -1)
 
             # Yield results in a regular time interval only!
             if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
@@ -2481,12 +2458,12 @@ class ScenarioSimulator():
                 yield (data, total_time >= requested_total_time)
 
             # Next
-            tstep = self.epanet_api.api.ENstepQ()
+            tstep = self.epanet_api.stepQ()
             error_code = self.epanet_api.get_last_error_code()
             if last_error_code == 0:
                 last_error_code = error_code
 
-        self.epanet_api.closeQualityAnalysis()
+        self.epanet_api.closeQ()
 
     def run_hydraulic_simulation(self, hyd_export: str = None, verbose: bool = False,
                                  frozen_sensor_config: bool = False,
@@ -2541,13 +2518,18 @@ class ScenarioSimulator():
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
-                    result[data_type] = [data]
+                    if data is None:
+                        result[data_type] = None
+                    else:
+                        result[data_type] = [data]
             else:
                 for data_type, data in scada_data.items():
-                    result[data_type].append(data)
+                    if result[data_type] is not None:
+                        result[data_type].append(data)
 
         for data_type in result:
-            result[data_type] = np.concatenate(result[data_type], axis=0)
+            if result[data_type] is not None:
+                result[data_type] = np.concatenate(result[data_type], axis=0)
 
         result = ScadaData(**result,
                            network_topo=self.get_topology(),
@@ -2619,21 +2601,21 @@ class ScenarioSimulator():
 
         self.__running_simulation = True
 
-        self.epanet_api.api.ENopenH()
-        self.epanet_api.api.ENopenQ()
-        self.epanet_api.initializeHydraulicAnalysis(ToolkitConstants.EN_SAVE)
-        self.epanet_api.initializeQualityAnalysis(ToolkitConstants.EN_SAVE)
+        self.epanet_api.openH()
+        self.epanet_api.openQ()
+        self.epanet_api.initH(EpanetConstants.EN_SAVE)
+        self.epanet_api.initQ(EpanetConstants.EN_SAVE)
 
-        requested_total_time = self.epanet_api.getTimeSimulationDuration()
-        requested_time_step = self.epanet_api.getTimeHydraulicStep()
-        reporting_time_start = self.epanet_api.getTimeReportingStart()
-        reporting_time_step = self.epanet_api.getTimeReportingStep()
+        requested_total_time = self.epanet_api.get_simulation_duration()
+        requested_time_step = self.epanet_api.get_hydraulic_time_step()
+        reporting_time_start = self.epanet_api.get_reporting_start_time()
+        reporting_time_step = self.epanet_api.get_reporting_time_step()
 
         network_topo = self.get_topology()
 
         if verbose is True:
             print("Running EPANET ...")
-            n_iterations = math.ceil(self.epanet_api.getTimeSimulationDuration() /
+            n_iterations = math.ceil(self.epanet_api.get_simulation_duration() /
                                      requested_time_step)
             progress_bar = iter(tqdm(range(n_iterations + 1), ascii=True, desc="Time steps"))
 
@@ -2661,9 +2643,9 @@ class ScenarioSimulator():
                         event.step(total_time + tstep)
 
                 # Compute current time step
-                t = self.epanet_api.api.ENrunH()
+                t = self.epanet_api.runH()
                 error_code = self.epanet_api.get_last_error_code()
-                self.epanet_api.api.ENrunQ()
+                self.epanet_api.runQ()
                 if error_code == 0:
                     error_code = self.epanet_api.get_last_error_code()
                 total_time = t
@@ -2671,20 +2653,32 @@ class ScenarioSimulator():
                     last_error_code = error_code
 
                 # Fetch data
-                pressure_data = self.epanet_api.getNodePressure().reshape(1, -1)
-                flow_data = self.epanet_api.getLinkFlows().reshape(1, -1)
-                demand_data = self.epanet_api.getNodeActualDemand().reshape(1, -1)
-                quality_node_data = self.epanet_api.getNodeActualQuality().reshape(1, -1)
-                quality_link_data = self.epanet_api.getLinkActualQuality().reshape(1, -1)
-                pumps_state_data = self.epanet_api.getLinkPumpState().reshape(1, -1)
-                tanks_volume_data = self.epanet_api.getNodeTankVolume().reshape(1, -1)
+                pressure_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_PRESSURE)).reshape(1, -1)
+                flow_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_FLOW)).reshape(1, -1)
+                demand_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_DEMAND)).reshape(1, -1)
+                quality_node_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_QUALITY)).reshape(1, -1)
+                quality_link_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_QUALITY)).reshape(1, -1)
 
-                pump_idx = self.epanet_api.getLinkPumpIndex()
-                pumps_energy_usage_data = self.epanet_api.getLinkEnergy(pump_idx).reshape(1, -1)
-                pumps_efficiency_data = self.epanet_api.getLinkPumpEfficiency().reshape(1, -1)
+                tanks_volume_data = None
+                if len(self.epanet_api.get_all_tanks_idx()) > 0:
+                    tanks_volume_data = np.array([self.epanet_api.get_tank_volume(tank_idx)
+                                                  for tank_idx in self.epanet_api.get_all_tanks_idx()]).reshape(1, -1)
 
-                link_valve_idx = self.epanet_api.getLinkValveIndex()
-                valves_state_data = self.epanet_api.getLinkStatus(link_valve_idx).reshape(1, -1)
+                pumps_state_data = None
+                pumps_energy_usage_data = None
+                pumps_efficiency_data = None
+                if len(self.epanet_api.get_all_pumps_idx()) > 0:
+                    pumps_state_data = np.array([self.epanet_api.getlinkvalue(link_idx, EpanetConstants.EN_PUMP_STATE)
+                                                for link_idx in self.epanet_api.get_all_pumps_idx()]).reshape(1, -1)
+                    pumps_energy_usage_data = np.array([self.epanet_api.get_pump_energy_usage(pump_idx)
+                                                        for pump_idx in self.epanet_api.get_all_pumps_idx()]).reshape(1, -1)
+                    pumps_efficiency_data = np.array([self.epanet_api.get_pump_efficiency(pump_idx)
+                                                      for pump_idx in self.epanet_api.get_all_pumps_idx()]).reshape(1, -1)
+
+                valves_state_data = None
+                if len(self.epanet_api.get_all_valves_idx()) > 0:
+                    valves_state_data = np.array([self.epanet_api.getlinkvalue(link_valve_idx, EpanetConstants.EN_STATUS)
+                                                  for link_valve_idx in self.epanet_api.get_all_valves_idx()]).reshape(1, -1)
 
                 scada_data = ScadaData(network_topo=network_topo,
                                        sensor_config=self._sensor_config,
@@ -2736,23 +2730,23 @@ class ScenarioSimulator():
                     control.step(scada_data)
 
                 # Next
-                tstep = self.epanet_api.api.ENnextH()
+                tstep = self.epanet_api.nextH()
                 error_code = self.epanet_api.get_last_error_code()
                 if last_error_code == 0:
                     last_error_code = error_code
 
-                self.epanet_api.api.ENnextQ()
+                self.epanet_api.nextQ()
                 error_code = self.epanet_api.get_last_error_code()
                 if last_error_code == 0:
                     last_error_code = error_code
 
-            self.epanet_api.api.ENcloseQ()
-            self.epanet_api.api.ENcloseH()
+            self.epanet_api.closeQ()
+            self.epanet_api.closeH()
 
             self.__running_simulation = False
 
             if hyd_export is not None:
-                self.epanet_api.saveHydraulicFile(hyd_export)
+                self.epanet_api.savehydfile(hyd_export)
         except Exception as ex:
             self.__running_simulation = False
             raise ex
@@ -2929,7 +2923,7 @@ class ScenarioSimulator():
             Specifies the flow units -- i.e. all flows will be reported in these units.
             If None, the units from the .inp file will be used.
 
-            Must be one of the following EPANET toolkit constants:
+            Must be one of the following EPANET constants:
 
                 - EN_CFS  = 0  (cubic foot/sec)
                 - EN_GPM  = 1  (gal/min)
@@ -2956,39 +2950,39 @@ class ScenarioSimulator():
         self._adapt_to_network_changes()
 
         if flow_units_id is not None:
-            if flow_units_id == ToolkitConstants.EN_CFS:
-                self.epanet_api.setFlowUnitsCFS()
-            elif flow_units_id == ToolkitConstants.EN_GPM:
-                self.epanet_api.setFlowUnitsGPM()
-            elif flow_units_id == ToolkitConstants.EN_MGD:
-                self.epanet_api.setFlowUnitsMGD()
-            elif flow_units_id == ToolkitConstants.EN_IMGD:
-                self.epanet_api.setFlowUnitsIMGD()
-            elif flow_units_id == ToolkitConstants.EN_AFD:
-                self.epanet_api.setFlowUnitsAFD()
-            elif flow_units_id == ToolkitConstants.EN_LPS:
-                self.epanet_api.setFlowUnitsLPS()
-            elif flow_units_id == ToolkitConstants.EN_LPM:
-                self.epanet_api.setFlowUnitsLPM()
-            elif flow_units_id == ToolkitConstants.EN_MLD:
-                self.epanet_api.setFlowUnitsMLD()
-            elif flow_units_id == ToolkitConstants.EN_CMH:
-                self.epanet_api.setFlowUnitsCMH()
-            elif flow_units_id == ToolkitConstants.EN_CMD:
-                self.epanet_api.setFlowUnitsCMD()
+            if flow_units_id == EpanetConstants.EN_CFS:
+                self.epanet_api.setflowunits(flow_units_id)
+            elif flow_units_id == EpanetConstants.EN_GPM:
+                self.epanet_api.setflowunits(flow_units_id)
+            elif flow_units_id == EpanetConstants.EN_MGD:
+                self.epanet_api.setflowunits(flow_units_id)
+            elif flow_units_id == EpanetConstants.EN_IMGD:
+                self.epanet_api.setflowunits(flow_units_id)
+            elif flow_units_id == EpanetConstants.EN_AFD:
+                self.epanet_api.setflowunits(flow_units_id)
+            elif flow_units_id == EpanetConstants.EN_LPS:
+                self.epanet_api.setflowunits(flow_units_id)
+            elif flow_units_id == EpanetConstants.EN_LPM:
+                self.epanet_api.setflowunits(flow_units_id)
+            elif flow_units_id == EpanetConstants.EN_MLD:
+                self.epanet_api.setflowunits(flow_units_id)
+            elif flow_units_id == EpanetConstants.EN_CMH:
+                self.epanet_api.setflowunits(flow_units_id)
+            elif flow_units_id == EpanetConstants.EN_CMD:
+                self.epanet_api.setflowunits(flow_units_id)
             else:
                 raise ValueError(f"Unknown flow units '{flow_units_id}'")
 
         if demand_model is not None:
-            self.epanet_api.setDemandModel(demand_model["type"], demand_model["pressure_min"],
-                                           demand_model["pressure_required"],
-                                           demand_model["pressure_exponent"])
+            self.epanet_api.set_demand_model(demand_model["type"], demand_model["pressure_min"],
+                                             demand_model["pressure_required"],
+                                             demand_model["pressure_exponent"])
 
         if simulation_duration is not None:
             if not isinstance(simulation_duration, int) or simulation_duration <= 0:
                 raise ValueError("'simulation_duration' must be a positive integer specifying " +
                                  "the number of seconds to simulate")
-            self.epanet_api.setTimeSimulationDuration(simulation_duration)
+            self.epanet_api.set_simulation_duration(simulation_duration)
 
         if hydraulic_time_step is not None:
             if not isinstance(hydraulic_time_step, int) or hydraulic_time_step <= 0:
@@ -2997,52 +2991,47 @@ class ScenarioSimulator():
             if len(self._system_events) != 0:
                 raise RuntimeError("Hydraulic time step cannot be changed after system events " +
                                    "such as leakages have been added to the scenario")
-            self.epanet_api.setTimeHydraulicStep(hydraulic_time_step)
+            self.epanet_api.set_hydraulic_time_step(hydraulic_time_step)
             if reporting_time_step is None:
                 warnings.warn("No report time steps specified -- using 'hydraulic_time_step'")
-                self.epanet_api.setTimeReportingStep(hydraulic_time_step)
+                self.epanet_api.set_reporting_time_step(hydraulic_time_step)
 
         if reporting_time_step is not None:
-            hydraulic_time_step = self.epanet_api.getTimeHydraulicStep()
+            hydraulic_time_step = self.epanet_api.get_hydraulic_time_step()
             if not isinstance(reporting_time_step, int) or \
                     reporting_time_step % hydraulic_time_step != 0:
                 raise ValueError("'reporting_time_step' must be a positive integer " +
                                  "and a multiple of 'hydraulic_time_step'")
-            self.epanet_api.setTimeReportingStep(reporting_time_step)
+            self.epanet_api.set_reporting_time_step(reporting_time_step)
 
         if reporting_time_start is not None:
             if not isinstance(reporting_time_start, int) or reporting_time_start <= 0:
                 raise ValueError("'reporting_time_start' must be a positive integer specifying " +
                                  "the time at which reporting starts")
-            self.epanet_api.setTimeReportingStart(reporting_time_start)
+            self.epanet_api.set_reporting_start_time(reporting_time_start)
 
         if quality_time_step is not None:
             if not isinstance(quality_time_step, int) or quality_time_step <= 0 or \
-                    quality_time_step > self.epanet_api.getTimeHydraulicStep():
+                    quality_time_step > self.epanet_api.get_hydraulic_time_step():
                 raise ValueError("'quality_time_step' must be a positive integer that is not " +
                                  "greater than the hydraulic time step")
-            self.epanet_api.setTimeQualityStep(quality_time_step)
+            self.epanet_api.set_quality_time_step(quality_time_step)
 
         if advanced_quality_time_step is not None:
             if not isinstance(advanced_quality_time_step, int) or \
                     advanced_quality_time_step <= 0 or \
-                    advanced_quality_time_step > self.epanet_api.getTimeHydraulicStep():
+                    advanced_quality_time_step > self.epanet_api.get_hydraulic_time_step():
                 raise ValueError("'advanced_quality_time_step' must be a positive integer " +
                                  "that is not greater than the hydraulic time step")
-            self.epanet_api.setMSXTimeStep(advanced_quality_time_step)
+            self.epanet_api.set_msx_time_step(advanced_quality_time_step)
 
         if quality_model is not None:
-            if quality_model["type"] == "NONE":
-                self.epanet_api.setQualityType("none")
-            elif quality_model["type"] == "AGE":
-                self.epanet_api.setQualityType("age")
-            elif quality_model["type"] == "CHEM":
-                self.epanet_api.setQualityType("chem", quality_model["chemical_name"],
-                                               qualityunit_to_str(quality_model["units"]))
-            elif quality_model["type"] == "TRACE":
-                self.epanet_api.setQualityType("trace", quality_model["trace_node_id"])
-            else:
-                raise ValueError(f"Unknown quality type: {quality_model['type']}")
+            chem_name = quality_model["chem_name"] if "chem_name" in quality_model else ""
+            chem_units = quality_model["chem_units"] if "chem_units" in quality_model else ""
+            trace_node_id = quality_model["trace_node_id"] \
+                if "trace_node_id" in quality_model else ""
+            self.epanet_api.set_quality_type(quality_model["type"], chem_name, chem_units,
+                                             trace_node_id)
 
     def get_events_active_time_points(self) -> list[int]:
         """
@@ -3056,7 +3045,7 @@ class ScenarioSimulator():
         """
         events_times = []
 
-        hyd_time_step = self.epanet_api.getTimeHydraulicStep()
+        hyd_time_step = self.epanet_api.get_hydraulic_time_step()
 
         def __process_event(event) -> None:
             cur_time = event.start_time
@@ -3107,18 +3096,18 @@ class ScenarioSimulator():
         else:
             pattern_id = f"energy_price_{pump_id}"
 
-        pattern_idx = self.epanet_api.getPatternIndex(pattern_id)
+        pattern_idx = self.epanet_api.getpatternindex(pattern_id)
         if pattern_idx != 0:
             warnings.warn(f"Overwriting existing pattern '{pattern_id}'")
 
-        pump_idx = self.epanet_api.getLinkIndex(pump_id)
-        pattern_idx = self.epanet_api.getLinkPumpEPat(pump_idx)
+        pump_idx = self.epanet_api.get_link_idx(pump_id)
+        pattern_idx = self.epanet_api.getlinkvalue(pump_idx, EpanetConstants.EN_PUMP_EPAT)
         if pattern_idx != 0:
             warnings.warn(f"Overwriting existing energy price pattern of pump '{pump_id}'")
 
-        self.add_pattern(pattern_id, pattern)
-        pattern_idx = self.epanet_api.getPatternIndex(pattern_id)
-        self.epanet_api.setLinkPumpEPat(pattern_idx)
+        self.add_pattern(pattern_id, pattern.tolist())
+        pattern_idx = self.epanet_api.getpatternindex(pattern_id)
+        self.epanet_api.setlinkvalue(pump_idx, EpanetConstants.PUMP_EPAT, pattern_idx)
 
     def get_pump_energy_price_pattern(self, pump_id: str) -> np.ndarray:
         """
@@ -3139,14 +3128,12 @@ class ScenarioSimulator():
         if pump_id not in self._sensor_config.pumps:
             raise ValueError(f"Unknown pump '{pump_id}'")
 
-        pump_idx = self.epanet_api.getLinkIndex(pump_id)
-        pattern_idx = self.epanet_api.getLinkPumpEPat(pump_idx)
+        pump_idx = self.epanet_api.get_link_idx(pump_id)
+        pattern_idx = self.epanet_api.getlinkvalue(pump_idx, EpanetConstants.EN_PUMP_EPAT)
         if pattern_idx == 0:
             return None
         else:
-            pattern_length = self.epanet_api.getPatternLengths(pattern_idx)
-            return np.array([self.epanet_api.getPatternValue(pattern_idx, t+1)
-                            for t in range(pattern_length)])
+            return np.array(self.epanet_api.get_pattern(pattern_idx))
 
     def get_pump_energy_price(self, pump_id: str) -> float:
         """
@@ -3167,8 +3154,8 @@ class ScenarioSimulator():
         if pump_id not in self._sensor_config.pumps:
             raise ValueError(f"Unknown pump '{pump_id}'")
 
-        pump_idx = self.epanet_api.getLinkIndex(pump_id)
-        return self.epanet_api.getLinkPumpECost(pump_idx)
+        pump_idx = self.epanet_api.get_link_idx(pump_id)
+        return self.epanet_api.get_pump_avg_energy_price(pump_idx)
 
     def set_pump_energy_price(self, pump_id, price: float) -> None:
         """
@@ -3190,11 +3177,8 @@ class ScenarioSimulator():
         if price <= 0:
             raise ValueError("'price' must be positive")
 
-        pump_idx = self._sensor_config.pumps.index(pump_id) + 1
-        pumps_energy_price = self.epanet_api.getLinkPumpECost()
-        pumps_energy_price[pump_idx - 1] = price
-
-        self.epanet_api.setLinkPumpECost(pumps_energy_price)
+        pump_idx = self.epanet_api.get_link_idx(pump_id)
+        self.epanet_api.setlinkvalue(pump_idx, EpanetConstants.EN_PUMP_ECOST, price)
 
     def set_initial_link_status(self, link_id: str, status: int) -> None:
         """
@@ -3219,8 +3203,8 @@ class ScenarioSimulator():
         if status not in [ActuatorConstants.EN_CLOSED, ActuatorConstants.EN_OPEN]:
             raise ValueError(f"Invalid link status '{status}'")
 
-        link_idx = self.epanet_api.getLinkIndex(link_id)
-        self.epanet_api.setLinkInitialStatus(link_idx, status)
+        link_idx = self.epanet_api.get_link_idx(link_id)
+        self.epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_INITSTATUS, status)
 
     def set_initial_pump_speed(self, pump_id: str, speed: float) -> None:
         """
@@ -3242,8 +3226,8 @@ class ScenarioSimulator():
         if speed < 0:
             raise ValueError("'speed' can not be negative")
 
-        pump_idx = self.epanet_api.getLinkIndex(pump_id)
-        self.epanet_api.setLinkInitialSetting(pump_idx, speed)
+        pump_idx = self.epanet_api.get_link_idx(pump_id)
+        self.epanet_api.setlinkvalue(pump_idx, EpanetConstants.EN_INITSETTING, speed)
 
     def set_initial_tank_level(self, tank_id, level: int) -> None:
         """
@@ -3265,14 +3249,14 @@ class ScenarioSimulator():
         if level < 0:
             raise ValueError("'level' can not be negative")
 
-        tank_idx = self.epanet_api.getNodeIndex(tank_id)
-        self.epanet_api.setNodeTankInitialLevel(tank_idx, level)
+        tank_idx = self.epanet_api.get_node_idx(tank_id)
+        self.epanet_api.setnodevalue(tank_idx, EpanetConstants.EN_TANKLEVEL, level)
 
     def __warn_if_quality_set(self):
-        qual_info = self.epanet_api.getQualityInfo()
-        if qual_info.QualityCode != ToolkitConstants.EN_NONE:
+        qual_code = self.epanet_api.getqualinfo()[0]
+        if qual_code != EpanetConstants.EN_NONE:
             warnings.warn("You are overriding current quality settings " +
-                          f"'{qual_info.QualityType}'")
+                          f"'{qual_code}'")
 
     def enable_waterage_analysis(self) -> None:
         """
@@ -3285,7 +3269,7 @@ class ScenarioSimulator():
         self._adapt_to_network_changes()
 
         self.__warn_if_quality_set()
-        self.set_general_parameters(quality_model={"type": "AGE"})
+        self.set_general_parameters(quality_model={"type": EpanetConstants.EN_AGE})
 
     def enable_chemical_analysis(self, chemical_name: str = "Chlorine",
                                  chemical_units: int = MASS_UNIT_MG) -> None:
@@ -3316,8 +3300,9 @@ class ScenarioSimulator():
         self._adapt_to_network_changes()
 
         self.__warn_if_quality_set()
-        self.set_general_parameters(quality_model={"type": "CHEM", "chemical_name": chemical_name,
-                                                   "units": chemical_units})
+        self.set_general_parameters(quality_model={"type": EpanetConstants.EN_CHEM,
+                                                   "chem_name": chemical_name,
+                                                   "chem_units": qualityunit_to_str(chemical_units)})
 
     def add_quality_source(self, node_id: str, source_type: int, pattern: np.ndarray = None,
                            pattern_id: str = None, source_strength: int = 1.) -> None:
@@ -3330,7 +3315,7 @@ class ScenarioSimulator():
             ID of the node at which this external water quality source is placed.
         source_type : `int`,
             Types of the external water quality source -- must be of the following
-            EPANET toolkit constants:
+            EPANET constants:
 
                 - EN_CONCEN     = 0
                 - EN_MASS       = 1
@@ -3366,7 +3351,7 @@ class ScenarioSimulator():
 
         self._adapt_to_network_changes()
 
-        if self.epanet_api.getQualityInfo().QualityCode != ToolkitConstants.EN_CHEM:
+        if self.epanet_api.getqualinfo()[0] != EpanetConstants.EN_CHEM:
             raise RuntimeError("Chemical analysis is not enabled -- " +
                                "call 'enable_chemical_analysis()' before calling this function.")
         if node_id not in self._sensor_config.nodes:
@@ -3382,19 +3367,20 @@ class ScenarioSimulator():
         if pattern_id is None:
             pattern_id = f"qual_src_pat_{node_id}"
 
-        node_idx = self.epanet_api.getNodeIndex(node_id)
+        node_idx = self.epanet_api.get_node_idx(node_id)
 
         if pattern is None:
-            pattern_idx = self.epanet_api.getPatternIndex(pattern_id)
+            pattern_idx = self.epanet_api.getpatternindex(pattern_id)
         else:
-            pattern_idx = self.epanet_api.addPattern(pattern_id, pattern)
+            self.epanet_api.add_pattern(pattern_id, pattern.tolist())
+            pattern_idx = self.epanet_api.getpatternindex(pattern_id)
         if pattern_idx == 0:
             raise RuntimeError("Failed to add/get pattern! " +
                                "Maybe pattern name contains invalid characters or is too long?")
 
-        self.epanet_api.api.ENsetnodevalue(node_idx, ToolkitConstants.EN_SOURCETYPE, source_type)
-        self.epanet_api.setNodeSourceQuality(node_idx, source_strength)
-        self.epanet_api.setNodeSourcePatternIndex(node_idx, pattern_idx)
+        self.epanet_api.setnodevalue(node_idx, EpanetConstants.EN_SOURCETYPE, source_type)
+        self.epanet_api.setnodevalue(node_idx, EpanetConstants.EN_SOURCEQUAL, source_strength)
+        self.epanet_api.setnodevalue(node_idx, EpanetConstants.EN_SOURCEPAT, pattern_idx)
 
     def set_initial_node_quality(self, node_id: str, initial_quality: float) -> None:
         """
@@ -3486,12 +3472,8 @@ class ScenarioSimulator():
                 if node_init_qual < 0:
                     raise ValueError(f"{node_id}: Initial node quality can not be negative")
 
-            init_qual = self.epanet_api.getNodeInitialQuality()
-            for node_id, node_init_qual in initial_quality:
-                node_idx = self.epanet_api.getNodeIndex(node_id) - 1
-                init_qual[node_idx] = node_init_qual
-
-            self.epanet_api.setNodeInitialQuality(init_qual)
+            for node_idx in self.epanet_api.get_all_nodes_idx():
+                self.epanet_api.set_node_init_quality(node_idx, node_init_qual)
 
         if order_wall is not None:
             if not isinstance(order_wall, int):
@@ -3500,7 +3482,7 @@ class ScenarioSimulator():
             if order_wall not in [0, 1]:
                 raise ValueError(f"Invalid value '{order_wall}' for order_wall")
 
-            self.epanet_api.setOptionsPipeWallReactionOrder(order_wall)
+            self.epanet_api.setoption(EpanetConstants.EN_WALLORDER, order_wall)
 
         if order_bulk is not None:
             if not isinstance(order_bulk, int):
@@ -3509,7 +3491,7 @@ class ScenarioSimulator():
             if order_bulk not in [0, 1]:
                 raise ValueError(f"Invalid value '{order_bulk}' for order_bulk")
 
-            self.epanet_api.setOptionsPipeBulkReactionOrder(order_bulk)
+            self.epanet_api.setoption(EpanetConstants.EN_BULKORDER, order_bulk)
 
         if order_tank is not None:
             if not isinstance(order_tank, int):
@@ -3518,29 +3500,25 @@ class ScenarioSimulator():
             if order_tank not in [0, 1]:
                 raise ValueError(f"Invalid value '{order_tank}' for order_wall")
 
-            self.epanet_api.setOptionsTankBulkReactionOrder(order_tank)
+            self.epanet_api.setoption(EpanetConstants.EN_TANKORDER, order_tank)
 
         if global_wall_reaction_coefficient is not None:
             if not isinstance(global_wall_reaction_coefficient, float):
                 raise TypeError("'global_wall_reaction_coefficient' must be an instance of " +
                                 f"'float' but not of '{type(global_wall_reaction_coefficient)}'")
 
-            wall_reaction_coeff = self.epanet_api.getLinkWallReactionCoeff()
-            for i in range(len(wall_reaction_coeff)):
-                wall_reaction_coeff[i] = global_wall_reaction_coefficient
-
-            self.epanet_api.setLinkWallReactionCoeff(wall_reaction_coeff)
+            for link_idx in self.epanet_api.get_all_links_idx():
+                self.epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_KWALL,
+                                             global_wall_reaction_coefficient)
 
         if global_bulk_reaction_coefficient is not None:
             if not isinstance(global_bulk_reaction_coefficient, float):
                 raise TypeError("'global_bulk_reaction_coefficient' must be an instance of " +
                                 f"'float' but not of '{type(global_bulk_reaction_coefficient)}'")
 
-            bulk_reaction_coeff = self.epanet_api.getLinkBulkReactionCoeff()
-            for i in range(len(bulk_reaction_coeff)):
-                bulk_reaction_coeff[i] = global_bulk_reaction_coefficient
-
-            self.epanet_api.setLinkBulkReactionCoeff(bulk_reaction_coeff)
+            for link_idx in self.epanet_api.get_all_links_idx():
+                self.epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_KBULK,
+                                             global_bulk_reaction_coefficient)
 
         if local_wall_reaction_coefficient is not None:
             if not isinstance(local_wall_reaction_coefficient, dict):
@@ -3556,8 +3534,8 @@ class ScenarioSimulator():
                     raise ValueError(f"Invalid link ID '{link_id}'")
 
             for link_id, link_reaction_coeff in local_wall_reaction_coefficient:
-                link_idx = self.epanet_api.getLinkIndex(link_id)
-                self.epanet_api.setLinkWallReactionCoeff(link_idx, link_reaction_coeff)
+                link_idx = self.epanet_api.get_link_idx(link_id)
+                self.epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_KWALL, link_reaction_coeff)
 
         if local_bulk_reaction_coefficient is not None:
             if not isinstance(local_bulk_reaction_coefficient, dict):
@@ -3573,8 +3551,8 @@ class ScenarioSimulator():
                     raise ValueError(f"Invalid link ID '{link_id}'")
 
             for link_id, link_reaction_coeff in local_bulk_reaction_coefficient:
-                link_idx = self.epanet_api.getLinkIndex(link_id)
-                self.epanet_api.setLinkBulkReactionCoeff(link_idx, link_reaction_coeff)
+                link_idx = self.epanet_api.get_link_idx(link_id)
+                self.epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_KBULK, link_reaction_coeff)
 
         if local_tank_reaction_coefficient is not None:
             if not isinstance(local_tank_reaction_coefficient, dict):
@@ -3590,8 +3568,9 @@ class ScenarioSimulator():
                     raise ValueError(f"Invalid tank ID '{tank_id}'")
 
             for tank_id, tank_reaction_coeff in local_tank_reaction_coefficient:
-                tank_idx = self.epanet_api.getNodeTankIndex(tank_id)
-                self.epanet_api.setNodeTankBulkReactionCoeff(tank_idx, tank_reaction_coeff)
+                tank_idx = self.epanet_api.get_node_idx(tank_id)
+                self.epanet_api.setnodevalue(tank_idx, EpanetConstants.EN_TANK_KBULK,
+                                             tank_reaction_coeff)
 
         if limiting_potential is not None:
             if not isinstance(limiting_potential, float):
@@ -3600,7 +3579,7 @@ class ScenarioSimulator():
             if limiting_potential < 0:
                 raise ValueError("'limiting_potential' can not be negative")
 
-            self.epanet_api.setOptionsLimitingConcentration(limiting_potential)
+            self.epanet_api.setoption(EpanetConstants.EN_CONCENLIMIT, limiting_potential)
 
     def enable_sourcetracing_analysis(self, trace_node_id: str) -> None:
         """
@@ -3621,7 +3600,7 @@ class ScenarioSimulator():
             raise ValueError(f"Invalid node ID '{trace_node_id}'")
 
         self.__warn_if_quality_set()
-        self.set_general_parameters(quality_model={"type": "TRACE",
+        self.set_general_parameters(quality_model={"type": EpanetConstants.EN_TRACE,
                                                    "trace_node_id": trace_node_id})
 
     def add_species_injection_source(self, species_id: str, node_id: str, pattern: np.ndarray,
@@ -3645,7 +3624,7 @@ class ScenarioSimulator():
             Note that the pattern time step is equivalent to the EPANET pattern time step.
         source_type : `int`,
             Type of the external (bulk or surface) species injection source -- must be one of
-            the following EPANET toolkit constants:
+            the following EPANET constants:
 
                 - EN_CONCEN     = 0
                 - EN_MASS       = 1
@@ -3670,25 +3649,18 @@ class ScenarioSimulator():
 
             The default is 1.
         """
-        source_type_ = "None"
-        if source_type == ToolkitConstants.EN_CONCEN:
-            source_type_ = "CONCEN"
-        elif source_type == ToolkitConstants.EN_MASS:
-            source_type_ = "MASS"
-        elif source_type == ToolkitConstants.EN_SETPOINT:
-            source_type_ = "SETPOINT"
-        elif source_type == ToolkitConstants.EN_FLOWPACED:
-            source_type_ = "FLOWPACED"
-
         if pattern_id is None:
             pattern_id = f"{species_id}_{node_id}"
-        if pattern_id in self.epanet_api.getMSXPatternsNameID():
+        if pattern_id in self.epanet_api.get_all_msx_pattern_id():
             raise ValueError("Invalid 'pattern_id' -- " +
                              f"there already exists a pattern with ID '{pattern_id}'")
 
-        self.epanet_api.addMSXPattern(pattern_id, pattern)
-        self.epanet_api.setMSXSources(node_id, species_id, source_type_, source_strength,
-                                      pattern_id)
+        self.epanet_api.MSXaddpattern(pattern_id)
+        pattern_idx = self.epanet_api.MSXgetindex(EpanetConstants.MSX_PATTERN, pattern_id)
+        self.epanet_api.MSXsetpattern(pattern_idx, pattern.tolist(), len(pattern))
+        self.epanet_api.MSXsetsource(self.epanet_api.get_node_idx(node_id),
+                                     self.epanet_api.get_msx_species_idx(species_id),
+                                     source_type, source_strength, pattern_idx)
 
     def set_bulk_species_node_initial_concentrations(self,
                                                      inital_conc: dict[str, list[tuple[str, float]]]
@@ -3723,12 +3695,12 @@ class ScenarioSimulator():
             raise ValueError("Initial node concentration can not be negative")
 
         for species_id, node_initial_conc in inital_conc.items():
-            species_idx, = self.epanet_api.getMSXSpeciesIndex([species_id])
+            species_idx = self.epanet_api.get_msx_species_idx(species_id)
 
             for node_id, initial_conc in node_initial_conc:
-                node_idx = self.epanet_api.getNodeIndex(node_id)
-                self.epanet_api.msx.MSXsetinitqual(ToolkitConstants.MSX_NODE, node_idx, species_idx,
-                                                   initial_conc)
+                node_idx = self.epanet_api.get_node_idx(node_id)
+                self.epanet_api.MSXsetinitqual(EpanetConstants.MSX_NODE, node_idx, species_idx,
+                                               initial_conc)
 
     def set_species_link_initial_concentrations(self,
                                                 inital_conc: dict[str, list[tuple[str, float]]]
@@ -3762,9 +3734,9 @@ class ScenarioSimulator():
             raise ValueError("Initial link concentration can not be negative")
 
         for species_id, link_initial_conc in inital_conc.items():
-            species_idx, = self.epanet_api.getMSXSpeciesIndex([species_id])
+            species_idx = self.epanet_api.get_msx_species_idx(species_id)
 
             for link_id, initial_conc in link_initial_conc:
-                link_idx = self.epanet_api.getLinkIndex(link_id)
-                self.epanet_api.msx.MSXsetinitqual(ToolkitConstants.MSX_LINK, link_idx, species_idx,
-                                                   initial_conc)
+                link_idx = self.epanet_api.get_link_idx(link_id)
+                self.epanet_api.MSXsetinitqual(EpanetConstants.MSX_LINK, link_idx, species_idx,
+                                               initial_conc)

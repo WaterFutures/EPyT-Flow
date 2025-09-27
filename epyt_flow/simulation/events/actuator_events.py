@@ -2,8 +2,7 @@
 Module provides implementations of different types of actuator events.
 """
 import warnings
-from epyt.epanet import epanet
-import numpy as np
+from epanet_plus import EPyT, EpanetConstants
 
 from .system_event import SystemEvent
 from ...serialization import serializable, JsonSerializable, PUMP_STATE_EVENT_ID, \
@@ -20,9 +19,15 @@ class ActuatorConstants:
         Valve or pump is closed.
     EN_OPEN
         Valve or pump is open -- i.e. active.
+    EN_SET_CLOSED
+        Link set closed indicator
+    EN_SET_OPEN
+        Link set open indicator
     """
     EN_CLOSED       = 0
     EN_OPEN         = 1
+    EN_SET_CLOSED   = -1e10
+    EN_SET_OPEN     = 1e10
 
 
 class ActuatorEvent(SystemEvent):
@@ -59,8 +64,8 @@ class PumpEvent(ActuatorEvent):
 
         super().__init__(**kwds)
 
-    def init(self, epanet_api: epanet) -> None:
-        if self.__pump_id not in epanet_api.getLinkPumpNameID():
+    def init(self, epanet_api: EPyT) -> None:
+        if self.__pump_id not in epanet_api.get_all_pumps_id():
             raise ValueError(f"Invalid pump ID '{self.__pump_id}'")
 
         super().init(epanet_api)
@@ -132,15 +137,15 @@ class PumpStateEvent(PumpEvent, JsonSerializable):
         return self.__pump_state
 
     def apply(self, cur_time: int) -> None:
-        pump_idx = self._epanet_api.getLinkPumpNameID().index(self.pump_id) + 1
-        pump_link_idx = self._epanet_api.getLinkPumpIndex(pump_idx)
+        pump_link_idx = self._epanet_api.getlinkindex(self.pump_id)
 
-        pattern_idx = self._epanet_api.getLinkPumpPatternIndex(pump_idx)
+        pattern_idx = self._epanet_api.getlinkvalue(pump_link_idx, EpanetConstants.EN_LINKPATTERN)
         if pattern_idx != 0:
             warnings.warn(f"Can not set pump state of pump {self.pump_id} " +
                           "because a pump pattern exists")
         else:
-            self._epanet_api.setLinkStatus(pump_link_idx, self.__pump_state)
+            self._epanet_api.setlinkvalue(pump_link_idx, EpanetConstants.EN_STATUS,
+                                          self.__pump_state)
 
 
 @serializable(PUMP_SPEED_EVENT_ID, ".epytflow_pump_speed_event")
@@ -180,15 +185,17 @@ class PumpSpeedEvent(PumpEvent, JsonSerializable):
         return self.__pump_speed
 
     def apply(self, cur_time: int) -> None:
-        pump_idx = self._epanet_api.getLinkPumpNameID().index(self.pump_id) + 1
-        pattern_idx = self._epanet_api.getLinkPumpPatternIndex(pump_idx)
+        pump_idx = self._epanet_api.get_link_idx(self.pump_id)
+        pattern_idx = self._epanet_api.getlinkvalue(pump_idx, EpanetConstants.EN_LINKPATTERN)
 
         if pattern_idx == 0:
             warnings.warn(f"No pattern for pump '{self.pump_id}' found -- a new pattern is created")
-            pattern_idx = self._epanet_api.addPattern(f"pump_speed_{self.pump_id}")
-            self._epanet_api.setLinkPumpPatternIndex(pump_idx, pattern_idx)
+            pattern_id = f"pump_speed_{self.pump_id}"
+            self._epanet_api.add_pattern(pattern_id, [self.__pump_speed])
+            pattern_idx = self._epanet_api.getpatternindex(pattern_id)
+            self._epanet_api.setlinkvalue(pump_idx, EpanetConstants.EN_LINKPATTERN, pattern_idx)
 
-        self._epanet_api.setPattern(pattern_idx, np.array([self.__pump_speed]))
+        self._epanet_api.setpattern(pattern_idx, [self.__pump_speed], 1)
 
 
 @serializable(VALVE_STATE_EVENT_ID, ".epytflow_valve_state_event")
@@ -222,8 +229,8 @@ class ValveStateEvent(ActuatorEvent, JsonSerializable):
 
         super().__init__(**kwds)
 
-    def init(self, epanet_api: epanet) -> None:
-        if self.__valve_id not in epanet_api.getLinkValveNameID():
+    def init(self, epanet_api: EPyT) -> None:
+        if self.__valve_id not in epanet_api.get_all_valves_id():
             raise ValueError(f"Invalid valve ID '{self.__valve_id}'")
 
         super().init(epanet_api)
@@ -260,6 +267,5 @@ class ValveStateEvent(ActuatorEvent, JsonSerializable):
         return self.__valve_state
 
     def apply(self, cur_time: int) -> None:
-        valve_idx = self._epanet_api.getLinkValveNameID().index(self.__valve_id) + 1
-        valve_link_idx = self._epanet_api.getLinkValveIndex(valve_idx)
-        self._epanet_api.setLinkStatus(valve_link_idx, self.__valve_state)
+        valve_link_idx = self._epanet_api.get_link_idx(self.__valve_id)
+        self._epanet_api.setlinkvalue(valve_link_idx, EpanetConstants.EN_STATUS, self.__valve_state)

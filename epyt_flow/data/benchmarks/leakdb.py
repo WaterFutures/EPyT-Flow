@@ -28,7 +28,7 @@ from ..networks import load_net1, load_hanoi
 from .leakdb_data import NET1_LEAKAGES, HANOI_LEAKAGES
 from ...utils import get_temp_folder, to_seconds, unpack_zip_archive, create_path_if_not_exist, \
     download_if_necessary
-from ...simulation import ScenarioSimulator, ToolkitConstants
+from ...simulation import ScenarioSimulator, EpanetConstants
 from ...simulation.events import AbruptLeakage, IncipientLeakage
 from ...simulation import ScenarioConfig
 from ...simulation.scada import ScadaData
@@ -275,6 +275,8 @@ def load_data(scenarios_id: list[int], use_net1: bool, download_dir: str = None,
         create_path_if_not_exist(scenario_data_folder_in)
         unpack_zip_archive(scenario_data_file_in, scenario_data_folder_in)
 
+        scenario_data_folder_in = os.path.join(scenario_data_folder_in, f"Scenario-{s_id}")
+
         # Load and parse data
         pressure_files = list(filter(lambda d: d.endswith(".csv"),
                                      os.listdir(os.path.join(scenario_data_folder_in,
@@ -464,8 +466,8 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
     general_params = {"simulation_duration": to_seconds(days=365),   # One year
                       "hydraulic_time_step": hydraulic_time_step,
                       "reporting_time_step": hydraulic_time_step,
-                      "flow_units_id": ToolkitConstants.EN_CMH,
-                      "demand_model": {"type": "PDA", "pressure_min": 0,
+                      "flow_units_id": EpanetConstants.EN_CMH,
+                      "demand_model": {"type": EpanetConstants.EN_PDA, "pressure_min": 0,
                                        "pressure_required": 0.1,
                                        "pressure_exponent": 0.5}
                       } | network_config.general_params
@@ -544,18 +546,19 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
         if not os.path.exists(f_inp_in):
             with ScenarioSimulator(f_inp_in=network_config.f_inp_in) as wdn:
                 wdn.set_general_parameters(**general_params)
-                wdn.epanet_api.setTimePatternStep(hydraulic_time_step)
+                wdn.epanet_api.set_hydraulic_time_step(hydraulic_time_step)
 
-                wdn.epanet_api.deletePatternsAll()
+                for idx in range(1, wdn.epanet_api.getcount(EpanetConstants.EN_PATCOUNT) + 1):
+                    wdn.epanet_api.deletepattern(idx)
 
-                reservoir_nodes_id = wdn.epanet_api.getNodeReservoirNameID()
+                reservoir_nodes_id = wdn.epanet_api.get_all_reservoirs_id()
                 for node_id in network_config.sensor_config.nodes:
                     if node_id in network_config.sensor_config.tanks or\
                             node_id in reservoir_nodes_id:
                         continue
 
-                    node_idx = wdn.epanet_api.getNodeIndex(node_id)
-                    base_demand = wdn.epanet_api.getNodeBaseDemands(node_idx)[1][0]
+                    node_idx = wdn.epanet_api.get_node_idx(node_id)
+                    base_demand = wdn.epanet_api.get_node_base_demand(node_idx)
 
                     my_demand_pattern = np.array(gen_dem(download_dir))
 
@@ -563,7 +566,7 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
                                                 demand_pattern_id=f"demand_{node_id}",
                                                 demand_pattern=my_demand_pattern)
 
-                wdn.epanet_api.saveInputFile(f_inp_in)
+                wdn.epanet_api.saveinpfile(f_inp_in)
 
     # Create uncertainties
     class MyUniformUncertainty(UniformUncertainty):

@@ -82,7 +82,7 @@ Note that the pattern repeats automatically when the simulation duration exceeds
     # The pattern alternates the chemical concentration leaving this node between 1. and 0.
     sim.add_quality_source(node_id="1", pattern_id="my-pattern",
                             pattern=numpy.array([1., 0.]),
-                            source_type=ToolkitConstants.EN_SETPOINT)
+                            source_type=EpanetConstants.EN_SETPOINT)
 
 Different types of source patterns are supported:
 
@@ -118,7 +118,7 @@ is fixed over time.
         # this constant concentration pattern is named "my-constant-pattern"
         sim.add_quality_source(node_id="1", pattern_id="my-constant-pattern",
                                 pattern=numpy.array([1.]),
-                                source_type=ToolkitConstants.EN_CONCEN)
+                                source_type=EpanetConstants.EN_CONCEN)
 
         # Places quality sensors at all nodes -- 
         # i.e. measuring the chemical concentration at all nodes

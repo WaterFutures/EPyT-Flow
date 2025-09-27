@@ -6,9 +6,9 @@ import uuid
 from abc import abstractmethod, ABC
 from typing import Union
 import warnings
-import numpy as np
+from epanet_plus import EpanetConstants
 
-from ..simulation import ScenarioSimulator, ScenarioConfig, ScadaData, ToolkitConstants
+from ..simulation import ScenarioSimulator, ScenarioConfig, ScadaData
 from ..utils import get_temp_folder
 
 
@@ -193,14 +193,14 @@ class ScenarioControlEnv(ABC):
             raise RuntimeError("Can not execute actions affecting the hydraulics "+
                                "when running EPANET-MSX")
 
-        pump_idx = self._scenario_sim.epanet_api.getLinkPumpNameID().index(pump_id) + 1
-        pump_link_idx = self._scenario_sim.epanet_api.getLinkPumpIndex(pump_idx)
-
-        pattern_idx = self._scenario_sim.epanet_api.getLinkPumpPatternIndex(pump_idx)
+        pump_link_idx = self._scenario_sim.epanet_api.get_link_idx(pump_id)
+        pattern_idx = self._scenario_sim.epanet_api.getlinkvalue(pump_link_idx,
+                                                                 EpanetConstants.EN_LINKPATTERN)
         if pattern_idx != 0:
             warnings.warn(f"Can not set pump state of pump {pump_id} because a pump pattern exists")
         else:
-            self._scenario_sim.epanet_api.setLinkStatus(pump_link_idx, status)
+            self._scenario_sim.epanet_api.setlinkvalue(pump_link_idx, EpanetConstants.EN_STATUS,
+                                                       status)
 
     def set_pump_speed(self, pump_id: str, speed: float) -> None:
         """
@@ -217,15 +217,19 @@ class ScenarioControlEnv(ABC):
             raise RuntimeError("Can not execute actions affecting the hydraulics "+
                                "when running EPANET-MSX")
 
-        pump_idx = self._scenario_sim.epanet_api.getLinkPumpNameID().index(pump_id)
-        pattern_idx = self._scenario_sim.epanet_api.getLinkPumpPatternIndex(pump_idx + 1)
+        pump_idx = self._scenario_sim.epanet_api.get_link_idx(pump_id)
+        pattern_idx = int(self._scenario_sim.epanet_api.getlinkvalue(pump_idx,
+                                                                     EpanetConstants.EN_LINKPATTERN))
 
         if pattern_idx == 0:
             warnings.warn(f"No pattern for pump '{pump_id}' found -- a new pattern is created")
-            pattern_idx = self._scenario_sim.epanet_api.addPattern(f"pump_speed_{pump_id}")
-            self._scenario_sim.epanet_api.setLinkPumpPatternIndex(pump_idx + 1, pattern_idx)
+            pattern_id = f"pump_speed_{pump_id}"
+            self._scenario_sim.epanet_api.add_pattern(pattern_id, [speed])
+            pattern_idx = self._scenario_sim.epanet_api.getpatternindex(pattern_id)
+            self._scenario_sim.epanet_api.setlinkvalue(pump_idx, EpanetConstants.EN_LINKPATTERN,
+                                                       pattern_idx)
 
-        self._scenario_sim.epanet_api.setPattern(pattern_idx, np.array([speed]))
+        self._scenario_sim.epanet_api.setpattern(pattern_idx, [speed], 1)
 
     def set_valve_status(self, valve_id: str, status: int) -> None:
         """
@@ -248,9 +252,9 @@ class ScenarioControlEnv(ABC):
             raise RuntimeError("Can not execute actions affecting the hydraulics "+
                                "when running EPANET-MSX")
 
-        valve_idx = self._scenario_sim.epanet_api.getLinkValveNameID().index(valve_id)
-        valve_link_idx = self._scenario_sim.epanet_api.getLinkValveIndex()[valve_idx]
-        self._scenario_sim.epanet_api.setLinkStatus(valve_link_idx, status)
+        valve_link_idx = self._scenario_sim.epanet_api.get_link_idx(valve_id)
+        self._scenario_sim.epanet_api.setlinkvalue(valve_link_idx, EpanetConstants.EN_STATUS,
+                                                   status)
 
     def set_node_quality_source_value(self, node_id: str, pattern_id: str,
                                       qual_value: float) -> None:
@@ -271,10 +275,10 @@ class ScenarioControlEnv(ABC):
             raise RuntimeError("Can not execute actions affecting the hydraulics "+
                                "when running EPANET-MSX")
 
-        node_idx = self._scenario_sim.epanet_api.getNodeIndex(node_id)
-        pattern_idx = self._scenario_sim.epanet_api.getPatternIndex(pattern_id)
-        self._scenario_sim.epanet_api.setNodeSourceQuality(node_idx, 1)
-        self._scenario_sim.epanet_api.setPattern(pattern_idx, np.array([qual_value]))
+        node_idx = self._scenario_sim.epanet_api.get_node_idx(node_id)
+        pattern_idx = self._scenario_sim.epanet_api.getpatternindex(pattern_id)
+        self._scenario_sim.epanet_api.setnodevalue(node_idx, EpanetConstants.EN_SOURCEQUAL, 1)
+        self._scenario_sim.epanet_api.set_pattern(pattern_idx, [qual_value])
 
     def set_node_species_source_value(self, species_id: str, node_id: str, source_type: int,
                                       pattern_id: str, source_strength: float) -> None:
@@ -290,7 +294,7 @@ class ScenarioControlEnv(ABC):
             ID of the node.
         source_type : `int`
             Type of the external species injection source -- must be one of
-            the following EPANET toolkit constants:
+            the following EPANET constants:
 
                 - EN_CONCEN     = 0
                 - EN_MASS       = 1
@@ -312,19 +316,14 @@ class ScenarioControlEnv(ABC):
         if self._scenario_sim.f_msx_in is None:
             raise RuntimeError("You are not running EPANET-MSX")
 
-        source_type_ = "None"
-        if source_type == ToolkitConstants.EN_CONCEN:
-            source_type_ = "CONCEN"
-        elif source_type == ToolkitConstants.EN_MASS:
-            source_type_ = "MASS"
-        elif source_type == ToolkitConstants.EN_SETPOINT:
-            source_type_ = "SETPOINT"
-        elif source_type == ToolkitConstants.EN_FLOWPACED:
-            source_type_ = "FLOWPACED"
+        pattern_idx = self._scenario_sim.epanet_api.MSXgetindex(EpanetConstants.MSX_PATTERN,
+                                                                pattern_id)
+        self._scenario_sim.epanet_api.MSXsetpattern(pattern_idx, [1], 1)
 
-        self._scenario_sim.epanet_api.setMSXPattern(pattern_id, [1])
-        self._scenario_sim.epanet_api.setMSXSources(node_id, species_id, source_type_,
-                                                    source_strength, pattern_id)
+        node_idx = self._scenario_sim.epanet_api.get_node_idx(node_id)
+        species_idx = self._scenario_sim.epanet_api.get_msx_species_idx(species_id)
+        self._scenario_sim.epanet_api.MSXsetsource(node_idx, species_idx, source_type,
+                                                   source_strength, pattern_idx)
 
     @abstractmethod
     def step(self, *actions) -> Union[tuple[ScadaData, float, bool], tuple[ScadaData, float]]:

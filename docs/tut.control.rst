@@ -82,14 +82,14 @@ based on the water level in tank "2":
         # LINK 9 OPEN IF NODE 2 BELOW 110
         my_control_1 = SimpleControlModule(link_id="9",
                                            link_status=ActuatorConstants.EN_OPEN,
-                                           cond_type=ToolkitConstants.EN_LOWLEVEL,
+                                           cond_type=EpanetConstants.EN_LOWLEVEL,
                                            cond_var_value="2",
                                            cond_comp_value=110)
 
         # LINK 9 CLOSED IF NODE 2 ABOVE 140
         my_control_2 = SimpleControlModule(link_id="9",
                                            link_status=ActuatorConstants.EN_CLOSED,
-                                           cond_type=ToolkitConstants.EN_HILEVEL,
+                                           cond_type=EpanetConstants.EN_HILEVEL,
                                            cond_var_value="2",
                                            cond_comp_value=140)
 
@@ -142,12 +142,12 @@ based on the water level in tank "2":
 
         # Create two control rules for operating pump "9"
         # IF TANK 2 LEVEL <= 110 THEN PUMP 9 SETTING IS OPEN
-        condition_1 = RuleCondition(object_type_id=ToolkitConstants.EN_R_NODE,
+        condition_1 = RuleCondition(object_type_id=EpanetConstants.EN_R_NODE,
                                     object_id="2",
                                     attribute_id=EN_R_LEVEL,
                                     relation_type_id=EN_R_LEQ,
                                     value=110)
-        action_1 = RuleAction(link_type_id=ToolkitConstants.EN_PUMP,
+        action_1 = RuleAction(link_type_id=EpanetConstants.EN_PUMP,
                               link_id="9",
                               action_type_id=EN_R_ACTION_STATUS_OPEN,
                               action_value=None)
@@ -159,12 +159,12 @@ based on the water level in tank "2":
                                             priority=1)
 
         # IF TANK 2 LEVEL >= 140 THEN PUMP 9 SETTING IS CLOSED
-        condition_1 = RuleCondition(object_type_id=ToolkitConstants.EN_R_NODE,
+        condition_1 = RuleCondition(object_type_id=EpanetConstants.EN_R_NODE,
                                     object_id="2",
                                     attribute_id=EN_R_LEVEL,
                                     relation_type_id=EN_R_GEQ,
                                     value=140)
-        action_1 = RuleAction(link_type_id=ToolkitConstants.EN_PUMP,
+        action_1 = RuleAction(link_type_id=EpanetConstants.EN_PUMP,
                               link_id="9",
                               action_type_id=EN_R_ACTION_STATUS_CLOSED,
                               action_value=None)

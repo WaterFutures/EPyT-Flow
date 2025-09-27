@@ -4,8 +4,7 @@ Module provides a class for implementing sensor configurations.
 from copy import deepcopy
 import itertools
 import numpy as np
-import epyt
-from epyt.epanet import ToolkitConstants
+from epanet_plus import EpanetConstants, EPyT
 
 from ..serialization import SENSOR_CONFIG_ID, JsonSerializable, serializable
 
@@ -157,7 +156,7 @@ def flowunit_to_str(unit_id: int) -> str:
     unit_id : `int`
         ID of the flow unit.
 
-        Must be one of the following EPANET toolkit constants:
+        Must be one of the following EPANET constants:
 
             - EN_CFS  = 0 (cubic foot/sec)
             - EN_GPM  = 1 (gal/min)
@@ -177,25 +176,25 @@ def flowunit_to_str(unit_id: int) -> str:
     """
     if unit_id is None:
         return ""
-    elif unit_id == ToolkitConstants.EN_CFS:
+    elif unit_id == EpanetConstants.EN_CFS:
         return "cubic foot/sec"
-    elif unit_id == ToolkitConstants.EN_GPM:
+    elif unit_id == EpanetConstants.EN_GPM:
         return "gal/min"
-    elif unit_id == ToolkitConstants.EN_MGD:
+    elif unit_id == EpanetConstants.EN_MGD:
         return "Million gal/day"
-    elif unit_id == ToolkitConstants.EN_IMGD:
+    elif unit_id == EpanetConstants.EN_IMGD:
         return "Imperial MGD"
-    elif unit_id == ToolkitConstants.EN_AFD:
+    elif unit_id == EpanetConstants.EN_AFD:
         return "ac-foot/day"
-    elif unit_id == ToolkitConstants.EN_LPS:
+    elif unit_id == EpanetConstants.EN_LPS:
         return "liter/sec"
-    elif unit_id == ToolkitConstants.EN_LPM:
+    elif unit_id == EpanetConstants.EN_LPM:
         return "liter/min"
-    elif unit_id == ToolkitConstants.EN_MLD:
+    elif unit_id == EpanetConstants.EN_MLD:
         return "Megaliter/day"
-    elif unit_id == ToolkitConstants.EN_CMH:
+    elif unit_id == EpanetConstants.EN_CMH:
         return "cubic meter/hr"
-    elif unit_id == ToolkitConstants.EN_CMD:
+    elif unit_id == EpanetConstants.EN_CMD:
         return "cubic meter/day"
     else:
         raise ValueError(f"Unknown unit ID '{unit_id}'")
@@ -274,7 +273,7 @@ def is_flowunit_simetric(unit_id: int) -> bool:
     unit_id : `int`
         ID of the flow unit.
 
-        Must be one of the following EPANET toolkit constants:
+        Must be one of the following EPANET constants:
 
             - EN_CFS  = 0 (cubic foot/sec)
             - EN_GPM  = 1 (gal/min)
@@ -292,8 +291,8 @@ def is_flowunit_simetric(unit_id: int) -> bool:
     `bool`
         True if the fiven unit is a SI metric unit, False otherwise.
     """
-    return unit_id in [ToolkitConstants.EN_LPS, ToolkitConstants.EN_LPM, ToolkitConstants.EN_MLD,
-                       ToolkitConstants.EN_CMH, ToolkitConstants.EN_CMD]
+    return unit_id in [EpanetConstants.EN_LPS, EpanetConstants.EN_LPM, EpanetConstants.EN_MLD,
+                       EpanetConstants.EN_CMH, EpanetConstants.EN_CMD]
 
 
 @serializable(SENSOR_CONFIG_ID, ".epytflow_sensor_config")
@@ -410,7 +409,7 @@ class SensorConfig(JsonSerializable):
         Specifies the flow units and consequently all other hydraulic units
         (US CUSTOMARY or SI METRIC) as well.
 
-        Must be one of the following EPANET toolkit constants:
+        Must be one of the following EPANET constants:
 
             - EN_CFS = 0 (cubic foot/sec)
             - EN_GPM = 1 (gal/min)
@@ -1201,34 +1200,34 @@ class SensorConfig(JsonSerializable):
                                                      surface_species_idx_shift)}
         self.__sensors_id_to_idx = mapping
 
-    def validate(self, epanet_api: epyt.epanet) -> None:
+    def validate(self, epanet_api: EPyT) -> None:
         """
         Validates this sensor configuration --
         i.e. checks whether all nodes, etc. exist in the .inp file.
 
         Parameters
         ----------
-        epanet_api : `epyt.epanet`
+        epanet_api : `epanet_plus.EPyT <https://epanet-plus.readthedocs.io/en/stable/api.html#epanet_plus.epanet_toolkit.EPyT>`_
             EPANET and EPANET-MSX API.
         """
-        if not isinstance(epanet_api, epyt.epanet):
-            raise TypeError("'epanet_api' must be an instance of 'epyt.epanet' " +
+        if not isinstance(epanet_api, EPyT):
+            raise TypeError("'epanet_api' must be an instance of 'epanet-plus.EPyT' " +
                             f"but not of '{type(epanet_api)}'")
 
-        nodes = epanet_api.getNodeNameID()
-        links = epanet_api.getLinkNameID()
-        valves = epanet_api.getLinkValveNameID()
-        pumps = epanet_api.getLinkPumpNameID()
-        tanks = epanet_api.getNodeTankNameID()
+        nodes = epanet_api.get_all_nodes_id()
+        links = epanet_api.get_all_links_id()
+        valves = epanet_api.get_all_valves_id()
+        pumps = epanet_api.get_all_pumps_id()
+        tanks = epanet_api.get_all_tanks_id()
 
         bulk_species = []
         surface_species = []
-        if epanet_api.msx is not None:
-            for species_id, species_type in zip(epanet_api.getMSXSpeciesNameID(),
-                                                epanet_api.getMSXSpeciesType()):
-                if species_type == "BULK":
+        if epanet_api.msx_file is not None:
+            for species_id, species_info in zip(epanet_api.get_all_msx_species_id(),
+                                                epanet_api.get_all_msx_species_info()):
+                if species_info["type"] == EpanetConstants.MSX_BULK:
                     bulk_species.append(species_id)
-                elif species_type == "WALL":
+                elif species_info["type"] == EpanetConstants.MSX_WALL:
                     surface_species.append(species_id)
 
         if any(node_id not in nodes for node_id in self.__nodes):
@@ -1334,7 +1333,7 @@ class SensorConfig(JsonSerializable):
         Gets the flow units.
         Note that this specifies all other hydraulic units as well.
 
-        Will be one of the following EPANET toolkit constants:
+        Will be one of the following EPANET constants:
 
             - EN_CFS = 0 (cubic foot/sec)
             - EN_GPM = 1 (gal/min)

@@ -2,7 +2,7 @@
 Module provides base classes for system events such as leakages, actuator events, etc.
 """
 from abc import abstractmethod
-import epyt
+from epanet_plus import EPyT
 
 from .event import Event
 
@@ -17,13 +17,13 @@ class SystemEvent(Event):
 
         super().__init__(**kwds)
 
-    def init(self, epanet_api: epyt.epanet) -> None:
+    def init(self, epanet_api: EPyT) -> None:
         """
         Initializes the event.
 
         Parameters
         ----------
-        epanet_api : `epyt.epanet <https://epanet-python-toolkit-epyt.readthedocs.io/en/stable/api.html#epyt.epanet.epanet>`_
+        epanet_api : `epanet_plus.EPyT <https://epanet-plus.readthedocs.io/en/stable/api.html#epanet_plus.epanet_toolkit.EPyT>`_
             API to EPANET and EPANET-MSX.
         """
         self._epanet_api = epanet_api

@@ -9,6 +9,7 @@ import networkx as nx
 from scipy.sparse import bsr_array
 from geopandas import GeoDataFrame
 from shapely.geometry import Point, LineString
+from epanet_plus import EpanetConstants
 
 from .serialization import serializable, JsonSerializable, NETWORK_TOPOLOGY_ID
 
@@ -228,7 +229,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         r = []
 
         for node_id in self.get_all_nodes():
-            if self.get_node_info(node_id)["type"] == "JUNCTION":
+            if self.get_node_info(node_id)["type"] == EpanetConstants.EN_JUNCTION:
                 r.append(node_id)
 
         return r
@@ -256,7 +257,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         r = []
 
         for node_id in self.get_all_nodes():
-            if self.get_node_info(node_id)["type"] == "TANK":
+            if self.get_node_info(node_id)["type"] == EpanetConstants.EN_TANK:
                 r.append(node_id)
 
         return r
@@ -284,7 +285,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         r = []
 
         for node_id in self.get_all_nodes():
-            if self.get_node_info(node_id)["type"] == "RESERVOIR":
+            if self.get_node_info(node_id)["type"] == EpanetConstants.EN_RESERVOIR:
                 r.append(node_id)
 
         return r
@@ -314,7 +315,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         for link_id, link_nodes in self.get_all_links():
             link_info = self.get_link_info(link_id)
 
-            if link_info["type"] == "PIPE":
+            if link_info["type"] == EpanetConstants.EN_PIPE:
                 r.append((link_id, link_nodes))
 
         return r
@@ -574,7 +575,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             node_data["elevation"].append(node_info["elevation"])
             node_data["geometry"].append(Point(node_info["coord"]))
 
-            if node_info["type"] == "TANK":
+            if node_info["type"] == EpanetConstants.EN_TANK:
                 tank_data["id"].append(node_id)
                 tank_data["elevation"].append(node_info["elevation"])
                 tank_data["diameter"].append(node_info["diameter"])
@@ -582,9 +583,9 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                 tank_data["max_level"].append(node_info["max_level"])
                 tank_data["min_level"].append(node_info["min_level"])
                 tank_data["mixing_fraction"].append(node_info["mixing_fraction"])
-                #tank_data["mixing_model"].append(node_info["mixing_model"])
+                tank_data["mixing_model"].append(node_info["mixing_model"])
                 tank_data["geometry"].append(Point(node_info["coord"]))
-            elif node_info["type"] == "RESERVOIR":
+            elif node_info["type"] == EpanetConstants.EN_RESERVOIR:
                 reservoir_data["id"].append(node_id)
                 reservoir_data["elevation"].append(node_info["elevation"])
                 reservoir_data["geometry"].append(Point(node_info["coord"]))
@@ -602,7 +603,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             link_info = self.get_link_info(link_id)
             end_points_coord = [self.get_node_info(n)["coord"] for n in link_nodes]
 
-            if link_info["type"] == "PIPE":
+            if link_info["type"] == EpanetConstants.EN_PIPE:
                 pipe_data["id"].append(link_id)
                 pipe_data["type"].append(link_info["type"])
                 pipe_data["end_point_a"].append(link_nodes[0])
@@ -610,7 +611,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                 pipe_data["length"].append(link_info["length"])
                 pipe_data["diameter"].append(link_info["diameter"])
                 pipe_data["geometry"].append(LineString(end_points_coord))
-            elif link_info["type"] == "PUMP":
+            elif link_info["type"] == EpanetConstants.EN_PUMP:
                 pump_data["id"].append(link_id)
                 pump_data["type"].append(self.get_pump_info(link_id)["type"])
                 if pumps_as_points is True:
@@ -619,7 +620,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                     pump_data["geometry"].append(LineString(end_points_coord))
             else:   # Valve
                 valve_data["id"].append(link_id)
-                valve_data["type"].append(self.get_valve_info[link_id]["type"])
+                valve_data["type"].append(self.get_valve_info(link_id)["type"])
                 if valves_as_points is True:
                     valve_data["geometry"].append(Point(end_points_coord[0]))
                 else:
