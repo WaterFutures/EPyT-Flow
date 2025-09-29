@@ -2,7 +2,7 @@
 Module provides tests to test basic quality analysis.
 """
 import numpy as np
-from epyt_flow.simulation import ToolkitConstants
+from epyt_flow.simulation import EpanetConstants
 from epyt_flow.data.networks import load_hanoi, load_net1
 from epyt_flow.simulation import ScenarioSimulator
 from epyt_flow.simulation.sensor_config import SENSOR_TYPE_NODE_QUALITY
@@ -53,7 +53,7 @@ def test_chlorine_injection():
 
         sim.enable_chemical_analysis()
         sim.add_quality_source(node_id="1", pattern=np.array([1.]),
-                               source_type=ToolkitConstants.EN_CONCEN,
+                               source_type=EpanetConstants.EN_CONCEN,
                                pattern_id="my-chl-pattern")
 
         res = sim.run_simulation()
@@ -64,7 +64,7 @@ def test_chlorine_injection():
 
         sim.enable_chemical_analysis()
         sim.add_quality_source(node_id="1", pattern=np.array([1.]),
-                               source_type=ToolkitConstants.EN_CONCEN)
+                               source_type=EpanetConstants.EN_CONCEN)
 
         res = sim.run_simulation()
         res.get_data()

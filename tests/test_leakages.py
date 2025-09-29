@@ -3,10 +3,10 @@ Module provides test to test different types of leakages.
 """
 import math
 import numpy as np
-from epyt.epanet import ToolkitConstants
 
 from epyt_flow.data.networks import load_hanoi
-from epyt_flow.simulation import ScenarioSimulator, IncipientLeakage, AbruptLeakage, Leakage
+from epyt_flow.simulation import ScenarioSimulator, IncipientLeakage, AbruptLeakage, Leakage, \
+    EpanetConstants
 from epyt_flow.utils import to_seconds
 
 from .utils import get_temp_folder
@@ -15,13 +15,9 @@ from .utils import get_temp_folder
 def test_abrupt_leakage():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
                                       include_default_sensor_placement=True,
-                                      flow_units_id=ToolkitConstants.EN_CMH)
+                                      flow_units_id=EpanetConstants.EN_CMH)
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
-        sim.set_general_parameters(simulation_duration=to_seconds(days=2),
-                                   demand_model={"type": "PDA",
-                                                 "pressure_min": 0,
-                                                 "pressure_required": 0.1,
-                                                 "pressure_exponent": 0.5})
+        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
         leak = AbruptLeakage(link_id="12", diameter=0.1, start_time=7200, end_time=100800)
         sim.add_leakage(leak)
@@ -33,13 +29,9 @@ def test_abrupt_leakage():
 def test_abrupt_leakage_area():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
                                       include_default_sensor_placement=True,
-                                      flow_units_id=ToolkitConstants.EN_CMH)
+                                      flow_units_id=EpanetConstants.EN_CMH)
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
-        sim.set_general_parameters(simulation_duration=to_seconds(days=2),
-                                   demand_model={"type": "PDA",
-                                                 "pressure_min": 0,
-                                                 "pressure_required": 0.1,
-                                                 "pressure_exponent": 0.5})
+        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
         leak = AbruptLeakage(link_id="12", area=0.79, start_time=7200, end_time=100800)
         sim.add_leakage(leak)
@@ -51,13 +43,9 @@ def test_abrupt_leakage_area():
 def test_incipient_leakage():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
                                       include_default_sensor_placement=True,
-                                      flow_units_id=ToolkitConstants.EN_CMH)
+                                      flow_units_id=EpanetConstants.EN_CMH)
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
-        sim.set_general_parameters(simulation_duration=to_seconds(days=2),
-                                   demand_model={"type": "PDA",
-                                                 "pressure_min": 0,
-                                                 "pressure_required": 0.1,
-                                                 "pressure_exponent": 0.5})
+        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
         leak = IncipientLeakage(link_id="12", diameter=0.01,
                                 start_time=7200, end_time=100800, peak_time=54000)
@@ -70,13 +58,9 @@ def test_incipient_leakage():
 def test_incipient_leakage_area():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
                                       include_default_sensor_placement=True,
-                                      flow_units_id=ToolkitConstants.EN_CMH)
+                                      flow_units_id=EpanetConstants.EN_CMH)
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
-        sim.set_general_parameters(simulation_duration=to_seconds(days=2),
-                                   demand_model={"type": "PDA",
-                                                 "pressure_min": 0,
-                                                 "pressure_required": 0.1,
-                                                 "pressure_exponent": 0.5})
+        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
         leak = IncipientLeakage(link_id="12", area=0.79,
                                 start_time=7200, end_time=100800, peak_time=54000)
@@ -89,15 +73,11 @@ def test_incipient_leakage_area():
 def test_custom_leakage_profile():
     hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
                                       include_default_sensor_placement=True,
-                                      flow_units_id=ToolkitConstants.EN_CMH)
+                                      flow_units_id=EpanetConstants.EN_CMH)
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
-        sim.set_general_parameters(simulation_duration=to_seconds(days=2),
-                                   demand_model={"type": "PDA",
-                                                 "pressure_min": 0,
-                                                 "pressure_required": 0.1,
-                                                 "pressure_exponent": 0.5})
+        sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
-        hyd_time_step = sim.epanet_api.getTimeHydraulicStep()
+        hyd_time_step = sim.epanet_api.get_hydraulic_time_step()
         n_leaky_time_steps = math.ceil((100800 - 7200) / hyd_time_step)
 
         profile = np.array([.1, .2, .5, .7, .9] + [1.] * (n_leaky_time_steps - 5))
