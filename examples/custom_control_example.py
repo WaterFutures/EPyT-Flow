@@ -17,7 +17,7 @@ class MyControl(CustomControlModule):
         self.__tank_id = "2"
         self.__pump_id = "9"
 
-        # Tank diameter could be also obtained by calling epanet.getNodeTankData
+        # Tank diameter could be also obtained from EPANET
         self.__tank_diameter = 50.5
 
         # Lower and upper threshold on tank level

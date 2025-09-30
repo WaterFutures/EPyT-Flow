@@ -18,7 +18,7 @@ if __name__ == "__main__":
         sim.set_pump_state_sensors(sensor_locations=["9"])
 
         # Remove all existing controls
-        sim.epanet_api.deleteControls()
+        sim.epanet_api.remove_all_controls()
 
         # Add actuator (i.e. pump state) events
         # Deactivate pump "9" at 14h after simulation start

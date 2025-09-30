@@ -3,7 +3,7 @@ Example of adding a simple arsenic contamination event to a scenario.
 """
 import numpy as np
 from epyt_flow.data.benchmarks import load_leakdb_scenarios
-from epyt_flow.simulation import ScenarioSimulator, ToolkitConstants, ScenarioConfig
+from epyt_flow.simulation import ScenarioSimulator, EpanetConstants, ScenarioConfig
 from epyt_flow.simulation.events import SpeciesInjectionEvent
 from epyt_flow.utils import to_seconds
 
@@ -30,7 +30,7 @@ if __name__ == "__main__":
         # i.e. injection of Arsenite (100mg/L) at node "22"
         contamination_event = SpeciesInjectionEvent(species_id="AsIII", node_id="22",
                                                     profile=np.array([100]),
-                                                    source_type=ToolkitConstants.EN_MASS,
+                                                    source_type=EpanetConstants.EN_MASS,
                                                     start_time=to_seconds(days=3),
                                                     end_time=to_seconds(days=4))
         sim.add_system_event(contamination_event)

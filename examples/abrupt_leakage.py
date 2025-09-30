@@ -2,7 +2,7 @@
 Example on the implementation of an abrupt leakage.
 """
 from epyt_flow.data.networks import load_hanoi
-from epyt_flow.simulation import ScenarioSimulator, AbruptLeakage, ToolkitConstants
+from epyt_flow.simulation import ScenarioSimulator, AbruptLeakage, EpanetConstants
 from epyt_flow.utils import to_seconds
 
 
@@ -18,7 +18,7 @@ if __name__ == "__main__":
         # Note that leakages are only modeled for two flow units.
         # We therefore change the flow units to cubic meter per hour --
         # could also be done when loading the network!
-        sim.set_general_parameters(flow_units_id=ToolkitConstants.EN_CMH)
+        sim.set_general_parameters(flow_units_id=EpanetConstants.EN_CMH)
 
         # Add an abrupt leakage at link/pipe "14" -- the leakage is active for 18 hours and
         # starts at 10 hours after simulation begin -- recall that the time arguments are seconds!
