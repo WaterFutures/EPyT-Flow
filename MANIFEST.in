@@ -1,5 +1,4 @@
 include epyt_flow/VERSION
-recursive-include epyt_flow/EPANET *
 exclude .*
 exclude DEVELOPERS.md
 exclude REQUIREMENTS-DEV.txt
