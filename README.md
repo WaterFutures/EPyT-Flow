@@ -41,7 +41,7 @@ Unique features of EPyT-Flow that make it superior to other (Python) toolboxes a
 
 ## Installation
 
-EPyT-Flow supports Python 3.9 - 3.13
+EPyT-Flow supports Python 3.9 - 3.14
 
 Note that EPyT-Flow builds upon [EPANET-PLUS](https://github.com/WaterFutures/EPANET-PLUS) which
 constitutes a C extension and Python package.
