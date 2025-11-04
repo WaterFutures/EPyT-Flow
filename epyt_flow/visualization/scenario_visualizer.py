@@ -720,8 +720,9 @@ class ScenarioVisualizer:
             shape links*timesteps. If `None`, a simulation is run to generate
             SCADA data. Default is `None`.
         parameter : `str`, optional
-            The link data to visualize. Options are 'flow_rate', 'velocity', or
-            'status'. Default is 'flow_rate'.
+            The link data to visualize. Options are 'flow_rate', 'link_quality',
+            'custom_data', 'bulk_species_concentration' or 'diameter'.
+            Default is 'flow_rate'.
         statistic : `str`, optional
             The statistic to calculate for the data. Can be 'mean', 'min',
             'max', or 'time_step'. Default is 'mean'.

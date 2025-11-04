@@ -310,8 +310,9 @@ class EdgeObject:
             SCADA data created by the :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`
             instance, is used to retrieve data for the next frame.
         parameter : `str`, default = 'flow_rate'
-            The link data to visualize. Options are 'flow_rate', 'velocity', or
-            'status'. Default is 'flow_rate'.
+            The link data to visualize. Options are 'flow_rate', 'link_quality',
+            'custom_data', 'bulk_species_concentration' or 'diameter'.
+            Default is 'flow_rate'.
         statistic : `str`, default = 'mean'
             The statistic to calculate for the data. Can be 'mean', 'min',
              'max' or 'time_step'.
