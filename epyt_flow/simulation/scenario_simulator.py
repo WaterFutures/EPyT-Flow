@@ -1195,7 +1195,7 @@ class ScenarioSimulator():
         else:
             base_demand = 0
             for demand_idx in range(n_demand_categories):
-                base_demand += self.epanet_api.getbasedemand(node_idx)[demand_idx + 1]
+                base_demand += self.epanet_api.getbasedemand(node_idx, demand_idx + 1)
 
             return base_demand
 
