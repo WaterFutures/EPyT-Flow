@@ -3,7 +3,7 @@ Module provides tests to test different types of uncertainties and noise.
 """
 import numpy as np
 from epyt_flow.data.networks import load_hanoi
-from epyt_flow.simulation import ScenarioSimulator
+from epyt_flow.simulation import ScenarioSimulator, EpanetConstants
 from epyt_flow.uncertainty import AbsoluteGaussianUncertainty, RelativeGaussianUncertainty, \
     RelativeUniformUncertainty, AbsoluteUniformUncertainty, PercentageDeviationUncertainty, \
     AbsoluteDeepGaussianUncertainty, RelativeDeepGaussianUncertainty, \
@@ -18,7 +18,7 @@ def test_model_uncertainty():
                                       include_default_sensor_placement=True)
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2),
-                                   demand_model={"type": "PDA",
+                                   demand_model={"type": EpanetConstants.EN_PDA,
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
@@ -111,7 +111,7 @@ def test_sensor_noise():
                                       include_default_sensor_placement=True)
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2),
-                                   demand_model={"type": "PDA",
+                                   demand_model={"type": EpanetConstants.EN_PDA,
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
@@ -122,7 +122,7 @@ def test_sensor_noise():
 
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2),
-                                   demand_model={"type": "PDA",
+                                   demand_model={"type": EpanetConstants.EN_PDA,
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
@@ -133,7 +133,7 @@ def test_sensor_noise():
 
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2),
-                                   demand_model={"type": "PDA",
+                                   demand_model={"type": EpanetConstants.EN_PDA,
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
@@ -144,7 +144,7 @@ def test_sensor_noise():
 
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2),
-                                   demand_model={"type": "PDA",
+                                   demand_model={"type": EpanetConstants.EN_PDA,
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
@@ -155,7 +155,7 @@ def test_sensor_noise():
 
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2),
-                                   demand_model={"type": "PDA",
+                                   demand_model={"type": EpanetConstants.EN_PDA,
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
@@ -166,7 +166,7 @@ def test_sensor_noise():
 
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2),
-                                   demand_model={"type": "PDA",
+                                   demand_model={"type": EpanetConstants.EN_PDA,
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
@@ -177,7 +177,7 @@ def test_sensor_noise():
 
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2),
-                                   demand_model={"type": "PDA",
+                                   demand_model={"type": EpanetConstants.EN_PDA,
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})
@@ -188,7 +188,7 @@ def test_sensor_noise():
 
     with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=2),
-                                   demand_model={"type": "PDA",
+                                   demand_model={"type": EpanetConstants.EN_PDA,
                                                  "pressure_min": 0,
                                                  "pressure_required": 0.1,
                                                  "pressure_exponent": 0.5})

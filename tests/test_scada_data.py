@@ -2,9 +2,8 @@
 Module provides tests to test the :class:`epyt_flow.simulation.scada.ScadaData` class.
 """
 from epyt_flow.data.networks import load_hanoi
-from epyt_flow.simulation import ScenarioSimulator
+from epyt_flow.simulation import ScenarioSimulator, EpanetConstants
 from epyt_flow.utils import to_seconds
-from epyt.epanet import ToolkitConstants
 
 from .utils import get_temp_folder
 
@@ -38,5 +37,5 @@ def test_convert_unit():
         res2 = res.convert_units()
         assert res == res2
 
-        res2 = res.convert_units(flow_unit=ToolkitConstants.EN_CFS)
+        res2 = res.convert_units(flow_unit=EpanetConstants.EN_CFS)
         assert res != res2

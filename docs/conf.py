@@ -25,8 +25,8 @@ author = 'André Artelt, Marios S. Kyriakou, Stelios G. Vrachimis, et al.'
 
 # -- General configuration ---------------------------------------------------
 
-autodoc_mock_imports = ["epyt", "pandas", "numpy", "scipy", "matplotlib", "sklearn", "falcon",
-                        "geopandas", "shapely"]
+autodoc_mock_imports = ["epanet_plus", "pandas", "numpy", "scipy", "matplotlib", "sklearn",
+                        "falcon", "geopandas", "shapely"]
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -37,6 +37,8 @@ extensions = [
     'sphinx.ext.viewcode',
     'nbsphinx'
 ]
+
+nbsphinx_allow_errors = True
 
 # Show line numbers in the source code
 viewcode_line_numbers = True

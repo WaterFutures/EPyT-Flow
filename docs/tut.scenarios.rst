@@ -211,7 +211,7 @@ in the `EPANET documentation <https://epanet22.readthedocs.io/en/latest/back_mat
 .. code-block:: python
 
     # Load Net1 with CMH (cubic meter per hour) as the flow unit
-    scenario_config = load_net1(flow_units_id=ToolkitConstants.EN_CMH)
+    scenario_config = load_net1(flow_units_id=EpanetConstants.EN_CMH)
 
 
 Alternatively, the flow units can be changed anytime by calling
@@ -223,7 +223,7 @@ Alternatively, the flow units can be changed anytime by calling
     # Open/Create a new scenario based on the Hanoi network
     with ScenarioSimulator(f_inp="Hanoi.inp") as sim:
         # Change flow units to CMH (cubic meter per hour)
-        sim.set_general_parameters(flow_units_id=ToolkitConstants.EN_CMH)
+        sim.set_general_parameters(flow_units_id=EpanetConstants.EN_CMH)
 
         # ...
 

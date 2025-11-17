@@ -4,8 +4,7 @@ Module provides classes for implementing leakages.
 from copy import deepcopy
 import math
 import numpy as np
-import epyt
-from epyt.epanet import ToolkitConstants
+from epanet_plus import EPyT, EpanetConstants
 
 from .system_event import SystemEvent
 from ...serialization import serializable, JsonSerializable, \
@@ -231,10 +230,10 @@ class Leakage(SystemEvent, JsonSerializable):
         `float`
             Leak emitter coefficient.
         """
-        flow_unit = self._epanet_api.api.ENgetflowunits()
-        if flow_unit == ToolkitConstants.EN_CMH:
+        flow_unit = self._epanet_api.getflowunits()
+        if flow_unit == EpanetConstants.EN_CMH:
             g = 127137600   # m/h^2
-        elif flow_unit == ToolkitConstants.EN_CFS:
+        elif flow_unit == EpanetConstants.EN_CFS:
             g = 32.17405    # feet/s^2
         else:
             raise ValueError("Leakages are only implemented for the following flow units:\n" +
@@ -248,30 +247,30 @@ class Leakage(SystemEvent, JsonSerializable):
     def _get_new_node_id(self) -> str:
         return f"leak_node_{self.__link_id}"
 
-    def init(self, epanet_api: epyt.epanet) -> None:
+    def init(self, epanet_api: EPyT) -> None:
         super().init(epanet_api)
 
         # Split pipe if leak is placed at a link/pipe
         if self.__link_id is not None:
-            if self.__link_id not in self._epanet_api.getLinkNameID():
+            if self.__link_id not in self._epanet_api.get_all_links_id():
                 raise ValueError(f"Unknown link/pipe '{self.__link_id}'")
 
             new_link_id = self._get_new_link_id()
             new_node_id = self._get_new_node_id()
 
-            all_nodes_id = self._epanet_api.getNodeNameID()
+            all_nodes_id = self._epanet_api.get_all_nodes_id()
             if new_node_id in all_nodes_id:
                 raise ValueError(f"There is already a leak at pipe {self.link_id}")
 
-            self._epanet_api.splitPipe(self.link_id, new_link_id, new_node_id)
-            self.__leaky_node_idx = self._epanet_api.getNodeIndex(new_node_id)
+            self._epanet_api.split_pipe(self.link_id, new_link_id, new_node_id)
+            self.__leaky_node_idx = self._epanet_api.get_node_idx(new_node_id)
         else:
-            if self.__node_id not in self._epanet_api.getNodeNameID():
+            if self.__node_id not in self._epanet_api.get_all_nodes_id():
                 raise ValueError(f"Unknown node '{self.__node_id}'")
 
-            self.__leaky_node_idx = self._epanet_api.getNodeIndex(self.__node_id)
+            self.__leaky_node_idx = self._epanet_api.get_node_idx(self.__node_id)
 
-        self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_idx, 0.)
+        self._epanet_api.setnodevalue(self.__leaky_node_idx, EpanetConstants.EN_EMITTER, 0.)
 
         # Compute leak emitter coefficient
         self.__leak_emitter_coef = self.compute_leak_emitter_coefficient(
@@ -279,51 +278,54 @@ class Leakage(SystemEvent, JsonSerializable):
 
     def cleanup(self) -> None:
         if self.__link_id is not None:
-            pipe_idx = self._epanet_api.getLinkIndex(self.__link_id)
-            link_prop = self._epanet_api.getLinksInfo()
-            link_diameter = link_prop.LinkDiameter[pipe_idx - 1]
-            link_length = link_prop.LinkLength[pipe_idx - 1] * 2.
-            link_roughness_coeff = link_prop.LinkRoughnessCoeff[pipe_idx - 1]
-            link_minor_loss_coeff = link_prop.LinkMinorLossCoeff[pipe_idx - 1]
-            link_initial_status = link_prop.LinkInitialStatus[pipe_idx - 1]
-            link_initial_setting = link_prop.LinkInitialSetting[pipe_idx - 1]
-            link_bulk_reaction_coeff = link_prop.LinkBulkReactionCoeff[pipe_idx - 1]
-            link_wall_reaction_coeff = link_prop.LinkWallReactionCoeff[pipe_idx - 1]
+            pipe_idx = self._epanet_api.get_link_idx(self.__link_id)
+            link_diameter = self._epanet_api.get_link_diameter(pipe_idx)
+            link_length = self._epanet_api.get_link_length(pipe_idx)
+            link_roughness_coeff = self._epanet_api.get_link_roughness(pipe_idx)
+            link_minor_loss_coeff = self._epanet_api.get_link_minorloss(pipe_idx)
+            link_initial_status = self._epanet_api.get_link_init_status(pipe_idx)
+            link_initial_setting = self._epanet_api.get_link_init_setting(pipe_idx)
+            link_bulk_reaction_coeff = self._epanet_api.get_link_bulk_raction_coeff(pipe_idx)
+            link_wall_reaction_coeff = self._epanet_api.get_link_wall_raction_coeff(pipe_idx)
 
-            node_a_idx = int(self._epanet_api.getLinkNodesIndex(pipe_idx)[0])
-            node_b_idx = int(self._epanet_api.getLinkNodesIndex(self._get_new_link_id())[1])
+            node_a_idx = int(self._epanet_api.getlinknodes(pipe_idx)[0])
+            node_b_idx = int(self._epanet_api.getlinknodes(self._epanet_api.get_link_idx(self._get_new_link_id()))[1])
 
-            self._epanet_api.deleteLink(self._get_new_link_id())
-            self._epanet_api.deleteLink(self.__link_id)
-            self._epanet_api.deleteNode(self._get_new_node_id())
+            self._epanet_api.deletelink(self._epanet_api.get_link_idx(self._get_new_link_id()),
+                                        EpanetConstants.EN_UNCONDITIONAL)
+            self._epanet_api.deletelink(self._epanet_api.get_link_idx(self.__link_id),
+                                        EpanetConstants.EN_UNCONDITIONAL)
+            self._epanet_api.deletenode(self._epanet_api.get_node_idx(self._get_new_node_id()),
+                                        EpanetConstants.EN_UNCONDITIONAL)
 
-            self._epanet_api.addLinkPipe(self.__link_id,
-                                         self._epanet_api.getNodeNameID(node_a_idx),
-                                         self._epanet_api.getNodeNameID(node_b_idx))
-            link_idx = self._epanet_api.getLinkIndex(self.__link_id)
-            self._epanet_api.setLinkNodesIndex(link_idx,
-                                               node_a_idx, node_b_idx)
-            self._epanet_api.setLinkPipeData(link_idx, link_length, link_diameter,
-                                             link_roughness_coeff,
-                                             link_minor_loss_coeff)
-            if link_minor_loss_coeff != 0:
-                self._epanet_api.setLinklinkMinorLossCoeff(link_idx, link_minor_loss_coeff)
-            self._epanet_api.setLinkInitialStatus(link_idx, link_initial_status)
-            self._epanet_api.setLinkInitialSetting(link_idx, link_initial_setting)
-            self._epanet_api.setLinkBulkReactionCoeff(link_idx, link_bulk_reaction_coeff)
-            self._epanet_api.setLinkWallReactionCoeff(link_idx, link_wall_reaction_coeff)
-            self._epanet_api.setLinkTypePipe(link_idx)
+            self._epanet_api.addlink(self.__link_id, EpanetConstants.EN_PIPE,
+                                     self._epanet_api.get_node_id(node_a_idx),
+                                     self._epanet_api.get_node_id(node_b_idx))
+            link_idx = self._epanet_api.get_link_idx(self.__link_id)
+            self._epanet_api.setlinknodes(link_idx, node_a_idx, node_b_idx)
+            self._epanet_api.setlinktype(link_idx, EpanetConstants.EN_PIPE,
+                                         EpanetConstants.EN_UNCONDITIONAL)
+            self._epanet_api.setpipedata(link_idx, link_length, link_diameter, link_roughness_coeff,
+                                         link_minor_loss_coeff)
+            self._epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_INITSTATUS,
+                                          link_initial_status)
+            self._epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_INITSETTING,
+                                          link_initial_setting)
+            self._epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_KBULK,
+                                          link_bulk_reaction_coeff)
+            self._epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_KWALL,
+                                          link_wall_reaction_coeff)
 
     def reset(self) -> None:
         self.__time_pattern_idx = 0
 
     def exit(self, cur_time) -> None:
-        self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_idx, 0.)
+        self._epanet_api.setnodevalue(self.__leaky_node_idx, EpanetConstants.EN_EMITTER, 0.)
 
     def apply(self, cur_time: int) -> None:
-        self._epanet_api.setNodeEmitterCoeff(self.__leaky_node_idx,
-                                             self.__leak_emitter_coef *
-                                             self.__profile[self.__time_pattern_idx])
+        self._epanet_api.setnodevalue(self.__leaky_node_idx, EpanetConstants.EN_EMITTER,
+                                      self.__leak_emitter_coef *
+                                      self.__profile[self.__time_pattern_idx])
         self.__time_pattern_idx += 1
 
 
@@ -357,12 +359,12 @@ class AbruptLeakage(Leakage):
         else:
             super().__init__(link_id=link_id, diameter=diameter, area=area, **kwds)
 
-    def init(self, epanet_api: epyt.epanet) -> None:
+    def init(self, epanet_api: EPyT) -> None:
         super().init(epanet_api)
 
         # Set pattern
-        total_sim_duration = self._epanet_api.getTimeSimulationDuration()
-        time_step = self._epanet_api.getTimeHydraulicStep()
+        total_sim_duration = self._epanet_api.get_simulation_duration()
+        time_step = self._epanet_api.get_hydraulic_time_step()
 
         if self.end_time is not None:
             n_leaky_time_points = math.ceil((self.end_time - self.start_time) / time_step)
@@ -436,12 +438,12 @@ class IncipientLeakage(Leakage):
     def __str__(self) -> str:
         return f"{super().__str__()} peak_time: {self.peak_time}"
 
-    def init(self, epanet_api: epyt.epanet) -> None:
+    def init(self, epanet_api: EPyT) -> None:
         super().init(epanet_api)
 
         # Set pattern
-        total_sim_duration = self._epanet_api.getTimeSimulationDuration()
-        time_step = self._epanet_api.getTimeHydraulicStep()
+        total_sim_duration = self._epanet_api.get_simulation_duration()
+        time_step = self._epanet_api.get_hydraulic_time_step()
 
         if self.end_time is not None:
             n_leaky_time_points = math.ceil((self.end_time - self.start_time) / time_step)

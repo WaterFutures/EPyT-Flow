@@ -70,12 +70,14 @@ def test_export_to_epanet_files_1():
 def test_export_to_epanet_files_2():
     f_msx_out = os.path.join(get_temp_folder(), "my_Net3-NH2CL.msx")
 
-    with ScenarioSimulator(f_inp_in="Net3-NH2CL.inp", f_msx_in="Net3-NH2CL.msx") as sim:
+    with ScenarioSimulator(f_inp_in=os.path.join("tests", "Net3-NH2CL.inp"),
+                           f_msx_in=os.path.join("tests", "Net3-NH2CL.msx")) as sim:
         sim.set_general_parameters(simulation_duration=to_seconds(days=3))
         sim.set_bulk_species_node_sensors(sensor_info={"HOCL": sim.sensor_config.nodes})
         sim.set_bulk_species_link_sensors(sensor_info={"HOCL": sim.sensor_config.links})
 
         sim.save_to_epanet_file(None, msx_file_path=f_msx_out)
 
-    with ScenarioSimulator(f_inp_in="Net3-NH2CL.inp", f_msx_in=f_msx_out) as sim:
+    with ScenarioSimulator(f_inp_in=os.path.join("tests", "Net3-NH2CL.inp"),
+                           f_msx_in=f_msx_out) as sim:
         pass

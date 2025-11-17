@@ -324,7 +324,7 @@ Example of a simple arsenic contamination event -- assuming an arsenite called "
         # Create a 1-day contamination event (i.e. injection of 100 mg/day Arsenite) at node "22"
         contamination_event = SpeciesInjectionEvent(species_id="AsIII", node_id="22",
                                                     profile=np.array([100]),
-                                                    source_type=ToolkitConstants.EN_MASS,
+                                                    source_type=EpanetConstants.EN_MASS,
                                                     start_time=to_seconds(days=3),
                                                     end_time=to_seconds(days=4))
         sim.add_system_event(contamination_event)

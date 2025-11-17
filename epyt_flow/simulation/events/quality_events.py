@@ -5,8 +5,7 @@ from copy import deepcopy
 import warnings
 import math
 import numpy as np
-import epyt
-from epyt.epanet import ToolkitConstants
+from epanet_plus import EPyT, EpanetConstants
 
 from .system_event import SystemEvent
 from ...serialization import serializable, JsonSerializable, \
@@ -31,7 +30,7 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
         Note that the pattern time step is equivalent to the EPANET pattern time step.
     source_type : `int`
         Type of the bulk species injection source -- must be one of
-        the following EPANET toolkit constants:
+        the following EPANET constants:
 
             - EN_CONCEN     = 0
             - EN_MASS       = 1
@@ -140,18 +139,18 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
     def _get_pattern_id(self) -> str:
         return f"{self.__species_id}_{self.__node_id}"
 
-    def init(self, epanet_api: epyt.epanet) -> None:
+    def init(self, epanet_api: EPyT) -> None:
         super().init(epanet_api)
 
         # Check parameters
-        if self.__species_id not in self._epanet_api.getMSXSpeciesNameID():
+        if self.__species_id not in self._epanet_api.get_all_msx_species_id():
             raise ValueError(f"Unknown species '{self.__species_id}'")
-        if self.__node_id not in self._epanet_api.getNodeNameID():
+        if self.__node_id not in self._epanet_api.get_all_nodes_id():
             raise ValueError(f"Unknown node '{self.__node_id}'")
 
         # Create final injection strength pattern
-        total_sim_duration = self._epanet_api.getTimeSimulationDuration()
-        time_step = self._epanet_api.getTimeHydraulicStep()
+        total_sim_duration = self._epanet_api.get_simulation_duration()
+        time_step = self._epanet_api.get_hydraulic_time_step()
 
         pattern = np.zeros(math.ceil(total_sim_duration / time_step))
 
@@ -170,34 +169,26 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
                 injection_time_start_idx + injection_pattern_length] = injection_pattern
 
         # Create injection
-        source_type_ = "None"
-        if self.__source_type == ToolkitConstants.EN_CONCEN:
-            source_type_ = "CONCEN"
-        elif self.__source_type == ToolkitConstants.EN_MASS:
-            source_type_ = "MASS"
-        elif self.__source_type == ToolkitConstants.EN_SETPOINT:
-            source_type_ = "SETPOINT"
-        elif self.__source_type == ToolkitConstants.EN_FLOWPACED:
-            source_type_ = "FLOWPACED"
-
         pattern_id = self._get_pattern_id()
-        if pattern_id in self._epanet_api.getMSXPatternsNameID():
-            node_idx = self._epanet_api.getNodeIndex(self.__node_id)
-            species_idx, = self._epanet_api.getMSXSpeciesIndex([self.__species_id])
-            cur_source_type = self._epanet_api.msx.MSXgetsource(node_idx, species_idx)
-            if cur_source_type[0] != source_type_:
+        if pattern_id in [self._epanet_api.MSXgetID(EpanetConstants.MSX_PATTERN, pattern_idx + 1)
+                          for pattern_idx in
+                          range(self._epanet_api.MSXgetcount(EpanetConstants.MSX_PATTERN))]:
+            node_idx = self._epanet_api.get_node_idx(self.__node_id)
+            species_idx = self._epanet_api.get_msx_species_idx(self.__species_id)
+            cur_source_type = self._epanet_api.MSXgetsource(node_idx, species_idx)
+            if cur_source_type[0] != self.__source_type:
                 raise ValueError("Source type does not match existing source type")
 
             # Add new injection amount to existing injection --
             # i.e. two injection events at the same node
-            pattern_idx, = self._epanet_api.getMSXPatternsIndex([pattern_id])
-            cur_pattern = self._epanet_api.getMSXPattern()[pattern_idx - 1]
-            cur_pattern += pattern
-            self._epanet_api.setMSXPattern(pattern_idx, cur_pattern)
+            pattern_idx = self._epanet_api.MSXgetindex(EpanetConstants.MSX_PATTERN, pattern_id)
+            cur_pattern = self._epanet_api.get_msx_pattern(pattern_idx)
+            cur_pattern = np.array(cur_pattern) + pattern
+            self._epanet_api.MSXsetpattern(pattern_idx, cur_pattern.tolist(), len(cur_pattern))
         else:
-            self._epanet_api.addMSXPattern(pattern_id, pattern)
-        self._epanet_api.setMSXSources(self.__node_id, self.__species_id, source_type_, 1,
-                                       pattern_id)
+            self._epanet_api.add_msx_pattern(pattern_id, pattern.tolist())
+        self._epanet_api.set_msx_source(self.__node_id, self.__species_id, self.__source_type, 1,
+                                        pattern_id)
 
     def cleanup(self) -> None:
         warnings.warn("Can not undo SpeciesInjectionEvent -- " +

@@ -32,7 +32,7 @@ from .battledim_data import START_TIME_TEST, START_TIME_TRAIN, LEAKS_CONFIG_TEST
     LEAKS_CONFIG_TRAIN
 from ..networks import load_ltown
 from ...simulation.events import AbruptLeakage, IncipientLeakage, Leakage
-from ...simulation import ScenarioConfig
+from ...simulation import ScenarioConfig, EpanetConstants
 from ...topology import NetworkTopology
 from ...simulation.scada import ScadaData
 from ...utils import get_temp_folder, to_seconds, create_path_if_not_exist, download_if_necessary
@@ -463,7 +463,7 @@ def load_scenario(return_test_scenario: bool, download_dir: str = None,
     general_params = {"simulation_duration": to_seconds(days=365),    # One year
                       "hydraulic_time_step": to_seconds(minutes=5),   # 5min time steps
                       "reporting_time_step": to_seconds(minutes=5),
-                      "demand_model": {"type": "PDA", "pressure_min": 0,
+                      "demand_model": {"type": EpanetConstants.EN_PDA, "pressure_min": 0,
                                        "pressure_required": 0.1,
                                        "pressure_exponent": 0.5}
                       } | ltown_config.general_params

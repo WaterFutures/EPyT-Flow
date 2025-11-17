@@ -2,7 +2,7 @@
 The module contains classes for representing simple control rules as used in EPANET.
 """
 from typing import Union
-from epyt.epanet import ToolkitConstants
+from epanet_plus import EpanetConstants
 
 from ..events import ActuatorConstants
 from ...serialization import JsonSerializable, SIMPLE_CONTROL_ID, serializable
@@ -27,8 +27,10 @@ class SimpleControlModule(JsonSerializable):
         must be one of the followig costants defined in
         :class:`~epyt_flow.simulation.events.actuator_events.ActuatorConstants`:
 
-            - EN_CLOSED = 0
-            - EN_OPEN   = 1
+            - EN_CLOSED       = 0
+            - EN_OPEN         = 1
+            - EN_SET_CLOSED   = -1e10
+            - EN_SET_OPEN     = 1e10
     cond_type : `int`
         Condition/Rule type.
 
@@ -57,27 +59,25 @@ class SimpleControlModule(JsonSerializable):
                  **kwds):
         if not isinstance(link_id, str):
             raise TypeError(f"'link_id' must be an instance of 'str' but not of '{type(link_id)}'")
-        if isinstance(link_status, int):
-            if link_status not in [ActuatorConstants.EN_OPEN, ActuatorConstants.EN_CLOSED]:
-                raise ValueError(f"Invalid link status {link_status} in 'link_status'")
-        elif isinstance(link_status, float):
-            if link_status < 0:
-                raise TypeError("'link_status' can not be negative")
-        else:
+        if not isinstance(link_status, int) and not isinstance(link_status, float):
             raise TypeError("'link_status' must be an instance of 'int' or 'float' but not " +
                             f"of '{type(link_status)}'")
-        if cond_type not in [ToolkitConstants.EN_TIMEOFDAY, ToolkitConstants.EN_TIMER,
-                             ToolkitConstants.EN_LOWLEVEL, ToolkitConstants.EN_HILEVEL]:
+        if link_status not in [ActuatorConstants.EN_OPEN, ActuatorConstants.EN_CLOSED,
+                               ActuatorConstants.EN_SET_OPEN, ActuatorConstants.EN_SET_CLOSED]:
+            if link_status < 0:
+                raise TypeError("'link_status' can not be negative")
+        if cond_type not in [EpanetConstants.EN_TIMEOFDAY, EpanetConstants.EN_TIMER,
+                             EpanetConstants.EN_LOWLEVEL, EpanetConstants.EN_HILEVEL]:
             raise ValueError(f"Invalid control type '{cond_type}' in 'cond_type'")
 
-        if cond_type == ToolkitConstants.EN_TIMEOFDAY:
+        if cond_type == EpanetConstants.EN_TIMEOFDAY:
             if not isinstance(cond_var_value, str):
                 raise TypeError("EN_TIMEOFDAY requires that 'cond_var_value' must be an instance " +
                                 f"of 'str' but not of '{type(cond_var_value)}'")
             if not cond_var_value.endswith("AM") and not cond_var_value.endswith("PM"):
                 raise ValueError(f"Invalid time of day format '{cond_var_value}' in " +
                                  "'cond_var_value'")
-        elif cond_type == ToolkitConstants.EN_TIMER:
+        elif cond_type == EpanetConstants.EN_TIMER:
             if not isinstance(cond_var_value, int):
                 raise TypeError("EN_TIMER requires that 'cond_var_value' must be an instance " +
                                 f"of 'int' but not of '{type(cond_var_value)}'")
@@ -121,11 +121,14 @@ class SimpleControlModule(JsonSerializable):
         Returns
         -------
         `int` or `float`
-            Pump speed if the link is a pump, otherwise one of the followig costants defined in
+            Pump speed if the link is a pump, otherwise one of the followig constants defined in
             :class:`~epyt_flow.simulation.events.actuator_events.ActuatorConstants`:
 
-                - EN_CLOSED = 0
-                - EN_OPEN   = 1
+                - EN_CLOSED       = 0
+                - EN_OPEN         = 1
+                - EN_SET_CLOSED   = -1e10
+                - EN_SET_OPEN     = 1e10
+
         """
         return self.__link_status
 
@@ -193,18 +196,18 @@ class SimpleControlModule(JsonSerializable):
     def __str__(self) -> str:
         control_rule_str = f"LINK {self.__link_id} "
         if isinstance(self.__link_status, int):
-            control_rule_str += "OPEN " if self.__link_status == ActuatorConstants.EN_OPEN \
-                else "CLOSED "
+            control_rule_str += "OPEN " if self.__link_status == ActuatorConstants.EN_OPEN or \
+                self.__link_status == ActuatorConstants.EN_SET_OPEN else "CLOSED "
         else:
             control_rule_str += f"{self.__link_status} "
 
-        if self.__cond_type == ToolkitConstants.EN_TIMER:
+        if self.__cond_type == EpanetConstants.EN_TIMER:
             control_rule_str += f"AT TIME {self.__cond_var_value}"
-        elif self.__cond_type == ToolkitConstants.EN_TIMEOFDAY:
+        elif self.__cond_type == EpanetConstants.EN_TIMEOFDAY:
             control_rule_str += f"AT CLOCKTIME {self.__cond_var_value}"
-        elif self.__cond_type == ToolkitConstants.EN_LOWLEVEL:
+        elif self.__cond_type == EpanetConstants.EN_LOWLEVEL:
             control_rule_str += f"IF NODE {self.__cond_var_value} BELOW {self.__cond_comp_value}"
-        elif self.__cond_type == ToolkitConstants.EN_HILEVEL:
+        elif self.__cond_type == EpanetConstants.EN_HILEVEL:
             control_rule_str += f"IF NODE {self.__cond_var_value} ABOVE {self.__cond_comp_value}"
 
         return control_rule_str
@@ -226,8 +229,8 @@ class SimplePumpSpeedTimeControl(SimpleControlModule):
     """
     def __init__(self, pump_id: str, pump_speed: float, time: Union[str, int]):
         super().__init__(link_id=pump_id, link_status=pump_speed,
-                         cond_type=ToolkitConstants.EN_TIMER if isinstance(time, int)
-                         else ToolkitConstants.EN_TIMEOFDAY,
+                         cond_type=EpanetConstants.EN_TIMER if isinstance(time, int)
+                         else EpanetConstants.EN_TIMEOFDAY,
                          cond_var_value=time, cond_comp_value=None)
 
 
@@ -273,16 +276,18 @@ class SimpleValveTimeControl(SimpleControlModule):
         Valve status -- must be one of the followig costants defined in
         :class:`~epyt_flow.simulation.events.actuator_events.ActuatorConstants`:
 
-            - EN_CLOSED = 0
-            - EN_OPEN   = 1
+            - EN_CLOSED       = 0
+            - EN_OPEN         = 1
+            - EN_SET_CLOSED   = -1e10
+            - EN_SET_OPEN     = 1e10
     time : `str` or `int`
         Time of the day (in AM/PM format) in the case or
         number of hours (as an integer) since simulation start.
     """
     def __init__(self, valve_id: str, valve_status: int, time: Union[str, int]):
         super().__init__(link_id=valve_id, link_status=valve_status,
-                         cond_type=ToolkitConstants.EN_TIMER if isinstance(time, int)
-                         else ToolkitConstants.EN_TIMEOFDAY,
+                         cond_type=EpanetConstants.EN_TIMER if isinstance(time, int)
+                         else EpanetConstants.EN_TIMEOFDAY,
                          cond_var_value=time, cond_comp_value=None)
 
 
@@ -298,8 +303,10 @@ class SimpleValveConditionControl(SimpleControlModule):
         Valve status -- must be one of the followig costants defined in
         :class:`~epyt_flow.simulation.events.actuator_events.ActuatorConstants`:
 
-            - EN_CLOSED = 0
-            - EN_OPEN   = 1
+            - EN_CLOSED       = 0
+            - EN_OPEN         = 1
+            - EN_SET_CLOSED   = -1e10
+            - EN_SET_OPEN     = 1e10
     node_id : `str`
         Node ID.
     comp_type : `int`

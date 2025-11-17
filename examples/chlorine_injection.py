@@ -3,7 +3,7 @@ Example of adding a chlorine injection to a scenario.
 """
 import numpy
 from epyt_flow.data.networks import load_hanoi
-from epyt_flow.simulation import ScenarioSimulator, ToolkitConstants
+from epyt_flow.simulation import ScenarioSimulator, EpanetConstants
 from epyt_flow.utils import to_seconds
 
 
@@ -22,7 +22,7 @@ if __name__ == "__main__":
         # Sets the concentration at node "1" (reservoir) to 1.0 for all time steps.
         sim.add_quality_source(node_id="1",
                                pattern=numpy.array([1.]),
-                               source_type=ToolkitConstants.EN_CONCEN)
+                               source_type=EpanetConstants.EN_CONCEN)
 
         # Places quality sensors at all nodes --
         # i.e. measuring the chemical concentration at all nodes

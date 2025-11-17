@@ -407,7 +407,7 @@ Example of getting and changing the measurement units:
     print(flowunit_to_str(scada_data.sensor_config.flow_unit))
 
     # Change flow units to gal/min -- note that this changes the hydraulic units to US CUSTOM
-    scada_data_new = scada_data.convert_units(ToolkitConstants.EN_GPM)
+    scada_data_new = scada_data.convert_units(EpanetConstants.EN_GPM)
     print(flowunit_to_str(scada_data_new.sensor_config.flow_unit))
 
 

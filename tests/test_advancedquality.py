@@ -1,6 +1,7 @@
 """
 Module provides tests to test the advanced quality analysis.
 """
+import os
 import random
 from epyt_flow.simulation import ScenarioSimulator, SENSOR_TYPE_NODE_BULK_SPECIES, \
     SENSOR_TYPE_LINK_BULK_SPECIES
@@ -10,7 +11,8 @@ from epyt_flow.utils import to_seconds
 
 def test_msx_net2cl2():
     # Load net2-cl2 scenario
-    with ScenarioSimulator(f_inp_in="net2-cl2.inp", f_msx_in="net2-cl2.msx") as sim:
+    with ScenarioSimulator(f_inp_in=os.path.join("tests", "net2-cl2.inp"),
+                           f_msx_in=os.path.join("tests", "net2-cl2.msx")) as sim:
         # Set simulation duration to ten days
         sim.set_general_parameters(simulation_duration=to_seconds(days=10))
 
@@ -33,7 +35,8 @@ def test_msx_net2cl2():
 
 def test_msx_net2cl2_place_sensors_everywhere():
     # Load net2-cl2 scenario
-    with ScenarioSimulator(f_inp_in="net2-cl2.inp", f_msx_in="net2-cl2.msx") as sim:
+    with ScenarioSimulator(f_inp_in=os.path.join("tests", "net2-cl2.inp"),
+                           f_msx_in=os.path.join("tests", "net2-cl2.msx")) as sim:
         # Set simulation duration to ten days
         sim.set_general_parameters(simulation_duration=to_seconds(days=10))
 
@@ -58,7 +61,8 @@ def test_msx_net2cl2_place_sensors_everywhere():
 
 def test_msx_net2cl2_place_sensors_everywhere2():
     # Load net2-cl2 scenario
-    with ScenarioSimulator(f_inp_in="net2-cl2.inp", f_msx_in="net2-cl2.msx") as sim:
+    with ScenarioSimulator(f_inp_in=os.path.join("tests", "net2-cl2.inp"),
+                           f_msx_in=os.path.join("tests", "net2-cl2.msx")) as sim:
         # Set simulation duration to ten days
         sim.set_general_parameters(simulation_duration=to_seconds(days=10))
 
@@ -76,7 +80,8 @@ def test_msx_net2cl2_place_sensors_everywhere2():
 
 def test_msx_Net3NH2CL():
     # Load Net3-NH2CL scenario
-    with ScenarioSimulator(f_inp_in="Net3-NH2CL.inp", f_msx_in="Net3-NH2CL.msx") as sim:
+    with ScenarioSimulator(f_inp_in=os.path.join("tests", "Net3-NH2CL.inp"),
+                           f_msx_in=os.path.join("tests", "Net3-NH2CL.msx")) as sim:
         # Set simulation duration to two days
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 
@@ -94,7 +99,8 @@ def test_msx_Net3NH2CL():
 
 def test_msx_example():
     # Load example scenario
-    with ScenarioSimulator(f_inp_in="example.inp", f_msx_in="example.msx") as sim:
+    with ScenarioSimulator(f_inp_in=os.path.join("tests", "example.inp"),
+                           f_msx_in=os.path.join("tests", "example.msx")) as sim:
         # Set simulation duration to two days
         sim.set_general_parameters(simulation_duration=to_seconds(days=2))
 

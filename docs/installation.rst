@@ -4,22 +4,15 @@
 Installation
 ************
 
-Note that EPyT-Flow supports Python 3.9 - 3.13
+Note that EPyT-Flow supports Python 3.9 - 3.14
 
 .. note::
 
-    EPyT-Flow compiles EPANET and EPANET-MSX libraries (and uses those instead of the pre-compiled
-    libraries that are shipped with EPyT) if it is installed on a Unix system and if
-    the *gcc* compiler is available -- i.e. Linux user can simply install the
-    *build-essentials* package.
-
-    **Attention macOS users:** The "true" *gcc* compiler (version 15) is needed which is not the
-    *clang* compiler that is shipped with Xcode and is linked to gcc!
-    The correct version of the "true" *gcc* can be installed via `brew <https://brew.sh/>`_:
-    
-    .. code:: bash
-
-        brew install gcc@15
+    EPyT-Flow builds upon `EPANET-PLUS <https://github.com/WaterFutures/EPANET-PLUS>`_ which
+    constitutes a C extension and Python package.
+    In the rare case that the pre-build package of EPANET-PLUS does not work on your system,
+    you have to build and install it manually -- please follow the instructions provided
+    `here <https://epanet-plus.readthedocs.io/en/stable/installation.html>`_.
 
 PyPI
 ----

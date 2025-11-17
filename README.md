@@ -11,11 +11,13 @@
 
 <img src="https://github.com/WaterFutures/EPyT-Flow/blob/main/docs/_static/net1_plot.png?raw=true" align="right" height="230px"/>
 
-EPyT-Flow is a Python package building on top of [EPyT](https://github.com/OpenWaterAnalytics/EPyT) 
+EPyT-Flow is a Python package building on top of [EPANET-PLUS](https://github.com/WaterFutures/EPANET-PLUS) --
+an extension and interface of [EPANET](https://github.com/OpenWaterAnalytics/EPANET)
+and [EPANET-MSX](https://github.com/OpenWaterAnalytics/epanet-msx) -- 
 for providing easy access to water distribution network simulations.
 It aims to provide a high-level interface for the easy generation of hydraulic and water quality scenario data.
-However, it also provides access to low-level functions by [EPANET](https://github.com/USEPA/EPANET2.2) 
-and [EPANET-MSX](https://github.com/USEPA/EPANETMSX/).
+However, it also provides access to all functions of EPANET
+and EPANET-MSX.
 
 EPyT-Flow provides easy access to popular benchmark data sets for event detection and localization.
 Furthermore, it also provides an environment for developing and testing control algorithms.
@@ -39,21 +41,13 @@ Unique features of EPyT-Flow that make it superior to other (Python) toolboxes a
 
 ## Installation
 
-EPyT-Flow supports Python 3.9 - 3.13
+EPyT-Flow supports Python 3.9 - 3.14
 
-Note that [EPANET and EPANET-MSX sources](epyt_flow/EPANET/) are compiled and overwrite the binaries
-shipped by EPyT **IF** EPyT-Flow is installed on a Unix system and the *gcc* compiler is available.
-By this, we not only aim to achieve a better performance of the simulations but also avoid any
-compatibility issues of pre-compiled binaries.
-
-#### Prerequisites for macOS users
-The "true" *gcc* compiler (version 15) is needed which is not the
-*clang* compiler that is shipped with Xcode and is linked to gcc!
-
-The correct version of the "true" *gcc* can be installed via [brew](https://brew.sh/):
-```
-brew install gcc@15
-```
+Note that EPyT-Flow builds upon [EPANET-PLUS](https://github.com/WaterFutures/EPANET-PLUS) which
+constitutes a C extension and Python package.
+In the rare case that the pre-build package of EPANET-PLUS does not work on your system,
+you have to build and install it manually -- please follow the instructions provided
+[here](https://epanet-plus.readthedocs.io/en/stable/installation.html).
 
 ### PyPI
 
