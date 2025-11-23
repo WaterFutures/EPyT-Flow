@@ -1036,7 +1036,6 @@ class ScenarioSimulator():
                          "coord": node_coord,
                          "comment": node_comment,
                          "type": node_type}
-
             if node_type == EpanetConstants.EN_TANK:
                 node_tank_idx = self.epanet_api.get_node_idx(node_id)
                 node_info["diameter"] = float(self.epanet_api.get_tank_diameter(node_tank_idx))
@@ -1960,7 +1959,8 @@ class ScenarioSimulator():
     def run_advanced_quality_simulation(self, hyd_file_in: str, verbose: bool = False,
                                         frozen_sensor_config: bool = False,
                                         use_quality_time_step_as_reporting_time_step: bool = False,
-                                        reapply_uncertainties: bool = False
+                                        reapply_uncertainties: bool = False,
+                                        float_type: type = np.float32
                                         ) -> ScadaData:
         """
         Runs an advanced quality analysis using EPANET-MSX.
@@ -1990,6 +1990,10 @@ class ScenarioSimulator():
             If True, the uncertainties are re-applied on the original properties.
 
             The default is False.
+        float_type : `type`, optional
+            Floating point type (precision).
+
+            The default is 32bit -- i.e., numpy.float32
 
         Returns
         -------
@@ -2011,7 +2015,8 @@ class ScenarioSimulator():
                                  frozen_sensor_config=frozen_sensor_config,
                                  use_quality_time_step_as_reporting_time_step=
                                  use_quality_time_step_as_reporting_time_step,
-                                 reapply_uncertainties=reapply_uncertainties):
+                                 reapply_uncertainties=reapply_uncertainties,
+                                 float_type=float_type):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -2039,7 +2044,8 @@ class ScenarioSimulator():
                                                      return_as_dict: bool = False,
                                                      frozen_sensor_config: bool = False,
                                                      use_quality_time_step_as_reporting_time_step: bool = False,
-                                                     reapply_uncertainties: bool = False
+                                                     reapply_uncertainties: bool = False,
+                                                     float_type: type = np.float32,
                                                      ) -> Generator[Union[tuple[ScadaData, bool], tuple[dict, bool]], bool, None]:
         """
         Runs an advanced quality analysis using EPANET-MSX.
@@ -2073,6 +2079,10 @@ class ScenarioSimulator():
             If True, the uncertainties are re-applied on the original properties.
 
             The default is False.
+        float_type : `type`, optional
+            Floating point type (precision).
+
+            The default is 32bit -- i.e., numpy.float32
 
         Returns
         -------
@@ -2146,13 +2156,15 @@ class ScenarioSimulator():
             if len(bulk_species_node_concentrations) == 0:
                 bulk_species_node_concentrations = None
             else:
-                bulk_species_node_concentrations = np.array(bulk_species_node_concentrations). \
+                bulk_species_node_concentrations = np.array(bulk_species_node_concentrations,
+                                                            dtype=float_type). \
                     reshape((1, len(bulk_species_idx), n_nodes))
 
             if len(bulk_species_link_concentrations) == 0:
                 bulk_species_link_concentrations = None
             else:
-                bulk_species_link_concentrations = np.array(bulk_species_link_concentrations). \
+                bulk_species_link_concentrations = np.array(bulk_species_link_concentrations,
+                                                            dtype=float_type). \
                     reshape((1, len(bulk_species_idx), n_links))
 
             # Surface species
@@ -2169,7 +2181,8 @@ class ScenarioSimulator():
             if len(surface_species_concentrations) == 0:
                 surface_species_concentrations = None
             else:
-                surface_species_concentrations = np.array(surface_species_concentrations). \
+                surface_species_concentrations = np.array(surface_species_concentrations,
+                                                          dtype=float_type). \
                     reshape((1, len(surface_species_idx), n_links))
 
             return bulk_species_node_concentrations, bulk_species_link_concentrations, \
@@ -2272,7 +2285,8 @@ class ScenarioSimulator():
 
     def run_basic_quality_simulation(self, hyd_file_in: str, verbose: bool = False,
                                      frozen_sensor_config: bool = False,
-                                     use_quality_time_step_as_reporting_time_step: bool = False
+                                     use_quality_time_step_as_reporting_time_step: bool = False,
+                                     float_type: type = np.float32
                                      ) -> ScadaData:
         """
         Runs a basic quality analysis using EPANET.
@@ -2298,6 +2312,10 @@ class ScenarioSimulator():
             with the hydraulic simulation.
 
             The default is False.
+        float_type : `type`, optional
+            Floating point type (precision).
+
+            The default is 32bit -- i.e., numpy.float32
 
         Returns
         -------
@@ -2316,7 +2334,8 @@ class ScenarioSimulator():
                                  return_as_dict=True,
                                  frozen_sensor_config=frozen_sensor_config,
                                  use_quality_time_step_as_reporting_time_step=
-                                 use_quality_time_step_as_reporting_time_step):
+                                 use_quality_time_step_as_reporting_time_step,
+                                 float_type=float_type):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -2340,7 +2359,8 @@ class ScenarioSimulator():
                                                   support_abort: bool = False,
                                                   return_as_dict: bool = False,
                                                   frozen_sensor_config: bool = False,
-                                                  use_quality_time_step_as_reporting_time_step: bool = False
+                                                  use_quality_time_step_as_reporting_time_step: bool = False,
+                                                  float_type: type = np.float32
                                                   ) -> Generator[Union[tuple[ScadaData, bool], tuple[dict, bool]], bool, None]:
         """
         Runs a basic quality analysis using EPANET.
@@ -2372,6 +2392,10 @@ class ScenarioSimulator():
             with the hydraulic simulation.
 
             The default is False.
+        float_type : `type`, optional
+            Floating point type (precision).
+
+            The default is 32bit -- i.e., numpy.float32
 
         Returns
         -------
@@ -2430,8 +2454,10 @@ class ScenarioSimulator():
             error_code = self.epanet_api.get_last_error_code()
             if last_error_code == 0:
                 last_error_code = error_code
-            quality_node_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_QUALITY)).reshape(1, -1)
-            quality_link_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_QUALITY)).reshape(1, -1)
+            quality_node_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_QUALITY),
+                                         dtype=float_type).reshape(1, -1)
+            quality_link_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_QUALITY),
+                                         dtype=float_type).reshape(1, -1)
 
             # Yield results in a regular time interval only!
             if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
@@ -2468,7 +2494,8 @@ class ScenarioSimulator():
 
     def run_hydraulic_simulation(self, hyd_export: str = None, verbose: bool = False,
                                  frozen_sensor_config: bool = False,
-                                 reapply_uncertainties: bool = False) -> ScadaData:
+                                 reapply_uncertainties: bool = False,
+                                 float_type: type = np.float32) -> ScadaData:
         """
         Runs the hydraulic simulation of this scenario (incl. basic quality if set).
 
@@ -2496,6 +2523,10 @@ class ScenarioSimulator():
             If True, the uncertainties are re-applied on the original properties.
 
             The default is False.
+        float_type : `type`, optional
+            Floating point type (precision).
+
+            The default is 32bit -- i.e., numpy.float32
 
         Returns
         -------
@@ -2515,7 +2546,8 @@ class ScenarioSimulator():
                                  verbose=verbose,
                                  return_as_dict=True,
                                  frozen_sensor_config=frozen_sensor_config,
-                                 reapply_uncertainties=reapply_uncertainties):
+                                 reapply_uncertainties=reapply_uncertainties,
+                                 float_type=float_type):
             if result is None:
                 result = {}
                 for data_type, data in scada_data.items():
@@ -2545,7 +2577,8 @@ class ScenarioSimulator():
                                               support_abort: bool = False,
                                               return_as_dict: bool = False,
                                               frozen_sensor_config: bool = False,
-                                              reapply_uncertainties: bool = False
+                                              reapply_uncertainties: bool = False,
+                                              float_type: type = np.float32
                                               ) -> Generator[Union[tuple[ScadaData, bool], tuple[dict, bool]], bool, None]:
         """
         Runs the hydraulic simulation of this scenario (incl. basic quality if set) and
@@ -2586,6 +2619,10 @@ class ScenarioSimulator():
             If True, the uncertainties are re-applied on the original properties.
 
             The default is False.
+        float_type : `type`, optional
+            Floating point type (precision).
+
+            The default is 32bit -- i.e., numpy.float32
 
         Returns
         -------
@@ -2654,32 +2691,42 @@ class ScenarioSimulator():
                     last_error_code = error_code
 
                 # Fetch data
-                pressure_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_PRESSURE)).reshape(1, -1)
-                flow_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_FLOW)).reshape(1, -1)
-                demand_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_DEMAND)).reshape(1, -1)
-                quality_node_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_QUALITY)).reshape(1, -1)
-                quality_link_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_QUALITY)).reshape(1, -1)
+                pressure_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_PRESSURE),
+                                         dtype=float_type).reshape(1, -1)
+                flow_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_FLOW),
+                                     dtype=float_type).reshape(1, -1)
+                demand_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_DEMAND),
+                                       dtype=float_type).reshape(1, -1)
+                quality_node_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_QUALITY),
+                                             dtype=float_type).reshape(1, -1)
+                quality_link_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_QUALITY),
+                                             dtype=float_type).reshape(1, -1)
 
                 tanks_volume_data = None
                 if len(self.epanet_api.get_all_tanks_idx()) > 0:
                     tanks_volume_data = np.array([self.epanet_api.get_tank_volume(tank_idx)
-                                                  for tank_idx in self.epanet_api.get_all_tanks_idx()]).reshape(1, -1)
+                                                  for tank_idx in self.epanet_api.get_all_tanks_idx()],
+                                                  dtype=float_type).reshape(1, -1)
 
                 pumps_state_data = None
                 pumps_energy_usage_data = None
                 pumps_efficiency_data = None
                 if len(self.epanet_api.get_all_pumps_idx()) > 0:
                     pumps_state_data = np.array([self.epanet_api.getlinkvalue(link_idx, EpanetConstants.EN_PUMP_STATE)
-                                                for link_idx in self.epanet_api.get_all_pumps_idx()]).reshape(1, -1)
+                                                for link_idx in self.epanet_api.get_all_pumps_idx()],
+                                                dtype=float_type).reshape(1, -1)
                     pumps_energy_usage_data = np.array([self.epanet_api.get_pump_energy_usage(pump_idx)
-                                                        for pump_idx in self.epanet_api.get_all_pumps_idx()]).reshape(1, -1)
+                                                        for pump_idx in self.epanet_api.get_all_pumps_idx()],
+                                                        dtype=float_type).reshape(1, -1)
                     pumps_efficiency_data = np.array([self.epanet_api.get_pump_efficiency(pump_idx)
-                                                      for pump_idx in self.epanet_api.get_all_pumps_idx()]).reshape(1, -1)
+                                                      for pump_idx in self.epanet_api.get_all_pumps_idx()],
+                                                      dtype=float_type).reshape(1, -1)
 
                 valves_state_data = None
                 if len(self.epanet_api.get_all_valves_idx()) > 0:
                     valves_state_data = np.array([self.epanet_api.getlinkvalue(link_valve_idx, EpanetConstants.EN_STATUS)
-                                                  for link_valve_idx in self.epanet_api.get_all_valves_idx()]).reshape(1, -1)
+                                                  for link_valve_idx in self.epanet_api.get_all_valves_idx()],
+                                                  dtype=float_type).reshape(1, -1)
 
                 scada_data = ScadaData(network_topo=network_topo,
                                        sensor_config=self._sensor_config,
@@ -2754,7 +2801,8 @@ class ScenarioSimulator():
 
     def run_simulation(self, hyd_export: str = None, verbose: bool = False,
                        frozen_sensor_config: bool = False,
-                       reapply_uncertainties: bool = False) -> ScadaData:
+                       reapply_uncertainties: bool = False,
+                       float_type: type = np.float32) -> ScadaData:
         """
         Runs the simulation of this scenario.
 
@@ -2780,6 +2828,10 @@ class ScenarioSimulator():
             If True, the uncertainties are re-applied on the original properties.
 
             The default is False.
+        float_type : `type`, optional
+            Floating point type (precision).
+
+            The default is 32bit -- i.e., numpy.float32
 
         Returns
         -------
@@ -2800,7 +2852,8 @@ class ScenarioSimulator():
         # Run hydraulic simulation step-by-step
         result = self.run_hydraulic_simulation(hyd_export=hyd_export, verbose=verbose,
                                                frozen_sensor_config=frozen_sensor_config,
-                                               reapply_uncertainties=reapply_uncertainties)
+                                               reapply_uncertainties=reapply_uncertainties,
+                                               float_type=float_type)
 
         # If necessary, run advanced quality simulation utilizing the computed hydraulics
         if self.f_msx_in is not None:
@@ -2808,7 +2861,8 @@ class ScenarioSimulator():
             result_msx = gen(hyd_file_in=hyd_export,
                              verbose=verbose,
                              frozen_sensor_config=frozen_sensor_config,
-                             reapply_uncertainties=reapply_uncertainties)
+                             reapply_uncertainties=reapply_uncertainties,
+                             float_type=float_type)
             result.join(result_msx)
 
             if hyd_export_old is not None:
