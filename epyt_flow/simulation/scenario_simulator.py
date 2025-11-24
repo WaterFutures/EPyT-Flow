@@ -1014,9 +1014,9 @@ class ScenarioSimulator():
                         for link_idx in self.epanet_api.get_all_links_idx()]
         links_roughness_coeff = [self.epanet_api.get_link_roughness(link_idx)
                                  for link_idx in self.epanet_api.get_all_links_idx()]
-        links_bulk_coeff = [self.epanet_api.get_link_bulk_raction_coeff(link_idx)
+        links_bulk_coeff = [self.epanet_api.get_link_bulk_reaction_coeff(link_idx)
                             for link_idx in self.epanet_api.get_all_links_idx()]
-        links_wall_coeff = [self.epanet_api.get_link_wall_raction_coeff(link_idx)
+        links_wall_coeff = [self.epanet_api.get_link_wall_reaction_coeff(link_idx)
                             for link_idx in self.epanet_api.get_all_links_idx()]
         links_loss_coeff = [self.epanet_api.get_link_minorloss(link_idx)
                             for link_idx in self.epanet_api.get_all_links_idx()]
