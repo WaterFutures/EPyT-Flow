@@ -818,7 +818,9 @@ class ModelUncertainty(JsonSerializable):
                                             for node_idx in epanet_api.get_all_nodes_idx()
                                             for demand_idx in range(epanet_api.getnumdemands(node_idx))])
 
-            for pattern_idx in list(set(demand_patterns_idx)):
+            demand_patterns_idx = set(demand_patterns_idx)
+            demand_patterns_idx.discard(0)
+            for pattern_idx in list(demand_patterns_idx):
                 demand_pattern = np.array(epanet_api.get_pattern(pattern_idx))
                 self._cache_nodes_demand_pattern[pattern_idx] = np.copy(demand_pattern)
 
