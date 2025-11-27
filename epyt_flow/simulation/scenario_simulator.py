@@ -2641,7 +2641,7 @@ class ScenarioSimulator():
 
         self.epanet_api.openH()
         self.epanet_api.openQ()
-        self.epanet_api.initH(EpanetConstants.EN_SAVE)
+        self.epanet_api.initH(EpanetConstants.EN_SAVE_AND_INIT)
         self.epanet_api.initQ(EpanetConstants.EN_SAVE)
 
         requested_total_time = self.epanet_api.get_simulation_duration()
