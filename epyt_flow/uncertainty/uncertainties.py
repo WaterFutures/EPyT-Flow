@@ -101,9 +101,11 @@ class Uncertainty(ABC):
         return {"min_value": self.__min_value, "max_value": self.__max_value}
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, Uncertainty):
+        if not isinstance(other, (Uncertainty, type(None))):
             raise TypeError("Can not compare 'Uncertainty' instance " +
                             f"with '{type(other)}' instance")
+        if other is None:
+            return False
 
         return self.__min_value == other.min_value and self.__max_value == other.max_value and \
             self._random_generator == other.random_generator
@@ -221,7 +223,7 @@ class GaussianUncertainty(Uncertainty):
         return super().get_attributes() | {"mean": self._mean, "scale": self._scale}
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, GaussianUncertainty):
+        if not isinstance(other, (GaussianUncertainty, type(None))):
             raise TypeError("Can not compare 'GaussianUncertainty' instance " +
                             f"with '{type(other)}' instance")
 
@@ -320,7 +322,7 @@ class UniformUncertainty(Uncertainty):
         return super().get_attributes() | {"low": self.__low, "high": self.__high}
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, UniformUncertainty):
+        if not isinstance(other, (UniformUncertainty, type(None))):
             raise TypeError("Can not compare 'UniformUncertainty' instance " +
                             f"with '{type(other)}' instance")
 
@@ -562,7 +564,7 @@ class DeepUncertainty(Uncertainty):
                                            "max_noise_value": self.__max_noise_value}
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, DeepUncertainty):
+        if not isinstance(other, (DeepUncertainty, type(None))):
             raise TypeError("Can not compare 'DeepUncertainty' instance " +
                             f"with '{type(other)}' instance")
 
