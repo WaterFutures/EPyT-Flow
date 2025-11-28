@@ -111,6 +111,13 @@ class Serializable(ABC):
 
         super().__init__(**kwds)
 
+    def __eq__(self, other) -> bool:
+        return self._parent_path == other.parent_path
+
+    @property
+    def parent_path(self) -> str:
+        return self._parent_path
+
     @abstractmethod
     def get_attributes(self) -> dict:
         """

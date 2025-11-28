@@ -81,7 +81,8 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                  valves: dict,
                  units: int,
                  **kwds):
-        super().__init__(name=f_inp, **kwds)
+        nx.Graph.__init__(self, name=f_inp, **kwds)
+        JsonSerializable.__init__(self)
 
         self.__nodes = nodes
         self.__links = links
@@ -504,7 +505,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         adj_matrix = self.get_adj_matrix()
         other_adj_matrix = other.get_adj_matrix()
 
-        return super().__eq__(other) and \
+        return JsonSerializable.__eq__(self, other) and \
             self.name == other.name \
             and not np.any(adj_matrix.data != other_adj_matrix.data) \
             and not np.any(adj_matrix.indices != other_adj_matrix.indices) \
