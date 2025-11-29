@@ -492,7 +492,7 @@ ext_handler_pack = {np.ndarray:
                     networkx.Graph:
                         lambda graph:
                             umsgpack.Ext(NETWORKX_GRAPH_ID,
-                                         umsgpack.packb(networkx.node_link_data(graph))),
+                                         umsgpack.packb(networkx.edges(graph))),
                     scipy.sparse.bsr_array:
                     lambda arr: umsgpack.Ext(SCIPY_BSRARRAY_ID,
                                              umsgpack.packb(__encode_bsr_array(arr)))}
