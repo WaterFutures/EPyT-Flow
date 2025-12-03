@@ -218,18 +218,12 @@ class ScenarioControlEnv(ABC):
                                "when running EPANET-MSX")
 
         pump_idx = self._scenario_sim.epanet_api.get_link_idx(pump_id)
-        pattern_idx = int(self._scenario_sim.epanet_api.getlinkvalue(pump_idx,
-                                                                     EpanetConstants.EN_LINKPATTERN))
+        pattern_idx = self._scenario_sim.epanet_api.getlinkvalue(pump_idx,
+                                                                 EpanetConstants.EN_LINKPATTERN)
+        if pattern_idx != 0:
+            warnings.warn(f"Pump setting of pump {pump_id} will be multiplied with existing pump pattern")
 
-        if pattern_idx == 0:
-            warnings.warn(f"No pattern for pump '{pump_id}' found -- a new pattern is created")
-            pattern_id = f"pump_speed_{pump_id}"
-            self._scenario_sim.epanet_api.add_pattern(pattern_id, [speed])
-            pattern_idx = self._scenario_sim.epanet_api.getpatternindex(pattern_id)
-            self._scenario_sim.epanet_api.setlinkvalue(pump_idx, EpanetConstants.EN_LINKPATTERN,
-                                                       pattern_idx)
-
-        self._scenario_sim.epanet_api.setpattern(pattern_idx, [speed], 1)
+        self._scenario_sim.epanet_api.setlinkvalue(pump_idx, EpanetConstants.EN_SETTING, speed)
 
     def set_valve_status(self, valve_id: str, status: int) -> None:
         """
