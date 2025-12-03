@@ -3527,7 +3527,8 @@ class ScenarioSimulator():
                 if node_init_qual < 0:
                     raise ValueError(f"{node_id}: Initial node quality can not be negative")
 
-            for node_idx in self.epanet_api.get_all_nodes_idx():
+            for node_id, node_init_qual in initial_quality.items():
+                node_idx = self.epanet_api.get_node_idx(node_id)
                 self.epanet_api.set_node_init_quality(node_idx, node_init_qual)
 
         if order_wall is not None:
