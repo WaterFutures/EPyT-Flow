@@ -3776,17 +3776,18 @@ class ScenarioSimulator():
                 any(not isinstance(species_id, str) or not isinstance(link_initial_conc, list)
                     for species_id, link_initial_conc in inital_conc.items()) or \
                 any(not isinstance(link_initial_conc, tuple)
-                    for link_initial_conc in inital_conc.values()) or \
+                    for link_initial_conc in list(itertools.chain(*inital_conc.values()))) or \
                 any(not isinstance(link_id, str) or not isinstance(conc, float)
-                    for link_id, conc in inital_conc.values()):
+                    for link_id, conc in list(itertools.chain(*inital_conc.values()))):
             raise TypeError("'inital_conc' must be an instance of " +
                             "'dict[str, list[tuple[str, float]]'")
         if any(species_id not in self.sensor_config.bulk_species
                for species_id in inital_conc.keys()):
             raise ValueError("Unknown bulk species in 'inital_conc'")
-        if any(link_id not in self.sensor_config.links for link_id, _ in inital_conc.values()):
+        if any(link_id not in self.sensor_config.links for link_id, _ in
+               list(itertools.chain(*inital_conc.values()))):
             raise ValueError("Unknown link ID in 'inital_conc'")
-        if any(conc < 0 for _, conc in inital_conc.values()):
+        if any(conc < 0 for _, conc in list(itertools.chain(*inital_conc.values()))):
             raise ValueError("Initial link concentration can not be negative")
 
         for species_id, link_initial_conc in inital_conc.items():
