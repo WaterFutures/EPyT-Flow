@@ -754,6 +754,21 @@ class SensorConfig(JsonSerializable):
         self.__bulk_species_mass_unit = bulk_species_mass_unit
         self.__surface_species_mass_unit = surface_species_mass_unit
         self.__surface_species_area_unit = surface_species_area_unit
+        self.__sensor_ordering = [
+            SENSOR_TYPE_NODE_PRESSURE,
+            SENSOR_TYPE_LINK_FLOW,
+            SENSOR_TYPE_NODE_DEMAND,
+            SENSOR_TYPE_NODE_QUALITY,
+            SENSOR_TYPE_LINK_QUALITY,
+            SENSOR_TYPE_VALVE_STATE,
+            SENSOR_TYPE_PUMP_STATE,
+            SENSOR_TYPE_PUMP_EFFICIENCY,
+            SENSOR_TYPE_PUMP_ENERGYCONSUMPTION,
+            SENSOR_TYPE_TANK_VOLUME,
+            SENSOR_TYPE_SURFACE_SPECIES,
+            SENSOR_TYPE_NODE_BULK_SPECIES,
+            SENSOR_TYPE_LINK_BULK_SPECIES,
+        ]
 
         self.__compute_indices()    # Compute indices
 
@@ -951,6 +966,29 @@ class SensorConfig(JsonSerializable):
             Surface species ID to index mapping.
         """
         return self.__surfacespecies_id_to_idx
+
+    @property
+    def sensor_ordering(self) -> list[int]:
+        """
+        Returns the order in which sensors are included in ScadaData objects
+        i.e. if you call a ScadaData's get_data() method, the resulting array
+        will contain sensor readings in the order returned by this method.
+        Constants have the following meaning:
+        1 -> pressure sensor
+        2 -> node quality sensor
+        3 -> demand sensor
+        4 -> flow sensor
+        5 -> link quality sensor
+        6 -> valve state sensor
+        7 -> pump state sensor
+        8 -> tank volume sensor
+        9 -> node bulk species sensor
+        10 -> link bulk species sensor
+        11 -> surface species sensor
+        12 -> pump efficiency sensor
+        13 -> pump energy consumption sensor
+        """
+        return self.__sensor_ordering
 
     def map_node_id_to_idx(self, node_id: str) -> int:
         """
