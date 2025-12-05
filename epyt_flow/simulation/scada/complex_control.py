@@ -121,11 +121,11 @@ class RuleCondition(JsonSerializable):
                                     EN_R_IS, EN_R_NOT, EN_R_BELOW, EN_R_ABOVE]:
             raise ValueError(f"Invalid value '{relation_type_id}' for 'relation_type_id'")
 
-        self.__object_type_id = object_type_id
-        self.__object_id = object_id
-        self.__attribute_id = attribute_id
-        self.__relation_type_id = relation_type_id
-        self.__value = value
+        self._object_type_id = object_type_id
+        self._object_id = object_id
+        self._attribute_id = attribute_id
+        self._relation_type_id = relation_type_id
+        self._value = value
 
         super().__init__(**kwds)
 
@@ -145,7 +145,7 @@ class RuleCondition(JsonSerializable):
         `int`
             ID of the object type..
         """
-        return self.__object_type_id
+        return self._object_type_id
 
     @property
     def object_id(self) -> str:
@@ -157,7 +157,7 @@ class RuleCondition(JsonSerializable):
         `str`
             ID of the object.
         """
-        return self.__object_id
+        return self._object_id
 
     @property
     def attribute_id(self) -> int:
@@ -183,7 +183,7 @@ class RuleCondition(JsonSerializable):
         `int`
             Type ID of the object's attribute that is checked.
         """
-        return self.__attribute_id
+        return self._attribute_id
 
     @property
     def relation_type_id(self) -> int:
@@ -208,7 +208,7 @@ class RuleCondition(JsonSerializable):
         `int`
             ID of the type of comparison.
         """
-        return self.__relation_type_id
+        return self._relation_type_id
 
     @property
     def value(self) -> Any:
@@ -220,69 +220,69 @@ class RuleCondition(JsonSerializable):
         `Any`
             Value that is compared against.
         """
-        return self.__value
+        return self._value
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"object_type_id": self.__object_type_id,
-                                           "object_id": self.__object_id,
-                                           "attribute_id": self.__attribute_id,
-                                           "relation_type_id": self.__relation_type_id,
-                                           "value": self.__value}
+        return super().get_attributes() | {"object_type_id": self._object_type_id,
+                                           "object_id": self._object_id,
+                                           "attribute_id": self._attribute_id,
+                                           "relation_type_id": self._relation_type_id,
+                                           "value": self._value}
 
     def __eq__(self, other) -> bool:
-        return self.__object_type_id == other.object_type_id and \
-            self.__object_id == other.object_id and self.__attribute_id == other.attribute_id and \
-            self.__relation_type_id == other.relation_type_id and self.__value == other.value
+        return self._object_type_id == other.object_type_id and \
+            self._object_id == other.object_id and self._attribute_id == other.attribute_id and \
+            self._relation_type_id == other.relation_type_id and self._value == other.value
 
     def __str__(self) -> str:
         desc = ""
 
-        if self.__attribute_id == EN_R_DEMAND:
-            if self.__object_type_id == EpanetConstants.EN_R_NODE:
-                desc += f"JUNCTION {self.__object_id} DEMAND "
-            elif self.__object_type_id == EpanetConstants.EN_R_SYSTEM:
+        if self._attribute_id == EN_R_DEMAND:
+            if self._object_type_id == EpanetConstants.EN_R_NODE:
+                desc += f"JUNCTION {self._object_id} DEMAND "
+            elif self._object_type_id == EpanetConstants.EN_R_SYSTEM:
                 desc += "SYSTEM DEMAND "
-        elif self.__attribute_id == EN_R_HEAD:
-            desc += f"JUNCTION {self.__object_id} HEAD "
-        elif self.__attribute_id == EN_R_LEVEL:
-            desc += f"TANK {self.__object_id} LEVEL "
-        elif self.__attribute_id == EN_R_PRESSURE:
-            desc += f"JUNCTION {self.__object_id} PRESSURE "
-        elif self.__attribute_id == EN_R_FLOW:
-            desc += f"LINK {self.__object_id} FLOW "
-        elif self.__attribute_id == EN_R_STATUS:
-            desc += f"LINK {self.__object_id} STATUS "
-        elif self.__attribute_id == EN_R_SETTING:
-            desc += f"LINK {self.__object_id} SETTING "
-        elif self.__attribute_id == EN_R_TIME:
+        elif self._attribute_id == EN_R_HEAD:
+            desc += f"JUNCTION {self._object_id} HEAD "
+        elif self._attribute_id == EN_R_LEVEL:
+            desc += f"TANK {self._object_id} LEVEL "
+        elif self._attribute_id == EN_R_PRESSURE:
+            desc += f"JUNCTION {self._object_id} PRESSURE "
+        elif self._attribute_id == EN_R_FLOW:
+            desc += f"LINK {self._object_id} FLOW "
+        elif self._attribute_id == EN_R_STATUS:
+            desc += f"LINK {self._object_id} STATUS "
+        elif self._attribute_id == EN_R_SETTING:
+            desc += f"LINK {self._object_id} SETTING "
+        elif self._attribute_id == EN_R_TIME:
             desc += "SYSTEM TIME "
-        elif self.__attribute_id == EN_R_CLOCKTIME:
+        elif self._attribute_id == EN_R_CLOCKTIME:
             desc += "SYSTEM CLOCKTIME "
-        elif self.__attribute_id == EN_R_FILLTIME:
-            desc += f"TANK {self.__object_id} FILLTIME "
-        elif self.__attribute_id == EN_R_DRAINTIME:
-            desc += f"TANK {self.__object_id} DRAINTIME "
+        elif self._attribute_id == EN_R_FILLTIME:
+            desc += f"TANK {self._object_id} FILLTIME "
+        elif self._attribute_id == EN_R_DRAINTIME:
+            desc += f"TANK {self._object_id} DRAINTIME "
 
-        if self.__relation_type_id == EN_R_EQ:
+        if self._relation_type_id == EN_R_EQ:
             desc += "= "
-        elif self.__relation_type_id == EN_R_IS:
+        elif self._relation_type_id == EN_R_IS:
             desc += "IS "
-        elif self.__relation_type_id == EN_R_NOT:
+        elif self._relation_type_id == EN_R_NOT:
             desc += "IS NOT "
-        elif self.__relation_type_id == EN_R_LEQ:
+        elif self._relation_type_id == EN_R_LEQ:
             desc += "<= "
-        elif self.__relation_type_id == EN_R_GEQ:
+        elif self._relation_type_id == EN_R_GEQ:
             desc += ">= "
-        elif self.__relation_type_id == EN_R_ABOVE:
+        elif self._relation_type_id == EN_R_ABOVE:
             desc += "ABOVE "
-        elif self.__relation_type_id == EN_R_BELOW:
+        elif self._relation_type_id == EN_R_BELOW:
             desc += "BELOW "
-        elif self.__relation_type_id == EN_R_LESS:
+        elif self._relation_type_id == EN_R_LESS:
             desc += "< "
-        elif self.__relation_type_id == EN_R_GREATER:
+        elif self._relation_type_id == EN_R_GREATER:
             desc += "> "
 
-        desc += str(self.__value)
+        desc += str(self._value)
 
         return desc
 
@@ -344,10 +344,10 @@ class RuleAction(JsonSerializable):
                                   EN_R_ACTION_STATUS_CLOSED, EN_R_ACTION_STATUS_ACTIVE]:
             raise ValueError(f"Invalid value '{action_type_id}' for 'action_type_id'")
 
-        self.__link_type_id = link_type_id
-        self.__link_id = link_id
-        self.__action_type_id = action_type_id
-        self.__action_value = action_value
+        self._link_type_id = link_type_id
+        self._link_id = link_id
+        self._action_type_id = action_type_id
+        self._action_value = action_value
 
         super().__init__(**kwds)
 
@@ -373,7 +373,7 @@ class RuleAction(JsonSerializable):
         `int`
             Link type ID.
         """
-        return self.__link_type_id
+        return self._link_type_id
 
     @property
     def link_id(self) -> str:
@@ -385,7 +385,7 @@ class RuleAction(JsonSerializable):
         `str`
             Link ID.
         """
-        return self.__link_id
+        return self._link_id
 
     @property
     def action_type_id(self) -> int:
@@ -404,7 +404,7 @@ class RuleAction(JsonSerializable):
         `int`
             Type ID of the action.
         """
-        return self.__action_type_id
+        return self._action_type_id
 
     @property
     def action_value(self) -> Any:
@@ -417,37 +417,37 @@ class RuleAction(JsonSerializable):
         `Any`
             Value of the action.
         """
-        return self.__action_value
+        return self._action_value
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"link_type_id": self.__link_type_id,
-                                           "link_id": self.__link_id,
-                                           "action_type_id": self.__action_type_id,
-                                           "action_value": self.__action_value}
+        return super().get_attributes() | {"link_type_id": self._link_type_id,
+                                           "link_id": self._link_id,
+                                           "action_type_id": self._action_type_id,
+                                           "action_value": self._action_value}
 
     def __eq__(self, other) -> bool:
-        return self.__link_type_id == other.link_type_id and \
-            self.__link_id == other.link_id and \
-            self.__action_type_id == other.action_type_id and \
-            self.__action_value == other.action_value
+        return self._link_type_id == other.link_type_id and \
+            self._link_id == other.link_id and \
+            self._action_type_id == other.action_type_id and \
+            self._action_value == other.action_value
 
     def __str__(self) -> str:
         desc = ""
 
-        if self.__link_type_id in [EpanetConstants.EN_CVPIPE, EpanetConstants.EN_PIPE]:
+        if self._link_type_id in [EpanetConstants.EN_CVPIPE, EpanetConstants.EN_PIPE]:
             desc += "PIPE "
-        elif self.__link_type_id == EpanetConstants.EN_PUMP:
+        elif self._link_type_id == EpanetConstants.EN_PUMP:
             desc += "PUMP "
         else:
             desc += "VALVE "
 
-        desc += f"{self.__link_id} "
+        desc += f"{self._link_id} "
 
-        if self.__action_type_id == EN_R_ACTION_SETTING:
-            desc += f"SETTING IS {self.__action_value}"
-        elif self.__action_type_id == EN_R_ACTION_STATUS_OPEN:
+        if self._action_type_id == EN_R_ACTION_SETTING:
+            desc += f"SETTING IS {self._action_value}"
+        elif self._action_type_id == EN_R_ACTION_STATUS_OPEN:
             desc += "STATUS IS OPEN"
-        elif self.__action_type_id == EN_R_ACTION_STATUS_CLOSED:
+        elif self._action_type_id == EN_R_ACTION_STATUS_CLOSED:
             desc += "STATUS IS CLOSED"
         elif self.action_type_id == EN_R_ACTION_STATUS_ACTIVE:
             desc += "STATUS IS ACTIVE"
@@ -508,12 +508,12 @@ class ComplexControlModule(JsonSerializable):
         if not isinstance(priority, int) or priority < 0:
             raise TypeError("'priority' must be a non-negative integer")
 
-        self.__rule_id = rule_id
-        self.__condition_1 = condition_1
-        self.__additional_conditions = additional_conditions
-        self.__actions = actions
-        self.__else_actions = else_actions
-        self.__priority = priority
+        self._rule_id = rule_id
+        self._condition_1 = condition_1
+        self._additional_conditions = additional_conditions
+        self._actions = actions
+        self._else_actions = else_actions
+        self._priority = priority
 
         super().__init__(**kwds)
 
@@ -527,7 +527,7 @@ class ComplexControlModule(JsonSerializable):
         `str`
             ID of this control rule.
         """
-        return self.__rule_id
+        return self._rule_id
 
     @property
     def condition_1(self) -> RuleCondition:
@@ -539,7 +539,7 @@ class ComplexControlModule(JsonSerializable):
         :class:`~epyt_flow.simulation.scada.complex_control.RuleCondition`
             First condition of this rule.
         """
-        return deepcopy(self.__condition_1)
+        return deepcopy(self._condition_1)
 
     @property
     def additional_conditions(self) -> list[tuple[int, RuleCondition]]:
@@ -552,7 +552,7 @@ class ComplexControlModule(JsonSerializable):
         list[tuple[int, :class:`~epyt_flow.simulation.scada.complex_control.RuleCondition`]]
             List of (optional) additional conditions incl. their conjunction operator.
         """
-        return deepcopy(self.__additional_conditions)
+        return deepcopy(self._additional_conditions)
 
     @property
     def actions(self) -> list[RuleAction]:
@@ -564,7 +564,7 @@ class ComplexControlModule(JsonSerializable):
         list[:class:`~epyt_flow.simulation.scada.complex_control.RuleAction`]
             List of actions that are applied if the conditions are met.
         """
-        return deepcopy(self.__actions)
+        return deepcopy(self._actions)
 
     @property
     def else_actions(self) -> list[RuleAction]:
@@ -576,7 +576,7 @@ class ComplexControlModule(JsonSerializable):
         list[:class:`~epyt_flow.simulation.scada.complex_control.RuleAction`]
             List of actions that are applied if the conditions are NOT met.
         """
-        return deepcopy(self.__else_actions)
+        return deepcopy(self._else_actions)
 
     @property
     def priority(self) -> int:
@@ -588,29 +588,29 @@ class ComplexControlModule(JsonSerializable):
         `int`
             Priority of this control rule.
         """
-        return self.__priority
+        return self._priority
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"rule_id": self.__rule_id,
-                                           "condition_1": self.__condition_1,
-                                           "additional_conditions": self.__additional_conditions,
-                                           "actions": self.__actions,
-                                           "else_actions": self.__else_actions,
-                                           "priority": self.__priority}
+        return super().get_attributes() | {"rule_id": self._rule_id,
+                                           "condition_1": self._condition_1,
+                                           "additional_conditions": self._additional_conditions,
+                                           "actions": self._actions,
+                                           "else_actions": self._else_actions,
+                                           "priority": self._priority}
 
     def __eq__(self, other) -> bool:
-        return super().__eq__(other) and self.__rule_id == other.rule_id and \
-            self.__priority == other.priority and self.__condition_1 == other.condition_1 and \
-            np.all(self.__additional_conditions == other.additional_conditions) and \
-            np.all(self.__actions == other.actions) and \
-            np.all(self.__else_actions == other.else_actions)
+        return super().__eq__(other) and self._rule_id == other.rule_id and \
+            self._priority == other.priority and self._condition_1 == other.condition_1 and \
+            np.all(self._additional_conditions == other.additional_conditions) and \
+            np.all(self._actions == other.actions) and \
+            np.all(self._else_actions == other.else_actions)
 
     def __str__(self) -> str:
         desc = ""
 
-        desc += f"RULE {self.__rule_id}\n"
-        desc += f"IF {self.__condition_1} "
-        for op, action in self.__additional_conditions:
+        desc += f"RULE {self._rule_id}\n"
+        desc += f"IF {self._condition_1} "
+        for op, action in self._additional_conditions:
             if op == EN_R_AND:
                 desc += "\nAND "
             elif op == EN_R_OR:
@@ -618,10 +618,10 @@ class ComplexControlModule(JsonSerializable):
 
             desc += f"{action} "
         desc += "\nTHEN "
-        desc += "\nAND ".join(str(action) for action in self.__actions)
-        if len(self.__else_actions) != 0:
-            desc += "\nELSE " + "\nAND ".join(str(action) for action in self.__else_actions)
+        desc += "\nAND ".join(str(action) for action in self._actions)
+        if len(self._else_actions) != 0:
+            desc += "\nELSE " + "\nAND ".join(str(action) for action in self._else_actions)
 
-        desc += f"\nPRIORITY {self.__priority}"
+        desc += f"\nPRIORITY {self._priority}"
 
         return desc

@@ -93,11 +93,11 @@ class SimpleControlModule(JsonSerializable):
             if cond_comp_value < 0:
                 raise ValueError("'cond_comp_value' can not be negative")
 
-        self.__link_id = link_id
-        self.__link_status = link_status
-        self.__cond_type = cond_type
-        self.__cond_var_value = cond_var_value
-        self.__cond_comp_value = cond_comp_value
+        self._link_id = link_id
+        self._link_status = link_status
+        self._cond_type = cond_type
+        self._cond_var_value = cond_var_value
+        self._cond_comp_value = cond_comp_value
 
         super().__init__(**kwds)
 
@@ -111,7 +111,7 @@ class SimpleControlModule(JsonSerializable):
         `str`
             Link ID.
         """
-        return self.__link_id
+        return self._link_id
 
     @property
     def link_status(self) -> Union[int, float]:
@@ -130,7 +130,7 @@ class SimpleControlModule(JsonSerializable):
                 - EN_SET_OPEN     = 1e10
 
         """
-        return self.__link_status
+        return self._link_status
 
     @property
     def cond_type(self) -> int:
@@ -147,7 +147,7 @@ class SimpleControlModule(JsonSerializable):
                 - EN_TIMER     = 2
                 - EN_TIMEOFDAY = 3
         """
-        return self.__cond_type
+        return self._cond_type
 
     @property
     def cond_var_value(self) -> Union[str, int]:
@@ -163,7 +163,7 @@ class SimpleControlModule(JsonSerializable):
         `str` or `int`
             Condition/rule variable value.
         """
-        return self.__cond_var_value
+        return self._cond_var_value
 
     @property
     def cond_comp_value(self) -> float:
@@ -178,37 +178,37 @@ class SimpleControlModule(JsonSerializable):
         `float`
             Condition/Rule comparison value.
         """
-        return self.__cond_comp_value
+        return self._cond_comp_value
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"link_id": self.__link_id,
-                                           "link_status": self.__link_status,
-                                           "cond_type": self.__cond_type,
-                                           "cond_var_value": self.__cond_var_value,
-                                           "cond_comp_value": self.__cond_comp_value}
+        return super().get_attributes() | {"link_id": self._link_id,
+                                           "link_status": self._link_status,
+                                           "cond_type": self._cond_type,
+                                           "cond_var_value": self._cond_var_value,
+                                           "cond_comp_value": self._cond_comp_value}
 
     def __eq__(self, other) -> bool:
-        return super().__eq__(other) and self.__link_id == other.link_id and \
-            self.__link_status == other.link_status and self.__cond_type == other.cond_type and \
-            self.__cond_var_value == other.cond_var_value and \
-            self.__cond_comp_value == other.cond_comp_value
+        return super().__eq__(other) and self._link_id == other.link_id and \
+            self._link_status == other.link_status and self._cond_type == other.cond_type and \
+            self._cond_var_value == other.cond_var_value and \
+            self._cond_comp_value == other.cond_comp_value
 
     def __str__(self) -> str:
-        control_rule_str = f"LINK {self.__link_id} "
-        if isinstance(self.__link_status, int):
-            control_rule_str += "OPEN " if self.__link_status == ActuatorConstants.EN_OPEN or \
-                self.__link_status == ActuatorConstants.EN_SET_OPEN else "CLOSED "
+        control_rule_str = f"LINK {self._link_id} "
+        if isinstance(self._link_status, int):
+            control_rule_str += "OPEN " if self._link_status == ActuatorConstants.EN_OPEN or \
+                self._link_status == ActuatorConstants.EN_SET_OPEN else "CLOSED "
         else:
-            control_rule_str += f"{self.__link_status} "
+            control_rule_str += f"{self._link_status} "
 
-        if self.__cond_type == EpanetConstants.EN_TIMER:
-            control_rule_str += f"AT TIME {self.__cond_var_value}"
-        elif self.__cond_type == EpanetConstants.EN_TIMEOFDAY:
-            control_rule_str += f"AT CLOCKTIME {self.__cond_var_value}"
-        elif self.__cond_type == EpanetConstants.EN_LOWLEVEL:
-            control_rule_str += f"IF NODE {self.__cond_var_value} BELOW {self.__cond_comp_value}"
-        elif self.__cond_type == EpanetConstants.EN_HILEVEL:
-            control_rule_str += f"IF NODE {self.__cond_var_value} ABOVE {self.__cond_comp_value}"
+        if self._cond_type == EpanetConstants.EN_TIMER:
+            control_rule_str += f"AT TIME {self._cond_var_value}"
+        elif self._cond_type == EpanetConstants.EN_TIMEOFDAY:
+            control_rule_str += f"AT CLOCKTIME {self._cond_var_value}"
+        elif self._cond_type == EpanetConstants.EN_LOWLEVEL:
+            control_rule_str += f"IF NODE {self._cond_var_value} BELOW {self._cond_comp_value}"
+        elif self._cond_type == EpanetConstants.EN_HILEVEL:
+            control_rule_str += f"IF NODE {self._cond_var_value} ABOVE {self._cond_comp_value}"
 
         return control_rule_str
 
