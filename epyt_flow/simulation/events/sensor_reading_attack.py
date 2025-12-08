@@ -38,8 +38,8 @@ class SensorOverrideAttack(SensorReadingAttack, JsonSerializable):
         if len(new_sensor_values) == 0:
             raise ValueError("'new_sensor_values' can not be empty")
 
-        self.__new_sensor_values = new_sensor_values
-        self.__cur_replay_idx = 0
+        self._new_sensor_values = new_sensor_values
+        self._cur_replay_idx = 0
 
         super().__init__(**kwds)
 
@@ -54,21 +54,21 @@ class SensorOverrideAttack(SensorReadingAttack, JsonSerializable):
         `np.ndarray`
             New sensor readings.
         """
-        return deepcopy(self.__new_sensor_values)
+        return deepcopy(self._new_sensor_values)
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"new_sensor_values": self.__new_sensor_values}
+        return super().get_attributes() | {"new_sensor_values": self._new_sensor_values}
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, SensorOverrideAttack):
             raise TypeError("Can not compare 'SensorOverrideAttack' instance " +
                             f"with '{type(other)}' instance")
 
-        return super().__eq__(other) and np.all(self.__new_sensor_values == other.new_sensor_values)
+        return super().__eq__(other) and np.all(self._new_sensor_values == other.new_sensor_values)
 
     def __str__(self) -> str:
         return f"{type(self).__name__} {super().__str__()} " +\
-            f"new_sensor_values: {self.__new_sensor_values}"
+            f"new_sensor_values: {self._new_sensor_values}"
 
     def apply(self, sensor_readings: np.ndarray,
               sensor_readings_time: np.ndarray) -> np.ndarray:
@@ -76,8 +76,8 @@ class SensorOverrideAttack(SensorReadingAttack, JsonSerializable):
             t = sensor_readings_time[i]
 
             if self.start_time <= t <= self.end_time:
-                sensor_readings[i] = self.__new_sensor_values[self.__cur_replay_idx]
-                self.__cur_replay_idx = (self.__cur_replay_idx + 1) % len(self.__new_sensor_values)
+                sensor_readings[i] = self._new_sensor_values[self._cur_replay_idx]
+                self._cur_replay_idx = (self._cur_replay_idx + 1) % len(self._new_sensor_values)
 
         return sensor_readings
 
@@ -113,16 +113,16 @@ class SensorReplayAttack(SensorReadingAttack, JsonSerializable):
             raise ValueError("Invalid values for 'replay_data_time_window_start' and/or " +
                              "'replay_data_time_window_end' detected.")
 
-        self.__new_sensor_values = np.zeros(replay_data_time_window_end -
+        self._new_sensor_values = np.zeros(replay_data_time_window_end -
                                             replay_data_time_window_start)
-        self.__sensor_data_time_window_start = replay_data_time_window_start
-        self.__sensor_data_time_window_end = replay_data_time_window_end
-        self.__cur_hist_idx = 0
-        self.__cur_replay_idx = 0
+        self._sensor_data_time_window_start = replay_data_time_window_start
+        self._sensor_data_time_window_end = replay_data_time_window_end
+        self._cur_hist_idx = 0
+        self._cur_replay_idx = 0
 
         super().__init__(**kwds)
 
-        if self.__sensor_data_time_window_start > self.start_time:
+        if self._sensor_data_time_window_start > self.start_time:
             raise ValueError("'replay_data_time_window_start' must be less than 'start_time'")
 
     @property
@@ -136,7 +136,7 @@ class SensorReplayAttack(SensorReadingAttack, JsonSerializable):
         `int`
             Start time.
         """
-        return self.__sensor_data_time_window_start
+        return self._sensor_data_time_window_start
 
     @property
     def sensor_data_time_window_end(self) -> int:
@@ -149,7 +149,7 @@ class SensorReplayAttack(SensorReadingAttack, JsonSerializable):
         `int`
             End time.
         """
-        return self.__sensor_data_time_window_end
+        return self._sensor_data_time_window_end
 
     @property
     def new_sensor_values(self) -> np.ndarray:
@@ -162,12 +162,12 @@ class SensorReplayAttack(SensorReadingAttack, JsonSerializable):
         `np.ndarray`
             New sensor readings.
         """
-        return deepcopy(self.__new_sensor_values)
+        return deepcopy(self._new_sensor_values)
 
     def get_attributes(self) -> dict:
-        my_attributes = {"new_sensor_values": self.__new_sensor_values,
-                         "replay_data_time_window_start": self.__sensor_data_time_window_start,
-                         "replay_data_time_window_end": self.__sensor_data_time_window_end}
+        my_attributes = {"new_sensor_values": self._new_sensor_values,
+                         "replay_data_time_window_start": self._sensor_data_time_window_start,
+                         "replay_data_time_window_end": self._sensor_data_time_window_end}
 
         return super().get_attributes() | my_attributes
 
@@ -176,23 +176,23 @@ class SensorReplayAttack(SensorReadingAttack, JsonSerializable):
             raise TypeError("Can not compare 'SensorReplayAttack' instance " +
                             f"with '{type(other)}' instance")
 
-        return super().__eq__(other) and np.all(self.__new_sensor_values == other.new_sensor_values)
+        return super().__eq__(other) and np.all(self._new_sensor_values == other.new_sensor_values)
 
     def __str__(self) -> str:
         return f"{type(self).__name__} {super().__str__()} " +\
-            f"new_sensor_values: {self.__new_sensor_values}"
+            f"new_sensor_values: {self._new_sensor_values}"
 
     def apply(self, sensor_readings: np.ndarray,
               sensor_readings_time: np.ndarray) -> np.ndarray:
         for i in range(sensor_readings.shape[0]):
             t = sensor_readings_time[i]
 
-            if self.__sensor_data_time_window_start <= t <= self.__sensor_data_time_window_end:
-                self.__new_sensor_values[self.__cur_hist_idx] = sensor_readings[i]
-                self.__cur_hist_idx += 1
+            if self._sensor_data_time_window_start <= t <= self._sensor_data_time_window_end:
+                self._new_sensor_values[self._cur_hist_idx] = sensor_readings[i]
+                self._cur_hist_idx += 1
 
             if self.start_time <= t <= self.end_time:
-                sensor_readings[i] = self.__new_sensor_values[self.__cur_replay_idx]
-                self.__cur_replay_idx = (self.__cur_replay_idx + 1) % len(self.__new_sensor_values)
+                sensor_readings[i] = self._new_sensor_values[self._cur_replay_idx]
+                self._cur_replay_idx = (self._cur_replay_idx + 1) % len(self._new_sensor_values)
 
         return sensor_readings
