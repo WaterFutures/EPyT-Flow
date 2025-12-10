@@ -85,15 +85,15 @@ class Leakage(SystemEvent, JsonSerializable):
                 raise TypeError("'node_id' must be an instance of 'str' " +
                                 f"but not of '{type(node_id)}'")
 
-        self.__link_id = link_id
-        self.__node_id = node_id
-        self.__diameter = diameter
-        self.__area = area
-        self.__profile = profile
+        self._link_id = link_id
+        self._node_id = node_id
+        self._diameter = diameter
+        self._area = area
+        self._profile = profile
 
-        self.__leaky_node_idx = None
-        self.__leak_emitter_coef = None
-        self.__time_pattern_idx = 0
+        self._leaky_node_idx = None
+        self._leak_emitter_coef = None
+        self._time_pattern_idx = 0
 
         super().__init__(**kwds)
 
@@ -107,7 +107,7 @@ class Leakage(SystemEvent, JsonSerializable):
         `str`
             ID of the link at which the leak is placed.
         """
-        return self.__link_id
+        return self._link_id
 
     @property
     def node_id(self) -> str:
@@ -119,7 +119,7 @@ class Leakage(SystemEvent, JsonSerializable):
         `str`
             ID of the node at which the leak is placed.
         """
-        return self.__node_id
+        return self._node_id
 
     @property
     def diameter(self) -> float:
@@ -132,7 +132,7 @@ class Leakage(SystemEvent, JsonSerializable):
         `float`
             Diameter (*foot* or *meter*) of the leak.
         """
-        return self.__diameter
+        return self._diameter
 
     @property
     def area(self) -> float:
@@ -145,7 +145,7 @@ class Leakage(SystemEvent, JsonSerializable):
         `float`
             Area of the leak.
         """
-        return self.__area if self.__area is not None else self.compute_leak_area(self.__diameter)
+        return self._area if self._area is not None else self.compute_leak_area(self._diameter)
 
     @property
     def profile(self) -> np.ndarray:
@@ -157,7 +157,7 @@ class Leakage(SystemEvent, JsonSerializable):
         `numpy.ndarray`
             Pattern of the leak.
         """
-        return deepcopy(self.__profile)
+        return deepcopy(self._profile)
 
     @profile.setter
     def profile(self, pattern: np.ndarray):
@@ -168,25 +168,25 @@ class Leakage(SystemEvent, JsonSerializable):
             raise ValueError("'profile' must be a one-dimensional array " +
                              f"but not of shape '{pattern.shape}'")
 
-        self.__profile = pattern
+        self._profile = pattern
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"link_id": self.__link_id, "diameter": self.__diameter,
-                                           "area": self.__area, "profile": self.__profile,
-                                           "node_id": self.__node_id
-                                           if self.__link_id is None else None}
+        return super().get_attributes() | {"link_id": self._link_id, "diameter": self._diameter,
+                                           "area": self._area, "profile": self._profile,
+                                           "node_id": self._node_id
+                                           if self._link_id is None else None}
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Leakage):
             raise TypeError(f"Can not compare 'Leakage' instance with '{type(other)}' instance")
 
-        return super().__eq__(other) and self.__link_id == other.link_id \
-            and self.__diameter == other.diameter and np.all(self.__profile == other.profile) \
-            and self.__node_id == other.node_id and self.area == other.area
+        return super().__eq__(other) and self._link_id == other.link_id \
+            and self._diameter == other.diameter and np.all(self._profile == other.profile) \
+            and self._node_id == other.node_id and self.area == other.area
 
     def __str__(self) -> str:
-        return f"{super().__str__()} link_id: {self.__link_id} diameter: {self.__diameter} " +\
-            f"area: {self.__area} profile: {self.__profile} node_id: {self.__node_id}"
+        return f"{super().__str__()} link_id: {self._link_id} diameter: {self._diameter} " +\
+            f"area: {self._area} profile: {self._profile} node_id: {self._node_id}"
 
     def compute_leak_area(self, diameter: float) -> float:
         """
@@ -242,18 +242,18 @@ class Leakage(SystemEvent, JsonSerializable):
         return discharge_coef * area * np.sqrt(2. * g)
 
     def _get_new_link_id(self) -> str:
-        return f"leak_pipe_{self.__link_id}"
+        return f"leak_pipe_{self._link_id}"
 
     def _get_new_node_id(self) -> str:
-        return f"leak_node_{self.__link_id}"
+        return f"leak_node_{self._link_id}"
 
     def init(self, epanet_api: EPyT) -> None:
         super().init(epanet_api)
 
         # Split pipe if leak is placed at a link/pipe
-        if self.__link_id is not None:
-            if self.__link_id not in self._epanet_api.get_all_links_id():
-                raise ValueError(f"Unknown link/pipe '{self.__link_id}'")
+        if self._link_id is not None:
+            if self._link_id not in self._epanet_api.get_all_links_id():
+                raise ValueError(f"Unknown link/pipe '{self._link_id}'")
 
             new_link_id = self._get_new_link_id()
             new_node_id = self._get_new_node_id()
@@ -263,22 +263,22 @@ class Leakage(SystemEvent, JsonSerializable):
                 raise ValueError(f"There is already a leak at pipe {self.link_id}")
 
             self._epanet_api.split_pipe(self.link_id, new_link_id, new_node_id)
-            self.__leaky_node_idx = self._epanet_api.get_node_idx(new_node_id)
+            self._leaky_node_idx = self._epanet_api.get_node_idx(new_node_id)
         else:
-            if self.__node_id not in self._epanet_api.get_all_nodes_id():
-                raise ValueError(f"Unknown node '{self.__node_id}'")
+            if self._node_id not in self._epanet_api.get_all_nodes_id():
+                raise ValueError(f"Unknown node '{self._node_id}'")
 
-            self.__leaky_node_idx = self._epanet_api.get_node_idx(self.__node_id)
+            self._leaky_node_idx = self._epanet_api.get_node_idx(self._node_id)
 
-        self._epanet_api.setnodevalue(self.__leaky_node_idx, EpanetConstants.EN_EMITTER, 0.)
+        self._epanet_api.setnodevalue(self._leaky_node_idx, EpanetConstants.EN_EMITTER, 0.)
 
         # Compute leak emitter coefficient
-        self.__leak_emitter_coef = self.compute_leak_emitter_coefficient(
+        self._leak_emitter_coef = self.compute_leak_emitter_coefficient(
             self.compute_leak_area(self.area))
 
     def cleanup(self) -> None:
-        if self.__link_id is not None:
-            pipe_idx = self._epanet_api.get_link_idx(self.__link_id)
+        if self._link_id is not None:
+            pipe_idx = self._epanet_api.get_link_idx(self._link_id)
             link_diameter = self._epanet_api.get_link_diameter(pipe_idx)
             link_length = self._epanet_api.get_link_length(pipe_idx)
             link_roughness_coeff = self._epanet_api.get_link_roughness(pipe_idx)
@@ -293,15 +293,15 @@ class Leakage(SystemEvent, JsonSerializable):
 
             self._epanet_api.deletelink(self._epanet_api.get_link_idx(self._get_new_link_id()),
                                         EpanetConstants.EN_UNCONDITIONAL)
-            self._epanet_api.deletelink(self._epanet_api.get_link_idx(self.__link_id),
+            self._epanet_api.deletelink(self._epanet_api.get_link_idx(self._link_id),
                                         EpanetConstants.EN_UNCONDITIONAL)
             self._epanet_api.deletenode(self._epanet_api.get_node_idx(self._get_new_node_id()),
                                         EpanetConstants.EN_UNCONDITIONAL)
 
-            self._epanet_api.addlink(self.__link_id, EpanetConstants.EN_PIPE,
+            self._epanet_api.addlink(self._link_id, EpanetConstants.EN_PIPE,
                                      self._epanet_api.get_node_id(node_a_idx),
                                      self._epanet_api.get_node_id(node_b_idx))
-            link_idx = self._epanet_api.get_link_idx(self.__link_id)
+            link_idx = self._epanet_api.get_link_idx(self._link_id)
             self._epanet_api.setlinknodes(link_idx, node_a_idx, node_b_idx)
             self._epanet_api.setlinktype(link_idx, EpanetConstants.EN_PIPE,
                                          EpanetConstants.EN_UNCONDITIONAL)
@@ -317,16 +317,16 @@ class Leakage(SystemEvent, JsonSerializable):
                                           link_wall_reaction_coeff)
 
     def reset(self) -> None:
-        self.__time_pattern_idx = 0
+        self._time_pattern_idx = 0
 
     def exit(self, cur_time) -> None:
-        self._epanet_api.setnodevalue(self.__leaky_node_idx, EpanetConstants.EN_EMITTER, 0.)
+        self._epanet_api.setnodevalue(self._leaky_node_idx, EpanetConstants.EN_EMITTER, 0.)
 
     def apply(self, cur_time: int) -> None:
-        self._epanet_api.setnodevalue(self.__leaky_node_idx, EpanetConstants.EN_EMITTER,
-                                      self.__leak_emitter_coef *
-                                      self.__profile[self.__time_pattern_idx])
-        self.__time_pattern_idx += 1
+        self._epanet_api.setnodevalue(self._leaky_node_idx, EpanetConstants.EN_EMITTER,
+                                      self._leak_emitter_coef *
+                                      self._profile[self._time_pattern_idx])
+        self._time_pattern_idx += 1
 
 
 @serializable(ABRUPT_LEAKAGE_ID, ".epytflow_leakage_abrupt")
