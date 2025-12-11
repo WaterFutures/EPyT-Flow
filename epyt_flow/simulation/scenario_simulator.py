@@ -1223,11 +1223,14 @@ class ScenarioSimulator():
         node_idx = self.epanet_api.get_node_idx(node_id)
 
         if self.epanet_api.getnodetype(node_idx) != EpanetConstants.EN_RESERVOIR:
-            demand_pattern_idx = self.epanet_api.getdemandpattern(node_idx)
+            demand_pattern_idx = self.epanet_api.getdemandpattern(node_idx, 1)
         else:
             demand_pattern_idx = self.epanet_api.getnodevalue(node_idx, EpanetConstants.EN_PATTERN)
 
-        return self.get_pattern(self.epanet_api.getpatternid(demand_pattern_idx))
+        if demand_pattern_idx == 0:
+            return None
+        else:
+            return self.get_pattern(self.epanet_api.getpatternid(demand_pattern_idx))
 
     def set_node_demand_pattern(self, node_id: str, base_demand: float, demand_pattern_id: str,
                                 demand_pattern: np.ndarray = None) -> None:
