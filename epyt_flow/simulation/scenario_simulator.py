@@ -136,41 +136,17 @@ class ScenarioSimulator():
         self.__running_simulation = False
         self.__uncertainties_applied = False
 
-        # Workaround for EPyT bug concerning parallel simulations (see EPyT issue #54):
-        # 1. Create random tmp folder (make sure it is unique!)
-        # 2. Copy .inp and .msx file there
-        # 3. Use those copies  when loading EPyT
-        tmp_folder_path = os.path.join(get_temp_folder(), f"{random.randint(int(1e5), int(1e7))}{time.time()}")
-        pathlib.Path(tmp_folder_path).mkdir(parents=True, exist_ok=False)
-
         def __file_exists(file_in: str) -> bool:
             try:
                 return pathlib.Path(file_in).is_file()
             except Exception:
                 return False
 
-        if not __file_exists(self.__f_inp_in):
-            my_f_inp_in = self.__f_inp_in
-            self.__my_f_inp_in = None
-        else:
-            my_f_inp_in = os.path.join(tmp_folder_path, pathlib.Path(self.__f_inp_in).name)
-            shutil.copyfile(self.__f_inp_in, my_f_inp_in)
-            self.__my_f_inp_in = my_f_inp_in
-
-        if self.__f_msx_in is not None:
-            if not __file_exists(self.__f_msx_in):
-                my_f_msx_in = self.__f_msx_in
-            else:
-                my_f_msx_in = os.path.join(tmp_folder_path, pathlib.Path(self.__f_msx_in).name)
-                shutil.copyfile(self.__f_msx_in, my_f_msx_in)
-        else:
-            my_f_msx_in = None
-
         from epanet_plus import EPyT   # Workaround: Sphinx autodoc "importlib.import_module TypeError: __mro_entries__"
-        self.epanet_api = EPyT(my_f_inp_in, use_project=self.__f_msx_in is None)
+        self.epanet_api = EPyT(self.__f_inp_in, use_project=self.__f_msx_in is None)
 
         if self.__f_msx_in is not None:
-            self.epanet_api.load_msx_file(my_f_msx_in)
+            self.epanet_api.load_msx_file(self.__f_msx_in)
 
         # Do not raise exceptions in the case of EPANET warnings and errors
         self.epanet_api.set_error_handling(raise_exception_on_error=raise_exception_on_error,
@@ -613,9 +589,6 @@ class ScenarioSimulator():
         Call this function after the simulation is done -- do not call this function before!
         """
         self.epanet_api.close()
-
-        if self.__my_f_inp_in is not None:
-            shutil.rmtree(pathlib.Path(self.__my_f_inp_in).parent)
 
     def __enter__(self):
         return self
