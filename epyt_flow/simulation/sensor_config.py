@@ -5,6 +5,7 @@ from copy import deepcopy
 import itertools
 import numpy as np
 from epanet_plus import EpanetConstants, EPyT
+from typing import Optional
 
 from ..serialization import SENSOR_CONFIG_ID, JsonSerializable, serializable
 
@@ -1206,7 +1207,7 @@ class SensorConfig(JsonSerializable):
                 flow_idx_shift = current_shift
                 current_shift += n_flow_sensors
             elif sensor_type == SENSOR_TYPE_NODE_QUALITY:
-                quality_node_idx_shift = current_shift
+                node_quality_idx_shift = current_shift
                 current_shift += n_node_quality_sensors
             elif sensor_type == SENSOR_TYPE_NODE_DEMAND:
                 demand_idx_shift = current_shift
@@ -2073,9 +2074,9 @@ class SensorConfig(JsonSerializable):
         return self.__surface_species_mass_unit[self.map_surfacespecies_id_to_idx(
             surface_species_id)]
 
-    def _append_readings_if_possible(self, data: list, readings: np.ndarray, request_condition: bool, sensor_description: str) -> list:
-        if readings is not None:
-            data.append(readings)
+    def _append_readings_if_possible(self, data: list, reading: Optional[np.ndarray], reading_idx: list, request_condition: bool, sensor_description: str) -> list:
+        if reading is not None:
+            data.append(reading[:, reading_idx])
         else:
             if request_condition:
                 raise ValueError(
@@ -2162,57 +2163,49 @@ class SensorConfig(JsonSerializable):
         for sensor_type in self.sensor_ordering:
             if sensor_type==SENSOR_TYPE_NODE_PRESSURE:
                 data = self._append_readings_if_possible(
-                    data,
-                    pressures[:, self.__pressure_idx],
+                    data, pressures, self.__pressure_idx,
                     len(self.__pressure_sensors) != 0,
                     "Pressure"
                 )
             elif sensor_type==SENSOR_TYPE_NODE_QUALITY:
                 data = self._append_readings_if_possible(
-                    data,
-                    nodes_quality[:, self.__quality_node_idx],
+                    data, nodes_quality, self.__quality_node_idx,
                     len(self.__quality_node_sensors) != 0,
                     "Node water quality"
                 )
             elif sensor_type==SENSOR_TYPE_NODE_DEMAND:
                 data = self._append_readings_if_possible(
-                    data,
-                    demands[:, self.__demand_idx],
+                    data, demands, self.__demand_idx,
                     len(self.__demand_sensors) != 0,
                     "Demand"
                 )
             elif sensor_type==SENSOR_TYPE_LINK_FLOW:
                 data = self._append_readings_if_possible(
-                    data,
-                    flows[:, self.__flow_idx],
+                    data, flows, self.__flow_idx,
                     len(self.__flow_sensors) != 0,
                     "Flow"
                 )
             elif sensor_type==SENSOR_TYPE_LINK_QUALITY:
                 data = self._append_readings_if_possible(
-                    data,
-                    links_quality[:, self.__quality_link_idx],
+                    data, links_quality, self.__quality_link_idx,
                     len(self.__quality_link_sensors) != 0,
                     "Link/Pipe water quality"
                 )
             elif sensor_type==SENSOR_TYPE_VALVE_STATE:
                 data = self._append_readings_if_possible(
-                    data,
-                    valves_state[:, self.__valve_state_idx],
+                    data, valves_state, self.__valve_state_idx,
                     len(self.__valve_state_sensors) != 0,
                     "Valve state"
                 )
             elif sensor_type==SENSOR_TYPE_PUMP_STATE:
                 data = self._append_readings_if_possible(
-                    data,
-                    pumps_state[:, self.__pump_state_idx],
+                    data, pumps_state, self.__pump_state_idx,
                     len(self.__pump_state_sensors) != 0,
                     "Pump state"
                 )
             elif sensor_type==SENSOR_TYPE_TANK_VOLUME:
                 data = self._append_readings_if_possible(
-                    data,
-                    tanks_volume[:, self.__tank_volume_idx],
+                    data, tanks_volume, self.__tank_volume_idx,
                     len(self.__tank_volume_sensors) != 0,
                     "Tank water volume"
                 )
@@ -2254,15 +2247,13 @@ class SensorConfig(JsonSerializable):
                                          "surface species concentration data is given")
             elif sensor_type==SENSOR_TYPE_PUMP_EFFICIENCY:
                 data = self._append_readings_if_possible(
-                    data,
-                    pumps_efficiency[:, self.__pump_efficiency_idx],
+                    data, pumps_efficiency, self.__pump_efficiency_idx,
                     len(self.__pump_efficiency_sensors) != 0,
                     "Pump efficiency"
                 )
             elif sensor_type==SENSOR_TYPE_PUMP_ENERGYCONSUMPTION:
                 data = self._append_readings_if_possible(
-                    data,
-                    pumps_energyconsumption[:, self.__pump_energyconsumption_idx],
+                    data, pumps_energyconsumption, self.__pump_energyconsumption_idx,
                     len(self.__pump_energyconsumption_sensors) != 0,
                     "Pump energy consumption"
                 )
