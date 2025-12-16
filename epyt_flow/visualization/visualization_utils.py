@@ -3,11 +3,9 @@ Module provides helper functions and data management classes for visualizing
 scenarios.
 """
 import inspect
-from dataclasses import dataclass
 from typing import Optional, Union, List, Tuple
 
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 import networkx.drawing.nx_pylab as nxp
 import numpy as np
 from scipy.interpolate import CubicSpline
@@ -23,7 +21,6 @@ stat_funcs = {
 }
 
 
-@dataclass
 class JunctionObject:
     """
     Represents a junction component (e.g. nodes, tanks, reservoirs, ...) in a
@@ -48,12 +45,15 @@ class JunctionObject:
     interpolated : `bool`, default = False
         Set to True, if node_colors are interpolated for smoother animation.
     """
-    nodelist: list
-    pos: dict
-    node_shape: mpl.path.Path = None
-    node_size: int = 10
-    node_color: Union[str, list] = 'k'
-    interpolated: bool = False
+    def __init__(self, nodelist: list, pos: dict, node_shape: mpl.path.Path = None,
+                 node_size: int = 10, node_color: Union[str, list] = 'k',
+                 interpolated: bool = False):
+        self.nodelist = nodelist
+        self.pos = pos
+        self.node_shape = node_shape
+        self.node_size = node_size
+        self.node_color = node_color
+        self.interpolated = interpolated
 
     def add_frame(self, statistic: str, values: np.ndarray,
                   pit: int, intervals: Union[int, List[Union[int, float]]]):
@@ -233,7 +233,6 @@ class JunctionObject:
             setattr(self, key, value)
 
 
-@dataclass
 class EdgeObject:
     """
     Represents an edge component (pipes) in a water distribution network and
@@ -253,10 +252,12 @@ class EdgeObject:
     interpolated : `dict`, default = {}
         Filled with interpolated frames if interpolation method is called.
     """
-    edgelist: list
-    pos: dict
-    edge_color: Union[str, list] = 'k'
-    interpolated = {}
+    def __init__(self, edgelist: list, pos: dict, edge_color: Union[str, list] = 'k',
+                 interpolated: dict = {}):
+        self.edgelist = edgelist
+        self.pos = pos
+        self.edge_color = edge_color
+        self.interpolated = interpolated
 
     def rescale_widths(self, line_widths: Tuple[int, int] = (1, 2)):
         """
