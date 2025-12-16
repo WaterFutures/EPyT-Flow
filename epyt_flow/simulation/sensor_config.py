@@ -5,6 +5,7 @@ from copy import deepcopy
 import itertools
 import numpy as np
 from epanet_plus import EpanetConstants, EPyT
+from typing import Optional
 
 from ..serialization import SENSOR_CONFIG_ID, JsonSerializable, serializable
 
@@ -33,6 +34,23 @@ MASS_UNIT_MMOL = 7
 TIME_UNIT_HRS = 8
 MASS_UNIT_CUSTOM = 9
 
+def valid_sensor_types() -> str:
+    """Returns a description of all valid sensor types."""
+    return (
+        f"{SENSOR_TYPE_NODE_PRESSURE} (Node Pressure), "
+        f"{SENSOR_TYPE_NODE_QUALITY} (Node Quality), "
+        f"{SENSOR_TYPE_NODE_DEMAND} (Node Demand), "
+        f"{SENSOR_TYPE_LINK_FLOW} (Link Flow), "
+        f"{SENSOR_TYPE_LINK_QUALITY} (Link Quality), "
+        f"{SENSOR_TYPE_VALVE_STATE} (Valve State), "
+        f"{SENSOR_TYPE_PUMP_STATE} (Pump State), "
+        f"{SENSOR_TYPE_TANK_VOLUME} (Tank Volume), "
+        f"{SENSOR_TYPE_NODE_BULK_SPECIES} (Node Bulk Species), "
+        f"{SENSOR_TYPE_LINK_BULK_SPECIES} (Link Bulk Species), "
+        f"{SENSOR_TYPE_SURFACE_SPECIES} (Surface Species), "
+        f"{SENSOR_TYPE_PUMP_EFFICIENCY} (Pump Efficiency), "
+        f"{SENSOR_TYPE_PUMP_ENERGYCONSUMPTION} (Pump Energy Consumption)"
+    )
 
 def areaunit_to_id(unit_desc: str) -> int:
     """
@@ -1177,20 +1195,55 @@ class SensorConfig(JsonSerializable):
             *self.__bulk_species_node_sensors.values())))
         n_bulk_species_link_sensors = len(list(itertools.chain(
             *self.__bulk_species_link_sensors.values())))
+        n_surface_species_sensors = len(list(itertools.chain(
+            *self.__surface_species_sensors.values())))
 
-        pressure_idx_shift = 0
-        flow_idx_shift = pressure_idx_shift + n_pressure_sensors
-        demand_idx_shift = flow_idx_shift + n_flow_sensors
-        node_quality_idx_shift = demand_idx_shift + n_demand_sensors
-        link_quality_idx_shift = node_quality_idx_shift + n_node_quality_sensors
-        valve_state_idx_shift = link_quality_idx_shift + n_link_quality_sensors
-        pump_state_idx_shift = valve_state_idx_shift + n_valve_state_sensors
-        pump_efficiency_idx_shift = pump_state_idx_shift + n_pump_state_sensors
-        pump_energyconsumption_idx_shift = pump_efficiency_idx_shift + n_pump_efficiency_sensors
-        tank_volume_idx_shift = pump_energyconsumption_idx_shift + n_pump_energyconsumption_sensors
-        bulk_species_node_idx_shift = tank_volume_idx_shift + n_tank_volume_sensors
-        bulk_species_link_idx_shift = bulk_species_node_idx_shift + n_bulk_species_node_sensors
-        surface_species_idx_shift = bulk_species_link_idx_shift + n_bulk_species_link_sensors
+        current_shift = 0
+        for sensor_type in self.__sensor_ordering:
+            if sensor_type == SENSOR_TYPE_NODE_PRESSURE:
+                pressure_idx_shift = current_shift
+                current_shift += n_pressure_sensors
+            elif sensor_type == SENSOR_TYPE_LINK_FLOW:
+                flow_idx_shift = current_shift
+                current_shift += n_flow_sensors
+            elif sensor_type == SENSOR_TYPE_NODE_QUALITY:
+                node_quality_idx_shift = current_shift
+                current_shift += n_node_quality_sensors
+            elif sensor_type == SENSOR_TYPE_NODE_DEMAND:
+                demand_idx_shift = current_shift
+                current_shift += n_demand_sensors
+            elif sensor_type == SENSOR_TYPE_LINK_QUALITY:
+                link_quality_idx_shift = current_shift
+                current_shift += n_link_quality_sensors
+            elif sensor_type == SENSOR_TYPE_VALVE_STATE:
+                valve_state_idx_shift = current_shift
+                current_shift += n_valve_state_sensors
+            elif sensor_type == SENSOR_TYPE_PUMP_STATE:
+                pump_state_idx_shift = current_shift
+                current_shift += n_pump_state_sensors
+            elif sensor_type == SENSOR_TYPE_PUMP_EFFICIENCY:
+                pump_efficiency_idx_shift = current_shift
+                current_shift += n_pump_efficiency_sensors
+            elif sensor_type == SENSOR_TYPE_PUMP_ENERGYCONSUMPTION:
+                pump_energyconsumption_idx_shift = current_shift
+                current_shift += n_pump_energyconsumption_sensors
+            elif sensor_type == SENSOR_TYPE_TANK_VOLUME:
+                tank_volume_idx_shift = current_shift
+                current_shift += n_tank_volume_sensors
+            elif sensor_type == SENSOR_TYPE_NODE_BULK_SPECIES:
+                bulk_species_node_idx_shift = current_shift
+                current_shift += n_bulk_species_node_sensors
+            elif sensor_type == SENSOR_TYPE_LINK_BULK_SPECIES:
+                bulk_species_link_idx_shift = current_shift
+                current_shift += n_bulk_species_link_sensors
+            elif sensor_type == SENSOR_TYPE_SURFACE_SPECIES:
+                surface_species_idx_shift = current_shift
+                current_shift += n_surface_species_sensors
+            else:
+                raise ValueError(
+                    f"Invalid sensor type: {sensor_type}. "
+                    f"Valid sensor types are:\n{valid_sensor_types()}"
+                )
 
         def __build_sensors_id_to_idx(sensors: list[str], initial_idx_shift: int) -> dict:
             return {sensor_id: i + initial_idx_shift
@@ -2021,6 +2074,17 @@ class SensorConfig(JsonSerializable):
         return self.__surface_species_mass_unit[self.map_surfacespecies_id_to_idx(
             surface_species_id)]
 
+    def _append_readings_if_possible(self, data: list, reading: Optional[np.ndarray], reading_idx: list, request_condition: bool, sensor_description: str) -> list:
+        if reading is not None:
+            data.append(reading[:, reading_idx])
+        else:
+            if request_condition:
+                raise ValueError(
+                    f"{sensor_description} readings requested, "
+                    f"but no such data is given"
+                )
+        return data
+
     def compute_readings(self, pressures: np.ndarray, flows: np.ndarray, demands: np.ndarray,
                          nodes_quality: np.ndarray, links_quality: np.ndarray,
                          pumps_state: np.ndarray, pumps_efficiency: np.ndarray,
@@ -2096,100 +2160,108 @@ class SensorConfig(JsonSerializable):
         """
         data = []
 
-        if pressures is not None:
-            data.append(pressures[:, self.__pressure_idx])
-        else:
-            if len(self.__pressure_sensors) != 0:
-                raise ValueError("Pressure readings requested but no pressure data is given")
-
-        if flows is not None:
-            data.append(flows[:, self.__flow_idx])
-        else:
-            if len(self.__flow_sensors) != 0:
-                raise ValueError("Flow readings requested but no flow data is given")
-
-        if demands is not None:
-            data.append(demands[:, self.__demand_idx])
-        else:
-            if len(self.__demand_sensors) != 0:
-                raise ValueError("Demand readings requested but no demand data is given")
-
-        if nodes_quality is not None:
-            data.append(nodes_quality[:, self.__quality_node_idx])
-        else:
-            if len(self.__quality_node_sensors) != 0:
-                raise ValueError("Node water quality readings requested " +
-                                 "but no water quality data at nodes is given")
-
-        if links_quality is not None:
-            data.append(links_quality[:, self.__quality_link_idx])
-        else:
-            if len(self.__quality_link_sensors) != 0:
-                raise ValueError("Link/Pipe water quality readings requested " +
-                                 "but no water quality data at links/pipes is given")
-
-        if valves_state is not None:
-            data.append(valves_state[:, self.__valve_state_idx])
-        else:
-            if len(self.__valve_state_sensors) != 0:
-                raise ValueError("Valve states readings requested " +
-                                 "but no valve state data is given")
-
-        if pumps_state is not None:
-            data.append(pumps_state[:, self.__pump_state_idx])
-        else:
-            if len(self.__pump_state_sensors) != 0:
-                raise ValueError("Pump states readings requested " +
-                                 "but no pump state data is given")
-
-        if pumps_efficiency is not None:
-            data.append(pumps_efficiency[:, self.__pump_efficiency_idx])
-        else:
-            if len(self.__pump_efficiency_sensors) != 0:
-                raise ValueError("Pump efficiency readings requested " +
-                                 "but no pump efficiency data is given")
-
-        if pumps_energyconsumption is not None:
-            data.append(pumps_energyconsumption[:, self.__pump_energyconsumption_idx])
-        else:
-            if len(self.__pump_energyconsumption_sensors) != 0:
-                raise ValueError("Pump energy consumption readings requested " +
-                                 "but no pump energy consumption data is given")
-
-        if tanks_volume is not None:
-            data.append(tanks_volume[:, self.__tank_volume_idx])
-        else:
-            if len(self.__tank_volume_sensors) != 0:
-                raise ValueError("Water volumes in tanks is requested but no " +
-                                 "tank water volume data is given")
-
-        if surface_species_concentrations is not None:
-            for species_idx, links_idx in self.__surface_species_idx:
-                data.append(surface_species_concentrations[:, species_idx, links_idx].
-                            reshape(-1, len(links_idx)))
-        else:
-            if len(self.__surface_species_sensors) != 0:
-                raise ValueError("Surface species concentratinons requested but no " +
-                                 "surface species concentration data is given")
-
-        if bulk_species_node_concentrations is not None:
-            for species_idx, nodes_idx in self.__bulk_species_node_idx:
-                data.append(bulk_species_node_concentrations[:, species_idx, nodes_idx].
-                            reshape(-1, len(nodes_idx)))
-        else:
-            if len(self.__bulk_species_node_sensors) != 0:
-                raise ValueError("Bulk species concentratinons requested but no " +
-                                 "bulk species node concentration data is given")
-
-        if bulk_species_link_concentrations is not None:
-            for species_idx, links_idx in self.__bulk_species_link_idx:
-                data.append(bulk_species_link_concentrations[:, species_idx, links_idx].
-                            reshape(-1, len(links_idx)))
-        else:
-            if len(self.__bulk_species_link_sensors) != 0:
-                raise ValueError("Bulk species concentratinons requested but no " +
-                                 "bulk species link/pipe concentration data is given")
-
+        for sensor_type in self.sensor_ordering:
+            if sensor_type==SENSOR_TYPE_NODE_PRESSURE:
+                data = self._append_readings_if_possible(
+                    data, pressures, self.__pressure_idx,
+                    len(self.__pressure_sensors) != 0,
+                    "Pressure"
+                )
+            elif sensor_type==SENSOR_TYPE_NODE_QUALITY:
+                data = self._append_readings_if_possible(
+                    data, nodes_quality, self.__quality_node_idx,
+                    len(self.__quality_node_sensors) != 0,
+                    "Node water quality"
+                )
+            elif sensor_type==SENSOR_TYPE_NODE_DEMAND:
+                data = self._append_readings_if_possible(
+                    data, demands, self.__demand_idx,
+                    len(self.__demand_sensors) != 0,
+                    "Demand"
+                )
+            elif sensor_type==SENSOR_TYPE_LINK_FLOW:
+                data = self._append_readings_if_possible(
+                    data, flows, self.__flow_idx,
+                    len(self.__flow_sensors) != 0,
+                    "Flow"
+                )
+            elif sensor_type==SENSOR_TYPE_LINK_QUALITY:
+                data = self._append_readings_if_possible(
+                    data, links_quality, self.__quality_link_idx,
+                    len(self.__quality_link_sensors) != 0,
+                    "Link/Pipe water quality"
+                )
+            elif sensor_type==SENSOR_TYPE_VALVE_STATE:
+                data = self._append_readings_if_possible(
+                    data, valves_state, self.__valve_state_idx,
+                    len(self.__valve_state_sensors) != 0,
+                    "Valve state"
+                )
+            elif sensor_type==SENSOR_TYPE_PUMP_STATE:
+                data = self._append_readings_if_possible(
+                    data, pumps_state, self.__pump_state_idx,
+                    len(self.__pump_state_sensors) != 0,
+                    "Pump state"
+                )
+            elif sensor_type==SENSOR_TYPE_TANK_VOLUME:
+                data = self._append_readings_if_possible(
+                    data, tanks_volume, self.__tank_volume_idx,
+                    len(self.__tank_volume_sensors) != 0,
+                    "Tank water volume"
+                )
+            elif sensor_type==SENSOR_TYPE_NODE_BULK_SPECIES:
+                if bulk_species_node_concentrations is not None:
+                    for species_idx, nodes_idx in self.__bulk_species_node_idx:
+                        data.append(
+                            bulk_species_node_concentrations[
+                                :, species_idx, nodes_idx
+                            ].reshape(-1, len(nodes_idx))
+                        )
+                else:
+                    if len(self.__bulk_species_node_sensors) != 0:
+                        raise ValueError("Bulk species concentratinons requested but no " +
+                                         "bulk species node concentration data is given")
+            elif sensor_type==SENSOR_TYPE_LINK_BULK_SPECIES:
+                if bulk_species_link_concentrations is not None:
+                    for species_idx, links_idx in self.__bulk_species_link_idx:
+                        data.append(
+                            bulk_species_link_concentrations[
+                                :, species_idx, links_idx
+                            ].reshape(-1, len(links_idx))
+                        )
+                else:
+                    if len(self.__bulk_species_link_sensors) != 0:
+                        raise ValueError("Bulk species concentratinons requested but no " +
+                                         "bulk species link/pipe concentration data is given")
+            elif sensor_type==SENSOR_TYPE_SURFACE_SPECIES:
+                if surface_species_concentrations is not None:
+                    for species_idx, links_idx in self.__surface_species_idx:
+                        data.append(
+                            surface_species_concentrations[
+                                :, species_idx, links_idx
+                            ].reshape(-1, len(links_idx))
+                        )
+                else:
+                    if len(self.__surface_species_sensors) != 0:
+                        raise ValueError("Surface species concentratinons requested but no " +
+                                         "surface species concentration data is given")
+            elif sensor_type==SENSOR_TYPE_PUMP_EFFICIENCY:
+                data = self._append_readings_if_possible(
+                    data, pumps_efficiency, self.__pump_efficiency_idx,
+                    len(self.__pump_efficiency_sensors) != 0,
+                    "Pump efficiency"
+                )
+            elif sensor_type==SENSOR_TYPE_PUMP_ENERGYCONSUMPTION:
+                data = self._append_readings_if_possible(
+                    data, pumps_energyconsumption, self.__pump_energyconsumption_idx,
+                    len(self.__pump_energyconsumption_sensors) != 0,
+                    "Pump energy consumption"
+                )
+            else:
+                raise ValueError(
+                    f"Unknown sensor type '{sensor_type}'. "
+                    f"Valid sensor types are\n{valid_sensor_types()}"
+                )
         return np.concatenate(data, axis=1)
 
     def get_index_of_reading(self, pressure_sensor: str = None, flow_sensor: str = None,
