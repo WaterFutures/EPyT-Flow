@@ -2144,25 +2144,25 @@ class ScadaData(Serializable):
 
             for sensor_type in self.__sensor_config.sensor_ordering:
                 if sensor_type==SENSOR_TYPE_NODE_PRESSURE \
-                    and self.__pressure_data_raw is not None:
+                        and self.__pressure_data_raw is not None:
                     data.append(self.__pressure_data_raw)
                 elif sensor_type==SENSOR_TYPE_NODE_QUALITY \
-                    and self.__node_quality_data_raw is not None:
+                        and self.__node_quality_data_raw is not None:
                     data.append(self.__node_quality_data_raw)
                 elif sensor_type==SENSOR_TYPE_NODE_DEMAND \
-                    and self.__demand_data_raw is not None:
+                        and self.__demand_data_raw is not None:
                     data.append(self.__demand_data_raw)
                 elif sensor_type==SENSOR_TYPE_LINK_FLOW \
-                    and self.__flow_data_raw is not None:
+                        and self.__flow_data_raw is not None:
                     data.append(self.__flow_data_raw)
                 elif sensor_type==SENSOR_TYPE_LINK_QUALITY \
-                    and self.__link_quality_data_raw is not None:
+                        and self.__link_quality_data_raw is not None:
                     data.append(self.__link_quality_data_raw)
                 elif sensor_type==SENSOR_TYPE_VALVE_STATE \
-                    and self.__valves_state_data_raw is not None:
+                        and self.__valves_state_data_raw is not None:
                     data.append(self.__valves_state_data_raw)
                 elif sensor_type==SENSOR_TYPE_PUMP_STATE \
-                    and self.__pumps_state_data_raw is not None:
+                        and self.__pumps_state_data_raw is not None:
                     data.append(self.__pumps_state_data_raw)
                 elif sensor_type==SENSOR_TYPE_TANK_VOLUME \
                         and self.__tanks_volume_data_raw is not None:

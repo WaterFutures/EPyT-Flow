@@ -34,6 +34,7 @@ MASS_UNIT_MMOL = 7
 TIME_UNIT_HRS = 8
 MASS_UNIT_CUSTOM = 9
 
+
 def valid_sensor_types() -> str:
     """Returns a description of all valid sensor types."""
     return (
@@ -51,6 +52,7 @@ def valid_sensor_types() -> str:
         f"{SENSOR_TYPE_PUMP_EFFICIENCY} (Pump Efficiency), "
         f"{SENSOR_TYPE_PUMP_ENERGYCONSUMPTION} (Pump Energy Consumption)"
     )
+
 
 def areaunit_to_id(unit_desc: str) -> int:
     """
