@@ -4,7 +4,7 @@
 Installation
 ************
 
-Note that EPyT-Flow supports Python 3.9 - 3.14
+Note that EPyT-Flow supports Python 3.10 - 3.14
 
 .. note::
 
