@@ -164,7 +164,8 @@ class ScenarioSimulator():
 
             self._model_uncertainty = scenario_config.model_uncertainty
             self._sensor_noise = scenario_config.sensor_noise
-            self._sensor_config = scenario_config.sensor_config
+            if scenario_config.sensor_config is not None:
+                self._sensor_config = scenario_config.sensor_config
 
             for control in scenario_config.custom_controls:
                 self.add_custom_control(control)
