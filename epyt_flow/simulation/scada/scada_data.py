@@ -23,7 +23,7 @@ from ..sensor_config import SensorConfig, valid_sensor_types, \
 from ..events import SensorFault, SensorReadingAttack, SensorReadingEvent
 from ...uncertainty import SensorNoise
 from ...serialization import serializable, Serializable, SCADA_DATA_ID
-from ...topology import NetworkTopology
+from ...topology import NetworkTopology, UNITS_USCUSTOM, UNITS_SIMETRIC
 from ...utils import plot_timeseries_data
 
 
@@ -1057,7 +1057,12 @@ class ScadaData(Serializable):
                                      surface_species_mass_unit=new_surface_species_mass_unit,
                                      surface_species_area_unit=new_surface_species_area_unit)
 
-        return ScadaData(network_topo=self.network_topo,
+        if is_flowunit_simetric(flow_unit):
+            network_topo = self.network_topo.convert_units(UNITS_SIMETRIC)
+        else:
+            network_topo = self.network_topo.convert_units(UNITS_USCUSTOM)
+
+        return ScadaData(network_topo=network_topo,
                          warnings_code=self.warnings_code,
                          sensor_config=sensor_config,
                          sensor_readings_time=self.sensor_readings_time,
