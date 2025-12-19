@@ -518,7 +518,7 @@ class ScenarioVisualizer:
         return None
 
     def show_plot(self, export_to_file: str = None,
-                  suppress_plot: bool = False) -> None:
+                  suppress_plot: bool = False, dpi: int = None) -> None:
         """
         Displays a static plot of the water distribution network.
 
@@ -533,13 +533,21 @@ class ScenarioVisualizer:
             Default is `None`.
         suppress_plot : `bool`, default is False
             If true, no plot is displayed after running this method.
+        dpi : `int`, optional
+            Dpi of the generated plot. If None, standard values (200 when
+            displaying and 900 when saving) are used.
         """
-        self.fig = plt.figure(figsize=(6.4, 4.8), dpi=200)
+        if dpi is None:
+            plot_dpi = 200
+            save_dpi = 900
+        else:
+            plot_dpi = save_dpi = dpi
+        self.fig = plt.figure(figsize=(6.4, 4.8), dpi=plot_dpi)
         self._get_next_frame(0)
 
         if export_to_file is not None:
             plt.savefig(export_to_file, transparent=True, bbox_inches='tight',
-                        dpi=900)
+                        dpi=save_dpi)
         if not suppress_plot:
             plt.show()
         else:
