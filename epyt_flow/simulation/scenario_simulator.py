@@ -898,10 +898,18 @@ class ScenarioSimulator():
         """
         return self.epanet_api.get_reporting_time_step()
 
-    def get_scenario_config(self) -> ScenarioConfig:
+    def get_scenario_config(self, include_network_topology: bool = True) -> ScenarioConfig:
         """
         Gets the configuration of this scenario -- i.e. all information & elements
         that completely describe this scenario.
+
+        Parameters
+        ----------
+        include_network_topology : `bool`, optional
+            If True, the full specification of the network topology (incl. demand patterns)
+            will be included in the scenario configuration.
+
+            The default is True.
 
         Returns
         -------
@@ -918,7 +926,12 @@ class ScenarioSimulator():
                           "quality_model": self.get_quality_model(),
                           "demand_model": self.get_demand_model()}
 
+        network_topology = None
+        if include_network_topology is True:
+            network_topology = self.get_topology()
+
         return ScenarioConfig(f_inp_in=self.__f_inp_in, f_msx_in=self.__f_msx_in,
+                              network_topology=network_topology,
                               general_params=general_params, sensor_config=self.sensor_config,
                               memory_consumption_estimate=self.estimate_memory_consumption(),
                               custom_controls=self.custom_controls,
