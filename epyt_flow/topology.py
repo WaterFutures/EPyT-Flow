@@ -4,12 +4,13 @@ Module provides a class for representing the topology of WDN.
 from copy import deepcopy
 import warnings
 from typing import Any
+import math
 import numpy as np
 import networkx as nx
 from scipy.sparse import bsr_array
 from geopandas import GeoDataFrame
 from shapely.geometry import Point, LineString
-from epanet_plus import EpanetConstants
+from epanet_plus import EpanetConstants, EPyT
 
 from .serialization import serializable, JsonSerializable, NETWORK_TOPOLOGY_ID
 
@@ -67,6 +68,10 @@ class NetworkTopology(nx.Graph, JsonSerializable):
     valves : `dict`
         List of all valves -- i.e. valve ID, and information such as
         valve type and connecting nodes.
+    curves : `dict[str, tuple[int, list[tuple[float, float]]]]`
+        All curves -- i.e. curve ID, and list of points.
+    patterns : `dict[str, list[float]]`
+        All time patterns -- i.e., pattern ID and list of multipliers.
     units : `int`
         Measurement units category -- i.e. US Customary or SI Metric.
 
@@ -79,6 +84,8 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                  links: list[tuple[str, tuple[str, str], dict]],
                  pumps: dict,
                  valves: dict,
+                 curves: dict[str, tuple[int, list[tuple[float, float]]]],
+                 patterns: dict[str, list[float]],
                  units: int,
                  **kwds):
         nx.Graph.__init__(self, name=f_inp, **kwds)
@@ -88,7 +95,13 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         self.__links = links
         self.__pumps = pumps
         self.__valves = valves
+        self.__curves = curves
+        self.__patterns = patterns
         self.__units = units
+
+        for key in self.__curves.keys():    # Fix value types -- tuple gets converted to list when deserializing it
+            self.__curves[key] = (self.__curves[key][0],
+                                  [tuple(value) for value in self.__curves[key][1]])
 
         for node_id, node_info in nodes:
             node_elevation = node_info["elevation"]
@@ -139,6 +152,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         # Get all data and convert units
         inch_to_millimeter = 25.4
         feet_to_meter = 0.3048
+        cubicmeter_to_cubicfeet = 35.3146667215
 
         nodes = []
         for node_id in self.get_all_nodes():
@@ -147,9 +161,22 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                 conv_factor = 1. / feet_to_meter
             else:
                 conv_factor = feet_to_meter
+
             node_info["elevation"] *= conv_factor
             if "diameter" in node_info:
                 node_info["diameter"] *= conv_factor
+
+            if "max_level" in node_info:
+                node_info["max_level"] *= conv_factor
+            if "min_level" in node_info:
+                node_info["min_level"] *= conv_factor
+            if "init_level" in node_info:
+                node_info["init_level"] *= conv_factor
+            if "min_vol" in node_info:
+                if units == UNITS_USCUSTOM:
+                    node_info["min_vol"] *= cubicmeter_to_cubicfeet
+                else:
+                    node_info["min_vol"] *= 1. / cubicmeter_to_cubicfeet
 
             nodes.append((node_id, node_info))
 
@@ -172,7 +199,8 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             links.append((link_id, link_nodes, link_info))
 
         return NetworkTopology(f_inp=self.name, nodes=nodes, links=links, pumps=self.pumps,
-                               valves=self.valves, units=units)
+                               valves=self.valves, units=units, curves=self.__curves,
+                               patterns=self.__patterns)
 
     def get_all_nodes(self) -> list[str]:
         """
@@ -457,6 +485,30 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             raise ValueError(f"Unknown valve: '{valve_id}'")
 
     @property
+    def curves(self) -> dict[str, tuple[int, list[tuple[float, float]]]]:
+        """
+        Gets all curves -- i.e., ID and list of points.
+
+        Returns
+        -------
+        `dict[str, tuple[int, list[tuple[float, float]]]]`
+            All curves.
+        """
+        return deepcopy(self.__curves)
+
+    @property
+    def patterns(self) -> dict[str, list[float]]:
+        """
+        Returns all time patterns -- i.e., ID and list of multipliers.
+
+        Returns
+        -------
+        `dict[str, list[float]]`
+            All time patterns.
+        """
+        return deepcopy(self.__patterns)
+
+    @property
     def pumps(self) -> dict:
         """
         Gets all pumps -- i.e. ID and associated information such as the pump type.
@@ -505,8 +557,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         adj_matrix = self.get_adj_matrix()
         other_adj_matrix = other.get_adj_matrix()
 
-        return JsonSerializable.__eq__(self, other) and \
-            self.name == other.name \
+        return self.name == other.name \
             and not np.any(adj_matrix.data != other_adj_matrix.data) \
             and not np.any(adj_matrix.indices != other_adj_matrix.indices) \
             and not np.any(adj_matrix.indptr != other_adj_matrix.indptr) \
@@ -515,7 +566,9 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                     for link_a, link_b in zip(self.get_all_links(), other.get_all_links())) \
             and self.__units == other.units \
             and self.get_all_pumps() == other.get_all_pumps() \
-            and self.get_all_valves() == other.get_all_valves()
+            and self.get_all_valves() == other.get_all_valves() \
+            and self.__curves == other.curves \
+            and self.__patterns == other.patterns
 
     def __str__(self) -> str:
         return f"f_inp: {self.name} nodes: {self.__nodes} links: {self.__links} " +\
@@ -528,6 +581,8 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                                            "links": self.__links,
                                            "pumps": self.__pumps,
                                            "valves": self.__valves,
+                                           "curves": self.__curves,
+                                           "patterns": self.__patterns,
                                            "units": self.__units}
 
     def to_gis(self, coord_reference_system: str = None, pumps_as_points: bool = False,
