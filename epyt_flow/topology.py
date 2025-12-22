@@ -116,6 +116,141 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                           info={"id": link_id, "type": link_type, "nodes": link,
                                 "diameter": link_diameter, "length": link_length})
 
+    def to_inp_file(self, inp_file_out: str) -> None:
+        """
+        Creates an .inp file with the network layout and parameters as specified in
+        this instance.
+        Note that no control rules are set!
+
+        Parameters
+        ----------
+        inp_file_out : `str`
+            Path to the .inp file.
+        """
+        with EPyT(inp_file_in=inp_file_out, use_project=False) as epanet_api:
+            if self.units == UNITS_SIMETRIC:
+                epanet_api.setflowunits(EpanetConstants.EN_CMH)
+            else:
+                epanet_api.setflowunits(EpanetConstants.EN_GPM)
+
+            for curve_id, (curve_type, curve_data) in self.__curves.items():
+                epanet_api.addcurve(curve_id)
+                curve_idx = epanet_api.getcurveindex(curve_id)
+                epanet_api.setcurvetype(curve_idx, curve_type)
+                for i, (x, y) in enumerate(curve_data):
+                    epanet_api.setcurvevalue(curve_idx, i+1, x, y)
+
+            for pattern_id, values in self.__patterns.items():
+                epanet_api.add_pattern(pattern_id, values)
+
+            for junc_id in self.get_all_junctions():
+                epanet_api.addnode(junc_id, EpanetConstants.EN_JUNCTION)
+
+                node_idx = epanet_api.get_node_idx(junc_id)
+                junc_info = self.get_node_info(junc_id)
+                epanet_api.setnodevalue(node_idx, EpanetConstants.EN_ELEVATION,
+                                        junc_info["elevation"])
+                epanet_api.setbasedemand(node_idx, 1, junc_info["base_demand"])
+                epanet_api.setcoord(node_idx, junc_info["coord"][0], junc_info["coord"][1])
+                epanet_api.setcomment(EpanetConstants.EN_NODE, node_idx, junc_info["comment"])
+                if "demand_patterns_id" in junc_info:
+                    for i, demand_pattern_id in enumerate(junc_info["demand_patterns_id"]):
+                        epanet_api.setdemandpattern(node_idx, i+1,
+                                                    epanet_api.getpatternindex(demand_pattern_id))
+
+            for reservoir_id in self.get_all_reservoirs():
+                epanet_api.addnode(reservoir_id, EpanetConstants.EN_RESERVOIR)
+
+                node_idx = epanet_api.get_node_idx(reservoir_id)
+                reservoir_info = self.get_node_info(reservoir_id)
+                epanet_api.setnodevalue(node_idx, EpanetConstants.EN_ELEVATION,
+                                        reservoir_info["elevation"])
+                epanet_api.setcoord(node_idx, reservoir_info["coord"][0],
+                                    reservoir_info["coord"][1])
+                epanet_api.setcomment(EpanetConstants.EN_NODE, node_idx,
+                                      reservoir_info["comment"])
+
+            for tank_id in self.get_all_tanks():
+                epanet_api.addnode(tank_id, EpanetConstants.EN_TANK)
+
+                node_idx = epanet_api.get_node_idx(tank_id)
+                tank_info = self.get_node_info(tank_id)
+                if tank_info["cylindric"] is False:
+                    raise NotImplementedError("Non-cylindric tanks are not supported!")
+                else:
+                    epanet_api.setnodevalue(node_idx, EpanetConstants.EN_ELEVATION,
+                                            tank_info["elevation"])
+                    epanet_api.setcoord(node_idx, tank_info["coord"][0], tank_info["coord"][1])
+                    epanet_api.setcomment(EpanetConstants.EN_NODE, node_idx, tank_info["comment"])
+                    epanet_api.setnodevalue(node_idx, EpanetConstants.EN_TANKDIAM,
+                                            tank_info["diameter"])
+                    epanet_api.setnodevalue(node_idx, EpanetConstants.EN_MIXFRACTION,
+                                            tank_info["mixing_fraction"])
+                    epanet_api.setnodevalue(node_idx, EpanetConstants.EN_MIXMODEL,
+                                            tank_info["mixing_model"])
+                    epanet_api.setnodevalue(node_idx, EpanetConstants.EN_CANOVERFLOW,
+                                            float(tank_info["can_overflow"]))
+
+                    tank_info["min_level"] = tank_info["min_vol"] / \
+                        (math.pi * (0.5 * tank_info["diameter"])**2)
+                    tank_info["init_level"] = tank_info["init_vol"] / \
+                        (math.pi * (0.5 * tank_info["diameter"])**2)
+
+                    epanet_api.settankdata(node_idx, tank_info["elevation"],
+                                           tank_info["init_level"], tank_info["min_level"],
+                                           tank_info["max_level"], tank_info["diameter"],
+                                           tank_info["min_vol"], tank_info["vol_curve_id"])
+
+            for pipe_id, (node_a, node_b) in self.get_all_pipes():
+                epanet_api.addlink(pipe_id, EpanetConstants.EN_PIPE, node_a, node_b)
+
+                pipe_idx = epanet_api.get_link_idx(pipe_id)
+                pipe_info = self.get_link_info(pipe_id)
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_LENGTH, pipe_info["length"])
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_DIAMETER,
+                                        pipe_info["diameter"])
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_ROUGHNESS,
+                                        pipe_info["roughness_coeff"])
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_KBULK, pipe_info["bulk_coeff"])
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_KWALL, pipe_info["wall_coeff"])
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_MINORLOSS,
+                                        pipe_info["loss_coeff"])
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_INITSETTING,
+                                        pipe_info["init_setting"])
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_INITSTATUS,
+                                        pipe_info["init_status"])
+
+            for valve_id in self.get_all_valves():
+                valve_info = self.get_valve_info(valve_id)
+                node_a, node_b = valve_info["end_points"]
+                epanet_api.addlink(valve_id, valve_info["type"], node_a, node_b)
+                link_idx = epanet_api.get_link_idx(valve_id)
+                epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_DIAMETER,
+                                        valve_info["diameter"])
+                epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_INITSETTING,
+                                        valve_info["initial_setting"])
+                if valve_info["type"] not in [EpanetConstants.EN_GPV, EpanetConstants.EN_PRV,
+                                              EpanetConstants.EN_CVPIPE]:
+                    epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_INITSTATUS,
+                                            valve_info["initial_status"])
+
+            for pump_id in self.get_all_pumps():
+                pump_info = self.get_pump_info(pump_id)
+                node_a, node_b = pump_info["end_points"]
+                epanet_api.addlink(pump_id, pump_info["type"], node_a, node_b)
+
+                link_idx = link_idx = epanet_api.get_link_idx(pump_id)
+                epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_INITSETTING,
+                                        pump_info["init_setting"])
+                epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_INITSTATUS,
+                                        pump_info["init_status"])
+
+                if pump_info["curve_id"] is not None:
+                    curve_idx = epanet_api.getcurveindex(pump_info["curve_id"])
+                    epanet_api.setheadcurveindex(link_idx, curve_idx)
+
+            epanet_api.saveinpfile(inp_file_out)
+
     def convert_units(self, units: int) -> Any:
         """
         Converts this instance to a :class:`~epyt_flow.topology.NetworkTopology` instance
