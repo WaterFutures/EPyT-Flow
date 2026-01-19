@@ -18,6 +18,7 @@ from .events.sensor_faults import SensorFaultConstant, SensorFaultDrift, SensorF
     SensorFaultPercentage, SensorFaultStuckZero
 from .events.leakages import AbruptLeakage, IncipientLeakage
 from ..serialization import serializable, Serializable, SCENARIO_CONFIG_ID
+from ..topology import NetworkTopology
 
 
 @serializable(SCENARIO_CONFIG_ID, ".epytflow_scenario_config")
@@ -46,6 +47,11 @@ class ScenarioConfig(Serializable):
         Path to the .msx file -- optional, only necessary if EPANET-MSX is used.
 
         The default is None
+    network_topology : :class:`~epyt_flow.topology.NetworkTopology`, optional
+        Specification of the network topology -- necessary if .inp file does not exist
+        or is not shared.
+
+        The default is None.
     general_params : `dict`, optional
         General parameters such as the demand model, hydraulic time steps, etc.
 
@@ -88,6 +94,7 @@ class ScenarioConfig(Serializable):
     """
 
     def __init__(self, scenario_config: Any = None, f_inp_in: str = None, f_msx_in: str = None,
+                 network_topology: NetworkTopology = None,
                  general_params: dict = None, sensor_config: SensorConfig = None,
                  memory_consumption_estimate: float = None,
                  custom_controls: list[CustomControlModule] = [],
@@ -112,6 +119,10 @@ class ScenarioConfig(Serializable):
             if not isinstance(f_msx_in, str):
                 raise TypeError("'f_msx_in' must be an instance of 'str' " +
                                 f"but no of '{type(f_msx_in)}'")
+        if network_topology is not None:
+            if not isinstance(network_topology, NetworkTopology):
+                raise TypeError("'network_topology' msut be an instance of 'NetworkTopology' " +
+                                f"but not of '{type(network_topology)}'")
         if general_params is not None:
             if not isinstance(general_params, dict):
                 raise TypeError("'general_params' must be an instance of 'dict' " +
@@ -172,6 +183,11 @@ class ScenarioConfig(Serializable):
             self.__f_inp_in = scenario_config.f_inp_in
             self.__f_msx_in = scenario_config.f_msx_in if f_msx_in is None else f_msx_in
 
+            if network_topology is None:
+                self.__network_topology = scenario_config.network_topology
+            else:
+                self.__network_topology = network_topology
+
             if general_params is None:
                 self.__general_params = scenario_config.general_params
             else:
@@ -224,6 +240,7 @@ class ScenarioConfig(Serializable):
         else:
             self.__f_inp_in = f_inp_in
             self.__f_msx_in = f_msx_in
+            self.__network_topology = network_topology
             self.__general_params = general_params
             self.__sensor_config = sensor_config
             self.__memory_consumption_estimate = memory_consumption_estimate
@@ -277,6 +294,18 @@ class ScenarioConfig(Serializable):
                 return os.path.join(self._parent_path, self.__f_msx_in)
             else:
                 return self.__f_msx_in
+
+    @property
+    def network_topology(self) -> NetworkTopology:
+        """
+        Returns the specification of the network topology.
+
+        Returns
+        -------
+        :class:`~epyt_flow.topology.NetworkTopology`
+            Network topology.
+        """
+        return deepcopy(self.__network_topology)
 
     @property
     def general_params(self) -> dict:
@@ -402,6 +431,7 @@ class ScenarioConfig(Serializable):
 
     def get_attributes(self) -> dict:
         my_attributes = {"f_inp_in": self.__f_inp_in, "f_msx_in": self.__f_msx_in,
+                         "network_topology": self.__network_topology,
                          "general_params": self.__general_params,
                          "sensor_config": self.__sensor_config,
                          "memory_consumption_estimate": self.__memory_consumption_estimate,
@@ -421,6 +451,7 @@ class ScenarioConfig(Serializable):
                             f"with '{type(other)}' instance")
 
         return self.__f_inp_in == other.f_inp_in and self.__f_msx_in == other.f_msx_in \
+            and self.__network_topology == other.network_topology \
             and self.__general_params == other.general_params \
             and self.__memory_consumption_estimate == other.memory_consumption_estimate \
             and self.__sensor_config == other.sensor_config \

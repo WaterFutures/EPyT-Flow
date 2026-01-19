@@ -46,8 +46,8 @@ class SensorReadingEvent(Event):
         if not 1 <= sensor_type <= 10:
             raise ValueError("Invalid value of 'sensor_type'")
 
-        self.__sensor_id = sensor_id
-        self.__sensor_type = sensor_type
+        self._sensor_id = sensor_id
+        self._sensor_type = sensor_type
 
         super().__init__(**kwds)
 
@@ -68,52 +68,52 @@ class SensorReadingEvent(Event):
 
         def __show_warning() -> None:
             warnings.warn("Event does not have any effect because there is " +
-                          f"no sensor at '{self.__sensor_id}'")
+                          f"no sensor at '{self._sensor_id}'")
 
-        if self.__sensor_type == SENSOR_TYPE_NODE_PRESSURE:
-            if self.__sensor_id not in sensor_config.pressure_sensors:
+        if self._sensor_type == SENSOR_TYPE_NODE_PRESSURE:
+            if self._sensor_id not in sensor_config.pressure_sensors:
                 __show_warning()
-        elif self.__sensor_type == SENSOR_TYPE_NODE_QUALITY:
-            if self.__sensor_id not in sensor_config.quality_node_sensors:
+        elif self._sensor_type == SENSOR_TYPE_NODE_QUALITY:
+            if self._sensor_id not in sensor_config.quality_node_sensors:
                 __show_warning()
-        elif self.__sensor_type == SENSOR_TYPE_NODE_DEMAND:
-            if self.__sensor_id not in sensor_config.demand_sensors:
+        elif self._sensor_type == SENSOR_TYPE_NODE_DEMAND:
+            if self._sensor_id not in sensor_config.demand_sensors:
                 __show_warning()
-        elif self.__sensor_type == SENSOR_TYPE_LINK_FLOW:
-            if self.__sensor_id not in sensor_config.flow_sensors:
+        elif self._sensor_type == SENSOR_TYPE_LINK_FLOW:
+            if self._sensor_id not in sensor_config.flow_sensors:
                 __show_warning()
-        elif self.__sensor_type == SENSOR_TYPE_LINK_QUALITY:
-            if self.__sensor_id not in sensor_config.quality_link_sensors:
+        elif self._sensor_type == SENSOR_TYPE_LINK_QUALITY:
+            if self._sensor_id not in sensor_config.quality_link_sensors:
                 __show_warning()
-        elif self.__sensor_type == SENSOR_TYPE_VALVE_STATE:
-            if self.__sensor_id not in sensor_config.valve_state_sensors:
+        elif self._sensor_type == SENSOR_TYPE_VALVE_STATE:
+            if self._sensor_id not in sensor_config.valve_state_sensors:
                 __show_warning()
-        elif self.__sensor_type == SENSOR_TYPE_PUMP_STATE:
-            if self.__sensor_id not in sensor_config.pump_state_sensors:
+        elif self._sensor_type == SENSOR_TYPE_PUMP_STATE:
+            if self._sensor_id not in sensor_config.pump_state_sensors:
                 __show_warning()
-        elif self.__sensor_type == SENSOR_TYPE_TANK_VOLUME:
-            if self.__sensor_id not in sensor_config.tank_volume_sensors:
+        elif self._sensor_type == SENSOR_TYPE_TANK_VOLUME:
+            if self._sensor_id not in sensor_config.tank_volume_sensors:
                 __show_warning()
-        elif self.__sensor_type == SENSOR_TYPE_NODE_BULK_SPECIES:
+        elif self._sensor_type == SENSOR_TYPE_NODE_BULK_SPECIES:
             sensor_present = False
             for _, sensors_id in sensor_config.bulk_species_node_sensors.items():
-                if self.__sensor_id in sensors_id:
+                if self._sensor_id in sensors_id:
                     sensor_present = True
                     break
             if sensor_present is False:
                 __show_warning()
-        elif self.__sensor_type == SENSOR_TYPE_LINK_BULK_SPECIES:
+        elif self._sensor_type == SENSOR_TYPE_LINK_BULK_SPECIES:
             sensor_present = False
             for _, sensors_id in sensor_config.bulk_species_link_sensors.items():
-                if self.__sensor_id in sensors_id:
+                if self._sensor_id in sensors_id:
                     sensor_present = True
                     break
             if sensor_present is False:
                 __show_warning()
-        elif self.__sensor_type == SENSOR_TYPE_SURFACE_SPECIES:
+        elif self._sensor_type == SENSOR_TYPE_SURFACE_SPECIES:
             sensor_present = False
             for _, sensors_id in sensor_config.surface_species_sensors.items():
-                if self.__sensor_id in sensors_id:
+                if self._sensor_id in sensors_id:
                     sensor_present = True
                     break
             if sensor_present is False:
@@ -129,7 +129,7 @@ class SensorReadingEvent(Event):
         `str`
             Node or link ID.
         """
-        return self.__sensor_id
+        return self._sensor_id
 
     @property
     def sensor_type(self) -> int:
@@ -141,23 +141,23 @@ class SensorReadingEvent(Event):
         `int`
             Sensor type code.
         """
-        return self.__sensor_type
+        return self._sensor_type
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"sensor_id": self.__sensor_id,
-                                           "sensor_type": self.__sensor_type}
+        return super().get_attributes() | {"sensor_id": self._sensor_id,
+                                           "sensor_type": self._sensor_type}
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, SensorReadingEvent):
             raise TypeError("Can not compare 'SensorReadingEvent' instance " +
                             f"with '{type(other)}' instance")
 
-        return super().__eq__(other) and self.__sensor_id == other.sensor_id \
-            and self.__sensor_type == other.sensor_type
+        return super().__eq__(other) and self._sensor_id == other.sensor_id \
+            and self._sensor_type == other.sensor_type
 
     def __str__(self) -> str:
-        return f"{super().__str__()} sensor_id: {self.__sensor_id} " +\
-            f"sensor_type: {self.__sensor_type}"
+        return f"{super().__str__()} sensor_id: {self._sensor_id} " +\
+            f"sensor_type: {self._sensor_type}"
 
     def __call__(self, sensor_readings: numpy.ndarray,
                  sensor_readings_time: numpy.ndarray) -> numpy.ndarray:

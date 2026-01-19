@@ -136,41 +136,17 @@ class ScenarioSimulator():
         self.__running_simulation = False
         self.__uncertainties_applied = False
 
-        # Workaround for EPyT bug concerning parallel simulations (see EPyT issue #54):
-        # 1. Create random tmp folder (make sure it is unique!)
-        # 2. Copy .inp and .msx file there
-        # 3. Use those copies  when loading EPyT
-        tmp_folder_path = os.path.join(get_temp_folder(), f"{random.randint(int(1e5), int(1e7))}{time.time()}")
-        pathlib.Path(tmp_folder_path).mkdir(parents=True, exist_ok=False)
-
         def __file_exists(file_in: str) -> bool:
             try:
                 return pathlib.Path(file_in).is_file()
             except Exception:
                 return False
 
-        if not __file_exists(self.__f_inp_in):
-            my_f_inp_in = self.__f_inp_in
-            self.__my_f_inp_in = None
-        else:
-            my_f_inp_in = os.path.join(tmp_folder_path, pathlib.Path(self.__f_inp_in).name)
-            shutil.copyfile(self.__f_inp_in, my_f_inp_in)
-            self.__my_f_inp_in = my_f_inp_in
-
-        if self.__f_msx_in is not None:
-            if not __file_exists(self.__f_msx_in):
-                my_f_msx_in = self.__f_msx_in
-            else:
-                my_f_msx_in = os.path.join(tmp_folder_path, pathlib.Path(self.__f_msx_in).name)
-                shutil.copyfile(self.__f_msx_in, my_f_msx_in)
-        else:
-            my_f_msx_in = None
-
         from epanet_plus import EPyT   # Workaround: Sphinx autodoc "importlib.import_module TypeError: __mro_entries__"
-        self.epanet_api = EPyT(my_f_inp_in, use_project=self.__f_msx_in is None)
+        self.epanet_api = EPyT(self.__f_inp_in, use_project=self.__f_msx_in is None)
 
         if self.__f_msx_in is not None:
-            self.epanet_api.load_msx_file(my_f_msx_in)
+            self.epanet_api.load_msx_file(self.__f_msx_in)
 
         # Do not raise exceptions in the case of EPANET warnings and errors
         self.epanet_api.set_error_handling(raise_exception_on_error=raise_exception_on_error,
@@ -188,7 +164,8 @@ class ScenarioSimulator():
 
             self._model_uncertainty = scenario_config.model_uncertainty
             self._sensor_noise = scenario_config.sensor_noise
-            self._sensor_config = scenario_config.sensor_config
+            if scenario_config.sensor_config is not None:
+                self._sensor_config = scenario_config.sensor_config
 
             for control in scenario_config.custom_controls:
                 self.add_custom_control(control)
@@ -614,9 +591,6 @@ class ScenarioSimulator():
         """
         self.epanet_api.close()
 
-        if self.__my_f_inp_in is not None:
-            shutil.rmtree(pathlib.Path(self.__my_f_inp_in).parent)
-
     def __enter__(self):
         return self
 
@@ -924,10 +898,18 @@ class ScenarioSimulator():
         """
         return self.epanet_api.get_reporting_time_step()
 
-    def get_scenario_config(self) -> ScenarioConfig:
+    def get_scenario_config(self, include_network_topology: bool = True) -> ScenarioConfig:
         """
         Gets the configuration of this scenario -- i.e. all information & elements
         that completely describe this scenario.
+
+        Parameters
+        ----------
+        include_network_topology : `bool`, optional
+            If True, the full specification of the network topology (incl. demand patterns)
+            will be included in the scenario configuration.
+
+            The default is True.
 
         Returns
         -------
@@ -944,7 +926,12 @@ class ScenarioSimulator():
                           "quality_model": self.get_quality_model(),
                           "demand_model": self.get_demand_model()}
 
+        network_topology = None
+        if include_network_topology is True:
+            network_topology = self.get_topology()
+
         return ScenarioConfig(f_inp_in=self.__f_inp_in, f_msx_in=self.__f_msx_in,
+                              network_topology=network_topology,
                               general_params=general_params, sensor_config=self.sensor_config,
                               memory_consumption_estimate=self.estimate_memory_consumption(),
                               custom_controls=self.custom_controls,
@@ -1223,11 +1210,14 @@ class ScenarioSimulator():
         node_idx = self.epanet_api.get_node_idx(node_id)
 
         if self.epanet_api.getnodetype(node_idx) != EpanetConstants.EN_RESERVOIR:
-            demand_pattern_idx = self.epanet_api.getdemandpattern(node_idx)
+            demand_pattern_idx = self.epanet_api.getdemandpattern(node_idx, 1)
         else:
             demand_pattern_idx = self.epanet_api.getnodevalue(node_idx, EpanetConstants.EN_PATTERN)
 
-        return self.get_pattern(self.epanet_api.getpatternid(demand_pattern_idx))
+        if demand_pattern_idx == 0:
+            return None
+        else:
+            return self.get_pattern(self.epanet_api.getpatternid(demand_pattern_idx))
 
     def set_node_demand_pattern(self, node_id: str, base_demand: float, demand_pattern_id: str,
                                 demand_pattern: np.ndarray = None) -> None:
@@ -3776,17 +3766,18 @@ class ScenarioSimulator():
                 any(not isinstance(species_id, str) or not isinstance(link_initial_conc, list)
                     for species_id, link_initial_conc in inital_conc.items()) or \
                 any(not isinstance(link_initial_conc, tuple)
-                    for link_initial_conc in inital_conc.values()) or \
+                    for link_initial_conc in list(itertools.chain(*inital_conc.values()))) or \
                 any(not isinstance(link_id, str) or not isinstance(conc, float)
-                    for link_id, conc in inital_conc.values()):
+                    for link_id, conc in list(itertools.chain(*inital_conc.values()))):
             raise TypeError("'inital_conc' must be an instance of " +
                             "'dict[str, list[tuple[str, float]]'")
         if any(species_id not in self.sensor_config.bulk_species
                for species_id in inital_conc.keys()):
             raise ValueError("Unknown bulk species in 'inital_conc'")
-        if any(link_id not in self.sensor_config.links for link_id, _ in inital_conc.values()):
+        if any(link_id not in self.sensor_config.links for link_id, _ in
+               list(itertools.chain(*inital_conc.values()))):
             raise ValueError("Unknown link ID in 'inital_conc'")
-        if any(conc < 0 for _, conc in inital_conc.values()):
+        if any(conc < 0 for _, conc in list(itertools.chain(*inital_conc.values()))):
             raise ValueError("Initial link concentration can not be negative")
 
         for species_id, link_initial_conc in inital_conc.items():

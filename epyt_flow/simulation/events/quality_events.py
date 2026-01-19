@@ -61,10 +61,10 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
         if not 0 <= source_type <= 3:
             raise ValueError("'source_tye' must be in [0, 3]")
 
-        self.__species_id = species_id
-        self.__node_id = node_id
+        self._species_id = species_id
+        self._node_id = node_id
         self._profile = profile
-        self.__source_type = source_type
+        self._source_type = source_type
 
         super().__init__(**kwds)
 
@@ -78,7 +78,7 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
         `str`
             Bulk species ID.
         """
-        return self.__species_id
+        return self._species_id
 
     @property
     def node_id(self) -> str:
@@ -90,7 +90,7 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
         `str`
             Node ID.
         """
-        return self.__node_id
+        return self._node_id
 
     @property
     def profile(self) -> np.ndarray:
@@ -120,33 +120,33 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
         `int`
             Type of the injection source.
         """
-        return self.__source_type
+        return self._source_type
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"species_id": self.__species_id,
-                                           "node_id": self.__node_id, "profile": self._profile,
-                                           "source_type": self.__source_type}
+        return super().get_attributes() | {"species_id": self._species_id,
+                                           "node_id": self._node_id, "profile": self._profile,
+                                           "source_type": self._source_type}
 
     def __eq__(self, other) -> bool:
-        return super().__eq__(other) and self.__species_id == other.species_id and \
-            self.__node_id == other.node_id and np.all(self._profile == other.profile) and \
-            self.__source_type == other.source_type
+        return super().__eq__(other) and self._species_id == other.species_id and \
+            self._node_id == other.node_id and np.all(self._profile == other.profile) and \
+            self._source_type == other.source_type
 
     def __str__(self) -> str:
-        return f"{super().__str__()} species_id: {self.__species_id} " +\
-            f"node_id: {self.__node_id} profile: {self._profile} source_type: {self.__source_type}"
+        return f"{super().__str__()} species_id: {self._species_id} " +\
+            f"node_id: {self._node_id} profile: {self._profile} source_type: {self._source_type}"
 
     def _get_pattern_id(self) -> str:
-        return f"{self.__species_id}_{self.__node_id}"
+        return f"{self._species_id}_{self._node_id}"
 
     def init(self, epanet_api: EPyT) -> None:
         super().init(epanet_api)
 
         # Check parameters
-        if self.__species_id not in self._epanet_api.get_all_msx_species_id():
-            raise ValueError(f"Unknown species '{self.__species_id}'")
-        if self.__node_id not in self._epanet_api.get_all_nodes_id():
-            raise ValueError(f"Unknown node '{self.__node_id}'")
+        if self._species_id not in self._epanet_api.get_all_msx_species_id():
+            raise ValueError(f"Unknown species '{self._species_id}'")
+        if self._node_id not in self._epanet_api.get_all_nodes_id():
+            raise ValueError(f"Unknown node '{self._node_id}'")
 
         # Create final injection strength pattern
         total_sim_duration = self._epanet_api.get_simulation_duration()
@@ -173,10 +173,10 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
         if pattern_id in [self._epanet_api.MSXgetID(EpanetConstants.MSX_PATTERN, pattern_idx + 1)
                           for pattern_idx in
                           range(self._epanet_api.MSXgetcount(EpanetConstants.MSX_PATTERN))]:
-            node_idx = self._epanet_api.get_node_idx(self.__node_id)
-            species_idx = self._epanet_api.get_msx_species_idx(self.__species_id)
+            node_idx = self._epanet_api.get_node_idx(self._node_id)
+            species_idx = self._epanet_api.get_msx_species_idx(self._species_id)
             cur_source_type = self._epanet_api.MSXgetsource(node_idx, species_idx)
-            if cur_source_type[0] != self.__source_type:
+            if cur_source_type[0] != self._source_type:
                 raise ValueError("Source type does not match existing source type")
 
             # Add new injection amount to existing injection --
@@ -187,7 +187,7 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
             self._epanet_api.MSXsetpattern(pattern_idx, cur_pattern.tolist(), len(cur_pattern))
         else:
             self._epanet_api.add_msx_pattern(pattern_id, pattern.tolist())
-        self._epanet_api.set_msx_source(self.__node_id, self.__species_id, self.__source_type, 1,
+        self._epanet_api.set_msx_source(self._node_id, self._species_id, self._source_type, 1,
                                         pattern_id)
 
     def cleanup(self) -> None:

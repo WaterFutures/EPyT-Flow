@@ -10,7 +10,8 @@ import matplotlib
 import pandas as pd
 from epanet_plus import EpanetConstants
 
-from ..sensor_config import SensorConfig, is_flowunit_simetric, massunit_to_str, flowunit_to_str,\
+from ..sensor_config import SensorConfig, valid_sensor_types, \
+    is_flowunit_simetric, massunit_to_str, flowunit_to_str,\
     qualityunit_to_str, areaunit_to_str,\
     MASS_UNIT_MG, MASS_UNIT_UG, TIME_UNIT_HRS, MASS_UNIT_MOL, MASS_UNIT_MMOL, \
     AREA_UNIT_CM2, AREA_UNIT_FT2, AREA_UNIT_M2, \
@@ -22,7 +23,7 @@ from ..sensor_config import SensorConfig, is_flowunit_simetric, massunit_to_str,
 from ..events import SensorFault, SensorReadingAttack, SensorReadingEvent
 from ...uncertainty import SensorNoise
 from ...serialization import serializable, Serializable, SCADA_DATA_ID
-from ...topology import NetworkTopology
+from ...topology import NetworkTopology, UNITS_USCUSTOM, UNITS_SIMETRIC
 from ...utils import plot_timeseries_data
 
 
@@ -1056,7 +1057,12 @@ class ScadaData(Serializable):
                                      surface_species_mass_unit=new_surface_species_mass_unit,
                                      surface_species_area_unit=new_surface_species_area_unit)
 
-        return ScadaData(network_topo=self.network_topo,
+        if is_flowunit_simetric(flow_unit):
+            network_topo = self.network_topo.convert_units(UNITS_SIMETRIC)
+        else:
+            network_topo = self.network_topo.convert_units(UNITS_USCUSTOM)
+
+        return ScadaData(network_topo=network_topo,
                          warnings_code=self.warnings_code,
                          sensor_config=sensor_config,
                          sensor_readings_time=self.sensor_readings_time,
@@ -2141,33 +2147,52 @@ class ScadaData(Serializable):
         else:
             data = []
 
-            if self.__pressure_data_raw is not None:
-                data.append(self.__pressure_data_raw)
-            if self.__flow_data_raw is not None:
-                data.append(self.__flow_data_raw)
-            if self.__demand_data_raw is not None:
-                data.append(self.__demand_data_raw)
-            if self.__node_quality_data_raw is not None:
-                data.append(self.__node_quality_data_raw)
-            if self.__link_quality_data_raw is not None:
-                data.append(self.__link_quality_data_raw)
-            if self.__valves_state_data_raw is not None:
-                data.append(self.__valves_state_data_raw)
-            if self.__pumps_state_data_raw is not None:
-                data.append(self.__pumps_state_data_raw)
-            if self.__pumps_efficiency_data_raw is not None:
-                data.append(self.__pumps_efficiency_data_raw)
-            if self.__pumps_energy_usage_data_raw is not None:
-                data.append(self.__pumps_energy_usage_data_raw)
-            if self.__tanks_volume_data_raw is not None:
-                data.append(self.__tanks_volume_data_raw)
-            if self.__surface_species_concentration_raw is not None:
-                data.append(self.__surface_species_concentration_raw)
-            if self.__bulk_species_node_concentration_raw is not None:
-                data.append(self.__bulk_species_node_concentration_raw)
-            if self.__bulk_species_link_concentration_raw is not None:
-                data.append(self.__bulk_species_link_concentration_raw)
-
+            for sensor_type in self.__sensor_config.sensor_ordering:
+                if sensor_type==SENSOR_TYPE_NODE_PRESSURE \
+                        and self.__pressure_data_raw is not None:
+                    data.append(self.__pressure_data_raw)
+                elif sensor_type==SENSOR_TYPE_NODE_QUALITY \
+                        and self.__node_quality_data_raw is not None:
+                    data.append(self.__node_quality_data_raw)
+                elif sensor_type==SENSOR_TYPE_NODE_DEMAND \
+                        and self.__demand_data_raw is not None:
+                    data.append(self.__demand_data_raw)
+                elif sensor_type==SENSOR_TYPE_LINK_FLOW \
+                        and self.__flow_data_raw is not None:
+                    data.append(self.__flow_data_raw)
+                elif sensor_type==SENSOR_TYPE_LINK_QUALITY \
+                        and self.__link_quality_data_raw is not None:
+                    data.append(self.__link_quality_data_raw)
+                elif sensor_type==SENSOR_TYPE_VALVE_STATE \
+                        and self.__valves_state_data_raw is not None:
+                    data.append(self.__valves_state_data_raw)
+                elif sensor_type==SENSOR_TYPE_PUMP_STATE \
+                        and self.__pumps_state_data_raw is not None:
+                    data.append(self.__pumps_state_data_raw)
+                elif sensor_type==SENSOR_TYPE_TANK_VOLUME \
+                        and self.__tanks_volume_data_raw is not None:
+                    data.append(self.__tanks_volume_data_raw)
+                elif sensor_type==SENSOR_TYPE_NODE_BULK_SPECIES \
+                        and self.__bulk_species_node_concentration_raw is not None:
+                    data.append(self.__bulk_species_node_concentration_raw)
+                elif sensor_type==SENSOR_TYPE_LINK_BULK_SPECIES \
+                        and self.__bulk_species_link_concentration_raw is not None:
+                    data.append(self.__bulk_species_link_concentration_raw)
+                elif sensor_type==SENSOR_TYPE_SURFACE_SPECIES \
+                        and self.__surface_species_concentration_raw is not None:
+                    data.append(self.__surface_species_concentration_raw)
+                elif sensor_type==SENSOR_TYPE_PUMP_EFFICIENCY \
+                        and self.__pumps_efficiency_data_raw is not None:
+                    data.append(self.__pumps_efficiency_data_raw)
+                elif sensor_type==SENSOR_TYPE_PUMP_ENERGYCONSUMPTION \
+                        and self.__pumps_energy_usage_data_raw is not None:
+                    data.append(self.__pumps_energy_usage_data_raw)
+                elif sensor_type not in range(1,14):
+                    raise ValueError(
+                        f"Unknown sensor type '{sensor_type}' found in "
+                        f"'sensor_ordering'. Valid sensor types are:\n"
+                        f"{valid_sensor_types()}"
+                    )
             sensor_readings = np.concatenate(data, axis=1)
 
         # Apply sensor uncertainties

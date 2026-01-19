@@ -60,18 +60,18 @@ class PumpEvent(ActuatorEvent):
         ID of the pump that is affected by this event.
     """
     def __init__(self, pump_id: str, **kwds):
-        self.__pump_id = pump_id
+        self._pump_id = pump_id
 
         super().__init__(**kwds)
 
     def init(self, epanet_api: EPyT) -> None:
-        if self.__pump_id not in epanet_api.get_all_pumps_id():
-            raise ValueError(f"Invalid pump ID '{self.__pump_id}'")
+        if self._pump_id not in epanet_api.get_all_pumps_id():
+            raise ValueError(f"Invalid pump ID '{self._pump_id}'")
 
         super().init(epanet_api)
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"pump_id": self.__pump_id}
+        return super().get_attributes() | {"pump_id": self._pump_id}
 
     @property
     def pump_id(self) -> str:
@@ -83,7 +83,7 @@ class PumpEvent(ActuatorEvent):
         `str`
             Pump ID.
         """
-        return self.__pump_id
+        return self._pump_id
 
 
 @serializable(PUMP_STATE_EVENT_ID, ".epytflow_pump_state_event")
@@ -111,12 +111,12 @@ class PumpStateEvent(PumpEvent, JsonSerializable):
             raise ValueError(f"Invalid pump state '{pump_state}' -- " +
                              "must be either EN_CLOSED (0) or EN_OPEN (1)")
 
-        self.__pump_state = pump_state
+        self._pump_state = pump_state
 
         super().__init__(**kwds)
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"pump_state": self.__pump_state}
+        return super().get_attributes() | {"pump_state": self._pump_state}
 
     @property
     def pump_state(self) -> int:
@@ -134,7 +134,7 @@ class PumpStateEvent(PumpEvent, JsonSerializable):
                 - EN_CLOSED  = 0
                 - EN_OPEN    = 1
         """
-        return self.__pump_state
+        return self._pump_state
 
     def apply(self, cur_time: int) -> None:
         pump_link_idx = self._epanet_api.getlinkindex(self.pump_id)
@@ -145,7 +145,7 @@ class PumpStateEvent(PumpEvent, JsonSerializable):
                           "because a pump pattern exists")
         else:
             self._epanet_api.setlinkvalue(pump_link_idx, EpanetConstants.EN_STATUS,
-                                          self.__pump_state)
+                                          self._pump_state)
 
 
 @serializable(PUMP_SPEED_EVENT_ID, ".epytflow_pump_speed_event")
@@ -165,12 +165,12 @@ class PumpSpeedEvent(PumpEvent, JsonSerializable):
         if pump_speed <= 0:
             raise ValueError("Pump speed must be positive")
 
-        self.__pump_speed = pump_speed
+        self._pump_speed = pump_speed
 
         super().__init__(**kwds)
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"pump_speed": self.__pump_speed}
+        return super().get_attributes() | {"pump_speed": self._pump_speed}
 
     @property
     def pump_speed(self) -> float:
@@ -182,7 +182,7 @@ class PumpSpeedEvent(PumpEvent, JsonSerializable):
         `float`
             New pump speed.
         """
-        return self.__pump_speed
+        return self._pump_speed
 
     def apply(self, cur_time: int) -> None:
         pump_idx = self._epanet_api.get_link_idx(self.pump_id)
@@ -191,11 +191,11 @@ class PumpSpeedEvent(PumpEvent, JsonSerializable):
         if pattern_idx == 0:
             warnings.warn(f"No pattern for pump '{self.pump_id}' found -- a new pattern is created")
             pattern_id = f"pump_speed_{self.pump_id}"
-            self._epanet_api.add_pattern(pattern_id, [self.__pump_speed])
+            self._epanet_api.add_pattern(pattern_id, [self._pump_speed])
             pattern_idx = self._epanet_api.getpatternindex(pattern_id)
             self._epanet_api.setlinkvalue(pump_idx, EpanetConstants.EN_LINKPATTERN, pattern_idx)
 
-        self._epanet_api.setpattern(pattern_idx, [self.__pump_speed], 1)
+        self._epanet_api.setpattern(pattern_idx, [self._pump_speed], 1)
 
 
 @serializable(VALVE_STATE_EVENT_ID, ".epytflow_valve_state_event")
@@ -224,20 +224,20 @@ class ValveStateEvent(ActuatorEvent, JsonSerializable):
             raise ValueError(f"Invalid valve state '{valve_state}' -- " +
                              "must be either EN_CLOSED (0) or EN_OPEN (1)")
 
-        self.__valve_id = valve_id
-        self.__valve_state = valve_state
+        self._valve_id = valve_id
+        self._valve_state = valve_state
 
         super().__init__(**kwds)
 
     def init(self, epanet_api: EPyT) -> None:
-        if self.__valve_id not in epanet_api.get_all_valves_id():
-            raise ValueError(f"Invalid valve ID '{self.__valve_id}'")
+        if self._valve_id not in epanet_api.get_all_valves_id():
+            raise ValueError(f"Invalid valve ID '{self._valve_id}'")
 
         super().init(epanet_api)
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"valve_id": self.__valve_id,
-                                           "valve_state": self.__valve_state}
+        return super().get_attributes() | {"valve_id": self._valve_id,
+                                           "valve_state": self._valve_state}
 
     @property
     def valve_id(self) -> str:
@@ -249,7 +249,7 @@ class ValveStateEvent(ActuatorEvent, JsonSerializable):
         `str`
             Valve ID.
         """
-        return self.__valve_id
+        return self._valve_id
 
     @property
     def valve_state(self) -> int:
@@ -264,8 +264,8 @@ class ValveStateEvent(ActuatorEvent, JsonSerializable):
             One of the following constants defined in
             :class:`~epyt_flow.simulation.events.actuator_events.ActuatorConstants`:
         """
-        return self.__valve_state
+        return self._valve_state
 
     def apply(self, cur_time: int) -> None:
-        valve_link_idx = self._epanet_api.get_link_idx(self.__valve_id)
-        self._epanet_api.setlinkvalue(valve_link_idx, EpanetConstants.EN_STATUS, self.__valve_state)
+        valve_link_idx = self._epanet_api.get_link_idx(self._valve_id)
+        self._epanet_api.setlinkvalue(valve_link_idx, EpanetConstants.EN_STATUS, self._valve_state)

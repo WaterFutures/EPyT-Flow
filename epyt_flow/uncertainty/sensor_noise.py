@@ -50,9 +50,9 @@ class SensorNoise(JsonSerializable):
                 raise TypeError("'local_uncertainties' must be an instance of " +
                                 "'dict[tuple[int, str], epyt_flow.uncertainty.Uncertainty]'")
 
-        self.__global_uncertainty = global_uncertainty
-        self.__local_uncertainties = local_uncertainties
-        self.__np_rand_gen = default_rng(seed)
+        self._global_uncertainty = global_uncertainty
+        self._local_uncertainties = local_uncertainties
+        self._np_rand_gen = default_rng(seed)
 
         super().__init__(**kwds)
 
@@ -66,7 +66,7 @@ class SensorNoise(JsonSerializable):
         :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`
             Global sensor readings uncertainty.
         """
-        return deepcopy(self.__global_uncertainty)
+        return deepcopy(self._global_uncertainty)
 
     @property
     def local_uncertainties(self) -> dict[int, str, Uncertainty]:
@@ -78,23 +78,23 @@ class SensorNoise(JsonSerializable):
         dict[tuple[int, str], :class:`~epyt_flow.uncertainty.uncertainties.Uncertainty`]
             Local (i.e. sensor specific) uncertainties.
         """
-        return deepcopy(self.__local_uncertainties)
+        return deepcopy(self._local_uncertainties)
 
     def get_attributes(self) -> dict:
-        return super().get_attributes() | {"global_uncertainty": self.__global_uncertainty,
-                                           "local_uncertainties": self.__local_uncertainties}
+        return super().get_attributes() | {"global_uncertainty": self._global_uncertainty,
+                                           "local_uncertainties": self._local_uncertainties}
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, SensorNoise):
             raise TypeError("Can not compare 'SensorNoise' instance " +
                             f"with '{type(other)}' instance")
 
-        return super().__eq__(other) and self.__global_uncertainty == other.global_uncertainty and \
-            self.__local_uncertainties == other.local_uncertainties
+        return super().__eq__(other) and self._global_uncertainty == other.global_uncertainty and \
+            self._local_uncertainties == other.local_uncertainties
 
     def __str__(self) -> str:
-        return f"global_uncertainty: {self.__global_uncertainty} " + \
-            f"local_uncertainties: {self.__local_uncertainties}"
+        return f"global_uncertainty: {self._global_uncertainty} " + \
+            f"local_uncertainties: {self._local_uncertainties}"
 
     def apply_local_uncertainty(self, map_sensor_to_idx: Callable[[int, str], int],
                                 sensor_readings: numpy.ndarray) -> numpy.ndarray:
@@ -115,10 +115,10 @@ class SensorNoise(JsonSerializable):
         `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Perturbed sensor readings.
         """
-        if self.__local_uncertainties is None:
+        if self._local_uncertainties is None:
             return sensor_readings
         else:
-            self.__local_uncertainties.set_random_generator(self.__np_rand_gen)
+            self._local_uncertainties.set_random_generator(self._np_rand_gen)
 
             for (sensor_type, sensor_id), uncertainty in map_sensor_to_idx.items():
                 idx = map_sensor_to_idx(sensor_type, sensor_id)
@@ -144,9 +144,9 @@ class SensorNoise(JsonSerializable):
         `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_
             Perturbed sensor readings.
         """
-        if self.__global_uncertainty is None:
+        if self._global_uncertainty is None:
             return sensor_readings
         else:
-            self.__global_uncertainty.set_random_generator(self.__np_rand_gen)
+            self._global_uncertainty.set_random_generator(self._np_rand_gen)
 
-            return self.__global_uncertainty.apply_batch(sensor_readings)
+            return self._global_uncertainty.apply_batch(sensor_readings)

@@ -328,6 +328,8 @@ class ModelUncertainty(JsonSerializable):
         self._cache_msx_tanks_parameters = None
         self._cache_msx_patterns = None
 
+        self.__np_rand_gen = np.random.default_rng(seed=self.__seed)
+
         super().__init__(**kwds)
 
     @property
@@ -703,13 +705,12 @@ class ModelUncertainty(JsonSerializable):
         epanet_api : `epanet_plus.EPyT <https://epanet-plus.readthedocs.io/en/stable/api.html#epanet_plus.epanet_toolkit.EPyT>`_
             Interface to EPANET and EPANET-MSX.
         """
-        np_rand_gen = np.random.default_rng(seed=self.__seed)
 
         all_links_idx = epanet_api.get_all_links_idx()
         all_nodes_idx = epanet_api.get_all_nodes_idx()
 
         if self._global_pipe_length is not None:
-            self._global_pipe_length.set_random_generator(np_rand_gen)
+            self._global_pipe_length.set_random_generator(self.__np_rand_gen)
 
             link_length = np.array([epanet_api.getlinkvalue(link_idx, EpanetConstants.EN_LENGTH)
                                     for link_idx in all_links_idx])
@@ -720,7 +721,7 @@ class ModelUncertainty(JsonSerializable):
                 epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_LENGTH, link_value)
 
         if self._local_pipe_length is not None:
-            self._local_pipe_length.set_random_generator(np_rand_gen)
+            self._local_pipe_length.set_random_generator(self.__np_rand_gen)
             self._cache_links_length = np.array([epanet_api.getlinkvalue(link_idx, EpanetConstants.EN_LENGTH)
                                                  for link_idx in all_links_idx])
 
@@ -732,7 +733,7 @@ class ModelUncertainty(JsonSerializable):
                 epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_LENGTH, link_length)
 
         if self._global_pipe_diameter is not None:
-            self._global_pipe_diameter.set_random_generator(np_rand_gen)
+            self._global_pipe_diameter.set_random_generator(self.__np_rand_gen)
 
             link_diameters = np.array([epanet_api.getlinkvalue(link_idx, EpanetConstants.EN_DIAMETER)
                                        for link_idx in all_links_idx])
@@ -743,7 +744,7 @@ class ModelUncertainty(JsonSerializable):
                 epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_DIAMETER, link_value)
 
         if self._local_pipe_diameter is not None:
-            self._local_pipe_diameter.set_random_generator(np_rand_gen)
+            self._local_pipe_diameter.set_random_generator(self.__np_rand_gen)
             self._cache_links_diameter = np.array([epanet_api.getlinkvalue(link_idx,
                                                                            EpanetConstants.EN_DIAMETER)
                                                    for link_idx in all_links_idx])
@@ -756,7 +757,7 @@ class ModelUncertainty(JsonSerializable):
                 epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_DIAMETER, link_diameter)
 
         if self._global_pipe_roughness is not None:
-            self._global_pipe_roughness.set_random_generator(np_rand_gen)
+            self._global_pipe_roughness.set_random_generator(self.__np_rand_gen)
 
             coeffs = np.array([epanet_api.getlinkvalue(link_idx, EpanetConstants.EN_ROUGHNESS)
                                for link_idx in all_links_idx])
@@ -767,7 +768,7 @@ class ModelUncertainty(JsonSerializable):
                 epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_ROUGHNESS, link_value)
 
         if self._local_pipe_roughness is not None:
-            self._local_pipe_roughness.set_random_generator(np_rand_gen)
+            self._local_pipe_roughness.set_random_generator(self.__np_rand_gen)
             self._cache_links_roughness_coeff = \
                 np.array([epanet_api.getlinkvalue(link_idx, EpanetConstants.EN_ROUGHNESS)
                           for link_idx in all_links_idx])
@@ -782,7 +783,7 @@ class ModelUncertainty(JsonSerializable):
                                         link_roughness_coeff)
 
         if self._global_base_demand is not None:
-            self._global_base_demand.set_random_generator(np_rand_gen)
+            self._global_base_demand.set_random_generator(self.__np_rand_gen)
 
             self._cache_nodes_base_demand = {}
             for node_idx in all_nodes_idx:
@@ -796,7 +797,7 @@ class ModelUncertainty(JsonSerializable):
                     epanet_api.setbasedemand(node_idx, demand_idx + 1, base_demand)
 
         if self._local_base_demand is not None:
-            self._local_base_demand.set_random_generator(np_rand_gen)
+            self._local_base_demand.set_random_generator(self.__np_rand_gen)
 
             self._cache_nodes_base_demand = {}
             for node_id, uncertainty in self._local_base_demand.items():
@@ -811,7 +812,7 @@ class ModelUncertainty(JsonSerializable):
                     epanet_api.setbasedemand(node_idx, demand_idx + 1, base_demand)
 
         if self._global_demand_pattern is not None:
-            self._global_demand_pattern.set_random_generator(np_rand_gen)
+            self._global_demand_pattern.set_random_generator(self.__np_rand_gen)
 
             self._cache_nodes_demand_pattern = {}
             demand_patterns_idx = np.array([epanet_api.getdemandpattern(node_idx, demand_idx + 1)
@@ -828,7 +829,7 @@ class ModelUncertainty(JsonSerializable):
                 epanet_api.set_pattern(pattern_idx, demand_pattern.tolist())
 
         if self._local_demand_pattern is not None:
-            self._local_demand_pattern.set_random_generator(np_rand_gen)
+            self._local_demand_pattern.set_random_generator(self.__np_rand_gen)
 
             self._cache_nodes_demand_pattern = {}
 
@@ -841,7 +842,7 @@ class ModelUncertainty(JsonSerializable):
                 epanet_api.set_pattern(pattern_idx, demand_pattern.tolist())
 
         if self._global_elevation is not None:
-            self._global_elevation.set_random_generator(np_rand_gen)
+            self._global_elevation.set_random_generator(self.__np_rand_gen)
 
             elevations = np.array([epanet_api.get_node_elevation(node_idx)
                                    for node_idx in epanet_api.get_all_nodes_idx()])
@@ -852,7 +853,7 @@ class ModelUncertainty(JsonSerializable):
                 epanet_api.setnodevalue(node_idx + 1, EpanetConstants.EN_ELEVATION, node_elev)
 
         if self._local_elevation is not None:
-            self._local_elevation.set_random_generator(np_rand_gen)
+            self._local_elevation.set_random_generator(self.__np_rand_gen)
             self._cache_nodes_elevation = np.array([epanet_api.get_node_elevation(node_idx)
                                                     for node_idx in epanet_api.get_all_nodes_idx()])
 
@@ -864,7 +865,7 @@ class ModelUncertainty(JsonSerializable):
                 epanet_api.setnodevalue(node_idx, EpanetConstants.EN_ELEVATION, elevation)
 
         if self._local_patterns is not None:
-            self._local_patterns.set_random_generator(np_rand_gen)
+            self._local_patterns.set_random_generator(self.__np_rand_gen)
             self._cache_patterns = {}
 
             for pattern_id, uncertainty in self._local_patterns.items():
@@ -877,7 +878,7 @@ class ModelUncertainty(JsonSerializable):
 
         if epanet_api.msx_file is not None:
             if self._global_constants is not None:
-                self._global_constants.set_random_generator(np_rand_gen)
+                self._global_constants.set_random_generator(self.__np_rand_gen)
 
                 constants = np.array([epanet_api.MSXgetconstant(const_idx + 1)
                                       for const_idx in range(epanet_api.MSXgetcount(EpanetConstants.MSX_CONSTANT))])
@@ -888,7 +889,7 @@ class ModelUncertainty(JsonSerializable):
                     epanet_api.MSXsetconstant(const_idx + 1, const_value)
 
             if self._local_constants:
-                self._local_constants.set_random_generator(np_rand_gen)
+                self._local_constants.set_random_generator(self.__np_rand_gen)
 
                 self._cache_msx_patterns = np.array([epanet_api.MSXgetconstant(const_idx + 1)
                                                      for const_idx in range(epanet_api.MSXgetcount(EpanetConstants.MSX_CONSTANT))])
@@ -901,7 +902,7 @@ class ModelUncertainty(JsonSerializable):
                     epanet_api.MSXsetconstant(idx, constant)
 
             if self._global_parameters is not None:
-                self._global_parameters.set_random_generator(np_rand_gen)
+                self._global_parameters.set_random_generator(self.__np_rand_gen)
 
                 self._cache_msx_links_parameters = {}
                 num_params = epanet_api.MSXgetcount(EpanetConstants.MSX_PARAMETER)
@@ -936,7 +937,7 @@ class ModelUncertainty(JsonSerializable):
                         epanet_api.MSXsetparameter(EpanetConstants.MSX_NODE, tank_idx, idx + 1, val)
 
             if self._local_parameters is not None:
-                self._local_parameters.set_random_generator(np_rand_gen)
+                self._local_parameters.set_random_generator(self.__np_rand_gen)
                 self._cache_msx_links_parameters = {}
                 self._cache_msx_tanks_parameters = {}
 
@@ -961,7 +962,7 @@ class ModelUncertainty(JsonSerializable):
                     epanet_api.MSXsetparameter(item_type, item_idx, idx, parameter)
 
             if self._local_msx_patterns is not None:
-                self._local_msx_patterns.set_random_generator(np_rand_gen)
+                self._local_msx_patterns.set_random_generator(self.__np_rand_gen)
                 self._cache_msx_patterns = {}
 
                 for pattern_id, uncertainty in self._local_msx_patterns.items():
