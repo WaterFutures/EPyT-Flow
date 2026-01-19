@@ -1,4 +1,4 @@
-epanet-plus>=0.1.3
+epanet-plus>=0.2.0
 requests>=2.31.0
 scipy>=1.11.4
 u-msgpack-python>=2.8.0
