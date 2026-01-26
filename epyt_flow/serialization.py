@@ -487,8 +487,17 @@ def __decode_bsr_array(ext_data: tuple[tuple[int, int],
     return scipy.sparse.bsr_array((data[0], (data[1][0], data[1][1])), shape=(shape[0], shape[1]))
 
 
+def __encode_numpy_array(array: np.ndarray) -> tuple[str, list[int], bytes]:
+    return array.dtype.descr[0][1], array.shape, array.tobytes()
+
+
+def __decode_numpy_array(ext_data: tuple[str, list[int], bytes]) -> np.ndarray:
+    dtype_descr, shape, buffer = ext_data
+    return np.frombuffer(buffer, dtype=np.dtype(dtype_descr)).reshape(shape)
+
+
 ext_handler_pack = {np.ndarray:
-                    lambda arr: umsgpack.Ext(NUMPY_ARRAY_ID, umsgpack.packb(arr.tolist())),
+                    lambda arr: umsgpack.Ext(NUMPY_ARRAY_ID, umsgpack.packb(__encode_numpy_array(arr))),
                     networkx.Graph:
                         lambda graph:
                             umsgpack.Ext(NETWORKX_GRAPH_ID,
@@ -496,7 +505,7 @@ ext_handler_pack = {np.ndarray:
                     scipy.sparse.bsr_array:
                     lambda arr: umsgpack.Ext(SCIPY_BSRARRAY_ID,
                                              umsgpack.packb(__encode_bsr_array(arr)))}
-ext_handler_unpack = {NUMPY_ARRAY_ID: lambda ext: np.array(umsgpack.unpackb(ext.data)),
+ext_handler_unpack = {NUMPY_ARRAY_ID: lambda ext: __decode_numpy_array(umsgpack.unpackb(ext.data)),
                       NETWORKX_GRAPH_ID:
                       lambda ext: networkx.node_link_graph(umsgpack.unpackb(ext.data)),
                       SCIPY_BSRARRAY_ID: lambda ext: __decode_bsr_array(umsgpack.unpackb(ext.data))}

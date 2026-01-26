@@ -134,7 +134,12 @@ The topology (i.e. a graph) of the WDN is represented by a
 :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` instance.
 
 The topology :class:`~epyt_flow.topology.NetworkTopology` not only contains the WDN as a graph
-but also includes node and link/pipe attributes such as elevation, diameter, length, etc.
+but also includes all relevant node and link/pipe attributes such as curves,
+elevation, diameter, length, etc., and can (optionally) also include all demand patterns as well.
+All those stored information can be written exported to an .inp file by calling the function
+:func:`~epyt_flow.topology.NetworkTopology.to_inp_file`. This can become handy if the corresponding
+.inp file is not shared or not available any longer.
+
 Furthermore, :class:`~epyt_flow.topology.NetworkTopology` also comes with some helper functions
 such as those for computing the adjacency matrix
 (:func:`~epyt_flow.topology.NetworkTopology.get_adj_matrix`), the shortest path between two nodes
@@ -235,6 +240,15 @@ An alternative to passing the path to an .inp file (and .msx file) to
 :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator`, is to use a
 :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` instance which completely
 describes/specifies a scenario.
+
+.. note::
+
+    A :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` instance can also contain a
+    :class:`~epyt_flow.topology.NetworkTopology` instance, completly specifying the water network.
+    If the specified .inp file is not found, the
+    :class:`~epyt_flow.simulation.scenario_simulator.ScenarioSimulator` creates an .inp file based
+    on the information from the :class:`~epyt_flow.topology.NetworkTopology` instance and uses then
+    loads and uses this .inp file.
 
 Because :class:`~epyt_flow.simulation.scenario_config.ScenarioConfig` instances are immutable, 
 there are usually not explicitly constructed by the user but loaded/parsed from a file 

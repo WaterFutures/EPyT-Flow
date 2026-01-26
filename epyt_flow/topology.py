@@ -4,12 +4,13 @@ Module provides a class for representing the topology of WDN.
 from copy import deepcopy
 import warnings
 from typing import Any
+import math
 import numpy as np
 import networkx as nx
 from scipy.sparse import bsr_array
 from geopandas import GeoDataFrame
 from shapely.geometry import Point, LineString
-from epanet_plus import EpanetConstants
+from epanet_plus import EpanetConstants, EPyT
 
 from .serialization import serializable, JsonSerializable, NETWORK_TOPOLOGY_ID
 
@@ -67,6 +68,10 @@ class NetworkTopology(nx.Graph, JsonSerializable):
     valves : `dict`
         List of all valves -- i.e. valve ID, and information such as
         valve type and connecting nodes.
+    curves : `dict[str, tuple[int, list[tuple[float, float]]]]`
+        All curves -- i.e. curve ID, and list of points.
+    patterns : `dict[str, list[float]]`
+        All time patterns -- i.e., pattern ID and list of multipliers.
     units : `int`
         Measurement units category -- i.e. US Customary or SI Metric.
 
@@ -79,6 +84,8 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                  links: list[tuple[str, tuple[str, str], dict]],
                  pumps: dict,
                  valves: dict,
+                 curves: dict[str, tuple[int, list[tuple[float, float]]]],
+                 patterns: dict[str, list[float]],
                  units: int,
                  **kwds):
         nx.Graph.__init__(self, name=f_inp, **kwds)
@@ -88,7 +95,13 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         self.__links = links
         self.__pumps = pumps
         self.__valves = valves
+        self.__curves = curves
+        self.__patterns = patterns
         self.__units = units
+
+        for key in self.__curves.keys():    # Fix value types -- tuple gets converted to list when deserializing it
+            self.__curves[key] = (self.__curves[key][0],
+                                  [tuple(value) for value in self.__curves[key][1]])
 
         for node_id, node_info in nodes:
             node_elevation = node_info["elevation"]
@@ -102,6 +115,141 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             self.add_edge(link[0], link[1], length=link_length,
                           info={"id": link_id, "type": link_type, "nodes": link,
                                 "diameter": link_diameter, "length": link_length})
+
+    def to_inp_file(self, inp_file_out: str) -> None:
+        """
+        Creates an .inp file with the network layout and parameters as specified in
+        this instance.
+        Note that no control rules are set!
+
+        Parameters
+        ----------
+        inp_file_out : `str`
+            Path to the .inp file.
+        """
+        with EPyT(inp_file_in=inp_file_out, use_project=False) as epanet_api:
+            if self.units == UNITS_SIMETRIC:
+                epanet_api.setflowunits(EpanetConstants.EN_CMH)
+            else:
+                epanet_api.setflowunits(EpanetConstants.EN_GPM)
+
+            for curve_id, (curve_type, curve_data) in self.__curves.items():
+                epanet_api.addcurve(curve_id)
+                curve_idx = epanet_api.getcurveindex(curve_id)
+                epanet_api.setcurvetype(curve_idx, curve_type)
+                for i, (x, y) in enumerate(curve_data):
+                    epanet_api.setcurvevalue(curve_idx, i+1, x, y)
+
+            for pattern_id, values in self.__patterns.items():
+                epanet_api.add_pattern(pattern_id, values)
+
+            for junc_id in self.get_all_junctions():
+                epanet_api.addnode(junc_id, EpanetConstants.EN_JUNCTION)
+
+                node_idx = epanet_api.get_node_idx(junc_id)
+                junc_info = self.get_node_info(junc_id)
+                epanet_api.setnodevalue(node_idx, EpanetConstants.EN_ELEVATION,
+                                        junc_info["elevation"])
+                epanet_api.setbasedemand(node_idx, 1, junc_info["base_demand"])
+                epanet_api.setcoord(node_idx, junc_info["coord"][0], junc_info["coord"][1])
+                epanet_api.setcomment(EpanetConstants.EN_NODE, node_idx, junc_info["comment"])
+                if "demand_patterns_id" in junc_info:
+                    for i, demand_pattern_id in enumerate(junc_info["demand_patterns_id"]):
+                        epanet_api.setdemandpattern(node_idx, i+1,
+                                                    epanet_api.getpatternindex(demand_pattern_id))
+
+            for reservoir_id in self.get_all_reservoirs():
+                epanet_api.addnode(reservoir_id, EpanetConstants.EN_RESERVOIR)
+
+                node_idx = epanet_api.get_node_idx(reservoir_id)
+                reservoir_info = self.get_node_info(reservoir_id)
+                epanet_api.setnodevalue(node_idx, EpanetConstants.EN_ELEVATION,
+                                        reservoir_info["elevation"])
+                epanet_api.setcoord(node_idx, reservoir_info["coord"][0],
+                                    reservoir_info["coord"][1])
+                epanet_api.setcomment(EpanetConstants.EN_NODE, node_idx,
+                                      reservoir_info["comment"])
+
+            for tank_id in self.get_all_tanks():
+                epanet_api.addnode(tank_id, EpanetConstants.EN_TANK)
+
+                node_idx = epanet_api.get_node_idx(tank_id)
+                tank_info = self.get_node_info(tank_id)
+                if tank_info["cylindric"] is False:
+                    raise NotImplementedError("Non-cylindric tanks are not supported!")
+                else:
+                    epanet_api.setnodevalue(node_idx, EpanetConstants.EN_ELEVATION,
+                                            tank_info["elevation"])
+                    epanet_api.setcoord(node_idx, tank_info["coord"][0], tank_info["coord"][1])
+                    epanet_api.setcomment(EpanetConstants.EN_NODE, node_idx, tank_info["comment"])
+                    epanet_api.setnodevalue(node_idx, EpanetConstants.EN_TANKDIAM,
+                                            tank_info["diameter"])
+                    epanet_api.setnodevalue(node_idx, EpanetConstants.EN_MIXFRACTION,
+                                            tank_info["mixing_fraction"])
+                    epanet_api.setnodevalue(node_idx, EpanetConstants.EN_MIXMODEL,
+                                            tank_info["mixing_model"])
+                    epanet_api.setnodevalue(node_idx, EpanetConstants.EN_CANOVERFLOW,
+                                            float(tank_info["can_overflow"]))
+
+                    tank_info["min_level"] = tank_info["min_vol"] / \
+                        (math.pi * (0.5 * tank_info["diameter"])**2)
+                    tank_info["init_level"] = tank_info["init_vol"] / \
+                        (math.pi * (0.5 * tank_info["diameter"])**2)
+
+                    epanet_api.settankdata(node_idx, tank_info["elevation"],
+                                           tank_info["init_level"], tank_info["min_level"],
+                                           tank_info["max_level"], tank_info["diameter"],
+                                           tank_info["min_vol"], tank_info["vol_curve_id"])
+
+            for pipe_id, (node_a, node_b) in self.get_all_pipes():
+                epanet_api.addlink(pipe_id, EpanetConstants.EN_PIPE, node_a, node_b)
+
+                pipe_idx = epanet_api.get_link_idx(pipe_id)
+                pipe_info = self.get_link_info(pipe_id)
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_LENGTH, pipe_info["length"])
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_DIAMETER,
+                                        pipe_info["diameter"])
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_ROUGHNESS,
+                                        pipe_info["roughness_coeff"])
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_KBULK, pipe_info["bulk_coeff"])
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_KWALL, pipe_info["wall_coeff"])
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_MINORLOSS,
+                                        pipe_info["loss_coeff"])
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_INITSETTING,
+                                        pipe_info["init_setting"])
+                epanet_api.setlinkvalue(pipe_idx, EpanetConstants.EN_INITSTATUS,
+                                        pipe_info["init_status"])
+
+            for valve_id in self.get_all_valves():
+                valve_info = self.get_valve_info(valve_id)
+                node_a, node_b = valve_info["end_points"]
+                epanet_api.addlink(valve_id, valve_info["type"], node_a, node_b)
+                link_idx = epanet_api.get_link_idx(valve_id)
+                epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_DIAMETER,
+                                        valve_info["diameter"])
+                epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_INITSETTING,
+                                        valve_info["initial_setting"])
+                if valve_info["type"] not in [EpanetConstants.EN_GPV, EpanetConstants.EN_PRV,
+                                              EpanetConstants.EN_CVPIPE]:
+                    epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_INITSTATUS,
+                                            valve_info["initial_status"])
+
+            for pump_id in self.get_all_pumps():
+                pump_info = self.get_pump_info(pump_id)
+                node_a, node_b = pump_info["end_points"]
+                epanet_api.addlink(pump_id, pump_info["type"], node_a, node_b)
+
+                link_idx = link_idx = epanet_api.get_link_idx(pump_id)
+                epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_INITSETTING,
+                                        pump_info["init_setting"])
+                epanet_api.setlinkvalue(link_idx, EpanetConstants.EN_INITSTATUS,
+                                        pump_info["init_status"])
+
+                if pump_info["curve_id"] is not None:
+                    curve_idx = epanet_api.getcurveindex(pump_info["curve_id"])
+                    epanet_api.setheadcurveindex(link_idx, curve_idx)
+
+            epanet_api.saveinpfile(inp_file_out)
 
     def convert_units(self, units: int) -> Any:
         """
@@ -139,6 +287,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         # Get all data and convert units
         inch_to_millimeter = 25.4
         feet_to_meter = 0.3048
+        cubicmeter_to_cubicfeet = 35.3146667215
 
         nodes = []
         for node_id in self.get_all_nodes():
@@ -147,9 +296,22 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                 conv_factor = 1. / feet_to_meter
             else:
                 conv_factor = feet_to_meter
+
             node_info["elevation"] *= conv_factor
             if "diameter" in node_info:
                 node_info["diameter"] *= conv_factor
+
+            if "max_level" in node_info:
+                node_info["max_level"] *= conv_factor
+            if "min_level" in node_info:
+                node_info["min_level"] *= conv_factor
+            if "init_level" in node_info:
+                node_info["init_level"] *= conv_factor
+            if "min_vol" in node_info:
+                if units == UNITS_USCUSTOM:
+                    node_info["min_vol"] *= cubicmeter_to_cubicfeet
+                else:
+                    node_info["min_vol"] *= 1. / cubicmeter_to_cubicfeet
 
             nodes.append((node_id, node_info))
 
@@ -172,7 +334,8 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             links.append((link_id, link_nodes, link_info))
 
         return NetworkTopology(f_inp=self.name, nodes=nodes, links=links, pumps=self.pumps,
-                               valves=self.valves, units=units)
+                               valves=self.valves, units=units, curves=self.__curves,
+                               patterns=self.__patterns)
 
     def get_all_nodes(self) -> list[str]:
         """
@@ -457,6 +620,30 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             raise ValueError(f"Unknown valve: '{valve_id}'")
 
     @property
+    def curves(self) -> dict[str, tuple[int, list[tuple[float, float]]]]:
+        """
+        Gets all curves -- i.e., ID and list of points.
+
+        Returns
+        -------
+        `dict[str, tuple[int, list[tuple[float, float]]]]`
+            All curves.
+        """
+        return deepcopy(self.__curves)
+
+    @property
+    def patterns(self) -> dict[str, list[float]]:
+        """
+        Returns all time patterns -- i.e., ID and list of multipliers.
+
+        Returns
+        -------
+        `dict[str, list[float]]`
+            All time patterns.
+        """
+        return deepcopy(self.__patterns)
+
+    @property
     def pumps(self) -> dict:
         """
         Gets all pumps -- i.e. ID and associated information such as the pump type.
@@ -505,8 +692,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
         adj_matrix = self.get_adj_matrix()
         other_adj_matrix = other.get_adj_matrix()
 
-        return JsonSerializable.__eq__(self, other) and \
-            self.name == other.name \
+        return self.name == other.name \
             and not np.any(adj_matrix.data != other_adj_matrix.data) \
             and not np.any(adj_matrix.indices != other_adj_matrix.indices) \
             and not np.any(adj_matrix.indptr != other_adj_matrix.indptr) \
@@ -515,7 +701,9 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                     for link_a, link_b in zip(self.get_all_links(), other.get_all_links())) \
             and self.__units == other.units \
             and self.get_all_pumps() == other.get_all_pumps() \
-            and self.get_all_valves() == other.get_all_valves()
+            and self.get_all_valves() == other.get_all_valves() \
+            and self.__curves == other.curves \
+            and self.__patterns == other.patterns
 
     def __str__(self) -> str:
         return f"f_inp: {self.name} nodes: {self.__nodes} links: {self.__links} " +\
@@ -528,6 +716,8 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                                            "links": self.__links,
                                            "pumps": self.__pumps,
                                            "valves": self.__valves,
+                                           "curves": self.__curves,
+                                           "patterns": self.__patterns,
                                            "units": self.__units}
 
     def to_gis(self, coord_reference_system: str = None, pumps_as_points: bool = False,
