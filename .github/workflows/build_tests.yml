@@ -16,17 +16,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r REQUIREMENTS.txt
-          pip install -r REQUIREMENTS-DEV.txt
       - name: Install gcc on macOS
         if: runner.os == 'macOS'
         run: brew install gcc@15
       - name: Install libomp on macOS
         if: runner.os == 'macOS'
         run: brew install libomp
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r REQUIREMENTS.txt
+          pip install -r REQUIREMENTS-DEV.txt
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
