@@ -1057,10 +1057,13 @@ class ScadaData(Serializable):
                                      surface_species_mass_unit=new_surface_species_mass_unit,
                                      surface_species_area_unit=new_surface_species_area_unit)
 
-        if is_flowunit_simetric(flow_unit):
-            network_topo = self.network_topo.convert_units(UNITS_SIMETRIC)
+        if flow_unit is not None:
+            if is_flowunit_simetric(flow_unit):
+                network_topo = self.network_topo.convert_units(UNITS_SIMETRIC)
+            else:
+                network_topo = self.network_topo.convert_units(UNITS_USCUSTOM)
         else:
-            network_topo = self.network_topo.convert_units(UNITS_USCUSTOM)
+            network_topo = self.network_topo
 
         return ScadaData(network_topo=network_topo,
                          warnings_code=self.warnings_code,
