@@ -142,6 +142,16 @@ class ScenarioSimulator():
             except Exception:
                 return False
 
+        if scenario_config is not None:     # Extract .inp file from NetworkTopology if necessary
+            if __file_exists(self.__f_inp_in) is False:
+                network_topo = scenario_config.network_topo
+                if network_topo is not None:
+                    warnings.info(".inp file not found -- extracting network data from NetworkTopology")
+                    network_topo.to_inp_file(self.__f_inp_in)
+                else:
+                    raise ValueError(".inp file does not exist and 'scenario_config' does not " +
+                                     "contain a specification of the network topology")
+
         from epanet_plus import EPyT   # Workaround: Sphinx autodoc "importlib.import_module TypeError: __mro_entries__"
         self.epanet_api = EPyT(self.__f_inp_in, use_project=self.__f_msx_in is None)
 
@@ -898,10 +908,18 @@ class ScenarioSimulator():
         """
         return self.epanet_api.get_reporting_time_step()
 
-    def get_scenario_config(self) -> ScenarioConfig:
+    def get_scenario_config(self, include_network_topology: bool = True) -> ScenarioConfig:
         """
         Gets the configuration of this scenario -- i.e. all information & elements
         that completely describe this scenario.
+
+        Parameters
+        ----------
+        include_network_topology : `bool`, optional
+            If True, the full specification of the network topology (incl. demand patterns)
+            will be included in the scenario configuration.
+
+            The default is True.
 
         Returns
         -------
@@ -918,7 +936,12 @@ class ScenarioSimulator():
                           "quality_model": self.get_quality_model(),
                           "demand_model": self.get_demand_model()}
 
+        network_topology = None
+        if include_network_topology is True:
+            network_topology = self.get_topology(include_demand_patterns=True)
+
         return ScenarioConfig(f_inp_in=self.__f_inp_in, f_msx_in=self.__f_msx_in,
+                              network_topology=network_topology,
                               general_params=general_params, sensor_config=self.sensor_config,
                               memory_consumption_estimate=self.estimate_memory_consumption(),
                               custom_controls=self.custom_controls,
@@ -955,9 +978,17 @@ class ScenarioSimulator():
 
         return n_time_steps * n_quantities * n_bytes_per_quantity * .000001
 
-    def get_topology(self) -> NetworkTopology:
+    def get_topology(self, include_demand_patterns: bool = False) -> NetworkTopology:
         """
         Gets the topology (incl. information such as elevations, pipe diameters, etc.) of this WDN.
+
+        Parameters
+        ----------
+        include_demand_patterns : `bool`, optional
+            If True, demand patterns will be included -- be aware that this will increase
+            the object's memory footprint.
+
+            The default is False.
 
         Returns
         -------
@@ -967,6 +998,12 @@ class ScenarioSimulator():
         self._adapt_to_network_changes()
 
         # Collect information about the topology of the water distribution network
+        patterns = {}
+        if include_demand_patterns is True:
+            patterns = {pattern_id: self.epanet_api.get_pattern(
+                self.epanet_api.getpatternindex(pattern_id))
+                        for pattern_id in self.epanet_api.get_all_patterns_id()}
+
         nodes_id = self.epanet_api.get_all_nodes_id()
         nodes_elevation = [self.epanet_api.get_node_elevation(node_idx)
                            for node_idx in self.epanet_api.get_all_nodes_idx()]
@@ -976,7 +1013,16 @@ class ScenarioSimulator():
                        for node_idx in self.epanet_api.get_all_nodes_idx()]
         nodes_comments = [self.epanet_api.get_node_comment(node_idx)
                           for node_idx in self.epanet_api.get_all_nodes_idx()]
-        node_tank_names = self.epanet_api.get_all_tanks_id()
+        nodes_base_demand = [self.epanet_api.get_node_base_demand(node_idx)
+                             for node_idx in self.epanet_api.get_all_nodes_idx()]
+
+        node_demand_patterns_id = []
+        for node_idx in self.epanet_api.get_all_nodes_idx():
+            r = []
+            for pattern_idx in self.epanet_api.get_node_demand_patterns_idx(node_idx):
+                if pattern_idx != 0:
+                    r.append(self.epanet_api.getpatternid(pattern_idx))
+            node_demand_patterns_id.append(r)
 
         links_id = self.epanet_api.get_all_links_id()
         links_type = [self.epanet_api.get_link_type(link_idx)
@@ -994,59 +1040,115 @@ class ScenarioSimulator():
                             for link_idx in self.epanet_api.get_all_links_idx()]
         links_loss_coeff = [self.epanet_api.get_link_minorloss(link_idx)
                             for link_idx in self.epanet_api.get_all_links_idx()]
+        link_init_setting = [self.epanet_api.get_link_init_setting(link_idx)
+                             for link_idx in self.epanet_api.get_all_links_idx()]
+        link_init_status = [self.epanet_api.get_link_init_status(link_idx)
+                            for link_idx in self.epanet_api.get_all_links_idx()]
 
         pumps_id = self.epanet_api.get_all_pumps_id()
         pumps_type = [self.epanet_api.get_pump_type(pump_idx)
                       for pump_idx in self.epanet_api.get_all_pumps_idx()]
+        pumps_hcurve = [int(self.epanet_api.getlinkvalue(pump_idx, EpanetConstants.EN_PUMP_HCURVE))
+                        for pump_idx in self.epanet_api.get_all_pumps_idx()]
 
         valves_id = self.epanet_api.get_all_valves_id()
 
         # Build graph describing the topology
+        curves = {}
+        def __add_curve(curve_id: str) -> None:
+            curve_type = self.epanet_api.getcurvetype(pump_hcurve_idx)
+            len = self.epanet_api.getcurvelen(pump_hcurve_idx)
+            curve_data = []
+            for i in range(len):
+                x, y = self.epanet_api.getcurvevalue(pump_hcurve_idx, i+1)
+                curve_data.append((x, y))
+            curves[curve_id] = (curve_type, curve_data)
+
         nodes = []
         for node_id, node_elevation, node_type, \
-                node_coord, node_comment in zip(nodes_id, nodes_elevation, nodes_type, nodes_coord,
-                                                nodes_comments):
+                node_coord, node_comment, node_base_demand, node_demand_patterns in \
+                    zip(nodes_id, nodes_elevation, nodes_type, nodes_coord,
+                        nodes_comments, nodes_base_demand, node_demand_patterns_id):
             node_info = {"elevation": node_elevation,
                          "coord": node_coord,
                          "comment": node_comment,
-                         "type": node_type}
+                         "type": node_type,
+                         "base_demand": node_base_demand}
+            if include_demand_patterns is True:
+                node_info["demand_patterns_id"] = node_demand_patterns
             if node_type == EpanetConstants.EN_TANK:
                 node_tank_idx = self.epanet_api.get_node_idx(node_id)
                 node_info["diameter"] = float(self.epanet_api.get_tank_diameter(node_tank_idx))
-                node_info["volume"] = float(self.epanet_api.get_tank_volume(node_tank_idx))
                 node_info["max_level"] = float(self.epanet_api.get_tank_max_level(node_tank_idx))
                 node_info["min_level"] = float(self.epanet_api.get_tank_min_level(node_tank_idx))
+                node_info["min_vol"] = float(self.epanet_api.get_tank_min_vol(node_tank_idx))
                 node_info["mixing_fraction"] = float(self.epanet_api.get_tank_mix_fraction(node_tank_idx))
                 node_info["mixing_model"] = int(self.epanet_api.get_tank_mix_model(node_tank_idx))
+                node_info["init_vol"] = self.epanet_api.getnodevalue(node_tank_idx,
+                                                                     EpanetConstants.EN_INITVOLUME)
+                node_info["cylindric"] = self.epanet_api.getnodevalue(node_tank_idx,
+                                                                      EpanetConstants.EN_VOLCURVE) == 0
+                node_info["can_overflow"] = bool(self.epanet_api.can_tank_overflow(node_tank_idx))
+
+                node_info["vol_curve_id"] = ""
+                tank_vol_curve_idx = int(self.epanet_api.get_tank_vol_curve_idx(node_tank_idx))
+                if tank_vol_curve_idx != 0:
+                    curve_id = self.epanet_api.getcurveid(tank_vol_curve_idx)
+                    node_info["vol_curve_id"] = curve_id
+
+                    if curve_id not in curves:
+                        __add_curve(curve_id)
 
             nodes.append((node_id, node_info))
 
         links = []
         for link_id, link_type, link, diameter, length, roughness_coeff, bulk_coeff, \
-            wall_coeff, loss_coeff in zip(links_id, links_type, links_data, links_diameter,
-                                          links_length, links_roughness_coeff, links_bulk_coeff,
-                                          links_wall_coeff, links_loss_coeff):
+            wall_coeff, loss_coeff, initial_setting, initial_status in \
+                zip(links_id, links_type, links_data, links_diameter, links_length,
+                    links_roughness_coeff, links_bulk_coeff, links_wall_coeff, links_loss_coeff,
+                    link_init_setting, link_init_status):
             links.append((link_id, list(link),
                           {"type": link_type, "diameter": diameter, "length": length,
                            "roughness_coeff": roughness_coeff,
                            "bulk_coeff": bulk_coeff, "wall_coeff": wall_coeff,
-                           "loss_coeff": loss_coeff}))
+                           "loss_coeff": loss_coeff, "init_setting": initial_setting,
+                           "init_status": initial_status}))
 
         pumps = {}
-        for pump_id, pump_type in zip(pumps_id, pumps_type):
+        for pump_id, pump_type, pump_hcurve_idx in zip(pumps_id, pumps_type, pumps_hcurve):
             link_idx = links_id.index(pump_id)
             link = links_data[link_idx]
-            pumps[pump_id] = {"type": pump_type, "end_points": link}
+            pump_init_setting = link_init_setting[link_idx]
+            pump_init_status = link_init_status[link_idx]
+
+            curve_id = None
+            if pump_hcurve_idx != 0:
+                curve_id = self.epanet_api.getcurveid(pump_hcurve_idx)
+
+                if curve_id not in curves:
+                    __add_curve(curve_id)
+
+            pumps[pump_id] = {"type": pump_type, "end_points": link,
+                              "init_setting": pump_init_setting,
+                              "init_status": pump_init_status,
+                              "curve_id": curve_id}
 
         valves = {}
         for valve_id in valves_id:
             link_idx = links_id.index(valve_id)
             link = links_data[link_idx]
             valve_type = links_type[link_idx]
-            valves[valve_id] = {"type": valve_type, "end_points": link}
+            valve_diameter = links_diameter[link_idx]
+            valve_init_setting = link_init_setting[link_idx]
+            valve_init_status = link_init_status[link_idx]
+            valves[valve_id] = {"type": valve_type, "end_points": link,
+                                "diameter": valve_diameter,
+                                "initial_setting": valve_init_setting,
+                                "initial_status": valve_init_status}
 
         return NetworkTopology(f_inp=self.f_inp_in, nodes=nodes, links=links, pumps=pumps,
-                               valves=valves, units=self.get_units_category())
+                               valves=valves, curves=curves, patterns=patterns,
+                               units=self.get_units_category())
 
     def plot_topology(self, export_to_file: str = None) -> None:
         """

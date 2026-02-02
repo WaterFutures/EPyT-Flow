@@ -8,6 +8,10 @@ import zipfile
 from pathlib import Path
 import re
 import requests
+import time
+import threading
+import multiprocessing as mp
+from deprecated import deprecated
 from tqdm import tqdm
 import numpy as np
 import matplotlib
@@ -345,6 +349,149 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
     return ax
 
 
+def robust_download(download_path: str, urls: str or list,
+                    verbose: bool = True, timeout: int = 30) -> None:
+    """
+    Downloads a file from the given urls if it does not already exist in the
+    given path. The urls are tried in order. If a download stops or stalls,
+    the next url is tried until one succeeds or all urls have failed.
+
+    Parameters
+    ----------
+    download_path : `str`
+        Local path to the file -- if this path does not exist, the file will be
+        downloaded from the provided 'urls' and stored there.
+    urls : `list` or `str`
+        One url or a list of urls (where additional urls function as backup) to
+        download the file from.
+    verbose : `bool`, optional
+        If True, a progress bar is shown while downloading the file.
+
+        The default is True.
+    timeout : `int`
+        If this time passed without progress while downloading, the download is
+        considered failed.
+
+        The default is 30 seconds.
+    """
+    if isinstance(urls, str):
+        urls = [urls]
+
+    for url in urls:
+        try:
+            download_if_necessary(download_path, url, verbose, timeout)
+            return
+        except Exception as e:
+            print(f"Failed url: {url} with {e}")
+            continue
+
+    raise SystemError("All download attempts failed")
+
+
+def _download_process(download_path: str, url: str, backup_urls: list[str],
+                     last_update: mp.Value, stop_flag: mp.Value,
+                     finish_flag: mp.Value, verbose: bool) -> None:
+    """
+    Process that handles the actual download. It updates the last download
+    update variable and cleans up the corrupted file if the download fails from
+    within.
+
+    This function is only to be called from `download_if_necessary`.
+
+    Parameters
+    ----------
+    download_path : `str`
+        Local path to the file -- if this path does not exist, the file will be
+        downloaded from the provided 'urls' and stored there.
+    url : `str`
+        Web-URL pointing to the source the file should be downloaded from. Can
+        also point to a google drive file.
+    backup_urls : `list[str]`
+        List of alternative URLs that are being tried in the case that
+        downloading from 'url' fails. This is deprecated, but left in for
+        downward compatibility with `download_if_necessary` calls with
+        backup_urls. Not necessary when using `robust_download`.
+    last_update : `mp.Value`
+        Shared variable to keep track of the last successful download update.
+    stop_flag : `mp.Value`
+        Shared variable. Set to 1 when this process stopped by finishing or
+        error.
+    finish_flag : `mp.Value`
+        Shared variable. Set to 1 when download finished successfully.
+    verbose : `bool`
+        If True, a progress bar is shown while downloading the file.
+    """
+    try:
+        progress_bar = None
+        response = None
+
+        if "drive.google.com" in url:
+            session = requests.Session()
+            response = session.get(url)
+            html = response.text
+
+            def extract(pattern):
+                match = re.search(pattern, html)
+                return match.group(1) if match else None
+
+            file_id = extract(r'name="id" value="([^"]+)"')
+            file_confirm = extract(r'name="confirm" value="([^"]+)"')
+            file_uuid = extract(r'name="uuid" value="([^"]+)"')
+
+            if not all([file_id, file_confirm, file_uuid]):
+                raise SystemError("Failed to extract download parameters")
+
+            download_url = (
+                f"https://drive.usercontent.google.com/download"
+                f"?id={file_id}&export=download&confirm={file_confirm}&uuid={file_uuid}"
+            )
+
+            response = session.get(download_url, stream=True)
+
+        else:
+            response = requests.get(url, stream=True, allow_redirects=True,
+                                    timeout=1000)
+
+        # Deprecated, left in for backward compatibility
+        if response.status_code != 200:
+            for backup_url in backup_urls:
+                response = requests.get(backup_url, stream=verbose,
+                                        allow_redirects=True, timeout=1000)
+                if response.status_code == 200:
+                    break
+        if response.status_code != 200:
+            raise SystemError(f"Failed to download -- {response.status_code}")
+
+        content_length = int(response.headers.get("content-length", 0))
+        with open(download_path, "wb") as file:
+            progress_bar = False
+            if verbose:
+                progress_bar = tqdm(desc=download_path, total=content_length,
+                                    ascii=True, unit='B', unit_scale=True,
+                                    unit_divisor=1024)
+            for data in response.iter_content(chunk_size=1024):
+                size = file.write(data)
+                if progress_bar:
+                    progress_bar.update(size)
+                with last_update.get_lock():
+                    last_update.value = time.time()
+            with finish_flag.get_lock():
+                finish_flag.value = 1
+        with stop_flag.get_lock():
+            stop_flag.value = 1
+    finally:
+        if progress_bar:
+            progress_bar.close()
+        if response:
+            response.close()
+        with finish_flag.get_lock():
+            if os.path.exists(download_path) and finish_flag.value == 0:
+                os.remove(download_path)
+        with stop_flag.get_lock():
+            stop_flag.value = 1
+
+
+@deprecated(reason="Please use new function `robust_download` instead.")
 def download_from_gdrive_if_necessary(download_path: str, url: str, verbose: bool = True) -> None:
     """
     Downloads a file from a google drive repository if it does not already exist
@@ -410,18 +557,20 @@ def download_from_gdrive_if_necessary(download_path: str, url: str, verbose: boo
                 f_out.write(response.content)
 
 
+# TODO: documentation
 def download_if_necessary(download_path: str, url: str, verbose: bool = True,
-                          backup_urls: list[str] = []) -> None:
+                          backup_urls: list[str] = [], timeout: int = 30) -> None:
     """
-    Downloads a file from a given URL if it does not already exist in a given path.
+    Downloads a file from a given URL if it does not already exist in a given
+    path. This function is deprecated, please use `robust_download` instead.
 
     Note that if the path (folder) does not already exist, it will be created.
 
     Parameters
     ----------
     download_path : `str`
-        Local path to the file -- if this path does not exist, the file will be downloaded from
-        the provided 'url' and stored in 'download_dir'.
+        Local path to the file -- if this path does not exist, the file will be
+        downloaded from the provided 'url' and stored in 'download_dir'.
     url : `str`
         Web-URL.
     verbose : `bool`, optional
@@ -432,36 +581,46 @@ def download_if_necessary(download_path: str, url: str, verbose: bool = True,
         List of alternative URLs that are being tried in the case that downloading from 'url' fails.
 
         The default is an empty list.
+    timeout : `int`, optional
+        Allowed download inactivity in seconds. After this time passed without
+        an update, the donwload is considered failed.
+
+        The default is 30 seconds.
     """
     folder_path = str(Path(download_path).parent.absolute())
     create_path_if_not_exist(folder_path)
 
-    if not os.path.isfile(download_path):
-        response = requests.get(url, stream=verbose, allow_redirects=True, timeout=1000)
+    if os.path.isfile(download_path):
+        return
 
-        if response.status_code != 200:
-            for backup_url in backup_urls:
-                response = requests.get(backup_url, stream=verbose, allow_redirects=True,
-                                        timeout=1000)
-                if response.status_code == 200:
-                    break
-        if response.status_code != 200:
-            raise SystemError(f"Failed to download -- {response.status_code}")
+    last_update = mp.Value('d', time.time())
+    stop_flag = mp.Value('i', 0)
+    finish_flag = mp.Value('i', 0)
 
-        if verbose is True:
-            content_length = int(response.headers.get('content-length', 0))
-            with open(download_path, "wb") as file, tqdm(desc=download_path,
-                                                         total=content_length,
-                                                         ascii=True,
-                                                         unit='B',
-                                                         unit_scale=True,
-                                                         unit_divisor=1024) as progress_bar:
-                for data in response.iter_content(chunk_size=1024):
-                    size = file.write(data)
-                    progress_bar.update(size)
-        else:
-            with open(download_path, "wb") as f_out:
-                f_out.write(response.content)
+    t = mp.Process(target=_download_process, args=(download_path, url, backup_urls, last_update, stop_flag, finish_flag, verbose))
+    t.start()
+
+    while True:
+        time.sleep(1)
+        with last_update.get_lock():
+            idle = time.time() - last_update.value
+        with stop_flag.get_lock():
+            if stop_flag.value == 1:
+                with finish_flag.get_lock():
+                    if finish_flag.value == 1:
+                        break
+                    else:
+                        if os.path.exists(download_path) and finish_flag.value == 0:
+                            os.remove(download_path)
+                        raise SystemError(f"failed downloading from {url}")
+        if idle > timeout:
+            with finish_flag.get_lock():
+                t.terminate()
+                t.join()
+                if os.path.exists(download_path) and finish_flag.value == 0:
+                    os.remove(download_path)
+                raise SystemError(f"no progress in {timeout} seconds, aborting download")
+    t.join()
 
 
 def create_path_if_not_exist(path_in: str) -> None:

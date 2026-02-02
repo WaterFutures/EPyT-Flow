@@ -6,7 +6,7 @@ import scipy
 import numpy as np
 from epyt_flow.data.networks import load_hanoi, load_net1
 from epyt_flow.simulation import ScenarioSimulator, SensorConfig, ScenarioConfig, ScadaData, \
-    EpanetConstants
+    EpanetConstants, NetworkTopology
 from epyt_flow.utils import to_seconds
 from epyt_flow.serialization import load, dump
 
@@ -66,6 +66,46 @@ def test_topology():
         g = load(dump(graph))
 
         assert list(graph.nodes(data=True)) == list(g.nodes(data=True))
+
+
+def test_topology2():
+    network_config = load_net1(download_dir=get_temp_folder())
+
+    net_topo_orig = None
+    with ScenarioSimulator(scenario_config=network_config) as sim:
+        net_topo_orig = sim.get_topology(include_demand_patterns=True)
+
+    f = os.path.join(get_temp_folder(), "my_net1.epytflow_topology")
+    net_topo_orig.save_to_file(f)
+
+    net_topo_restored = NetworkTopology.load_from_file(f)
+    assert net_topo_orig == net_topo_restored
+
+
+def test_topology3():
+    network_config = load_net1(download_dir=get_temp_folder())
+
+    net_topo_orig = None
+    with ScenarioSimulator(scenario_config=network_config) as sim:
+        net_topo_orig = sim.get_topology(include_demand_patterns=False)
+
+    f = os.path.join(get_temp_folder(), "my_net1.epytflow_topology")
+    net_topo_orig.save_to_file(f)
+
+    net_topo_restored = NetworkTopology.load_from_file(f)
+    assert net_topo_orig == net_topo_restored
+
+
+def test_topology4():
+    network_config = load_net1(download_dir=get_temp_folder())
+
+    with ScenarioSimulator(scenario_config=network_config) as sim:
+        f = os.path.join(get_temp_folder(), "my_net1-topo.inp")
+        sim.get_topology(include_demand_patterns=True).to_inp_file(f)
+
+    with ScenarioSimulator(scenario_config=network_config) as sim:
+        f = os.path.join(get_temp_folder(), "my_net1-nodemands.inp")
+        sim.get_topology(include_demand_patterns=False).to_inp_file(f)
 
 
 def test_sparse_matrix():
