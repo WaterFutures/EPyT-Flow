@@ -125,7 +125,7 @@ def load_data(download_dir: str = None, return_X_y: bool = False,
         del df_train_1["DATETIME"]
         X_train_1 = df_train_1.to_numpy()
 
-        y_train_2 = df_train_2[" ATT_FLAG"].to_numpy()
+        y_train_2 = df_train_2[" ATT_FLAG"].to_numpy(copy=True)
         idx = np.argwhere(y_train_2 == -999)
         y_train_2[idx] = 0
         y_train_2 = y_train_2.astype(np.int8)
