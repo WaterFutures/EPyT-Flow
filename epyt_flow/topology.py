@@ -755,8 +755,8 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
         # Nodes
         node_data = {"id": [], "type": [], "elevation": [], "geometry": []}
-        tank_data = {"id": [], "volume": [], "max_level": [], "min_level": [], "mixing_fraction": [],
-                     "elevation": [], "diameter": [], "geometry": []}
+        tank_data = {"id": [], "min_vol": [], "max_level": [], "min_level": [], "mixing_fraction": [],
+                     "elevation": [], "diameter": [], "geometry": [], "init_vol": [], "mixing_model": []}
         reservoir_data = {"id": [], "elevation": [], "geometry": []}
         for node_id in self.get_all_nodes():
             node_info = self.get_node_info(node_id)
@@ -770,9 +770,10 @@ class NetworkTopology(nx.Graph, JsonSerializable):
                 tank_data["id"].append(node_id)
                 tank_data["elevation"].append(node_info["elevation"])
                 tank_data["diameter"].append(node_info["diameter"])
-                tank_data["volume"].append(node_info["volume"])
                 tank_data["max_level"].append(node_info["max_level"])
                 tank_data["min_level"].append(node_info["min_level"])
+                tank_data["min_vol"].append(node_info["min_vol"])
+                tank_data["init_vol"].append(node_info["init_vol"])
                 tank_data["mixing_fraction"].append(node_info["mixing_fraction"])
                 tank_data["mixing_model"].append(node_info["mixing_model"])
                 tank_data["geometry"].append(Point(node_info["coord"]))
