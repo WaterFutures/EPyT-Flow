@@ -389,7 +389,7 @@ The units of measurements are stored in the sensor configuration:
 
 For a full list of supported measurement units and how they releate to each other
 can be found in the
-`EPANET documentation <https://epanet22.readthedocs.io/en/latest/back_matter.html#>`_.
+`EPANET documentation <http://wateranalytics.org/EPANET/_units.html>`_.
 
 The units can be changed (i.e. measurements are converted) by calling the function
 :func:`~epyt_flow.simulation.scada.scada_data.ScadaData.convert_units` of a
