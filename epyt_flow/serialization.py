@@ -5,7 +5,6 @@ from typing import Any, Union
 from abc import abstractmethod, ABC
 from io import BufferedIOBase
 import pathlib
-import importlib
 import json
 import gzip
 import umsgpack
@@ -55,6 +54,10 @@ COMPLEX_CONTROL_ACTION_ID               = 35
 COLOR_SCHEMES_ID                        = 36
 
 
+JSON_SERIALIZABLE = {
+}
+
+
 def my_packb(data: Any) -> bytes:
     """
     Overriden `umsgpack.packb <https://msgpack-python.readthedocs.io/en/latest/api.html#msgpack.packb>`_
@@ -86,6 +89,9 @@ def serializable(my_id: int, my_file_ext: str) -> Any:
         File extension.
     """
     def wrapper(my_class):
+        if issubclass(my_class, JsonSerializable):
+            JSON_SERIALIZABLE[(my_class.__module__, my_class.__name__)] = my_class
+
         @staticmethod
         def unpackb(data: bytes) -> Any:
             return my_class(**my_unpackb(data))
@@ -274,18 +280,22 @@ def my_load_from_json(data: str) -> Any:
     `Any`
         Deserialized object.
     """
-    def __object_hook(obj: dict) -> dict:
-        if "__type__" in obj:
-            module_name, class_name = obj["__type__"]
-            cls = getattr(importlib.import_module(module_name), class_name)
-            del obj["__type__"]
+    def __object_hook(obj: dict):
+        t = obj.get("__type__")
+        if not t:
+            return obj
 
-            for attr in obj:
-                if isinstance(attr, dict):
-                    obj[attr] = __object_hook(obj[attr])
+        if not (isinstance(t, (list, tuple)) and len(t) == 2 and
+                all(isinstance(x, str) for x in t)):
+            raise ValueError("Invalid __type__")
 
-            return cls(**obj)
-        return obj
+        key = (t[0], t[1])
+        cls = JSON_SERIALIZABLE.get(key)
+        if cls is None:
+            raise ValueError(f"Type not allowed: {key}")
+
+        args = {k: v for k, v in obj.items() if k != "__type__"}
+        return cls(**args)
 
     return json.loads(data, object_hook=__object_hook)
 
