@@ -150,7 +150,7 @@ class SpeciesInjectionEvent(SystemEvent, JsonSerializable):
 
         # Create final injection strength pattern
         total_sim_duration = self._epanet_api.get_simulation_duration()
-        time_step = self._epanet_api.get_hydraulic_time_step()
+        time_step = self._epanet_api.gettimeparam(EpanetConstants.EN_PATTERNSTEP)
 
         pattern = np.zeros(math.ceil(total_sim_duration / time_step))
 

@@ -547,6 +547,7 @@ def load_scenarios(scenarios_id: list[int], use_net1: bool = True,
             with ScenarioSimulator(f_inp_in=network_config.f_inp_in) as wdn:
                 wdn.set_general_parameters(**general_params)
                 wdn.epanet_api.set_hydraulic_time_step(hydraulic_time_step)
+                wdn.epanet_api.settimeparam(EpanetConstants.EN_PATTERNSTEP, hydraulic_time_step)
 
                 for idx in range(1, wdn.epanet_api.getcount(EpanetConstants.EN_PATCOUNT) + 1):
                     wdn.epanet_api.deletepattern(idx)
