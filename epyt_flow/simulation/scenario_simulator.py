@@ -1056,11 +1056,12 @@ class ScenarioSimulator():
         # Build graph describing the topology
         curves = {}
         def __add_curve(curve_id: str) -> None:
-            curve_type = self.epanet_api.getcurvetype(pump_hcurve_idx)
-            len = self.epanet_api.getcurvelen(pump_hcurve_idx)
+            curve_idx = self.epanet_api.getcurveindex(curve_id)
+            curve_type = self.epanet_api.getcurvetype(curve_idx)
+            len = self.epanet_api.getcurvelen(curve_idx)
             curve_data = []
             for i in range(len):
-                x, y = self.epanet_api.getcurvevalue(pump_hcurve_idx, i+1)
+                x, y = self.epanet_api.getcurvevalue(curve_idx, i+1)
                 curve_data.append((x, y))
             curves[curve_id] = (curve_type, curve_data)
 
