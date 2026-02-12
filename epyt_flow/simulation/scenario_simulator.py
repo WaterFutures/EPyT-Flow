@@ -3085,6 +3085,13 @@ class ScenarioSimulator():
         self._adapt_to_network_changes()
 
         if flow_units_id is not None:
+            raise RuntimeWarning(
+                f"IMPORTANT: Changing the unit system of a network "
+                f"before simulation may lead to conversion errors. "
+                f"While the root of this bug is being tracked, a safer "
+                f"way to convert units (if necessary) is to call "
+                f"scada_data.convert_units after the simulation"
+            )
             if flow_units_id == EpanetConstants.EN_CFS:
                 self.epanet_api.setflowunits(flow_units_id)
             elif flow_units_id == EpanetConstants.EN_GPM:
