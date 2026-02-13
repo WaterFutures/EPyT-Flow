@@ -350,18 +350,18 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             elif curve_type == EpanetConstants.EN_PUMP_CURVE:
                 x_conv_factor = flow_convert_factor
                 if units == UNITS_USCUSTOM:
-                    y_conv_factor = 1. / psi_to_meter
+                    y_conv_factor = 1. / feet_to_meter
                 else:
-                    y_conv_factor = psi_to_meter
+                    y_conv_factor = feet_to_meter
             elif curve_type == EpanetConstants.EN_EFFIC_CURVE:
                 x_conv_factor = flow_convert_factor
                 y_conv_factor = 1.
             elif curve_type == EpanetConstants.EN_HLOSS_CURVE:
                 x_conv_factor = flow_convert_factor
                 if units == UNITS_USCUSTOM:
-                    y_conv_factor = 1. / psi_to_meter
+                    y_conv_factor = 1. / feet_to_meter
                 else:
-                    y_conv_factor = psi_to_meter
+                    y_conv_factor = feet_to_meter
             else:
                 warnings.warn("Unit conversion: Curve type is not supported")
 
