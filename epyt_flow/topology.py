@@ -13,6 +13,7 @@ from shapely.geometry import Point, LineString
 from epanet_plus import EpanetConstants, EPyT
 
 from .serialization import serializable, JsonSerializable, NETWORK_TOPOLOGY_ID
+from .utils import _get_flow_convert_factor
 
 
 UNITS_USCUSTOM = 0
@@ -285,6 +286,7 @@ class NetworkTopology(nx.Graph, JsonSerializable):
             return deepcopy(self)
 
         # Get all data and convert units
+        psi_to_meter = 0.70306957964
         inch_to_millimeter = 25.4
         feet_to_meter = 0.3048
         cubicmeter_to_cubicfeet = 35.3146667215
@@ -333,8 +335,44 @@ class NetworkTopology(nx.Graph, JsonSerializable):
 
             links.append((link_id, link_nodes, link_info))
 
+        curves = {}
+        flow_convert_factor = _get_flow_convert_factor(units, self.__units)
+        for curve_id, (curve_type, curve_data) in self.__curves.items():
+            x_conv_factor, y_conv_factor = None, None
+
+            if curve_type == EpanetConstants.EN_VOLUME_CURVE:
+                if units == UNITS_USCUSTOM:
+                    x_conv_factor = 1. / feet_to_meter
+                    y_conv_factor = 1. / cubicmeter_to_cubicfeet
+                else:
+                    x_conv_factor = feet_to_meter
+                    y_conv_factor = cubicmeter_to_cubicfeet
+            elif curve_type == EpanetConstants.EN_PUMP_CURVE:
+                x_conv_factor = flow_convert_factor
+                if units == UNITS_USCUSTOM:
+                    y_conv_factor = 1. / psi_to_meter
+                else:
+                    y_conv_factor = psi_to_meter
+            elif curve_type == EpanetConstants.EN_EFFIC_CURVE:
+                x_conv_factor = flow_convert_factor
+                y_conv_factor = 1.
+            elif curve_type == EpanetConstants.EN_HLOSS_CURVE:
+                x_conv_factor = flow_convert_factor
+                if units == UNITS_USCUSTOM:
+                    y_conv_factor = 1. / psi_to_meter
+                else:
+                    y_conv_factor = psi_to_meter
+            else:
+                warnings.warn("Unit conversion: Curve type is not supported")
+
+            curve_data_new = []
+            for x, y in curve_data:
+                curve_data_new.append((x * x_conv_factor, y * y_conv_factor))
+
+            curves[curve_id] = (curve_type, curve_data_new)
+
         return NetworkTopology(f_inp=self.name, nodes=nodes, links=links, pumps=self.pumps,
-                               valves=self.valves, units=units, curves=self.__curves,
+                               valves=self.valves, units=units, curves=curves,
                                patterns=self.__patterns)
 
     def get_all_nodes(self) -> list[str]:

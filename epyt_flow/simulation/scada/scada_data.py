@@ -24,7 +24,7 @@ from ..events import SensorFault, SensorReadingAttack, SensorReadingEvent
 from ...uncertainty import SensorNoise
 from ...serialization import serializable, Serializable, SCADA_DATA_ID
 from ...topology import NetworkTopology, UNITS_USCUSTOM, UNITS_SIMETRIC
-from ...utils import plot_timeseries_data
+from ...utils import plot_timeseries_data, _get_flow_convert_factor
 
 
 @serializable(SCADA_DATA_ID, ".epytflow_scada_data")
@@ -698,198 +698,6 @@ class ScadaData(Serializable):
                 raise NotImplementedError(f"Can not convert '{massunit_to_str(old_unit_id)}' to " +
                                           f"'{massunit_to_str(new_unit_id)}'")
 
-        def __get_flow_convert_factor(new_unit_id: int, old_unit: int) -> float:
-            if new_unit_id == EpanetConstants.EN_CFS:
-                if old_unit == EpanetConstants.EN_GPM:
-                    return .0022280093
-                elif old_unit == EpanetConstants.EN_MGD:
-                    return 1.5472286523
-                elif old_unit == EpanetConstants.EN_IMGD:
-                    return 1.8581441347
-                elif old_unit == EpanetConstants.EN_AFD:
-                    return .5041666667
-                elif old_unit == EpanetConstants.EN_LPS:
-                    return .0353146667
-                elif old_unit == EpanetConstants.EN_LPM:
-                    return .0005885778
-                elif old_unit == EpanetConstants.EN_MLD:
-                    return .40873456853575
-                elif old_unit == EpanetConstants.EN_CMH:
-                    return .0098096296
-                elif old_unit == EpanetConstants.EN_CMD:
-                    return .0004087346
-            elif new_unit_id == EpanetConstants.EN_GPM:
-                if old_unit == EpanetConstants.EN_CFS:
-                    return 448.8325660485
-                elif old_unit == EpanetConstants.EN_MGD:
-                    return 694.44444444
-                elif old_unit == EpanetConstants.EN_IMGD:
-                    return 833.99300382
-                elif old_unit == EpanetConstants.EN_AFD:
-                    return 226.28571429
-                elif old_unit == EpanetConstants.EN_LPS:
-                    return 15.850323141
-                elif old_unit == EpanetConstants.EN_LPM:
-                    return .2641720524
-                elif old_unit == EpanetConstants.EN_MLD:
-                    return 183.4528141376
-                elif old_unit == EpanetConstants.EN_CMH:
-                    return 4.4028675393
-                elif old_unit == EpanetConstants.EN_CMD:
-                    return .1834528141
-            elif new_unit_id == EpanetConstants.EN_MGD:
-                if old_unit == EpanetConstants.EN_CFS:
-                    return .6463168831
-                elif old_unit == EpanetConstants.EN_GPM:
-                    return .00144
-                elif old_unit == EpanetConstants.EN_IMGD:
-                    return 1.2009499255
-                elif old_unit == EpanetConstants.EN_AFD:
-                    return 0.3258514286
-                elif old_unit == EpanetConstants.EN_LPS:
-                    return .0228244653
-                elif old_unit == EpanetConstants.EN_LPM:
-                    return .0003804078
-                elif old_unit == EpanetConstants.EN_MLD:
-                    return .26417205124156
-                elif old_unit == EpanetConstants.EN_CMH:
-                    return .0063401293
-                elif old_unit == EpanetConstants.EN_CMD:
-                    return .0002641721
-            elif new_unit_id == EpanetConstants.EN_IMGD:
-                if old_unit == EpanetConstants.EN_CFS:
-                    return .5381713837
-                elif old_unit == EpanetConstants.EN_MGD:
-                    return .8326741846
-                elif old_unit == EpanetConstants.EN_GPM:
-                    return .0011990508
-                elif old_unit == EpanetConstants.EN_AFD:
-                    return .2713280726
-                elif old_unit == EpanetConstants.EN_LPS:
-                    return .0190053431
-                elif old_unit == EpanetConstants.EN_LPM:
-                    return .0003167557
-                elif old_unit == EpanetConstants.EN_MLD:
-                    return .21996924829908776
-                elif old_unit == EpanetConstants.EN_CMH:
-                    return .005279262
-                elif old_unit == EpanetConstants.EN_CMD:
-                    return .0002199692
-            elif new_unit_id == EpanetConstants.EN_AFD:
-                if old_unit == EpanetConstants.EN_CFS:
-                    return 1.9834710744
-                elif old_unit == EpanetConstants.EN_MGD:
-                    return 3.0688832772
-                elif old_unit == EpanetConstants.EN_GPM:
-                    return .0044191919
-                elif old_unit == EpanetConstants.EN_IMGD:
-                    return 3.6855751432
-                elif old_unit == EpanetConstants.EN_LPS:
-                    return .0700456199
-                elif old_unit == EpanetConstants.EN_LPM:
-                    return .001167427
-                elif old_unit == EpanetConstants.EN_MLD:
-                    return .81070995093708
-                elif old_unit == EpanetConstants.EN_CMH:
-                    return .0194571167
-                elif old_unit == EpanetConstants.EN_CMD:
-                    return .0008107132
-            elif new_unit_id == EpanetConstants.EN_LPS:
-                if old_unit == EpanetConstants.EN_CFS:
-                    return 28.316846592
-                elif old_unit == EpanetConstants.EN_MGD:
-                    return 43.812636389
-                elif old_unit == EpanetConstants.EN_IMGD:
-                    return 52.616782407
-                elif old_unit == EpanetConstants.EN_GPM:
-                    return .0630901964
-                elif old_unit == EpanetConstants.EN_AFD:
-                    return 14.276410157
-                elif old_unit == EpanetConstants.EN_LPM:
-                    return .0166666667
-                elif old_unit == EpanetConstants.EN_MLD:
-                    return 11.574074074074
-                elif old_unit == EpanetConstants.EN_CMH:
-                    return .2777777778
-                elif old_unit == EpanetConstants.EN_CMD:
-                    return .0115740741
-            elif new_unit_id == EpanetConstants.EN_LPM:
-                if old_unit == EpanetConstants.EN_CFS:
-                    return 1699.0107955
-                elif old_unit == EpanetConstants.EN_MGD:
-                    return 2628.7581833
-                elif old_unit == EpanetConstants.EN_IMGD:
-                    return 3157.0069444
-                elif old_unit == EpanetConstants.EN_AFD:
-                    return 856.58460941
-                elif old_unit == EpanetConstants.EN_LPS:
-                    return 60
-                elif old_unit == EpanetConstants.EN_GPM:
-                    return 3.785411784
-                elif old_unit == EpanetConstants.EN_MLD:
-                    return 694.44444444443
-                elif old_unit == EpanetConstants.EN_CMH:
-                    return 16.666666667
-                elif old_unit == EpanetConstants.EN_CMD:
-                    return 0.6944444444
-            elif new_unit_id == EpanetConstants.EN_MLD:
-                if old_unit == EpanetConstants.EN_CFS:
-                    return 2.4465755456688
-                elif old_unit == EpanetConstants.EN_MGD:
-                    return 3.7854117999999777
-                elif old_unit == EpanetConstants.EN_IMGD:
-                    return 4.54609
-                elif old_unit == EpanetConstants.EN_AFD:
-                    return 1.2334867714947
-                elif old_unit == EpanetConstants.EN_LPS:
-                    return .0864
-                elif old_unit == EpanetConstants.EN_LPM:
-                    return .00144
-                elif old_unit == EpanetConstants.EN_GPM:
-                    return .00545099296896
-                elif old_unit == EpanetConstants.EN_CMH:
-                    return .024
-                elif old_unit == EpanetConstants.EN_CMD:
-                    return .00099999999999999
-            elif new_unit_id == EpanetConstants.EN_CMH:
-                if old_unit == EpanetConstants.EN_CFS:
-                    return 101.94064773
-                elif old_unit == EpanetConstants.EN_MGD:
-                    return 157.725491
-                elif old_unit == EpanetConstants.EN_IMGD:
-                    return 189.42041667
-                elif old_unit == EpanetConstants.EN_AFD:
-                    return 51.395076564
-                elif old_unit == EpanetConstants.EN_LPS:
-                    return 3.6
-                elif old_unit == EpanetConstants.EN_LPM:
-                    return .06
-                elif old_unit == EpanetConstants.EN_MLD:
-                    return 41.666666666666
-                elif old_unit == EpanetConstants.EN_GPM:
-                    return .227124707
-                elif old_unit == EpanetConstants.EN_CMD:
-                    return 0.0416666667
-            elif new_unit_id == EpanetConstants.EN_CMD:
-                if old_unit == EpanetConstants.EN_CFS:
-                    return 2446.5755455
-                elif old_unit == EpanetConstants.EN_MGD:
-                    return 3785.411784
-                elif old_unit == EpanetConstants.EN_IMGD:
-                    return 4546.09
-                elif old_unit == EpanetConstants.EN_AFD:
-                    return 1233.4818375
-                elif old_unit == EpanetConstants.EN_LPS:
-                    return 86.4
-                elif old_unit == EpanetConstants.EN_LPM:
-                    return 1.44
-                elif old_unit == EpanetConstants.EN_MLD:
-                    return 1000.
-                elif old_unit == EpanetConstants.EN_CMH:
-                    return 24
-                elif old_unit == EpanetConstants.EN_GPM:
-                    return 5.450992969
-
         # Convert units
         attributes = self.get_attributes()
 
@@ -910,7 +718,7 @@ class ScadaData(Serializable):
                               "-- nothing to do!", UserWarning)
             else:
                 # Convert flows and demands
-                convert_factor = __get_flow_convert_factor(flow_unit, old_flow_unit)
+                convert_factor = _get_flow_convert_factor(flow_unit, old_flow_unit)
 
                 flow_data *= convert_factor
                 demand_data *= convert_factor
