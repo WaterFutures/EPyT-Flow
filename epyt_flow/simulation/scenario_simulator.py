@@ -144,7 +144,7 @@ class ScenarioSimulator():
 
         if scenario_config is not None:     # Extract .inp file from NetworkTopology if necessary
             if __file_exists(self.__f_inp_in) is False:
-                network_topo = scenario_config.network_topo
+                network_topo = scenario_config.network_topology
                 if network_topo is not None:
                     warnings.info(".inp file not found -- extracting network data from NetworkTopology")
                     network_topo.to_inp_file(self.__f_inp_in)
