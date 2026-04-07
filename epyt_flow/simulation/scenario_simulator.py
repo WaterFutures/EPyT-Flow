@@ -3023,8 +3023,9 @@ class ScenarioSimulator():
         self._sensor_noise = sensor_noise
 
     def set_general_parameters(self, demand_model: dict = None, simulation_duration: int = None,
-                               hydraulic_time_step: int = None, quality_time_step: int = None,
-                               advanced_quality_time_step: int = None,
+                               hydraulic_time_step: int = None,
+                               pattern_time_step: int = None, pattern_time_start: int = None,
+                               quality_time_step: int = None, advanced_quality_time_step: int = None,
                                reporting_time_step: int = None, reporting_time_start: int = None,
                                flow_units_id: int = None, pressure_units_id: int = None,
                                quality_model: dict = None) -> None:
@@ -3054,13 +3055,23 @@ class ScenarioSimulator():
             Hydraulic time step -- i.e. the interval at which hydraulics are computed.
 
             The default is None.
+        pattern_time_step : `int`, optional
+            Pattern time step -- i.e. the interval at which patterns are applied.
+
+            Must be a multiple of `hydraulic_time_step`.
+
+            The default is None.
+        pattern_time_start : `int`, optional
+            Pattern time start -- i.e. the offset with which patterns are applied.
+
+            The default is None.
         quality_time_step : `int`, optional
             Quality time step -- i.e. the interval at which qualities are computed.
             Should be much smaller than the hydraulic time step!
 
             The default is None.
         advanced_quality_time_step : `ìnt`, optional
-            Time step in the advanced quality simuliation -- i.e. EPANET-MSX simulation.
+            Time step in the advanced quality simulation -- i.e. EPANET-MSX simulation.
             This number specifies the interval at which all species concentrations are.
             Should be much smaller than the hydraulic time step!
 
@@ -3182,6 +3193,20 @@ class ScenarioSimulator():
             if reporting_time_step is None:
                 warnings.warn("No report time steps specified -- using 'hydraulic_time_step'")
                 self.epanet_api.set_reporting_time_step(hydraulic_time_step)
+
+        if pattern_time_step is not None:
+            hydraulic_time_step = self.epanet_api.get_hydraulic_time_step()
+            if not isinstance(pattern_time_step, int) or \
+                    pattern_time_step % hydraulic_time_step != 0:
+                raise ValueError("'pattern_time_step' must be a positive integer " +
+                                 "and a multiple of 'hydraulic_time_step'")
+            self.epanet_api.set_pattern_time_step(pattern_time_step)
+
+        if pattern_time_start is not None:
+            if not isinstance(pattern_time_start, int) or pattern_time_start <= 0:
+                raise ValueError("'pattern_time_start' must be a positive integer specifying " +
+                                 "the time at which pattern starts")
+            self.epanet_api.set_pattern_start_time(pattern_time_start)
 
         if reporting_time_step is not None:
             hydraulic_time_step = self.epanet_api.get_hydraulic_time_step()
