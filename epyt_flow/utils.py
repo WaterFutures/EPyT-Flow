@@ -926,7 +926,7 @@ def plot_timeseries_prediction(y: np.ndarray, y_pred: np.ndarray,
     return ax
 
 
-def robust_download(download_path: str, urls: str or list,
+def robust_download(download_path: str, urls: str | list,
                     verbose: bool = True, timeout: int = 30) -> None:
     """
     Downloads a file from the given urls if it does not already exist in the
@@ -1134,7 +1134,6 @@ def download_from_gdrive_if_necessary(download_path: str, url: str, verbose: boo
                 f_out.write(response.content)
 
 
-# TODO: documentation
 def download_if_necessary(download_path: str, url: str, verbose: bool = True,
                           backup_urls: list[str] = [], timeout: int = 30) -> None:
     """
