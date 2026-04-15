@@ -3818,7 +3818,7 @@ class ScenarioSimulator():
 
     def add_species_injection_source(self, species_id: str, node_id: str, pattern: np.ndarray,
                                      source_type: int, pattern_id: str = None,
-                                     source_strength: int = 1.) -> None:
+                                     source_strength: float = 1.) -> None:
         """
         Adds a new external bulk species injection source at a particular node.
 
@@ -3857,7 +3857,7 @@ class ScenarioSimulator():
             could conflict with existing pattern IDs (in this case, an exception is raised).
 
             The default is None.
-        source_strength : `int`, optional
+        source_strength : `float`, optional
             Injection source strength -- i.e. injection = source_strength * pattern.
 
             The default is 1.
