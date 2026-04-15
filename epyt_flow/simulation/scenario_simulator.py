@@ -3441,7 +3441,7 @@ class ScenarioSimulator():
         pump_idx = self.epanet_api.get_link_idx(pump_id)
         self.epanet_api.setlinkvalue(pump_idx, EpanetConstants.EN_INITSETTING, speed)
 
-    def set_initial_tank_level(self, tank_id, level: int) -> None:
+    def set_initial_tank_level(self, tank_id, level: float) -> None:
         """
         Sets the initial water level of a given tank.
 
@@ -3449,15 +3449,15 @@ class ScenarioSimulator():
         ----------
         tank_id : `str`
             ID of the tank.
-        level : `int`
+        level : `float`
             Initial water level in the tank.
         """
         if not isinstance(tank_id, str):
             raise TypeError(f"'tank_id' must be an instance of 'str' but not of '{type(tank_id)}'")
         if tank_id not in self._sensor_config.tanks:
             raise ValueError("Invalid tank ID '{tank_id}'")
-        if not isinstance(level, int):
-            raise TypeError(f"'level' must be an instance of 'int' but not of '{type(level)}'")
+        if not isinstance(level, float):
+            raise TypeError(f"'level' must be an instance of 'float' but not of '{type(level)}'")
         if level < 0:
             raise ValueError("'level' can not be negative")
 
