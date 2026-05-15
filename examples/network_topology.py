@@ -3,7 +3,7 @@ Example of retrieving the network topology.
 """
 from epyt_flow.data.networks import load_net1
 from epyt_flow.simulation import ScenarioSimulator
-from epyt_flow.topology import unitscategoryid_to_str, UNITS_SIMETRIC, UNITS_USCUSTOM
+from epyt_flow.topology import flowunit_to_str, UNITS_SIMETRIC, UNITS_USCUSTOM
 
 
 if __name__ == "__main__":
@@ -37,8 +37,8 @@ if __name__ == "__main__":
         geo_data = topo.to_gis()
         print(geo_data["nodes"])
 
-        # Which units are used in this NetworkTopology instance?
-        print(unitscategoryid_to_str(topo.units))
+        # Which flow units are used in this NetworkTopology instance?
+        print(flowunit_to_str(topo.flow_units))
 
         # Convert units to SI METRIC -- i.e. pipe diameter in *millimeter*,
         # pipe length in *meter*, node elevation in *meter*, ...
