@@ -2559,7 +2559,7 @@ class ScenarioSimulator():
                 last_error_code = error_code
             quality_node_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_QUALITY),
                                          dtype=float_type).reshape(1, -1)
-            quality_link_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_QUALITY),
+            quality_link_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_LINKQUAL),
                                          dtype=float_type).reshape(1, -1)
 
             # Yield results in a regular time interval only!
@@ -2802,7 +2802,7 @@ class ScenarioSimulator():
                                        dtype=float_type).reshape(1, -1)
                 quality_node_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_QUALITY),
                                              dtype=float_type).reshape(1, -1)
-                quality_link_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_QUALITY),
+                quality_link_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_LINKQUAL),
                                              dtype=float_type).reshape(1, -1)
 
                 tanks_volume_data = None
