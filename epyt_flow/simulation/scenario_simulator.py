@@ -1378,7 +1378,7 @@ class ScenarioSimulator():
             self.epanet_api.add_pattern(demand_pattern_id, demand_pattern.tolist())
         else:
             if demand_pattern is not None:
-                pattern_idx = self.epanet_api.get_node_pattern_idx(demand_pattern_id)
+                pattern_idx = self.epanet_api.getpatternindex(demand_pattern_id)
                 self.epanet_api.set_pattern(pattern_idx, demand_pattern.tolist())
 
         self.epanet_api.setjuncdata(node_idx, self.epanet_api.get_node_elevation(node_idx),
