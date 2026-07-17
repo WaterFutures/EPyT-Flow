@@ -19,7 +19,7 @@ from ..sensor_config import SensorConfig, valid_sensor_types, \
 from ..events import SensorFault, SensorReadingAttack, SensorReadingEvent
 from ...uncertainty import SensorNoise
 from ...serialization import serializable, Serializable, SCADA_DATA_ID
-from ...topology import NetworkTopology, UNITS_USCUSTOM, UNITS_SIMETRIC
+from ...topology import NetworkTopology
 from ...utils import plot_timeseries_data, _get_flow_convert_factor, \
     _get_pressure_convert_factor, is_flowunit_simetric, massunit_to_str, flowunit_to_str,\
     qualityunit_to_str, areaunit_to_str, pressureunit_to_str, \
