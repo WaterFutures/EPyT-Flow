@@ -2557,10 +2557,10 @@ class ScenarioSimulator():
             error_code = self.epanet_api.get_last_error_code()
             if last_error_code == 0:
                 last_error_code = error_code
-            quality_node_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_QUALITY),
-                                         dtype=float_type).reshape(1, -1)
-            quality_link_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_LINKQUAL),
-                                         dtype=float_type).reshape(1, -1)
+            quality_node_data = self.epanet_api.getnodevalues_numpy(EpanetConstants.EN_QUALITY).\
+                astype(float_type).reshape(1, -1)
+            quality_link_data = self.epanet_api.getlinkvalues_numpy(EpanetConstants.EN_LINKQUAL).\
+                astype(float_type).reshape(1, -1)
 
             # Yield results in a regular time interval only!
             if total_time % reporting_time_step == 0 and total_time >= reporting_time_start:
@@ -2794,16 +2794,16 @@ class ScenarioSimulator():
                     last_error_code = error_code
 
                 # Fetch data
-                pressure_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_PRESSURE),
-                                         dtype=float_type).reshape(1, -1)
-                flow_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_FLOW),
-                                     dtype=float_type).reshape(1, -1)
-                demand_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_DEMAND),
-                                       dtype=float_type).reshape(1, -1)
-                quality_node_data = np.array(self.epanet_api.getnodevalues(EpanetConstants.EN_QUALITY),
-                                             dtype=float_type).reshape(1, -1)
-                quality_link_data = np.array(self.epanet_api.getlinkvalues(EpanetConstants.EN_LINKQUAL),
-                                             dtype=float_type).reshape(1, -1)
+                pressure_data = self.epanet_api.getnodevalues_numpy(EpanetConstants.EN_PRESSURE).\
+                    astype(float_type).reshape(1, -1)
+                flow_data = self.epanet_api.getlinkvalues_numpy(EpanetConstants.EN_FLOW).\
+                    astype(float_type).reshape(1, -1)
+                demand_data = self.epanet_api.getnodevalues_numpy(EpanetConstants.EN_DEMAND).\
+                    astype(float_type).reshape(1, -1)
+                quality_node_data = self.epanet_api.getnodevalues_numpy(EpanetConstants.EN_QUALITY).\
+                    astype(float_type).reshape(1, -1)
+                quality_link_data = self.epanet_api.getlinkvalues_numpy(EpanetConstants.EN_LINKQUAL).\
+                    astype(float_type).reshape(1, -1)
 
                 tanks_volume_data = None
                 if len(self.epanet_api.get_all_tanks_idx()) > 0:
