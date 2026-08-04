@@ -152,7 +152,6 @@ class ScenarioSimulator():
                     raise ValueError(".inp file does not exist and 'scenario_config' does not " +
                                      "contain a specification of the network topology")
 
-        from epanet_plus import EPyT   # Workaround: Sphinx autodoc "importlib.import_module TypeError: __mro_entries__"
         self.epanet_api = EPyT(self.__f_inp_in, use_project=self.__f_msx_in is None)
 
         if self.__f_msx_in is not None:
