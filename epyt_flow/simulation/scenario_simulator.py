@@ -106,7 +106,7 @@ class ScenarioSimulator():
                  raise_exception_on_error: bool = False, warn_on_error: bool = True,
                  ignore_error_codes: list[int] = [],
                  rpt_file_out: str = os.path.join(get_temp_folder(),
-                                                  f"{random.randint(0, 1e5)}.rpt")):
+                                                  f"{random.randint(0, int(1e5))}.rpt")):
         if f_msx_in is not None and f_inp_in is None:
             raise ValueError("'f_inp_in' must be set if 'f_msx_in' is set.")
         if f_inp_in is None and scenario_config is None:
