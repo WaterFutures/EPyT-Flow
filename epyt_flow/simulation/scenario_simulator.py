@@ -73,7 +73,12 @@ class ScenarioSimulator():
         However, error codes will still be included in the SCADA data.
 
         The default is [].
+    rpt_file_out : `str`, optional
+        Path to a text file into which EPANET will write its report.
+        If None, the report will be written to the command line.
 
+        The default is a path to temporary file.
+    
     Attributes
     ----------
     epanet_api : :class:`~epyt_flow.simulation.backend.my_epyt.EPyT`
@@ -99,7 +104,9 @@ class ScenarioSimulator():
     def __init__(self, f_inp_in: str = None, f_msx_in: str = None,
                  scenario_config: ScenarioConfig = None, epanet_verbose: bool = False,
                  raise_exception_on_error: bool = False, warn_on_error: bool = True,
-                 ignore_error_codes: list[int] = []):
+                 ignore_error_codes: list[int] = [],
+                 rpt_file_out: str = os.path.join(get_temp_folder(),
+                                                  f"{random.randint(0, 1e5)}.rpt")):
         if f_msx_in is not None and f_inp_in is None:
             raise ValueError("'f_inp_in' must be set if 'f_msx_in' is set.")
         if f_inp_in is None and scenario_config is None:
@@ -122,6 +129,10 @@ class ScenarioSimulator():
         if not isinstance(epanet_verbose, bool):
             raise TypeError("'epanet_verbose' must be an instance of 'bool' " +
                             f"but not of '{type(epanet_verbose)}'")
+        if rpt_file_out is not None:
+            if not isinstance(rpt_file_out, str):
+                raise TypeError("'rpt_file_out' must be an instance of 'str' " +
+                                f"but not of '{type(rpt_file_out)}'")
 
         self.__f_inp_in = f_inp_in if scenario_config is None else scenario_config.f_inp_in
         self.__f_msx_in = f_msx_in if scenario_config is None else scenario_config.f_msx_in
@@ -152,7 +163,8 @@ class ScenarioSimulator():
                     raise ValueError(".inp file does not exist and 'scenario_config' does not " +
                                      "contain a specification of the network topology")
 
-        self.epanet_api = EPyT(self.__f_inp_in, use_project=self.__f_msx_in is None)
+        self.epanet_api = EPyT(self.__f_inp_in, use_project=self.__f_msx_in is None,
+                               rpt_file_out=rpt_file_out)
 
         if self.__f_msx_in is not None:
             self.epanet_api.load_msx_file(self.__f_msx_in)
