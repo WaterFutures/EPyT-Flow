@@ -8,7 +8,6 @@ import numpy as np
 from scipy.sparse import bsr_array
 import matplotlib
 import pandas as pd
-from epanet_plus import EpanetConstants
 
 from ..sensor_config import SensorConfig, valid_sensor_types, \
     SENSOR_TYPE_LINK_FLOW, SENSOR_TYPE_LINK_QUALITY,  SENSOR_TYPE_NODE_DEMAND, \
