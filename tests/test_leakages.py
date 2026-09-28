@@ -86,3 +86,32 @@ def test_custom_leakage_profile():
 
         res = sim.run_simulation()
         res.get_data()
+
+
+def test_leakage_emitter_coefficient():
+    for flow_units, expected_coefficient in [(EpanetConstants.EN_CMH, 93.9297458066044),
+                                             (EpanetConstants.EN_CFS, 0.04725187090647694)]:
+        hanoi_network_config = load_hanoi(download_dir=get_temp_folder(),
+                                          flow_units_id=flow_units)
+        with ScenarioSimulator(scenario_config=hanoi_network_config) as sim:
+            leak_kwargs = {"link_id": None, "node_id": "13", "start_time": 0,
+                           "end_time": 7200}
+            leaks = [
+                (Leakage(diameter=0.1, profile=np.ones(2), **leak_kwargs),
+                 expected_coefficient),
+                (Leakage(area=0.007853981633974483, profile=np.ones(2), **leak_kwargs),
+                 expected_coefficient),
+                (AbruptLeakage(diameter=0.1, **leak_kwargs), expected_coefficient),
+                (IncipientLeakage(diameter=0.1, peak_time=3600, **leak_kwargs),
+                 expected_coefficient),
+                (Leakage(diameter=0.2, profile=np.ones(2), **leak_kwargs),
+                 4. * expected_coefficient),
+            ]
+
+            node_idx = sim.epanet_api.get_node_idx("13")
+            for leak, expected in leaks:
+                sim.add_leakage(leak)
+                leak.apply(0)
+                coefficient = sim.epanet_api.getnodevalue(node_idx,
+                                                          EpanetConstants.EN_EMITTER)
+                assert np.isclose(coefficient, expected)

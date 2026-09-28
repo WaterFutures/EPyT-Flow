@@ -273,8 +273,7 @@ class Leakage(SystemEvent, JsonSerializable):
         self._epanet_api.setnodevalue(self._leaky_node_idx, EpanetConstants.EN_EMITTER, 0.)
 
         # Compute leak emitter coefficient
-        self._leak_emitter_coef = self.compute_leak_emitter_coefficient(
-            self.compute_leak_area(self.area))
+        self._leak_emitter_coef = self.compute_leak_emitter_coefficient(self.area)
 
     def cleanup(self) -> None:
         if self._link_id is not None:
