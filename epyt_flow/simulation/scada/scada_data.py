@@ -1815,6 +1815,8 @@ class ScadaData(Serializable):
 
         self.__sensor_readings_time = np.concatenate(
             (self.__sensor_readings_time, other.sensor_readings_time), axis=0)
+        self.__sensor_readings_time_to_idx = {time: idx for idx, time in
+                                              enumerate(self.__sensor_readings_time)}
 
         self.__warnings_code = np.concatenate((self.__warnings_code, other.warnings_code), axis=0)
 
