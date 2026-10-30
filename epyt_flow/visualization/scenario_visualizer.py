@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import matplotlib as mpl
 import networkx.drawing.nx_pylab as nxp
-from svgpath2mpl import parse_path
+from .svgpath2mpl import parse_path
 
 from ..simulation.scenario_simulator import ScenarioSimulator
 from ..simulation.scada.scada_data import ScadaData
