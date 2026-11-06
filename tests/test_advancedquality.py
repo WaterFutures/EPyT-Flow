@@ -29,6 +29,9 @@ def test_msx_net2cl2():
         # Run entire simulation
         res = sim.run_simulation(verbose=True)
 
+        assert sim.msx_file_parsed_content is not None
+        assert sim.msx_file_options is not None
+
         # Show sensor readings over the entire simulation
         assert res.get_data_bulk_species_node_concentration() is not None
 

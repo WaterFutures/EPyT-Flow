@@ -17,7 +17,7 @@ import math
 import uuid
 import numpy as np
 from tqdm import tqdm
-from epanet_plus import EPyT, EpanetConstants
+from epanet_plus import EPyT, EpanetConstants, msx_parser
 
 from .scenario_config import ScenarioConfig
 from .sensor_config import SensorConfig, \
@@ -136,6 +136,8 @@ class ScenarioSimulator():
 
         self.__f_inp_in = f_inp_in if scenario_config is None else scenario_config.f_inp_in
         self.__f_msx_in = f_msx_in if scenario_config is None else scenario_config.f_msx_in
+        self._msx_file_options = None
+        self._msx_file_parsed_content = None
         self._model_uncertainty = ModelUncertainty()
         self._sensor_noise = None
         self._sensor_config = None
@@ -168,6 +170,11 @@ class ScenarioSimulator():
 
         if self.__f_msx_in is not None:
             self.epanet_api.load_msx_file(self.__f_msx_in)
+            try:
+                self._msx_file_options = self.epanet_api._parse_msx_file()
+                self._msx_file_parsed_content = msx_parser.parse_msx(self.__f_msx_in)
+            except Exception as ex:
+                warnings.warn(str(ex))
 
         # Do not raise exceptions in the case of EPANET warnings and errors
         self.epanet_api.set_error_handling(raise_exception_on_error=raise_exception_on_error,
@@ -272,6 +279,38 @@ class ScenarioSimulator():
         self._adapt_to_network_changes()
 
         return self.__f_msx_in
+
+    @property
+    def msx_file_options(self) -> dict:
+        """
+        Returns the file options of the loaded .msx file.
+        Raises an exception if not .msx file have been loaded.
+
+        Returns
+        -------
+        `dict`
+            MSX File options as strings.
+        """
+        if self._msx_file_options is None:
+            raise ValueError("No .msx file loaded")
+        else:
+            return self._msx_file_options
+
+    @property
+    def msx_file_parsed_content(self) -> dict:
+        """
+        Returns the (symbolic) parsed content of the loaded .msx file.
+        Raises an exception if not .msx file have been loaded.
+
+        Returns
+        -------
+        `dict`
+            Parsed MSX file content -- functions/reactions are represented by lambda functions.
+        """
+        if self._msx_file_parsed_content is None:
+            raise ValueError("No .msx file loaded")
+        else:
+            return self._msx_file_parsed_content
 
     @property
     def model_uncertainty(self) -> ModelUncertainty:

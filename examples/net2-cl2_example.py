@@ -9,6 +9,9 @@ if __name__ == "__main__":
     # Load scenario for chlorine analysis in Net2
     with ScenarioSimulator(f_inp_in="net2-cl2.inp",
                            f_msx_in="net2-cl2.msx") as sim:
+        # Inspect the parsed .msx file
+        print(sim.msx_file_parsed_content)
+
         # Set simulation duration to 5 days
         sim.set_general_parameters(simulation_duration=to_seconds(days=5))
 
