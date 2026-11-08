@@ -3232,22 +3232,10 @@ class ScenarioSimulator():
                                  "the number of seconds to simulate")
             self.epanet_api.set_simulation_duration(simulation_duration)
 
-        if hydraulic_time_step is not None:
-            if not isinstance(hydraulic_time_step, int) or hydraulic_time_step <= 0:
-                raise ValueError("'hydraulic_time_step' must be a positive integer specifying " +
-                                 "the time steps of the hydraulic simulation")
-            if len(self._system_events) != 0:
-                raise RuntimeError("Hydraulic time step cannot be changed after system events " +
-                                   "such as leakages have been added to the scenario")
-            self.epanet_api.set_hydraulic_time_step(hydraulic_time_step)
-            if reporting_time_step is None:
-                warnings.warn("No report time steps specified -- using 'hydraulic_time_step'")
-                self.epanet_api.set_reporting_time_step(hydraulic_time_step)
-
         if pattern_time_step is not None:
-            hydraulic_time_step = self.epanet_api.get_hydraulic_time_step()
+            hydraulic_time_step_ = self.epanet_api.get_hydraulic_time_step() if hydraulic_time_step is None else hydraulic_time_step
             if not isinstance(pattern_time_step, int) or \
-                    pattern_time_step % hydraulic_time_step != 0:
+                    pattern_time_step % hydraulic_time_step_ != 0:
                 raise ValueError("'pattern_time_step' must be a positive integer " +
                                  "and a multiple of 'hydraulic_time_step'")
             self.epanet_api.set_pattern_time_step(pattern_time_step)
@@ -3259,9 +3247,9 @@ class ScenarioSimulator():
             self.epanet_api.set_pattern_start_time(pattern_time_start)
 
         if reporting_time_step is not None:
-            hydraulic_time_step = self.epanet_api.get_hydraulic_time_step()
+            hydraulic_time_step_ = self.epanet_api.get_hydraulic_time_step() if hydraulic_time_step is None else hydraulic_time_step
             if not isinstance(reporting_time_step, int) or \
-                    reporting_time_step % hydraulic_time_step != 0:
+                    reporting_time_step % hydraulic_time_step_ != 0:
                 raise ValueError("'reporting_time_step' must be a positive integer " +
                                  "and a multiple of 'hydraulic_time_step'")
             self.epanet_api.set_reporting_time_step(reporting_time_step)
@@ -3273,11 +3261,24 @@ class ScenarioSimulator():
             self.epanet_api.set_reporting_start_time(reporting_time_start)
 
         if quality_time_step is not None:
+            hydraulic_time_step_ = self.epanet_api.get_hydraulic_time_step() if hydraulic_time_step is None else hydraulic_time_step
             if not isinstance(quality_time_step, int) or quality_time_step <= 0 or \
-                    quality_time_step > self.epanet_api.get_hydraulic_time_step():
+                    quality_time_step > hydraulic_time_step_:
                 raise ValueError("'quality_time_step' must be a positive integer that is not " +
                                  "greater than the hydraulic time step")
             self.epanet_api.set_quality_time_step(quality_time_step)
+
+        if hydraulic_time_step is not None:
+            if not isinstance(hydraulic_time_step, int) or hydraulic_time_step <= 0:
+                raise ValueError("'hydraulic_time_step' must be a positive integer specifying " +
+                                 "the time steps of the hydraulic simulation")
+            if len(self._system_events) != 0:
+                raise RuntimeError("Hydraulic time step cannot be changed after system events " +
+                                   "such as leakages have been added to the scenario")
+            self.epanet_api.set_hydraulic_time_step(hydraulic_time_step)
+            if reporting_time_step is None:
+                warnings.warn("No report time steps specified -- using 'hydraulic_time_step'")
+                self.epanet_api.set_reporting_time_step(hydraulic_time_step)
 
         if advanced_quality_time_step is not None:
             if not isinstance(advanced_quality_time_step, int) or \
