@@ -1,11 +1,13 @@
 """
 Module provides tests to test the `epty_flow.data.benchmarks` module.
 """
+from datetime import datetime
 import numpy as np
 from epyt_flow.data.benchmarks import load_batadal_data
 from epyt_flow.data.benchmarks import load_leakdb_scenarios, load_leakdb_scada_data, \
     load_leakdb_data
-from epyt_flow.data.benchmarks import load_battledim_scenario
+from epyt_flow.data.benchmarks import load_battledim_scenario, compute_battledim_evaluation_score
+from epyt_flow.data.benchmarks.battledim_data import LEAKS_CONFIG_TEST, START_TIME_TEST
 from epyt_flow.data.benchmarks.gecco_water_quality import load_gecco2017_water_quality_data, \
     load_gecco2018_water_quality_data, load_gecco2019_water_quality_data, \
     compute_evaluation_score as gecco_evaluation_score
@@ -88,6 +90,31 @@ def test_battledim():
     eval_scenario = load_battledim_scenario(return_test_scenario=True,
                                             download_dir=get_temp_folder())
     assert eval_scenario is not None
+
+
+def test_battledim_evaluation_score():
+    # One alarm on each leaky pipe at the start of its leak
+    perfect_alarms = []
+    for leak in LEAKS_CONFIG_TEST.splitlines():
+        items = [i.strip() for i in leak.split(",")]
+        start_time = (datetime.strptime(items[1], "%Y-%m-%d %H:%M") - START_TIME_TEST)
+        perfect_alarms.append((items[0], int(start_time.total_seconds())))
+
+    # As in the official PERFECT_TEAM_report.txt: EUR 523,153.82 with 23 true positives
+    score = compute_battledim_evaluation_score(perfect_alarms, test_scenario=True)
+    assert score["true_positives"] == 23 and score["false_positives"] == 0
+    assert abs(score["total_savings"] - 523153.82) < .01
+
+    # Repeated detections are ignored
+    score = compute_battledim_evaluation_score(perfect_alarms + perfect_alarms,
+                                               test_scenario=True)
+    assert score["true_positives"] == 23 and score["false_positives"] == 0
+    assert abs(score["total_savings"] - 523153.82) < .01
+
+    # An alarm more than 300m away from all leaks is a false positive
+    score = compute_battledim_evaluation_score([("p227", 3600)], test_scenario=True)
+    assert score["true_positives"] == 0 and score["false_positives"] == 1
+    assert score["total_savings"] == -500.
 
 
 def test_gecco_water_quality():

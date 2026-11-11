@@ -23,6 +23,7 @@ import os
 import math
 from datetime import datetime
 import functools
+import networkx as nx
 import scipy
 import pandas as pd
 import numpy as np
@@ -137,7 +138,11 @@ def compute_evaluation_score(y_leak_locations_pred: list[tuple[str, int]],
     hydraulic_time_step = to_seconds(minutes=5)
 
     # Get WDN topology and find minimum topological distance (using the pipe lengths)
-    # between all nodes
+    # between all nodes.
+    # As in the official nodeTopologicalDistance.m, links are weighted by their length and links
+    # of zero length (i.e. pumps and valves) are not part of the graph -- MATLAB's graph() drops
+    # zero entries of the adjacency matrix. Nodes that are only connected via a pump or valve
+    # are therefore unreachable from each other (infinite distance).
     f_topology_in = os.path.join(get_temp_folder(), "BattLeDIM", "ltown.epytflow_topology")
     url_topology = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/BattLeDIM/" +\
         "ltown.epytflow_topology"
@@ -145,7 +150,13 @@ def compute_evaluation_score(y_leak_locations_pred: list[tuple[str, int]],
     download_if_necessary(f_topology_in, url_topology, verbose)
     topology = NetworkTopology.load_from_file(f_topology_in)
 
-    all_pairs_shortest_path_length = topology.get_all_pairs_shortest_path_length()
+    pipes_graph = nx.Graph()
+    for link_id, _ in topology.get_all_links():
+        link_info = topology.get_link_info(link_id)
+        if link_info["length"] > 0:
+            node_a, node_b = link_info["nodes"]
+            pipes_graph.add_edge(node_a, node_b, length=link_info["length"])
+    all_pairs_shortest_path_length = dict(nx.shortest_path_length(pipes_graph, weight="length"))
 
     # Load ground truth
     sim_start_time = START_TIME_TEST if test_scenario is True else START_TIME_TRAIN
@@ -168,73 +179,76 @@ def compute_evaluation_score(y_leak_locations_pred: list[tuple[str, int]],
             leak_demand = df_leak_demand[leak.link_id].to_numpy()
             leak_demands[leak.link_id] = leak_demand
 
-    # Evaluate given predictions/alarms
+    def __time_to_step(t: float) -> int:
+        # Time steps of 5 minutes, rounded as in the official time2steps.m
+        return int(np.floor(t / hydraulic_time_step + .5))
+
+    leak_data = []
+    for leak in leakages:
+        leak_data.append((leak.link_id, __time_to_step(leak.start_time),
+                          __time_to_step(leak.end_time)))
+
+    def __pipe_distance(link_id: str, leak_pipe_id: str) -> float:
+        # Distance between the centers of two links, as in the official scoring_function.m:
+        # minimum distance between any of their end nodes plus half of *both* link lengths
+        if link_id == leak_pipe_id:
+            return 0.
+
+        link_info = topology.get_link_info(link_id)
+        leak_link_info = topology.get_link_info(leak_pipe_id)
+
+        dist = min(all_pairs_shortest_path_length.get(node_a, {}).get(node_b, float("inf"))
+                   for node_a in leak_link_info["nodes"] for node_b in link_info["nodes"])
+        return dist + .5 * leak_link_info["length"] + .5 * link_info["length"]
+
+    # Evaluate given predictions/alarms -- as in the official Scoring_Algorithm.m, alarms are
+    # processed in chronological order, alarms before the start of the scenario are ignored,
+    # and each alarm is assigned to the closest successfully detected leak that has not been
+    # detected before. An alarm whose successfully detected leaks have all been detected
+    # already is a repeated detection: it neither counts as true positive nor as false positive
+    # and does not affect the savings.
     total_savings = 0
     true_positives = 0
     false_positives = 0
     detected_leaks = []
 
-    leak_data = []
-    for leak in leakages:
-        leak_data.append((leak.link_id, leak.start_time, leak.end_time))
+    alarms = sorted([(pipe_id, __time_to_step(start_time))
+                     for pipe_id, start_time in y_leak_locations_pred],
+                    key=lambda alarm: alarm[1])
+    for pipe_id, alarm_step in alarms:
+        if alarm_step < 0:
+            continue
 
-    def __find_closest_leaky_pipe(link_id) -> tuple[str, float, int]:
-        closest_leaky_pipe_id = None
-        closest_dist = float("inf")
-        closest_start_time = None
-        closest_end_time = None
+        # Find all leaks that are successfully detected by this alarm --
+        # i.e. leak is active and the leaky pipe is not more than dist_max away
+        successful_detections = []
+        for leak_pipe_id, leak_start_step, leak_end_step in leak_data:
+            if leak_start_step <= alarm_step <= leak_end_step:
+                dist = __pipe_distance(pipe_id, leak_pipe_id)
+                if dist <= dist_max:
+                    successful_detections.append((dist, leak_pipe_id))
 
-        node_a, node_b = topology.get_link_info(link_id)["nodes"]
-
-        for leak_pipe_id, start_time_leak, end_time_leak in leak_data:
-            link_info = topology.get_link_info(leak_pipe_id)
-            end_node_a, end_node_b = link_info["nodes"]
-            link_length = link_info["length"]
-
-            dists = []
-            dists.append(all_pairs_shortest_path_length[node_a][end_node_a] + .5 * link_length)
-            dists.append(all_pairs_shortest_path_length[node_a][end_node_b] + .5 * link_length)
-            dists.append(all_pairs_shortest_path_length[node_b][end_node_a] + .5 * link_length)
-            dists.append(all_pairs_shortest_path_length[node_b][end_node_b] + .5 * link_length)
-            if min(dists) < closest_dist:
-                closest_dist = min(dists)
-                closest_leaky_pipe_id = leak_pipe_id
-                closest_start_time = start_time_leak
-                closest_end_time = end_time_leak
-
-        return closest_leaky_pipe_id, closest_dist, closest_start_time, closest_end_time
-
-    for pipe_id, start_time in y_leak_locations_pred:
-        # Check if leakages was found and if so, how far away it is from the ground truth
-        leaky_pipe_dist = None
-        leaky_pipe = None
-        if any(pipe_id == leaky_pipe_id and start_time >= start_time_leak and
-               start_time <= end_time_leak and
-               pipe_id not in detected_leaks
-               for leaky_pipe_id, start_time_leak, end_time_leak in leak_data):
-            leaky_pipe_dist = 0
-            leaky_pipe = pipe_id
-        else:
-            closest_leaky_pipe_id, dist, start_time_leak, end_time_leak = \
-                __find_closest_leaky_pipe(pipe_id)
-            if start_time >= start_time_leak and start_time <= end_time_leak:
-                leaky_pipe_dist = dist
-                leaky_pipe = closest_leaky_pipe_id
-
-        # Compute score of current alarm
-        if leaky_pipe is not None:
-            detected_leaks.append(leaky_pipe)
-            true_positives += 1
-
-            water_saved = 0
-            if leaky_pipe in leak_demands:
-                leak_demand = leak_demands[leaky_pipe]
-                start_time_idx = math.ceil(start_time / hydraulic_time_step)
-                water_saved = np.sum(leak_demand[start_time_idx:])
-            total_savings += water_saved * cost_water - (leaky_pipe_dist / dist_max) * cost_crew
-        else:
+        if len(successful_detections) == 0:
             false_positives += 1
             total_savings += -1. * cost_crew
+            continue
+
+        new_detections = [(dist, leak_pipe_id) for dist, leak_pipe_id in successful_detections
+                          if leak_pipe_id not in detected_leaks]
+        if len(new_detections) == 0:    # Repeated detection
+            continue
+
+        leaky_pipe_dist, leaky_pipe = min(new_detections, key=lambda detection: detection[0])
+        detected_leaks.append(leaky_pipe)
+        true_positives += 1
+
+        water_saved = 0
+        if leaky_pipe in leak_demands:
+            # Leak demands are in m3/h at 5 minute time steps -- the official implementation
+            # sums the time series from (1-based) index max(alarm_step, 1) on and divides by 12
+            leak_demand = leak_demands[leaky_pipe]
+            water_saved = np.sum(leak_demand[max(alarm_step, 1) - 1:]) / 12.
+        total_savings += water_saved * cost_water - (leaky_pipe_dist / dist_max) * cost_crew
 
     # Compute final scores
     false_negatives = n_leakages - true_positives
