@@ -33,8 +33,7 @@ from .battledim_data import START_TIME_TEST, START_TIME_TRAIN, LEAKS_CONFIG_TEST
     LEAKS_CONFIG_TRAIN
 from ..networks import load_ltown
 from ...simulation.events import AbruptLeakage, IncipientLeakage, Leakage
-from ...simulation import ScenarioConfig, EpanetConstants
-from ...topology import NetworkTopology
+from ...simulation import ScenarioConfig, ScenarioSimulator, EpanetConstants
 from ...simulation.scada import ScadaData
 from ...utils import get_temp_folder, to_seconds, create_path_if_not_exist, download_if_necessary
 
@@ -143,12 +142,12 @@ def compute_evaluation_score(y_leak_locations_pred: list[tuple[str, int]],
     # of zero length (i.e. pumps and valves) are not part of the graph -- MATLAB's graph() drops
     # zero entries of the adjacency matrix. Nodes that are only connected via a pump or valve
     # are therefore unreachable from each other (infinite distance).
-    f_topology_in = os.path.join(get_temp_folder(), "BattLeDIM", "ltown.epytflow_topology")
-    url_topology = "https://filedn.com/lumBFq2P9S74PNoLPWtzxG4/EPyT-Flow/BattLeDIM/" +\
-        "ltown.epytflow_topology"
-
-    download_if_necessary(f_topology_in, url_topology, verbose)
-    topology = NetworkTopology.load_from_file(f_topology_in)
+    # The topology is built at runtime from the L-TOWN.inp of the BattLeDIM data set
+    # (Zenodo record 4017659) -- i.e. the nominal model used by the official scoring algorithm.
+    ltown_config = load_ltown(download_dir=os.path.join(get_temp_folder(), "BattLeDIM"),
+                              verbose=verbose)
+    with ScenarioSimulator(scenario_config=ltown_config) as sim:
+        topology = sim.get_topology()
 
     pipes_graph = nx.Graph()
     for link_id, _ in topology.get_all_links():
