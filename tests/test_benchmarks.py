@@ -2,10 +2,12 @@
 Module provides tests to test the `epty_flow.data.benchmarks` module.
 """
 from datetime import datetime
+import json
 import numpy as np
 from epyt_flow.data.benchmarks import load_batadal_data
 from epyt_flow.data.benchmarks import load_leakdb_scenarios, load_leakdb_scada_data, \
-    load_leakdb_data
+    load_leakdb_data, compute_leakdb_evaluation_score
+from epyt_flow.data.benchmarks.leakdb_data import NET1_LEAKAGES
 from epyt_flow.data.benchmarks import load_battledim_scenario, compute_battledim_evaluation_score
 from epyt_flow.data.benchmarks.battledim_data import LEAKS_CONFIG_TEST, START_TIME_TEST
 from epyt_flow.data.benchmarks.gecco_water_quality import load_gecco2017_water_quality_data, \
@@ -80,6 +82,54 @@ def test_leakdb():
                             download_dir=get_temp_folder(),
                             return_features_desc=True, return_leak_locations=True)
     assert data is not None
+
+
+def test_leakdb_evaluation_score():
+    # Expected values as computed by the official scoring_algorithm.m.
+    # Scenario 3 has two overlapping leaks (counted as one), scenario 9 has two leaks,
+    # the second one lasting only 4 time steps.
+    scenarios_id = [1, 2, 3, 5, 6, 9]
+    n_time_steps = 17520
+    leaks_info = json.loads(NET1_LEAKAGES)
+
+    y_true = []
+    y_burst = []
+    for s_id in scenarios_id:
+        y = np.zeros(n_time_steps)
+        y_b = np.zeros(n_time_steps)
+        for leak in leaks_info[str(s_id)]:
+            t_start = int(leak["leak_start_time"])
+            y[t_start:int(np.ceil(leak["leak_end_time"]))] = 1
+            y_b[t_start:t_start + 10] = 1
+        y_true.append(y)
+        y_burst.append(y_b)
+
+    # Perfect detector -- the 4 time steps long leak is not detected because only 4 of the
+    # 14 time steps in its detection window are alarms
+    score = compute_leakdb_evaluation_score(scenarios_id, True, y_true)
+    assert score["f1_score"] == 1.
+    assert score["true_positive_rate"] == 1.
+    assert score["true_negative_rate"] == 1.
+    assert abs(score["early_detection_score"] - 6. / 7.) < 1e-10
+
+    # Detector that is delayed by 5 time steps
+    y_delayed = [np.concatenate((np.zeros(5), y[:-5])) for y in y_true]
+    score = compute_leakdb_evaluation_score(scenarios_id, True, y_delayed)
+    assert abs(score["f1_score"] - 0.9985504774897682) < 1e-10
+    assert abs(score["true_negative_rate"] - 0.9995836598746082) < 1e-10
+    assert abs(score["early_detection_score"] - 0.8511361425430957) < 1e-10
+
+    # Alarms only in the first 10 time steps of each leak
+    score = compute_leakdb_evaluation_score(scenarios_id, True, y_burst)
+    assert abs(score["f1_score"] - 0.00628823929299796) < 1e-10
+    assert score["early_detection_score"] == 0.
+
+    # Alarm in every time step
+    score = compute_leakdb_evaluation_score(scenarios_id, True,
+                                            [np.ones(n_time_steps) for _ in scenarios_id])
+    assert score["true_positive_rate"] == 1.
+    assert score["true_negative_rate"] == 0.
+    assert score["early_detection_score"] == 1.
 
 
 def test_battledim():

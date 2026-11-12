@@ -63,7 +63,7 @@ def true_negative_rate(y_pred: np.ndarray, y: np.ndarray) -> float:
         raise ValueError("'y_pred' must be a 1d array")
     if len(y.shape) > 1:
         raise ValueError("'y' must be a 1d array")
-    if set(np.unique(y_pred)) != set([0, 1]):
+    if not set(np.unique(y_pred)).issubset({0, 1}):
         raise ValueError("Labels must be either '0' or '1'")
 
     tn = np.sum((y == 0) & (y_pred == 0))
@@ -126,6 +126,33 @@ def compute_evaluation_score(scenarios_id: list[int], use_net1: bool,
     """
     Evaluates the predictions (leakage detection) for a list of given scenarios.
 
+    Follows the official MATLAB implementation
+    (`scoring_algorithm.m <https://github.com/KIOS-Research/LeakDB/blob/master/CCWI-WDSA2018/Scoring%20Function/scoring_algorithm.m>`_),
+    except that all scores are returned as fractions instead of percentages:
+
+        - The f1-score, true positive rate, and true negative rate are computed over the time
+          steps of all scenarios together.
+        - Early detection score: For each leak, the detection window spans the leak plus
+          10 time steps afterwards (`tw` is the length of this window minus one).
+          Let `Dt` be the index of the first alarm in the window (0 if the alarm is raised in the
+          first time step of the leak). The leak scores :math:`2 / (1 + e^{(5 / tw) \\cdot Dt})`
+          if more than 75% of the time steps from `Dt` to the end of the window are alarms,
+          and 0 otherwise. The early detection score is the sum of these scores divided by the
+          number of leaks.
+
+    Note that the following behaviours of the official implementation are reproduced:
+
+        - Leaks are found from the transitions of the ground truth labels, i.e. overlapping
+          leaks count as one leak.
+        - If a leak ends less than 10 time steps before the end of the time series, the 10
+          extra time steps are reduced to the remaining number of time steps -- this reduced
+          number is then also used for all following leaks and scenarios.
+        - The early detection score does not penalize false alarms, e.g. raising an alarm in
+          every time step yields an early detection score of 1.
+
+    Unlike the official implementation, a leak that starts in the first or ends in the last
+    time step of a scenario is handled as well.
+
     Parameters
     ----------
     scenarios_id : `list[int]`
@@ -162,40 +189,44 @@ def compute_evaluation_score(scenarios_id: list[int], use_net1: bool,
         if len(y) != len(y_pred_labels_per_scenario[i]):
             raise ValueError("A prediction must be provided for each time step -- " +
                              f"mismatch for scenario {i}, expected {len(y)} but got " +
-                             f"{y_pred_labels_per_scenario[i]}")
+                             f"{len(y_pred_labels_per_scenario[i])}")
         y_true.append(y)
 
     y_true = np.stack(y_true, axis=0)
     y_pred = np.stack(y_pred_labels_per_scenario, axis=0)
 
-    # Evaluate predictions
-    f1 = f1_score(y_true, y_pred)
-    tpr = true_positive_rate(y_true, y_pred)
-    tnr = true_negative_rate(y_pred, y_true)
+    # Evaluate predictions -- over all time steps of all scenarios
+    f1 = f1_score(y_true.flatten(), y_pred.flatten())
+    tpr = true_positive_rate(y_true.flatten(), y_pred.flatten())
+    tnr = true_negative_rate(y_pred.flatten(), y_true.flatten())
 
-    early_detection_score = 0
-    normalizing = []
+    # Early detection score
     n_time_steps_tolerance = 10
     detection_threshold = .75
-    for i, s_id in enumerate(scenarios_id):
-        y_pred_i = y_pred_labels_per_scenario[i]
-        leaks_time_window = __get_leak_time_windows(s_id, leaks_info)
+    n_time_steps = y_true.shape[1]
+    scores = []
+    for y_true_i, y_pred_i in zip(y_true, y_pred):
+        changes = np.diff(np.concatenate(([0], y_true_i, [0])))
+        leaks_start = np.flatnonzero(changes == 1)     # First time step of each leak
+        leaks_end = np.flatnonzero(changes == -1) - 1  # Last time step of each leak
 
-        scores = []
-        for t0, _ in leaks_time_window:
-            normalizing.append(1.)
+        for t_start, t_end in zip(leaks_start, leaks_end):
+            if t_end + 1 + n_time_steps_tolerance > n_time_steps:
+                n_time_steps_tolerance = n_time_steps - (t_end + 1)
+            tw = t_end - t_start + n_time_steps_tolerance
 
-            y_pred_window = y_pred_i[t0:t0+n_time_steps_tolerance]
-            if 1 in y_pred_window and \
-                    np.sum(y_pred_window) / len(y_pred_window) > detection_threshold:
-                t_idx = np.argwhere(y_pred_window)[0] + 1
-                scores.append(2. / (1 + np.exp((5. / n_time_steps_tolerance) * t_idx)))
+            y_pred_window = y_pred_i[t_start:t_start + tw + 1]
+            alarms = np.flatnonzero(y_pred_window == 1)
+            if len(alarms) != 0 and \
+                    np.mean(y_pred_window[alarms[0]:]) > detection_threshold:
+                if alarms[0] == 0:
+                    scores.append(1.)
+                else:
+                    scores.append(2. / (1. + np.exp((5. / tw) * alarms[0])))
             else:
                 scores.append(0.)
 
-        early_detection_score += np.sum(scores)
-
-    early_detection_score = early_detection_score / np.sum(normalizing)
+    early_detection_score = np.sum(scores) / len(scores) if len(scores) != 0 else np.nan
 
     return {"f1_score": f1, "true_positive_rate": tpr,
             "true_negative_rate": tnr, "early_detection_score": early_detection_score}
