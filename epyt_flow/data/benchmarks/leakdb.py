@@ -130,25 +130,14 @@ def compute_evaluation_score(scenarios_id: list[int], use_net1: bool,
     (`scoring_algorithm.m <https://github.com/KIOS-Research/LeakDB/blob/master/CCWI-WDSA2018/Scoring%20Function/scoring_algorithm.m>`_),
     except that all scores are returned as fractions instead of percentages:
 
-        - The f1-score, true positive rate, and true negative rate are computed over the time
-          steps of all scenarios together.
-        - Early detection score: For each leak, the detection window spans the leak plus
-          10 time steps afterwards (`tw` is the length of this window minus one).
-          Let `Dt` be the index of the first alarm in the window (0 if the alarm is raised in the
-          first time step of the leak). The leak scores :math:`2 / (1 + e^{(5 / tw) \\cdot Dt})`
-          if more than 75% of the time steps from `Dt` to the end of the window are alarms,
-          and 0 otherwise. The early detection score is the sum of these scores divided by the
-          number of leaks.
+        - The f1-score, true positive rate, and true negative rate are computed over the time steps of all scenarios together.
+        - Early detection score: For each leak, the detection window spans the leak plus 10 time steps afterwards (`tw` is the length of this window minus one). Let `Dt` be the index of the first alarm in the window (0 if the alarm is raised in the first time step of the leak). The leak scores :math:`2 / (1 + e^{(5 / tw) \\cdot Dt})` if more than 75% of the time steps from `Dt` to the end of the window are alarms, and 0 otherwise. The early detection score is the sum of these scores divided by the number of leaks.
 
     Note that the following behaviours of the official implementation are reproduced:
 
-        - Leaks are found from the transitions of the ground truth labels, i.e. overlapping
-          leaks count as one leak.
-        - If a leak ends less than 10 time steps before the end of the time series, the 10
-          extra time steps are reduced to the remaining number of time steps -- this reduced
-          number is then also used for all following leaks and scenarios.
-        - The early detection score does not penalize false alarms, e.g. raising an alarm in
-          every time step yields an early detection score of 1.
+        - Leaks are found from the transitions of the ground truth labels, i.e. overlapping leaks count as one leak.
+        - If a leak ends less than 10 time steps before the end of the time series, the 10 extra time steps are reduced to the remaining number of time steps -- this reduced number is then also used for all following leaks and scenarios.
+        - The early detection score does not penalize false alarms, e.g. raising an alarm in every time step yields an early detection score of 1.
 
     Unlike the official implementation, a leak that starts in the first or ends in the last
     time step of a scenario is handled as well.
