@@ -81,11 +81,11 @@ class RestApiService():
         self.app.add_route("/scenario/{scenario_id}/simulation",
                            ScenarioSimulationHandler(scenario_mgr=self.scenario_mgr,
                                                      scada_data_mgr=self.scada_data_mgr))
-        self.app.add_route("/scenario/{scenario_id}/simulation/advanced_quality",
+        self.app.add_route("/scenario/{scenario_id}/simulation/basic_quality",
                            ScenarioBasicQualitySimulationHandler(scenario_mgr=self.scenario_mgr,
                                                                  scada_data_mgr=
                                                                  self.scada_data_mgr))
-        self.app.add_route("/scenario/{scenario_id}/simulation/basic_quality",
+        self.app.add_route("/scenario/{scenario_id}/simulation/advanced_quality",
                            ScenarioAdvancedQualitySimulationHandler(scenario_mgr=self.scenario_mgr,
                                                                     scada_data_mgr=
                                                                     self.scada_data_mgr))
