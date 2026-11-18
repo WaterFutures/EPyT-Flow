@@ -5,9 +5,17 @@ REST API
 ********
 
 EPyT-Flow comes with a REST API for supporting the integration into other projects
-such as web applications. The REST server is based on `Falcon <https://falconframework.org/>`_
+such as web applications.
+The REST server is based on `Falcon <https://falconframework.org/>`_
 and is implemented in the class :class:`~epyt_flow.rest_api.server.RestApiService` -- it runs on port
-*8080* as a default. It provides the following methods:
+*8080* as a default.
+
+.. note::
+
+    The REST API is unauthenticated! However, you can extend :class:`~epyt_flow.rest_api.server.RestApiService` by
+    middleware layers for adding an authentication layer (e.g. `falcon-auth2 <https://github.com/CaselIT/falcon-auth2>`_).
+
+The REST API provides the following methods:
 
 +-----------+-------------------------------------------------------+----------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------+
 | Method    | URL                                                   | Implementation                                                                                     | Description                                                                                         |
