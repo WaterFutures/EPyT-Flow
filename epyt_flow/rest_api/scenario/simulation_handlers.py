@@ -1,11 +1,14 @@
 """
 This module provides REST API handlers concerning the simulation of scenarios.
 """
+import os
 import warnings
 import falcon
+from pathlib import Path
 
 from .handlers import ScenarioBaseHandler
 from ..scada_data.handlers import ScadaDataManager
+from ...utils import get_temp_folder
 
 
 class ScenarioSimulationHandler(ScenarioBaseHandler):
@@ -48,6 +51,12 @@ class ScenarioSimulationHandler(ScenarioBaseHandler):
             params = self.load_json_data_from_request(req)
 
             my_scenario = self.scenario_mgr.get(scenario_id)
+
+            if "hyd_export" in params:  # Security measure: Restrict hyd_export to be a file name
+                hyd_export_path = os.path.realpath(params["hyd_export"])
+                if Path(hyd_export_path).name != hyd_export_path:
+                    raise ValueError("'hyd_export' must be a file name only")
+                params["hyd_export"] = os.path.join(get_temp_folder(), params["hyd_export"])
             res = my_scenario.run_simulation(**params)
 
             data_id = self.scada_data_mgr.create_new_item(res)
@@ -119,6 +128,12 @@ class ScenarioBasicQualitySimulationHandler(ScenarioBaseHandler):
             params = self.load_json_data_from_request(req)
 
             my_scenario = self.scenario_mgr.get(scenario_id)
+
+            if "hyd_file_in" in params: # Security measure: Restrict hyd_file_in to be a file name
+                hyd_file_in_path = os.path.realpath(params["hyd_file_in"])
+                if Path(hyd_file_in_path).name != hyd_file_in_path:
+                    raise ValueError("'hyd_file_in' must be a file name only")
+                params["hyd_file_in"] = os.path.join(get_temp_folder(), params["hyd_file_in"])
             res = my_scenario.run_basic_quality_simulation(**params)
 
             data_id = self.scada_data_mgr.create_new_item(res)
@@ -164,6 +179,12 @@ class ScenarioAdvancedQualitySimulationHandler(ScenarioBaseHandler):
             params = self.load_json_data_from_request(req)
 
             my_scenario = self.scenario_mgr.get(scenario_id)
+
+            if "hyd_file_in" in params:  # Security measure: Restrict hyd_file_in to be a file name
+                hyd_file_in_path = os.path.realpath(params["hyd_file_in"])
+                if Path(hyd_file_in_path).name != hyd_file_in_path:
+                    raise ValueError("'hyd_file_in' must be a file name only")
+                params["hyd_file_in"] = os.path.join(get_temp_folder(), params["hyd_file_in"])
             res = my_scenario.run_advanced_quality_simulation(**params)
 
             data_id = self.scada_data_mgr.create_new_item(res)

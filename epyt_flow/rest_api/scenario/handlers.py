@@ -25,6 +25,9 @@ class ScenarioManager(ResourceManager):
         `str`
             UUID of the new scenario.
         """
+        if "rpt_file_out" in kwds:  # Security measure: Do not allow to set "rpt_file_out"
+            del kwds["rpt_file_out"]
+
         return self.create_new_item(ScenarioSimulator(**kwds))
 
     def close_item(self, item: ScenarioSimulator) -> None:
